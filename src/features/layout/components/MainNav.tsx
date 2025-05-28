@@ -2,37 +2,32 @@ import { signOut } from "firebase/auth"
 import { Link, useNavigate } from "react-router-dom"
 // @ts-ignore
 import { auth } from '../../../config/firebase-config'
-import { useGetAuthInfo } from "../../../hooks/useGetAuthInfo"
-import { useGetUserInfo } from "../../../hooks/useGetUserInfo"
 import Button from "../../../components/Button"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useCurrentUser } from "../../../utils/auth"
 
 const MainNav = () => {
   const navigate = useNavigate()
-  const { isLoggedIn } = useGetAuthInfo()
-  const { user } = useGetUserInfo()
-  // const [signOutPending, setSignOutPending] = useState(false)
+  const currentUserData = useCurrentUser()
+  const isLoggedIn = !!currentUserData?.user
+  const [signOutPending, setSignOutPending] = useState(false)
 
   const handleSignOut = () => {
-    // setSignOutPending(true)
+    setSignOutPending(true)
     signOut(auth)
       .then(() => {
         console.log('sign out successful')
         localStorage.removeItem('auth')
-        // setSignOutPending(false)
+        setSignOutPending(false)
         navigate('/login')
       })
       .catch((error) => {
         const errorCode = error.code
         const errorMessage = error.message
-        // setSignOutPending(false)
+        setSignOutPending(false)
         console.log(`${errorCode}: ${errorMessage}`)
       })
   }
-
-  useEffect(() => {
-    console.log('MainNav')
-  }, [])
 
   return (
     <nav className='MainNav'>
@@ -40,8 +35,8 @@ const MainNav = () => {
         <Button to='/me' title='My Preferences' icon='home' />
         <Button
           title="Sign out"
-          // onClick={() => handleSignOut()}
-          // loading={signOutPending}
+          onClick={() => handleSignOut()}
+          loading={signOutPending}
           icon="exit"
         />
       </div>
@@ -56,9 +51,9 @@ const MainNav = () => {
             to={'/create'}
             icon="document"
           />
-          {/*{isLoggedIn && user && <>
-            <Link to='/me'><strong>{user?.displayName}</strong></Link>
-          </>}*/}
+          {isLoggedIn && currentUserData?.user && <>
+            <Link to='/me'><strong>{currentUserData?.user?.displayName}</strong></Link>
+          </>}
         </>}
       </div>
     </nav>

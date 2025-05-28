@@ -1,10 +1,10 @@
-import { useGetUserInfo } from "../../hooks/useGetUserInfo"
 import { useEffect, useMemo } from "react"
 import { useGetCurrentGroups } from "../../hooks/useGetCurrentGroups"
 import { ActiveLog } from "../../features/moneylog/components/ActiveLog"
+import { useCurrentUser } from "../../utils/auth"
 
 export const Home = () => {
-  const { user } = useGetUserInfo()
+  const { user } = useCurrentUser()
   const { currentGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
   const latestActiveGroup = useMemo(() => {
     if (currentGroups?.length > 0) {

@@ -1,4 +1,5 @@
 import { addDoc, collection, doc, serverTimestamp, runTransaction, where, query, getDocs, Timestamp } from "firebase/firestore"
+// @ts-ignore
 import { db } from '../config/firebase-config'
 
 export const useLogGroupQuery = () => {

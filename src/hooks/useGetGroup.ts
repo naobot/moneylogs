@@ -1,51 +1,52 @@
 import { useEffect, useState } from "react"
-import { doc, getDoc, collection } from "firebase/firestore"
+import { doc, getDoc } from "firebase/firestore"
 import { Group } from "../types/user"
 // @ts-ignore
 import { db } from '../config/firebase-config'
 
-export const useGetGroup = (groupId: string) => {
-  const [group, setGroup] = useState<Group>()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [isError, setIsError] = useState(false)
-  const [error, setError] = useState()
-
-  // const groupsCollectionRef = collection(db, 'log_groups')
-
-  const getGroup = async () => {
-    setIsLoading(true)
-
-    try {
-      const docRef = doc(db, "log_groups", groupId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setGroup(({ id: groupId, ...docSnap.data() } as Group))
-        setIsLoading(false)
-        setIsSuccess(true)
-      } else {
-        // docSnap.data() will be undefined in this case
-        throw Error("group log does not exist")
-      }
-    }
-    catch (err) {
-      console.log(err)
-      setIsLoading(false)
-      setIsError(true)
-      setError(err)
-    }
-  }
+export const useGetGroup = (groupId?: string) => {
+  const [state, setState] = useState({
+    group: undefined as Group | undefined,
+    isLoading: false,
+    isSuccess: false,
+    isError: false,
+    error: undefined as any
+  })
 
   useEffect(() => {
-    getGroup()
+    if (!groupId) return
+
+    const fetchGroup = async () => {
+      setState(prev => ({ ...prev, isLoading: true }))
+
+      try {
+        const docRef = doc(db, "log_groups", groupId)
+        const docSnap = await getDoc(docRef)
+
+        if (docSnap.exists()) {
+          setState({
+            group: { id: groupId, ...docSnap.data() } as Group,
+            isLoading: false,
+            isSuccess: true,
+            isError: false,
+            error: undefined
+          })
+        } else {
+          throw new Error("Group does not exist")
+        }
+      } catch (err) {
+        setState({
+          group: undefined,
+          isLoading: false,
+          isSuccess: false,
+          isError: true,
+          error: err
+        })
+      }
+    }
+
+    fetchGroup()
   }, [groupId])
 
-  return {
-    group,
-    isSuccess,
-    isLoading,
-    isError,
-    error,
-  }
+  return state
 }

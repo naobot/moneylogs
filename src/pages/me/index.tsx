@@ -1,10 +1,10 @@
 // import { useState } from "react"
 // import ControlledInput from "../../components/ControlledInput"
 // import Button from "../../components/Button"
-import { useGetUserInfo } from "../../hooks/useGetUserInfo"
+import { useCurrentUser } from "../../utils/auth"
 
 export const UserSettings = () => {
-  const { user } = useGetUserInfo()
+  const { user } = useCurrentUser()
   // const [newName, setNewName] = useState('')
 
   return (

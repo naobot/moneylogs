@@ -1,15 +1,17 @@
 import dayjs from "dayjs"
 import { useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+import { useCurrentUser } from "../../utils/auth"
 import { useLogGroupQuery } from "../../hooks/useLogGroupQuery"
-// import { useGetUserInfo } from "../../hooks/useGetUserInfo"
+import { useMutation } from "../../hooks/useFirebase"
 
 import ControlledInput from "../../components/ControlledInput"
 import Button from "../../components/Button"
-import { AuthUser } from "../../types/user"
-import { useNavigate } from "react-router-dom"
+
 
 export const CreateNewLog = () => {
-  const { navigate } = useNavigate()
+  const navigate = useNavigate()
   const today = dayjs().format('YYYY-MM-DD')
   const oneMonth = dayjs().add(1, 'month').format('YYYY-MM-DD')
 
@@ -17,32 +19,48 @@ export const CreateNewLog = () => {
   const [numParticipants, setNumParticipants] = useState(10)
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(oneMonth)
-  const [createPending, setCreatePending] = useState(false)
 
-  const currentUserId = (JSON.parse(localStorage.getItem('auth') ?? '') as AuthUser).userId
-
-  // const { user } = useGetUserInfo()
+  const { user } = useCurrentUser()
   const { addNewLogGroup } = useLogGroupQuery()
 
-  const isSubmittable = useMemo(() => {
-    return !!logGroupTitle && numParticipants > 0 && !dayjs(endDate).isBefore(dayjs(startDate))
-  }, [startDate, endDate])
+  // Use mutation hook for better state management
+  const { mutate: createGroup, isLoading: createPending, isError, error } = useMutation(
+    async (groupData: {
+      title: string
+      max_participants: number
+      start: string
+      end: string
+      currentUserId: string
+    }) => {
+      return await addNewLogGroup(groupData)
+    }
+  )
 
-  const handleCreateNewGroup = () => {
-    setCreatePending(true)
-    console.log('hello user ' + currentUserId)
-    addNewLogGroup({
-      title: logGroupTitle,
-      max_participants: numParticipants,
-      start: startDate,
-      end: endDate,
-      currentUserId: currentUserId,
-    })
-      .then(() => {
-        setCreatePending(false)
-        console.log('successfully created new log group')
-        navigate('/')
+  const isSubmittable = useMemo(() => {
+    return !!logGroupTitle &&
+           !!user?.userId &&
+           numParticipants > 0 &&
+           !dayjs(endDate).isBefore(dayjs(startDate))
+  }, [logGroupTitle, user?.userId, numParticipants, startDate, endDate])
+
+  const handleCreateNewGroup = async () => {
+    if (!user?.userId) return
+
+    try {
+      await createGroup({
+        title: logGroupTitle,
+        max_participants: numParticipants,
+        start: startDate,
+        end: endDate,
+        currentUserId: user.userId,
       })
+
+      console.log('Successfully created new log group')
+      navigate('/')
+    } catch (err) {
+      console.error('Failed to create log group:', err)
+      // Error state is handled by useMutation
+    }
   }
 
   return (
@@ -53,7 +71,7 @@ export const CreateNewLog = () => {
         value={logGroupTitle}
       />
       <ControlledInput
-        onChange={(e: any) => setNumParticipants(e?.target?.value)}
+        onChange={(e: any) => setNumParticipants(Number(e?.target?.value))}
         label="Max no. of participants"
         value={numParticipants}
         type="number"
@@ -71,6 +89,13 @@ export const CreateNewLog = () => {
         type="date"
         isError={dayjs(endDate).isBefore(dayjs(startDate))}
       />
+
+      {isError && (
+        <div className="error-message">
+          Failed to create log group. Please try again.
+        </div>
+      )}
+
       <div className="Menu">
         <Button
           text="Start a new log group"
@@ -78,7 +103,7 @@ export const CreateNewLog = () => {
           buttonStyle="primary-border"
           disabled={!isSubmittable}
           loading={createPending}
-          onClick={() => handleCreateNewGroup()}
+          onClick={handleCreateNewGroup}
         />
       </div>
     </div>

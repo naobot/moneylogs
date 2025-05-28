@@ -47,10 +47,9 @@ export const ActiveLog = ({ groupId, userId }: ActiveLogProps) => {
       {(isLoading || logPostRes?.isLoading) && <div>...</div>}
       {(isSuccess && logPostRes?.isSuccess) && (
         <>
-          <LogsMenu logs={logs} setCurrentLog={currentLogSet} />
           <div className="GroupLogDashboard">
             <h2>{group?.title}</h2>
-            <LogPosts logs={logPostRes?.logs} />
+            <LogPosts logs={logPostRes?.data} />
             {/*{currentLog && <LogStickies log={currentLog} />}*/}
           </div>
         </>

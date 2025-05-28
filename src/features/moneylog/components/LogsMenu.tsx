@@ -1,19 +1,19 @@
 import { Dispatch, SetStateAction } from "react"
-import { Log } from "../../../types/user"
+import { UserData } from "../../../hooks/useGetUserInfo"
 
 type LogsMenuProps = {
-  logs: Array<Log>
-  setCurrentLog: Dispatch<SetStateAction<Log | undefined>>
+  logMembers: Array<UserData>
+  setter: Dispatch<SetStateAction<UserData | undefined>>
 }
 
-const LogsMenu = ({ logs }: LogsMenuProps) => {
+const LogsMenu = ({ logMembers, setter }: LogsMenuProps) => {
   return (
     <>
       <div className="LogsMenu">
-        {logs?.map((log: Log) => {
+        {logMembers?.map((member) => {
           return (
-            <div className="LogsMenu__item" key={log.id}>
-              {log.id}
+            <div className="LogsMenu__item" key={member.id} onClick={() => setter(member)}>
+              {member?.displayName}
             </div>
           )
         })}
