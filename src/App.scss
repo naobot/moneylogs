@@ -1,0 +1,229 @@
+:root {
+  font-family: Terminal, monospace;
+  color-scheme: light;
+  background-color: #fefefe;
+  color: #242424;
+}
+
+#root {
+  display: flex;
+  width: 100%;
+}
+
+.Container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: fit-content;
+}
+
+.MainNav {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4em;
+
+  &__item {
+    align-content: center;
+    font-size: 1em;
+  }
+
+  &__header {
+    a {
+      font-weight: 700;
+    }
+  }
+}
+
+.Menu {
+  display: inline-flex;
+  grid-gap: 0.4em;
+  font-size: 0.8em;
+  align-items: center;
+}
+
+.Content {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 1em;
+}
+
+.Icon {
+  width: 21px;
+  height: 21px;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.Button {
+  display: inline-flex;
+  grid-gap: 0.2em;
+  align-items: center;
+  border-radius: 1px;
+  border: none;
+  padding: 0.4em;
+
+  &--disabled {
+    cursor: default;
+    opacity: 0.3;
+
+    &:hover {
+      border: inherit !important;
+      color: inherit !important;
+      background-color: inherit !important;
+    }
+  }
+
+  &--active {
+    background-color: #242424 !important;
+    color: #fefefe !important;
+    cursor: default;
+  }
+
+  &--primary {
+    background-color: #fefefe;
+    color: #242424;
+  }
+
+  &--primary-border {
+    background-color: #fefefe;
+    color: #242424;
+    border: 2px solid #242424;
+    font-weight: 700;
+
+    &:hover {
+      border: 2px solid #242424 !important;
+      background-color: #242424;
+      color: #fefefe;
+    }
+  }
+
+  &--size-sm {
+    font-size: 0.8em;
+  }
+
+  &--size-md {
+    font-size: 1em;
+  }
+
+  &--size-lg {
+    font-size: 1.2em;
+    padding: 0.6em;
+  }
+
+  &--size-xl {
+    font-size: 1.4em;
+    padding: 0.8em;
+  }
+
+  &:hover {
+    border: none;
+  }
+}
+
+.ControlledInput {
+  display: flex;
+  grid-gap: 0.4em;
+  align-items: center;
+  padding: 0.2em;
+
+  &--warning {
+    input {
+      &::after {
+        content: '!';
+        display: inline-block;
+      }
+    }
+  }
+
+  label {
+    font-size: 0.8em;
+  }
+
+  &__alert {
+    width: 21px;
+  }
+}
+
+.Window {
+  padding: 2em;
+  border: 2px solid #242424;
+  border-radius: 4px;
+  width: 100%;
+
+  .Menu {
+    align-self: center;
+  }
+
+  @media (min-width: 758px) {
+    max-width: 700px;
+  }
+}
+
+.InfoBox {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 1em;
+  align-items: center;
+  align-content: center;
+}
+
+.LoginPage {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 2em;
+}
+
+.CreateNewLog {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 1em;
+}
+
+.Group {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
+  grid-gap: 2em;
+  width: 100%;
+}
+
+.LogsMenu {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 0.4em;
+
+  &__item {
+    display: block;
+    padding: 0.8em 1em;
+    border: 2px solid #242424;
+    text-align: right;
+
+    &--active, &:hover {
+      background-color: #242424;
+      color: #fefefe;
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}
+
+.LogPosts {
+  padding: 1em;
+  text-align: center;
+
+  &__menu {
+    margin-bottom: 1em;
+  }
+
+  &__item {
+    padding: 1em;
+    border: 1px solid #242424;
+  }
+}
