@@ -10,43 +10,46 @@ export const useGetGroup = (groupId?: string) => {
     isLoading: false,
     isSuccess: false,
     isError: false,
-    error: undefined as any
+    error: undefined as any,
   })
+
+  const fetchGroup = async () => {
+    setState(prev => ({ ...prev, isLoading: true }))
+
+    try {
+      const docRef = doc(db, "log_groups", groupId)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        setState({
+          group: { id: groupId, ...docSnap.data() } as Group,
+          isLoading: false,
+          isSuccess: true,
+          isError: false,
+          error: undefined
+        })
+      } else {
+        throw new Error("Group does not exist")
+      }
+    } catch (err) {
+      setState({
+        group: undefined,
+        isLoading: false,
+        isSuccess: false,
+        isError: true,
+        error: err
+      })
+    }
+  }
 
   useEffect(() => {
     if (!groupId) return
 
-    const fetchGroup = async () => {
-      setState(prev => ({ ...prev, isLoading: true }))
-
-      try {
-        const docRef = doc(db, "log_groups", groupId)
-        const docSnap = await getDoc(docRef)
-
-        if (docSnap.exists()) {
-          setState({
-            group: { id: groupId, ...docSnap.data() } as Group,
-            isLoading: false,
-            isSuccess: true,
-            isError: false,
-            error: undefined
-          })
-        } else {
-          throw new Error("Group does not exist")
-        }
-      } catch (err) {
-        setState({
-          group: undefined,
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error: err
-        })
-      }
-    }
-
     fetchGroup()
   }, [groupId])
 
-  return state
+  return {
+    refetch: () => { fetchGroup() },
+    ...state
+  }
 }

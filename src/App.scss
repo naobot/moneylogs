@@ -159,10 +159,6 @@
   .Menu {
     align-self: center;
   }
-
-  @media (min-width: 758px) {
-    max-width: 700px;
-  }
 }
 
 .InfoBox {
@@ -225,5 +221,72 @@
   &__item {
     padding: 1em;
     border: 1px solid #242424;
+  }
+}
+
+.Modal {
+  &__backdrop {
+    position: absolute;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 50;
+    display: flex;
+    cursor: pointer;
+    background-color: rgba(0,0,0,0.2);
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    z-index: 55;
+    cursor: default;
+    border: 2px solid #242424;
+    border-radius: 4px;
+    width: 100%;
+
+    @media (min-width: 758px) {
+      max-width: 700px;
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 2px 8px;
+    background-color: #000;
+  }
+
+  &__title {
+    font-size: 1em;
+    color: #fff;
+    margin: 0.2em 0;
+  }
+
+  &__button {
+    &--close {
+      border-radius: 1px;
+      border: none;
+      padding: 0.4em;
+      background-color: transparent;
+      color: #fff;
+      font-weight: 800;
+    }
+  }
+
+  &__body {
+    padding: 1em;
+    text-align: center;;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: center;
+    grid-gap: 0.2em;
+    padding: 1em;
   }
 }

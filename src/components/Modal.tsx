@@ -14,6 +14,7 @@ interface ModalProps {
   cancelButtonText?: string;
   title?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -29,6 +30,7 @@ const Modal: React.FC<ModalProps> = ({
   cancelButtonText = 'Cancel',
   title,
   className = '',
+  disabled = false,
 }) => {
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && onClose) {
@@ -84,12 +86,13 @@ const Modal: React.FC<ModalProps> = ({
         {/* Header with optional title and close button */}
         {(title || showCloseButton) && (
           <div className="Modal__header">
-            {title && <h2 className="Modal__title">{title}</h2>}
+            <h2 className="Modal__title">{title}</h2>
             {showCloseButton && onClose && (
               <button
                 className="Modal__button--close"
                 onClick={onClose}
                 aria-label="Close modal"
+                disabled={disabled}
               >
                 ×
               </button>
@@ -110,6 +113,8 @@ const Modal: React.FC<ModalProps> = ({
                 className="Modal__button--cancel"
                 onClick={handleCancelClick}
                 text={cancelButtonText}
+                buttonStyle='primary-border'
+                disabled={disabled}
               />
             )}
             {showOkButton && (
@@ -117,6 +122,8 @@ const Modal: React.FC<ModalProps> = ({
                 className="Modal__button--confirm"
                 onClick={handleOkClick}
                 text={okButtonText}
+                buttonStyle='primary-border'
+                disabled={disabled}
               />
             )}
           </div>

@@ -32,7 +32,7 @@ export const CreateNewLog = () => {
       end: string
       currentUserId: string
     }) => {
-      return await addNewLogGroup(groupData)
+      return await addNewLogGroup.mutate(groupData)
     }
   )
 

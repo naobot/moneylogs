@@ -7,16 +7,23 @@ import { parseReferenceArray } from "../../utils/helpers"
 import LogsMenu from "../../features/moneylog/components/LogsMenu"
 import { ActiveLog } from "../../features/moneylog/components/ActiveLog"
 import { useGetMultipleUsers, UserData } from "../../hooks/useGetUserInfo"
+import { useLogGroupQuery } from "../../hooks/useLogGroupQuery"
 import { useGetGroup } from "../../hooks/useGetGroup"
+
+import Modal from "../../components/Modal"
 
 // @ts-ignore
 import { db } from '../../config/firebase-config'
-import Modal from "../../components/Modal"
 
 export const GroupPage = () => {
   const { groupId } = useParams()
-  const { group, isLoading: isLoadingGroup, isSuccess, isError, error } = useGetGroup(groupId)
+  const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
+  const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
+  const isProcessingJoin = useMemo(() => {
+    return addGroupToMember.isLoading || addMemberToGroup.isLoading
+  }, [addGroupToMember, addMemberToGroup])
+
   const [displayUser, setDisplayUser] = useState<UserData>()
   const [showInviteModal, setShowInviteModal] = useState(false)
 
@@ -31,16 +38,36 @@ export const GroupPage = () => {
     return memberIds.includes(loggedInUser?.id)
   }, [loggedInUser, memberIds])
 
+  const handleJoinGroup = async () => {
+    console.log('Attempting to join!')
+    try {
+      await Promise.all([
+        addGroupToMember.mutate({
+          currentUserId: loggedInUser.userId,
+          groupId,
+        }),
+        addMemberToGroup.mutate({
+          currentUserId: loggedInUser.userId,
+          groupId,
+        }),
+      ])
+
+      await refetch()
+    } catch (error) {
+      console.error('Failed to join group:', error)
+    }
+  }
+
   useEffect(() => {
     // Initialize with loggedInUser
     setDisplayUser(loggedInUser)
   }, [loggedInUser])
 
   useEffect(() => {
-    if (!currentUserIsMember) {
+    if (isSuccessGroup && !currentUserIsMember) {
       setShowInviteModal(true)
     }
-  }, [currentUserIsMember])
+  }, [currentUserIsMember, isSuccessGroup])
 
   return (
     <>
@@ -54,14 +81,16 @@ export const GroupPage = () => {
       {!currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}
-        title="Information"
-        okButtonText="Join"
+        title=""
+        okButtonText={"Join"}
         showOkButton
+        onOk={handleJoinGroup}
         showCloseButton
         onClose={() => setShowInviteModal(false)}
+        disabled={isProcessingJoin}
       >
         <p>
-          ur not a member!
+          You've been invited to join this moneylog!
         </p>
       </Modal>}
     </>
