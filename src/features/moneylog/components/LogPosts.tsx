@@ -1,11 +1,14 @@
 import cx from "classnames"
-import { useMemo, useState } from "react"
+import { Dispatch, useMemo, useState } from "react"
 import { LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 
 type LogPostsProps = {
+  isMyLog: boolean
   logs: LogPost[]
+  isCreateNewEntry: boolean
+  isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
 }
 
 type DateBanner = {
@@ -14,8 +17,9 @@ type DateBanner = {
   _isBanner: boolean
 }
 
-const LogPosts = ({ logs }: LogPostsProps) => {
+const LogPosts = ({ isMyLog, logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
+
   const calendarMarkedPosts = useMemo(() => {
     const displayRows: Array<LogPost | DateBanner> = []
     const now = dayjs()
@@ -88,6 +92,35 @@ const LogPosts = ({ logs }: LogPostsProps) => {
               />
             </div>
           </>}
+
+          {isCreateNewEntry && (
+            <div className="LogPosts__posts__item">
+              <div
+                className="LogPosts__posts__item__header"
+              >
+                <div
+                  className="LogPosts__posts__item__date"
+                >
+                  date
+                </div>
+                <div className="LogPosts__posts__item__amount">
+                  amount
+                </div>
+                <div
+                  className="LogPosts__posts__item__comments"
+                >
+                </div>
+              </div>
+              <div
+                className="LogPosts__posts__item__body"
+              >
+                <div className="LogPosts__posts__item__content">
+                  content
+                </div>
+              </div>
+            </div>
+          )}
+
           {calendarMarkedPosts?.length > 0 && calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
             if ('_isBanner' in item && item._isBanner) {
               return (
@@ -125,7 +158,7 @@ const LogPosts = ({ logs }: LogPostsProps) => {
                     <div
                       className="LogPosts__posts__item__comments"
                     >
-                      ( )
+                      ({(item as LogPost)?.replies?.length ?? 0})
                     </div>
                   </div>
                   <div

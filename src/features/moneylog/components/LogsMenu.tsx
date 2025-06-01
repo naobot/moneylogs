@@ -1,18 +1,26 @@
 import { Dispatch, SetStateAction } from "react"
 import { UserData } from "../../../hooks/useGetUserInfo"
+import cx from 'classnames'
 
 type LogsMenuProps = {
+  displayUser: UserData
   logMembers: Array<UserData>
   setter: Dispatch<SetStateAction<UserData | undefined>>
 }
 
-const LogsMenu = ({ logMembers, setter }: LogsMenuProps) => {
+const LogsMenu = ({ displayUser, logMembers, setter }: LogsMenuProps) => {
   return (
     <>
       <div className="LogsMenu">
         {logMembers?.map((member) => {
           return (
-            <div className="LogsMenu__item" key={member.id} onClick={() => setter(member)}>
+            <div
+              className={cx("LogsMenu__item", {
+                'LogsMenu__item--active' : displayUser?.id === member?.id
+              })}
+              key={member.id}
+              onClick={() => setter(member)}
+            >
               {member?.displayName}
             </div>
           )

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { signOut } from "firebase/auth"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 // @ts-ignore
 import { auth } from '../../../config/firebase-config'
 
@@ -11,11 +11,21 @@ import Button from "../../../components/Button"
 
 const MainNav = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+  const currentGroupId = location.pathname.match(/\/g\/([^\/]+)/)?.[1]
+  const { currentGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
+  const highlightedGroupId = useMemo(() => {
+    if (currentGroupId) {
+      return currentGroupId
+    } else if (isHome && currentGroups) {
+      return currentGroups[0]?.id
+    }
+    return null
+  }, [currentGroupId, currentGroups, isHome])
   const currentUserData = useCurrentUser()
   const isLoggedIn = !!currentUserData?.user
   const [signOutPending, setSignOutPending] = useState(false)
-
-  const { currentGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
 
   const handleSignOut = () => {
     setSignOutPending(true)
@@ -39,6 +49,7 @@ const MainNav = () => {
       <div className='MainNav__item Menu'>
         {isLoggedIn &&
         <>
+          <Button to='/' title='Home' icon='home' />
           <Button to='/me' title='My Preferences' icon='home' />
           <Button
             title="New Log Group"
@@ -54,6 +65,7 @@ const MainNav = () => {
                 title={group.title}
                 text={group.title}
                 buttonStyle="primary-border-lite"
+                isSelected={highlightedGroupId == group?.id}
               />
             ))}
           </div>}

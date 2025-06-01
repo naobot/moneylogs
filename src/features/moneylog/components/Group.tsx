@@ -26,6 +26,8 @@ export const Group = ({ groupId }) => {
   const [displayUser, setDisplayUser] = useState<UserData>()
   const [showInviteModal, setShowInviteModal] = useState(false)
 
+  const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
+
   const memberIds = useMemo(() => {
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
@@ -33,6 +35,9 @@ export const Group = ({ groupId }) => {
 
   const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
 
+  const isActiveLogMyLog = useMemo(() => {
+    return loggedInUser?.id === displayUser?.id
+  }, [loggedInUser, displayUser])
   const currentUserIsMember = useMemo(() => {
     return memberIds.includes(loggedInUser?.id)
   }, [loggedInUser, memberIds])
@@ -72,6 +77,10 @@ export const Group = ({ groupId }) => {
     }
   }, [currentUserIsMember, isSuccessGroup])
 
+  useEffect(() => {
+    isCreateNewEntrySet(false)
+  }, [group])
+
   return (
     <>
       <div className="Group">
@@ -84,9 +93,15 @@ export const Group = ({ groupId }) => {
             </div>
           </div>
           <div className="Group__header__center">
-            <div>
-              [new entry]
-            </div>
+            {isActiveLogMyLog && (
+              <div
+                onClick={() => {
+                  isCreateNewEntrySet(true)
+                }}
+              >
+                [new entry]
+              </div>
+            )}
           </div>
           <div className="Group__header__right">
             [invite]
@@ -94,9 +109,9 @@ export const Group = ({ groupId }) => {
         </div>
         <div className="Group__body">
           {(isLoadingGroup || isLoadingMembers) && <>...</>}
-          {!isLoadingMembers && <LogsMenu logMembers={members} setter={setDisplayUser} />}
+          {!isLoadingMembers && <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} />}
           {groupId &&
-            <ActiveLog groupId={groupId} userId={displayUser?.userId} />
+            <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} />
           }
         </div>
       </div>
