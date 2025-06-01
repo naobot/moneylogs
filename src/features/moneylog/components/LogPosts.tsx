@@ -65,34 +65,36 @@ const LogPosts = ({ logs }: LogPostsProps) => {
       <div className={cx("LogPosts", {
         "LogPosts--weekly": isWeeklyView,
       })}>
-        <div className="LogPosts__menu">
-          <Button
-            className={"LogPosts__menu__button"}
-            text="Daily"
-            onClick={() => isWeeklyViewSet(false)}
-            isSelected={!isWeeklyView}
-            size="md"
-            buttonStyle="primary-border"
-          />
-          <Button
-            className={"LogPosts__menu__button"}
-            text="Weekly"
-            onClick={() => isWeeklyViewSet(true)}
-            isSelected={isWeeklyView}
-            size="md"
-            buttonStyle="primary-border"
-          />
-        </div>
         <div className={cx("LogPosts__posts", {
           "LogPosts__posts--weekly": isWeeklyView,
         })}>
-          {calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
+          {false && calendarMarkedPosts?.length > 0 && <>
+            <div className="LogPosts__menu">
+              <Button
+                className={"LogPosts__menu__button"}
+                text="Daily"
+                onClick={() => isWeeklyViewSet(false)}
+                isSelected={!isWeeklyView}
+                size="md"
+                buttonStyle="primary-border"
+              />
+              <Button
+                className={"LogPosts__menu__button"}
+                text="Weekly"
+                onClick={() => isWeeklyViewSet(true)}
+                isSelected={isWeeklyView}
+                size="md"
+                buttonStyle="primary-border"
+              />
+            </div>
+          </>}
+          {calendarMarkedPosts?.length > 0 && calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
             if ('_isBanner' in item && item._isBanner) {
               return (
               <div
-                className={cx("LogPosts__posts__item", {
-                  "LogPosts__posts__item--weekly": isWeeklyView,
-                  "LogPosts__posts__item--banner": true,
+                className={cx("LogPosts__posts__banner", {
+                  "LogPosts__posts__banner--weekly-view": isWeeklyView,
+                  "LogPosts__posts__banner--week": item.type == 'week',
                 })}
                 key={`banner-${i}`}
               >
@@ -109,14 +111,38 @@ const LogPosts = ({ logs }: LogPostsProps) => {
                   })}
                   key={(item as LogPost).id}
                 >
-                  <div>
-                    {date?.format("HH:mm")}
+                  <div
+                    className="LogPosts__posts__item__header"
+                  >
+                    <div
+                      className="LogPosts__posts__item__date"
+                    >
+                      {date?.format("HH:mm")}
+                    </div>
+                    <div className="LogPosts__posts__item__amount">
+                      {(item as LogPost).amount} {(item as LogPost).currency}
+                    </div>
+                    <div
+                      className="LogPosts__posts__item__comments"
+                    >
+                      ( )
+                    </div>
                   </div>
-                  <p>{(item as LogPost).content}</p>
+                  <div
+                    className="LogPosts__posts__item__body"
+                  >
+                    <div className="LogPosts__posts__item__content">
+                      <p>{(item as LogPost).content}</p>
+                    </div>
+                  </div>
                 </div>
               )
             }
           })}
+          {calendarMarkedPosts?.length == 0 && <div>No log entries to display!</div>}
+        </div>
+        <div className="LogPosts__comments">
+          !
         </div>
       </div>
     </>

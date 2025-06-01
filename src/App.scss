@@ -29,6 +29,12 @@
     font-size: 1em;
   }
 
+  &__list {
+    display: inline-flex;
+    grid-gap: 0.4em;
+    padding: 0.4em;
+  }
+
   &__header {
     a {
       font-weight: 700;
@@ -46,8 +52,10 @@
 .Content {
   display: flex;
   justify-content: center;
+  padding: 1em 1em 0 1em;
   width: 100%;
-  padding: 1em;
+  height: auto;
+  overflow-y: scroll;
 }
 
 .Icon {
@@ -98,6 +106,18 @@
 
     &:hover {
       border: 2px solid #242424 !important;
+      background-color: #242424;
+      color: #fefefe;
+    }
+  }
+
+  &--primary-border-lite {
+    background-color: #fefefe;
+    color: #242424;
+    border: 1px solid #242424;
+
+    &:hover {
+      border: 1px solid #242424 !important;
       background-color: #242424;
       color: #fefefe;
     }
@@ -182,10 +202,46 @@
 }
 
 .Group {
-  display: grid;
-  grid-template-columns: 180px 1fr 180px;
-  grid-gap: 2em;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+
+  &__header {
+    display: grid;
+    grid-template-columns: 180px auto 220px;
+    grid-gap: 2em;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1em;
+    background-color: #000;
+    color: #fff;
+    padding: 0.5em;
+    font-size: 0.8em;
+
+    &__left {
+      text-align: left;
+    }
+
+    &__center {
+      text-align: center;
+    }
+
+    &__right {
+      text-align: right;
+    }
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 180px auto;
+    grid-gap: 2em;
+    width: 100%;
+  }
+}
+
+.GroupLogDashboard {
+  display: flex;
+  flex-direction: column;
 }
 
 .LogsMenu {
@@ -211,6 +267,9 @@
 }
 
 .LogPosts {
+  display: grid;
+  grid-template-columns: auto 220px;
+  grid-gap: 2em;;
   padding: 1em;
   text-align: center;
 
@@ -218,9 +277,30 @@
     margin-bottom: 1em;
   }
 
-  &__item {
-    padding: 1em;
-    border: 1px solid #242424;
+  &__posts {
+    &__banner {
+      &--week {
+        font-weight: 800;
+      }
+    }
+
+    &__item {
+      display: flex;
+      flex-direction: column;
+      padding: 1em;
+      margin: 1em 0;
+      border: 1px solid #242424;
+
+      &__header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8em;
+      }
+
+      &__body {
+
+      }
+    }
   }
 }
 

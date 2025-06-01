@@ -9,7 +9,7 @@ type ButtonProps = {
   onClick?: Function
   disabled?: boolean
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-  buttonStyle?: string
+  buttonStyle?: 'primary' | 'primary-border' | 'primary-border-lite'
   loading?: boolean
   to?: string
   className?: string

@@ -3,10 +3,6 @@ import { useParams } from "react-router-dom"
 
 import { useCurrentUser } from "../../utils/auth"
 import { parseReferenceArray } from "../../utils/helpers"
-
-import LogsMenu from "../../features/moneylog/components/LogsMenu"
-import { ActiveLog } from "../../features/moneylog/components/ActiveLog"
-import { useGetMultipleUsers, UserData } from "../../hooks/useGetUserInfo"
 import { useLogGroupQuery } from "../../hooks/useLogGroupQuery"
 import { useGetGroup } from "../../hooks/useGetGroup"
 
@@ -14,6 +10,7 @@ import Modal from "../../components/Modal"
 
 // @ts-ignore
 import { db } from '../../config/firebase-config'
+import { Group } from "../../features/moneylog/components/Group"
 
 export const GroupPage = () => {
   const { groupId } = useParams()
@@ -24,15 +21,12 @@ export const GroupPage = () => {
     return addGroupToMember.isLoading || addMemberToGroup.isLoading
   }, [addGroupToMember, addMemberToGroup])
 
-  const [displayUser, setDisplayUser] = useState<UserData>()
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   const memberIds = useMemo(() => {
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.members])
-
-  const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
 
   const currentUserIsMember = useMemo(() => {
     return memberIds.includes(loggedInUser?.id)
@@ -59,11 +53,6 @@ export const GroupPage = () => {
   }
 
   useEffect(() => {
-    // Initialize with loggedInUser
-    setDisplayUser(loggedInUser)
-  }, [loggedInUser])
-
-  useEffect(() => {
     if (isSuccessGroup && !currentUserIsMember) {
       setShowInviteModal(true)
     }
@@ -71,13 +60,7 @@ export const GroupPage = () => {
 
   return (
     <>
-      <div className="Group">
-        {(isLoadingGroup || isLoadingMembers) && <>...</>}
-        {!isLoadingMembers && <LogsMenu logMembers={members} setter={setDisplayUser} />}
-        {groupId &&
-          <ActiveLog groupId={groupId} userId={displayUser?.userId} />
-        }
-      </div>
+      {groupId && <Group groupId={groupId} />}
       {!currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}

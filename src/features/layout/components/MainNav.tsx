@@ -1,16 +1,21 @@
+import { useEffect, useState } from "react"
 import { signOut } from "firebase/auth"
 import { Link, useNavigate } from "react-router-dom"
 // @ts-ignore
 import { auth } from '../../../config/firebase-config'
-import Button from "../../../components/Button"
-import { useEffect, useState } from "react"
+
 import { useCurrentUser } from "../../../utils/auth"
+import { useGetCurrentGroups } from "../../../hooks/useGetCurrentGroups"
+
+import Button from "../../../components/Button"
 
 const MainNav = () => {
   const navigate = useNavigate()
   const currentUserData = useCurrentUser()
   const isLoggedIn = !!currentUserData?.user
   const [signOutPending, setSignOutPending] = useState(false)
+
+  const { currentGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
 
   const handleSignOut = () => {
     setSignOutPending(true)
@@ -32,29 +37,38 @@ const MainNav = () => {
   return (
     <nav className='MainNav'>
       <div className='MainNav__item Menu'>
-        <Button to='/me' title='My Preferences' icon='home' />
+        {isLoggedIn &&
+        <>
+          <Button to='/me' title='My Preferences' icon='home' />
+          <Button
+            title="New Log Group"
+            to={'/create'}
+            icon="document"
+          />
+          {isLoading && <div>...</div>}
+          {isSuccess && <div className="MainNav__list">
+            {currentGroups.map((group) => (
+              <Button
+                key={group.id}
+                to={`/g/${group.id}`}
+                title={group.title}
+                text={group.title}
+                buttonStyle="primary-border-lite"
+              />
+            ))}
+          </div>}
+        </>}
+      </div>
+      <div className='MainNav__item MainNav__header'>
+        {/*<Link to={'/'}>moneylogs</Link>*/}
+      </div>
+      <div className="MainNev__item Menu">
         <Button
           title="Sign out"
           onClick={() => handleSignOut()}
           loading={signOutPending}
           icon="exit"
         />
-      </div>
-      <div className='MainNav__item MainNav__header'>
-        <Link to={'/'}>moneylogs</Link>
-      </div>
-      <div className="MainNev__item Menu">
-        {isLoggedIn &&
-        <>
-          <Button
-            title="New Log Group"
-            to={'/create'}
-            icon="document"
-          />
-          {isLoggedIn && currentUserData?.user && <>
-            <Link to='/me'><strong>{currentUserData?.user?.displayName}</strong></Link>
-          </>}
-        </>}
       </div>
     </nav>
   )
