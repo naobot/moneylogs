@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.77.2",
+    "@uiw/react-md-editor": "^4.0.7",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
     "firebase": "^11.1.0",

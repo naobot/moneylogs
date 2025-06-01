@@ -1,11 +1,11 @@
 import cx from "classnames"
-import { Dispatch, useMemo, useState } from "react"
-import { LogPost } from "../../../types/user"
+import { ChangeEvent, ChangeEventHandler, Dispatch, ReactEventHandler, useEffect, useMemo, useState } from "react"
+import { Currency, LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
+import MDEditor from "@uiw/react-md-editor"
 
 type LogPostsProps = {
-  isMyLog: boolean
   logs: LogPost[]
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
@@ -17,7 +17,20 @@ type DateBanner = {
   _isBanner: boolean
 }
 
-const LogPosts = ({ isMyLog, logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
+const CURRENCIES: Array<Currency> = [
+  'JPY',
+  'USD',
+  'CAD',
+  'KRW',
+  'CNY',
+  'EUR',
+  'GBP',
+  'NTD',
+  'AUD',
+  'MYR',
+]
+
+const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
 
   const calendarMarkedPosts = useMemo(() => {
@@ -64,6 +77,22 @@ const LogPosts = ({ isMyLog, logs, isCreateNewEntry = false, isCreateNewEntrySet
     return displayRows
   }, [logs?.length])
 
+  const [newEntryContent, newEntryContentSet] = useState<string>()
+  const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
+  const [selectedCurrency, selectedCurrencySet] = useState<Currency>()
+
+  useEffect(() => {
+    const lastCurrency = localStorage.getItem('ML__lastCurrency')
+    if (CURRENCIES.includes(lastCurrency)) {
+      selectedCurrencySet(lastCurrency as Currency)
+    }
+  }, [])
+
+  const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
+    localStorage.setItem('ML__lastCurrency', e.target.value)
+    selectedCurrencySet(e.target.value as Currency)
+  }
+
   return (
     <>
       <div className={cx("LogPosts", {
@@ -99,23 +128,44 @@ const LogPosts = ({ isMyLog, logs, isCreateNewEntry = false, isCreateNewEntrySet
                 className="LogPosts__posts__item__header"
               >
                 <div
-                  className="LogPosts__posts__item__date"
+                  className="LogPosts__posts__item__header__left"
                 >
-                  date
+                  new entry
                 </div>
-                <div className="LogPosts__posts__item__amount">
-                  amount
+                <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+                  <input
+                    type="number"
+                    onChange={(e) => newEntryAmountSet(e.target.value)}
+                    value={newEntryAmount}
+                  />
+                  <select
+                    name="currency"
+                    id="newEntry-currency"
+                    onChange={handleSelectCurrency}
+                    value={selectedCurrency}
+                  >
+                    {CURRENCIES.map((x) => (
+                      <option key={x} value={x}>{x}</option>
+                    ))}
+                  </select>
                 </div>
                 <div
-                  className="LogPosts__posts__item__comments"
+                  className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
                 >
                 </div>
               </div>
               <div
                 className="LogPosts__posts__item__body"
               >
-                <div className="LogPosts__posts__item__content">
-                  content
+                <div className="LogPosts__posts__item__content container" data-color-mode="light">
+                  <div className="LogPosts__posts__item__content__editor">
+                    <MDEditor
+                      value={newEntryContent}
+                      onChange={newEntryContentSet}
+                      preview='edit'
+                    />
+                    <MDEditor.Markdown source={newEntryContent} style={{ whiteSpace: 'pre-wrap' }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -148,15 +198,15 @@ const LogPosts = ({ isMyLog, logs, isCreateNewEntry = false, isCreateNewEntrySet
                     className="LogPosts__posts__item__header"
                   >
                     <div
-                      className="LogPosts__posts__item__date"
+                      className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
                     >
                       {date?.format("HH:mm")}
                     </div>
-                    <div className="LogPosts__posts__item__amount">
+                    <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
                       {(item as LogPost).amount} {(item as LogPost).currency}
                     </div>
                     <div
-                      className="LogPosts__posts__item__comments"
+                      className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
                     >
                       ({(item as LogPost)?.replies?.length ?? 0})
                     </div>

@@ -12,6 +12,8 @@ export type Currency =
   'CNY' |
   'GBP' |
   'AUD' |
+  'NTD' |
+  'EUR' |
   'NTD'
 
 export type AuthUser = {
