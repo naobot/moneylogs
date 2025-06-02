@@ -99,12 +99,12 @@ export const Group = ({ groupId }) => {
                   isCreateNewEntrySet(true)
                 }}
               >
-                [new entry]
+                <span className="handler">[new entry]</span>
               </div>
             )}
           </div>
           <div className="Group__header__right">
-            [invite]
+            <span className="handler">[invite]</span>
           </div>
         </div>
         <div className="Group__body">

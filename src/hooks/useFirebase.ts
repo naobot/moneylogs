@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { onSnapshot, Query, QueryDocumentSnapshot, runTransaction, Transaction } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, onSnapshot, query, Query, QueryDocumentSnapshot, runTransaction, Transaction, where } from "firebase/firestore"
 import { FirebaseError } from "firebase/app"
 // @ts-ignore
 import { db } from '../config/firebase-config'
@@ -115,4 +115,36 @@ export const useMutation = <TArgs, TResult>(
   }
 
   return { mutate, ...state }
+}
+
+export const getUserDocRef = async (userId: string) => {
+  const usersCollectionRef = collection(db, 'users')
+  const queryUsers = query(
+    usersCollectionRef,
+    where('userId', '==', userId),
+  )
+  const userSnapshot = await getDocs(queryUsers)
+  if (userSnapshot.empty) {
+    throw new Error('User does not exist')
+  }
+
+  const userDocId = userSnapshot.docs[0].id
+  const userName = userSnapshot.docs[0].data().displayName
+  return { userDocId, userName, userDocRef: doc(db, 'users', userDocId) }
+}
+
+export const getGroupDocRef = async (groupId: string) => {
+  const groupDocRef = doc(db, 'log_groups', groupId) // Fixed collection name
+  const groupSnapshot = await getDoc(groupDocRef)
+
+  if (!groupSnapshot.exists()) {
+    throw new Error(`Group with id ${groupId} does not exist`)
+  }
+
+  const groupName = groupSnapshot?.data()?.title
+  return {
+    groupDocId: groupId,
+    groupName,
+    groupDocRef
+  }
 }

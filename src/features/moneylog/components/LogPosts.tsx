@@ -1,11 +1,15 @@
 import cx from "classnames"
-import { ChangeEvent, ChangeEventHandler, Dispatch, ReactEventHandler, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, Dispatch, useEffect, useMemo, useState } from "react"
 import { Currency, LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
+import { LogData, useLogPostQuery } from "../../../hooks/useLogPostQuery"
+import { useMutation } from "../../../hooks/useFirebase"
 
 type LogPostsProps = {
+  groupId: string
+  userId: string
   logs: LogPost[]
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
@@ -30,7 +34,7 @@ const CURRENCIES: Array<Currency> = [
   'MYR',
 ]
 
-const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
+const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
 
   const calendarMarkedPosts = useMemo(() => {
@@ -77,13 +81,24 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
     return displayRows
   }, [logs?.length])
 
-  const [newEntryContent, newEntryContentSet] = useState<string>()
+  const [newEntryContent, newEntryContentSet] = useState<string|null>()
   const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>()
 
+  const { addNewLogPost } = useLogPostQuery()
+  const { mutate: createLogPost, isLoading: createPending, isError, error } = useMutation(
+    async (logData: LogData) => {
+      return await addNewLogPost.mutate({
+        groupId,
+        userId,
+        logData,
+      })
+    }
+  )
+
   useEffect(() => {
-    const lastCurrency = localStorage.getItem('ML__lastCurrency')
-    if (CURRENCIES.includes(lastCurrency)) {
+    const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
+    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
     }
   }, [])
@@ -91,6 +106,26 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
   const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
     localStorage.setItem('ML__lastCurrency', e.target.value)
     selectedCurrencySet(e.target.value as Currency)
+  }
+
+  const handleNewLogPost = async () => {
+    if (!selectedCurrency || !newEntryContent) return
+
+    try {
+      await createLogPost(
+        {
+          amount: newEntryAmount,
+          currency: selectedCurrency,
+          content: newEntryContent,
+        }
+      )
+
+      isCreateNewEntrySet(false)
+      newEntryContentSet(null)
+      newEntryAmountSet(0)
+    } catch (err) {
+      console.error('Failed to create log post:', err)
+    }
   }
 
   return (
@@ -135,7 +170,7 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
                 <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
                   <input
                     type="number"
-                    onChange={(e) => newEntryAmountSet(e.target.value)}
+                    onChange={(e) => newEntryAmountSet(e?.target?.value)}
                     value={newEntryAmount}
                   />
                   <select
@@ -152,6 +187,14 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
                 <div
                   className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
                 >
+                  <Button
+                    buttonStyle="primary-border-lite"
+                    size="sm"
+                    text={'×'}
+                    aria-label="Close"
+                    title="Close"
+                    onClick={() => isCreateNewEntrySet(false)}
+                  />
                 </div>
               </div>
               <div
@@ -167,6 +210,15 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
                     <MDEditor.Markdown source={newEntryContent} style={{ whiteSpace: 'pre-wrap' }} />
                   </div>
                 </div>
+              </div>
+              <div className="LogPosts__posts__item__footer">
+                <Button
+                  buttonStyle="primary-border"
+                  size="sm"
+                  text="Submit"
+                  disabled={!newEntryContent || createPending}
+                  onClick={handleNewLogPost}
+                />
               </div>
             </div>
           )}
@@ -214,15 +266,15 @@ const LogPosts = ({ logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPo
                   <div
                     className="LogPosts__posts__item__body"
                   >
-                    <div className="LogPosts__posts__item__content">
-                      <p>{(item as LogPost).content}</p>
+                    <div className="LogPosts__posts__item__content" data-color-mode="light">
+                      <MDEditor.Markdown source={(item as LogPost).content} style={{ whiteSpace: 'pre-wrap' }} />
                     </div>
                   </div>
                 </div>
               )
             }
           })}
-          {calendarMarkedPosts?.length == 0 && <div>No log entries to display!</div>}
+          {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
         <div className="LogPosts__comments">
           !

@@ -15,6 +15,10 @@
   font-size: 1em !important;
 }
 
+.handler {
+  cursor: pointer;
+}
+
 .Container {
   display: flex;
   flex-direction: column;
@@ -282,6 +286,11 @@
     margin-bottom: 1em;
   }
 
+  &__error {
+    margin: 1em 0;
+    padding: 1em;
+  }
+
   &__posts {
     &__banner {
       &--week {
@@ -323,11 +332,12 @@
       }
 
       &__content {
+        margin: 1em 0;
+
         &__editor {
           display: flex;
           flex-direction: column;
           grid-gap: 1em;
-          margin: 1em 0;
         }
       }
     }

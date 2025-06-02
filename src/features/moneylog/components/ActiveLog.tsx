@@ -26,6 +26,8 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
       {(isSuccess && logPostRes?.isSuccess) && (
         <>
           <LogPosts
+            groupId={groupId}
+            userId={userId}
             isMyLog={loggedInUser?.id === userId}
             logs={logPostRes?.data}
             isCreateNewEntry={isCreateNewEntry}
