@@ -1,8 +1,8 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { addDoc, collection, serverTimestamp, Timestamp } from "firebase/firestore"
 // @ts-ignore
 import { db } from '../config/firebase-config'
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase"
-import { Currency } from "../types/user"
+import { Currency, Datetime } from "../types/user"
 
 type AddNewLogPostArgs = {
   groupId: string
@@ -14,6 +14,7 @@ export type LogData = {
   amount: number
   content: string
   currency: Currency
+  postDate: number
 }
 
 export const useLogPostQuery = () => {
@@ -31,7 +32,7 @@ export const useLogPostQuery = () => {
       author: userDocRef,
       authorName: userName,
       createdAt: serverTimestamp(),
-      postDate: serverTimestamp(),
+      postDate: Timestamp.fromMillis(logData?.postDate),
       group: groupDocRef,
       groupName,
     })

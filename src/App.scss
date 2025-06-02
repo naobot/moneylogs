@@ -308,6 +308,7 @@
       &__header {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
+        grid-gap: 2px;
         font-size: 0.8em;
 
         &__left {

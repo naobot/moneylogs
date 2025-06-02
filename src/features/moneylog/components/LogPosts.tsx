@@ -83,6 +83,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
 
   const [newEntryContent, newEntryContentSet] = useState<string|null>()
   const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
+  const [newEntryDate, newEntryDateSet] = useState<number>(Date.now())
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>()
 
   const { addNewLogPost } = useLogPostQuery()
@@ -117,6 +118,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           amount: newEntryAmount,
           currency: selectedCurrency,
           content: newEntryContent,
+          postDate: newEntryDate,
         }
       )
 
@@ -165,7 +167,13 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                 <div
                   className="LogPosts__posts__item__header__left"
                 >
-                  new entry
+                  <input
+                    type="datetime-local"
+                    id="meeting-time"
+                    name="meeting-time"
+                    value={dayjs(newEntryDate).format('YYYY-MM-DDTHH:mm')}
+                    onChange={(e) => newEntryDateSet(dayjs(e?.target?.value, 'YYYY-MM-DDTHH:mm').unix() * 1000)}
+                  />
                 </div>
                 <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
                   <input
@@ -203,7 +211,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                 <div className="LogPosts__posts__item__content container" data-color-mode="light">
                   <div className="LogPosts__posts__item__content__editor">
                     <MDEditor
-                      value={newEntryContent}
+                      value={newEntryContent ?? ''}
                       onChange={newEntryContentSet}
                       preview='edit'
                     />
@@ -238,7 +246,8 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               )
             }
             else {
-              const date = dayjs((item as LogPost).postDate?.seconds * 1000)
+              const postTime = dayjs((item as LogPost).postDate?.seconds * 1000)
+              const createdTime = dayjs((item as LogPost).createdAt?.seconds * 1000)
               return (
                 <div
                   className={cx("LogPosts__posts__item", {
@@ -251,8 +260,9 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                   >
                     <div
                       className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
+                      title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
                     >
-                      {date?.format("HH:mm")}
+                      {postTime?.format("HH:mm")}
                     </div>
                     <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
                       {(item as LogPost).amount} {(item as LogPost).currency}
@@ -277,7 +287,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
         <div className="LogPosts__comments">
-          !
+          comments
         </div>
       </div>
     </>
