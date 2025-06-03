@@ -9,9 +9,10 @@ type ActiveLogProps = {
   userId: string
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
+  isMyLog: boolean
 }
 
-export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntrySet }: ActiveLogProps) => {
+export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
   const { group, isLoading, isSuccess, isError, error } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
   const logPostRes = useGetLogPosts({ groupId, userId })
@@ -28,7 +29,7 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
           <LogPosts
             groupId={groupId}
             userId={userId}
-            isMyLog={loggedInUser?.id === userId}
+            isMyLog={isMyLog}
             logs={logPostRes?.data}
             isCreateNewEntry={isCreateNewEntry}
             isCreateNewEntrySet={isCreateNewEntrySet}

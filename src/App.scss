@@ -67,6 +67,12 @@
   overflow-y: scroll;
 }
 
+.IconText {
+  display: inline-flex;
+  grid-gap: 0.2em;
+  align-items: center;
+}
+
 .Icon {
   width: 21px;
   height: 21px;
@@ -217,7 +223,7 @@
 
   &__header {
     display: grid;
-    grid-template-columns: 180px auto 220px;
+    grid-template-columns: 220px auto 320px;
     grid-gap: 2em;
     align-items: center;
     width: 100%;
@@ -227,24 +233,41 @@
     padding: 0.5em;
     font-size: 0.8em;
 
+    @media (max-width: 758px) {
+      grid-template-columns: 180px auto 220px;
+    }
+
     &__left {
-      text-align: left;
+      display: inline-flex;
+      justify-content: flex-start;
     }
 
     &__center {
-      text-align: center;
+      display: inline-flex;
+      justify-content: center;
     }
 
     &__right {
-      text-align: right;
+      display: inline-flex;
+      justify-content: flex-end;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+      width: fit-content;
     }
   }
 
   &__body {
     display: grid;
-    grid-template-columns: 180px auto;
+    grid-template-columns: 220px auto;
     grid-gap: 2em;
     width: 100%;
+
+    @media (max-width: 758px) {
+      grid-template-columns: 180px auto;
+    }
   }
 }
 
@@ -257,6 +280,10 @@
   display: flex;
   flex-direction: column;
   grid-gap: 0.4em;
+
+  @media (max-width: 758px) {
+    font-size: 0.8em;
+  }
 
   &__item {
     display: block;
@@ -277,10 +304,13 @@
 
 .LogPosts {
   display: grid;
-  grid-template-columns: auto 220px;
-  grid-gap: 2em;;
-  padding: 1em;
+  grid-template-columns: auto 320px;
+  grid-gap: 2em;
   text-align: center;
+
+  @media (max-width: 758px) {
+    grid-template-columns: auto 220px;
+  }
 
   &__menu {
     margin-bottom: 1em;
@@ -330,6 +360,7 @@
         display: inline-flex;
         grid-gap: 0.2rem;
         justify-content: center;
+        font-weight: 700;
       }
 
       &__content {

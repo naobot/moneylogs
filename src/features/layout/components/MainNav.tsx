@@ -50,12 +50,7 @@ const MainNav = () => {
         {isLoggedIn &&
         <>
           <Button to='/' title='Home' icon='home' />
-          <Button to='/me' title='My Preferences' icon='home' />
-          <Button
-            title="New Log Group"
-            to={'/create'}
-            icon="document"
-          />
+          <Button to='/me' title='My Preferences' icon='user' />
           {isLoading && <div>...</div>}
           {isSuccess && <div className="MainNav__list">
             {currentGroups.map((group) => (
@@ -69,6 +64,11 @@ const MainNav = () => {
               />
             ))}
           </div>}
+          <Button
+            title="New Log Group"
+            to={'/create'}
+            icon="plus"
+          />
         </>}
       </div>
       <div className='MainNav__item MainNav__header'>

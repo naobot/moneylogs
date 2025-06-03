@@ -6,6 +6,7 @@ import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
 import { LogData, useLogPostQuery } from "../../../hooks/useLogPostQuery"
 import { useMutation } from "../../../hooks/useFirebase"
+import Icon, { IconText } from "../../../components/Icon"
 
 type LogPostsProps = {
   groupId: string
@@ -13,6 +14,7 @@ type LogPostsProps = {
   logs: LogPost[]
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
+  isMyLog: boolean
 }
 
 type DateBanner = {
@@ -34,7 +36,7 @@ const CURRENCIES: Array<Currency> = [
   'MYR',
 ]
 
-const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet }: LogPostsProps) => {
+const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
 
   const calendarMarkedPosts = useMemo(() => {
@@ -159,6 +161,19 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
             </div>
           </>}
 
+          {/*{isMyLog && (
+            <div className="LogPosts__menu">
+              <div
+                className="handler"
+                onClick={() => {
+                  isCreateNewEntrySet(true)
+                }}
+              >
+                <Icon type={'document'} />
+              </div>
+            </div>
+          )}*/}
+
           {isCreateNewEntry && (
             <div className="LogPosts__posts__item">
               <div
@@ -262,7 +277,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                       className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
                       title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
                     >
-                      {postTime?.format("HH:mm")}
+                      <IconText type='clock' text={postTime?.format("HH:mm")} />
                     </div>
                     <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
                       {(item as LogPost).amount} {(item as LogPost).currency}
@@ -270,7 +285,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     <div
                       className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
                     >
-                      ({(item as LogPost)?.replies?.length ?? 0})
+                      <IconText type='speech' text={(item as LogPost)?.replies?.length ?? 0} size={18} />
                     </div>
                   </div>
                   <div

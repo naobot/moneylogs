@@ -14,6 +14,7 @@ import Modal from "../../../components/Modal"
 // @ts-ignore
 import { db } from '../../config/firebase-config'
 import dayjs from "dayjs"
+import { IconText } from "../../../components/Icon"
 
 export const Group = ({ groupId }) => {
   const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
@@ -86,7 +87,7 @@ export const Group = ({ groupId }) => {
       <div className="Group">
         <div className="Group__header">
           <div className="Group__header__left">
-            <div className="GroupInterval">
+            <div className="GroupInterval Group__header__item">
               {group &&
                 <>{formatDate(group.start?.seconds, 'D MMM')} to {formatDate(group.end?.seconds, 'D MMM')}</>
               }
@@ -95,16 +96,17 @@ export const Group = ({ groupId }) => {
           <div className="Group__header__center">
             {isActiveLogMyLog && (
               <div
+                className="handler Group__header__item"
                 onClick={() => {
                   isCreateNewEntrySet(true)
                 }}
               >
-                <span className="handler">[new entry]</span>
+                <IconText type={'document'} fill={'white'} />
               </div>
             )}
           </div>
           <div className="Group__header__right">
-            <span className="handler">[invite]</span>
+
           </div>
         </div>
         <div className="Group__body">
