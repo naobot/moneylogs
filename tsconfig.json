@@ -17,6 +17,5 @@
     "jsx": "react-jsx"
   },
   "include": ["src /**/*"],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.app.json" }],
-  "lib": ["WebWorker"]
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.app.json" }]
 }
