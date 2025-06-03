@@ -27,7 +27,7 @@ export const useGetUserInfo = (userId: string) => {
 
       return query(
         collection(db, 'users'),
-        where('userId', '==', userId)
+        where('userId', '==', userId),
       )
     },
     dataTransformer: (docs) => docs.map(doc => ({

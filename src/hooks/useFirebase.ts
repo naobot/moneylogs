@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { collection, doc, getDoc, getDocs, onSnapshot, query, Query, QueryDocumentSnapshot, runTransaction, Transaction, where } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, limit, onSnapshot, query, Query, QueryDocumentSnapshot, runTransaction, Transaction, where } from "firebase/firestore"
 import { FirebaseError } from "firebase/app"
 // @ts-ignore
 import { db } from '../config/firebase-config'
@@ -122,6 +122,7 @@ export const getUserDocRef = async (userId: string) => { // userId is the auth i
   const queryUsers = query(
     usersCollectionRef,
     where('userId', '==', userId),
+    limit(60),
   )
   const userSnapshot = await getDocs(queryUsers)
   if (userSnapshot.empty) {

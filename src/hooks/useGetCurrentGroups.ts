@@ -1,4 +1,4 @@
-import { collection, where, query, Timestamp, doc, getDocs } from "firebase/firestore"
+import { collection, where, query, Timestamp, doc, getDocs, limit } from "firebase/firestore"
 import { AuthUser, Group } from "../types/user"
 import { useFirebaseCollection } from "./useFirebase"
 import { useEffect, useState } from "react"
@@ -40,7 +40,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
       try {
         const usersQuery = query(
           collection(db, 'users'),
-          where('userId', '==', currentUserId)
+          where('userId', '==', currentUserId),
+          limit(60)
         )
         const snapshot = await getDocs(usersQuery)
 

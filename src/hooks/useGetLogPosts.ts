@@ -1,4 +1,4 @@
-import { collection, where, orderBy, query, doc } from "firebase/firestore"
+import { collection, where, orderBy, query, doc, limit } from "firebase/firestore"
 import { LogPost } from "../types/user"
 import { db } from '../config/firebase-config'
 import { useGetUserInfo } from "./useGetUserInfo"
@@ -15,7 +15,8 @@ export const useGetLogPosts = ({ groupId, userId }) => {
         collection(db, 'log_posts'),
         where('author', '==', doc(db, 'users', user.id)),
         where('group', '==', doc(db, 'log_groups', groupId)),
-        orderBy('postDate', 'desc')
+        orderBy('postDate', 'desc'),
+        limit(100),
       )
     },
     dataTransformer: (docs) => docs.map(doc => ({
