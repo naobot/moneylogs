@@ -349,8 +349,19 @@
     max-height: 100%;
 
     &__banner {
+      align-items: center;
+
       &--week {
         font-weight: 800;
+        margin-bottom: 0.5em;
+      }
+
+      &__left {
+        text-align: left;
+      }
+      &__center {
+        display: flex;
+        flex-direction: column;
       }
     }
 

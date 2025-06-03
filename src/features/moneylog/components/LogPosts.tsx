@@ -26,6 +26,8 @@ type LogPostCommentsProps = {
 type DateBanner = {
   type: 'week' | 'day'
   text: string
+  total: { [key: string]: number }
+  runningTotal: { [key: string]: number }
   _isBanner: boolean
 }
 
@@ -123,15 +125,24 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     const now = dayjs()
     let currentWeekStart: dayjs.Dayjs | null = null
     let currentDay: number | null = null
+    let runningTotals: { [key: string]: number } = {}
+    let weeklyTotals: { [key: string]: number } = {}
+    let dailyTotals: { [key: string]: number } = {}
 
     logs?.forEach((post) => {
       const logPostDate = dayjs(post?.postDate?.seconds * 1000)
       const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
 
+      if (!(post.currency in runningTotals)) {
+        runningTotals[post.currency] = 0
+      }
+      runningTotals[post.currency] += Number(post.amount)
+
       // Check if we've moved to a new week
       if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
         currentWeekStart = postWeekStart
         currentDay = null // Reset day tracking for new week
+        weeklyTotals = {} // Reset current weekly totals
 
         // Calculate weeks ago
         const weeksAgo = now.startOf('week').diff(postWeekStart, 'week')
@@ -142,19 +153,37 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
         displayRows.push({
           text: weekText,
           type: 'week',
-          _isBanner: true
+          _isBanner: true,
+          runningTotal: runningTotals,
+          total: weeklyTotals,
         })
       }
+
+      // Accumulate weekly totals
+      if (!(post.currency in weeklyTotals)) {
+        weeklyTotals[post.currency] = 0
+      }
+      weeklyTotals[post.currency] += Number(post.amount)
 
       // Check if we've moved to a new day within the week
       if (logPostDate.day() !== currentDay) {
         currentDay = logPostDate.day()
+        dailyTotals = {}
+
         displayRows.push({
           text: logPostDate.format('ddd D MMM YYYY'),
           type: 'day',
-          _isBanner: true
+          _isBanner: true,
+          runningTotal: runningTotals,
+          total: dailyTotals,
         })
       }
+
+      // Accumulate daily totals
+      if (!(post.currency in dailyTotals)) {
+        dailyTotals[post.currency] = 0
+      }
+      dailyTotals[post.currency] += Number(post.amount)
 
       displayRows.push(post)
     })
@@ -344,15 +373,22 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
 
           {calendarMarkedPosts?.length > 0 && calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
             if ('_isBanner' in item && item._isBanner) {
+              const currencyKeys = Object.keys(item?.total)
+              const formattedTotals = currencyKeys.map(x => `${item?.total[x]?.toLocaleString()} ${x}`)
+
               return (
               <div
-                className={cx("LogPosts__posts__banner", {
+                className={cx("LogPosts__posts__banner LogPosts__posts__item__header", {
                   "LogPosts__posts__banner--weekly-view": isWeeklyView,
                   "LogPosts__posts__banner--week": item.type == 'week',
                 })}
                 key={`banner-${i}`}
               >
-                {item?.text}
+                <div className="LogPosts__posts__banner__left">{item?.text}</div>
+                <div className="LogPosts__posts__banner__center">
+                  {formattedTotals?.map(x => <span key={`${i}-${x}`}>{x}</span>)}
+                </div>
+                <div></div>
               </div>
               )
             }
