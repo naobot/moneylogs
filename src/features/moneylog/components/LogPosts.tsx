@@ -77,7 +77,7 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
           <div key={comment.id} className="LogPostComments__item">
             <div className="LogPostComments__item__container">
               <div className="LogPostComments__item__body" data-color-mode="light">
-                <MDEditor.Markdown source={comment.content} style={{ whiteSpace: 'pre-wrap' }} />
+                <MDEditor.Markdown source={comment.content} />
               </div>
               <div className="LogPostComments__item__footer">
                 <div className="LogPostComments__item__footer__right">
@@ -355,7 +355,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                       onChange={newEntryContentSet}
                       preview='edit'
                     />
-                    <MDEditor.Markdown source={newEntryContent ?? ''} style={{ whiteSpace: 'pre-wrap' }} />
+                    <MDEditor.Markdown source={newEntryContent ?? ''} />
                   </div>
                 </div>
               </div>
@@ -431,7 +431,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     className="LogPosts__posts__item__body"
                   >
                     <div className="LogPosts__posts__item__content" data-color-mode="light">
-                      <MDEditor.Markdown source={(item as LogPost).content} style={{ whiteSpace: 'pre-wrap' }} />
+                      <MDEditor.Markdown source={(item as LogPost).content} />
                     </div>
                   </div>
                 </div>
