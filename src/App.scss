@@ -281,6 +281,13 @@
     overflow-y: auto;
     min-height: 0;
 
+    @media (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+      overflow-x: hidden;
+    }
+
     @media (max-width: 1200px) {
       grid-template-columns: 180px auto;
     }
@@ -291,6 +298,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+
+  @media (max-width: 768px) {
+    overflow-y: auto;
+  }
 }
 
 .LogsMenu {
@@ -300,7 +311,16 @@
   overflow-y: auto;
   max-height: 100%;
 
-  @media (max-width: 1200px) {
+  @media (max-width: 768px) {
+    display: inline-flex;
+    flex-direction: row;
+    overflow-y: initial;
+    overflow-x: auto;
+    height: fit-content;
+    font-size: 0.7em;
+  }
+
+  @media (min-width: 767px) and (max-width: 1200px) {
     font-size: 0.8em;
   }
 
@@ -309,6 +329,12 @@
     padding: 0.8em 1em;
     border: 2px solid #242424;
     text-align: right;
+
+    @media (max-width: 768px) {
+      display: flex;
+      text-align: center;
+      align-items: center;
+    }
 
     &--active, &:hover {
       background-color: #242424;
@@ -329,7 +355,12 @@
   text-align: center;
   height: 100%;
 
-  @media (max-width: 1200px) {
+  @media (max-width: 768px) {
+    grid-template-columns: auto 180px;
+    grid-template-rows: none;
+  }
+
+  @media (min-width: 767px) and (max-width: 1200px) {
     grid-template-columns: auto 220px;
   }
 
