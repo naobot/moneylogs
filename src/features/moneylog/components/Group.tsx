@@ -101,7 +101,7 @@ export const Group = ({ groupId }) => {
                   isCreateNewEntrySet(true)
                 }}
               >
-                <IconText type={'document'} fill={'white'} />
+                <IconText type={'document'} fill={'white'} text="new entry" />
               </div>
             )}
           </div>
