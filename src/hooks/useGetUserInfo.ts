@@ -2,6 +2,7 @@ import { collection, where, query } from "firebase/firestore"
 import { useFirebaseCollection } from './useFirebase'
 // @ts-ignore
 import { db } from '../config/firebase-config'
+import { useMemo } from "react";
 
 export type MoneyLog = {
   id: number;
@@ -53,39 +54,59 @@ export const useGetUserInfo = (userId: string) => {
 }
 
 export const useGetMultipleUsers = (documentIds: string[]) => {
-  const { data, isLoading, isSuccess, isError, error } = useFirebaseCollection<UserData>({
-    queryBuilder: () => {
-      if (!documentIds || documentIds.length === 0) return null
+  const chunks = useMemo(() => {
+    if (!documentIds || documentIds.length === 0) return []
+    return documentIds.reduce((acc, id, index) => {
+      const chunkIndex = Math.floor(index / 10)
+      if (!acc[chunkIndex]) acc[chunkIndex] = []
+      acc[chunkIndex].push(id)
+      return acc
+    }, [] as string[][])
+  }, [documentIds.join(',')])
 
-      // Batch fetch by document ID (Firestore allows up to 10 in a single 'in' query)
-      const chunks = documentIds.reduce((acc, id, index) => {
-        const chunkIndex = Math.floor(index / 10)
-        if (!acc[chunkIndex]) acc[chunkIndex] = []
-        acc[chunkIndex].push(id)
-        return acc
-      }, [] as string[][])
+  // Always call a fixed number of hooks (e.g., support up to 10 chunks = 100 users max)
+  const MAX_CHUNKS = 10
+  const queryResults = Array.from({ length: MAX_CHUNKS }, (_, index) =>
+    useFirebaseCollection<UserData>({
+      queryBuilder: () => {
+        const chunk = chunks[index]
+        if (!chunk || chunk.length === 0) return null
+        return query(
+          collection(db, 'users'),
+          where('__name__', 'in', chunk)
+        )
+      },
+      dataTransformer: (docs) => docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as UserData[],
+      dependencies: [chunks[index]?.join(',') || ''],
+      enabled: Boolean(chunks[index]?.length)
+    })
+  )
 
-      // For simplicity, let's handle the first chunk (could extend this)
-      const firstChunk = chunks[0] || []
+  // Aggregate results from all chunks
+  const aggregatedData = useMemo(() => {
+    return queryResults.reduce((allUsers, result) => {
+      if (result.data) {
+        return [...allUsers, ...result.data]
+      }
+      return allUsers
+    }, [] as UserData[])
+  }, [queryResults.map(r => r.data).join(',')])
 
-      return query(
-        collection(db, 'users'),
-        where('__name__', 'in', firstChunk) // __name__ queries by document ID
-      )
-    },
-    dataTransformer: (docs) => docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as UserData[],
-    dependencies: [documentIds.join(',')], // Stable dependency
-    enabled: documentIds.length > 0
-  })
+  // Aggregate loading/error states
+  const isLoading = queryResults.some(result => result.isLoading)
+  const isError = queryResults.some(result => result.isError)
+  const isSuccess = queryResults.every(result => result.isSuccess)
+  const errors = queryResults.filter(result => result.error).map(result => result.error)
 
   return {
-    users: data || [],
+    users: aggregatedData,
     isLoading,
     isSuccess,
     isError,
-    error
+    error: errors.length > 0 ? errors[0] : null, // Return first error for simplicity
+    errors // Optionally return all errors
   }
 }
