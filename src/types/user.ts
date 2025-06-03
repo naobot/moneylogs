@@ -56,7 +56,7 @@ export type LogPost = {
   content: string // formatted rich text
   amount: number // amount spent in the day
   currency: Currency
-  replies: Array<Comment>
+  commentCount?: number
   authorId: string
   authorName?: string
   groupId: string
@@ -64,7 +64,9 @@ export type LogPost = {
 }
 
 export type Comment = {
-  author: string // user by userId
+  id: string
+  authorId: string // user by userId
+  authorName: string
   content: string
   createdAt: Datetime
 }

@@ -4,14 +4,6 @@ import { db } from '../config/firebase-config'
 import { useGetUserInfo } from "./useGetUserInfo"
 import { useFirebaseCollection } from "./useFirebase"
 
-export type LogPostsResponse = {
-  logs: Array<LogPost>
-  isLoading: boolean
-  isSuccess: boolean
-  isError: boolean
-  error?: any
-}
-
 export const useGetLogPosts = ({ groupId, userId }) => {
   const { user } = useGetUserInfo(userId)
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
 import { useCurrentUser } from "../../utils/auth"
 import { parseReferenceArray } from "../../utils/helpers"
@@ -13,6 +13,7 @@ import { db } from '../../config/firebase-config'
 import { Group } from "../../features/moneylog/components/Group"
 
 export const GroupPage = () => {
+  const navigate = useNavigate()
   const { groupId } = useParams()
   const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
@@ -33,7 +34,6 @@ export const GroupPage = () => {
   }, [loggedInUser, memberIds])
 
   const handleJoinGroup = async () => {
-    console.log('Attempting to join!')
     try {
       await Promise.all([
         addGroupToMember.mutate({
@@ -46,7 +46,7 @@ export const GroupPage = () => {
         }),
       ])
 
-      await refetch()
+      navigate('/')
     } catch (error) {
       console.error('Failed to join group:', error)
     }

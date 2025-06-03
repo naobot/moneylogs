@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import { useMemo } from 'react'
+import { MouseEventHandler, useMemo } from 'react'
 
 type IconProps = {
   type: IconType
@@ -36,9 +36,9 @@ const Icon = ({ type, size, fill }: IconProps) => {
   )
 }
 
-export const IconText = ({ text = '', type, size, fill, className }: { type: IconType, text?: string, size?: number, fill?: string, className?: string }) => {
+export const IconText = ({ text = '', type, size, fill, onClick, className }: { type: IconType, text?: string, size?: number, fill?: string, onClick?: MouseEventHandler<HTMLDivElement>, className?: string }) => {
   return (
-    <div className={cx("IconText", className)}>
+    <div className={cx("IconText", className)} onClick={onClick}>
       <Icon type={type} size={size} fill={fill} />
       <div className="IconText__text">{text}</div>
     </div>

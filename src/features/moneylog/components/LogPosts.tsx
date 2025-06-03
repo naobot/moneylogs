@@ -4,9 +4,11 @@ import { Currency, LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
-import { LogData, useLogPostQuery } from "../../../hooks/useLogPostQuery"
+import { LogData, useAddComment, useLogPostQuery } from "../../../hooks/useLogPostQuery"
 import { useMutation } from "../../../hooks/useFirebase"
 import Icon, { IconText } from "../../../components/Icon"
+import { useGetComments } from "../../../hooks/useGetLogPostComments"
+import { useCurrentUser } from "../../../utils/auth"
 
 type LogPostsProps = {
   groupId: string
@@ -15,6 +17,10 @@ type LogPostsProps = {
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
   isMyLog: boolean
+}
+
+type LogPostCommentsProps = {
+  postId: string
 }
 
 type DateBanner = {
@@ -35,6 +41,79 @@ const CURRENCIES: Array<Currency> = [
   'AUD',
   'MYR',
 ]
+
+const LogPostComments = ({ postId }: LogPostCommentsProps) => {
+  const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
+  const [newCommentContent, newCommentContentSet] = useState<string|null>()
+  const { user } = useCurrentUser()
+
+  const { addComment, deleteComment } = useLogPostQuery()
+
+  const handleAddComment = async () => {
+    if (!newCommentContent?.trim()) return
+
+    try {
+      await addComment.mutate({
+        logPostId: postId,
+        userId: user?.userId,
+        content: newCommentContent,
+      })
+      newCommentContentSet('')
+    } catch (err) {
+      console.error('Failed to add comment:', err)
+    }
+  }
+
+  return (
+    <div className="LogPostComments__wrapper">
+      {isLoadingComments && <>...</>}
+      {!isLoadingComments && isSuccessComments && comments?.length === 0 && (
+        <div className="LogPostComments__notice">No comments</div>
+      )}
+      {!isLoadingComments && isSuccessComments && comments?.map(comment => {
+        return (
+          <div key={comment.id} className="LogPostComments__item">
+            <div className="LogPostComments__item__container">
+              <div className="LogPostComments__item__body" data-color-mode="light">
+                <MDEditor.Markdown source={comment.content} style={{ whiteSpace: 'pre-wrap' }} />
+              </div>
+              <div className="LogPostComments__item__footer">
+                <div className="LogPostComments__item__footer__right">
+                  - {comment.authorName}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+      <div className="LogPostComments__item">
+        <div className="LogPostComments__item__container">
+          <div className="LogPostComments__item__body container" data-color-mode="light">
+            {!addComment?.isLoading && (
+              <MDEditor
+                value={newCommentContent ?? ''}
+                onChange={newCommentContentSet}
+                preview='edit'
+                hideToolbar
+                height={120}
+              />
+            )}
+            {addComment?.isLoading && <>...</>}
+          </div>
+        </div>
+        <div className="LogPostComments__item__footer">
+          <Button
+            size="xs"
+            buttonStyle="primary-border-lite"
+            text="Comment"
+            onClick={handleAddComment}
+            disabled={!newCommentContent || addComment?.isLoading}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
@@ -81,48 +160,43 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     })
 
     return displayRows
-  }, [logs?.length])
+  }, [logs])
 
   const [newEntryContent, newEntryContentSet] = useState<string|null>()
   const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
   const [newEntryDate, newEntryDateSet] = useState<number>(Date.now())
-  const [selectedCurrency, selectedCurrencySet] = useState<Currency>()
+  const [selectedCurrency, selectedCurrencySet] = useState<Currency>('JPY')
+
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
 
   const { addNewLogPost } = useLogPostQuery()
-  const { mutate: createLogPost, isLoading: createPending, isError, error } = useMutation(
-    async (logData: LogData) => {
-      return await addNewLogPost.mutate({
-        groupId,
-        userId,
-        logData,
-      })
-    }
-  )
-
-  useEffect(() => {
-    const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
-    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
-      selectedCurrencySet(lastCurrency as Currency)
-    }
-  }, [])
-
-  const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
-    localStorage.setItem('ML__lastCurrency', e.target.value)
-    selectedCurrencySet(e.target.value as Currency)
-  }
 
   const handleNewLogPost = async () => {
-    if (!selectedCurrency || !newEntryContent) return
+    console.log('handleNewLogPost called', {
+      selectedCurrency,
+      newEntryContent,
+      userId: userId,
+      newEntryAmount,
+      newEntryDate
+    });
+
+    if (!selectedCurrency || !newEntryContent) {
+      console.log('Early return due to missing data')
+      return
+    }
 
     try {
-      await createLogPost(
-        {
+      console.log('About to call addNewLogPost.mutate')
+      await addNewLogPost.mutate({
+        groupId,
+        userId,
+        logData: {
           amount: newEntryAmount,
           currency: selectedCurrency,
           content: newEntryContent,
           postDate: newEntryDate,
         }
-      )
+      })
 
       isCreateNewEntrySet(false)
       newEntryContentSet(null)
@@ -132,6 +206,27 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     }
   }
 
+  useEffect(() => {
+    const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
+    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
+      selectedCurrencySet(lastCurrency as Currency)
+    }
+
+    isCreateNewEntrySet(false)
+  }, [])
+
+  useEffect(() => {
+    setSelectedPostId(null)
+  }, [userId])
+
+  const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
+    localStorage.setItem('ML__lastCurrency', e.target.value)
+    selectedCurrencySet(e.target.value as Currency)
+  }
+
+  const handleCommentsClick = (postId: string) => {
+    setSelectedPostId(postId)
+  }
   return (
     <>
       <div className={cx("LogPosts", {
@@ -195,6 +290,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     type="number"
                     onChange={(e) => newEntryAmountSet(e?.target?.value)}
                     value={newEntryAmount}
+                    className="LogPostsCurrency__input"
                   />
                   <select
                     name="currency"
@@ -230,7 +326,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                       onChange={newEntryContentSet}
                       preview='edit'
                     />
-                    <MDEditor.Markdown source={newEntryContent} style={{ whiteSpace: 'pre-wrap' }} />
+                    <MDEditor.Markdown source={newEntryContent ?? ''} style={{ whiteSpace: 'pre-wrap' }} />
                   </div>
                 </div>
               </div>
@@ -239,7 +335,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                   buttonStyle="primary-border"
                   size="sm"
                   text="Submit"
-                  disabled={!newEntryContent || createPending}
+                  disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}
                   onClick={handleNewLogPost}
                 />
               </div>
@@ -267,6 +363,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                 <div
                   className={cx("LogPosts__posts__item", {
                     "LogPosts__posts__item--weekly": isWeeklyView,
+                    "LogPosts__posts__item--selected": selectedPostId===(item as LogPost).id
                   })}
                   key={(item as LogPost).id}
                 >
@@ -285,7 +382,13 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     <div
                       className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
                     >
-                      <IconText type='speech' text={(item as LogPost)?.replies?.length ?? 0} size={18} />
+                      <IconText
+                        type='speech'
+                        text={((item as LogPost)?.commentCount ?? 0).toLocaleString()}
+                        size={18}
+                        className="handler"
+                        onClick={() => handleCommentsClick((item as LogPost).id)}
+                      />
                     </div>
                   </div>
                   <div
@@ -301,8 +404,9 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           })}
           {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
-        <div className="LogPosts__comments">
-          comments
+
+        <div className="LogPostComments">
+          {selectedPostId && <LogPostComments postId={selectedPostId} />}
         </div>
       </div>
     </>

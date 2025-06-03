@@ -117,7 +117,7 @@ export const useMutation = <TArgs, TResult>(
   return { mutate, ...state }
 }
 
-export const getUserDocRef = async (userId: string) => {
+export const getUserDocRef = async (userId: string) => { // userId is the auth id not the doc id
   const usersCollectionRef = collection(db, 'users')
   const queryUsers = query(
     usersCollectionRef,

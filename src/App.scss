@@ -24,7 +24,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  height: fit-content;
+  height: 100vh;
 }
 
 .MainNav {
@@ -32,6 +32,7 @@
   justify-content: space-between;
   width: 100%;
   padding: 0.4em;
+  flex-shrink: 0;
 
   &__item {
     align-content: center;
@@ -63,8 +64,9 @@
   justify-content: center;
   padding: 1em 1em 0 1em;
   width: 100%;
-  height: auto;
-  overflow-y: scroll;
+  // height: calc(100vh - 54px);
+  flex: 1;
+  overflow-y: hidden;
 }
 
 .IconText {
@@ -186,6 +188,7 @@
 }
 
 .Window {
+  margin-bottom: 1em;
   padding: 2em;
   border: 2px solid #242424;
   border-radius: 4px;
@@ -208,6 +211,14 @@
   display: flex;
   flex-direction: column;
   grid-gap: 2em;
+
+  h1 {
+    text-align: center;
+
+    small {
+      font-size: 0.2em;
+    }
+  }
 }
 
 .CreateNewLog {
@@ -220,6 +231,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
 
   &__header {
     display: grid;
@@ -228,12 +240,13 @@
     align-items: center;
     width: 100%;
     margin-bottom: 1em;
-    background-color: #000;
+    background-color: #242424;
     color: #fff;
     padding: 0.5em;
     font-size: 0.8em;
+    flex-shrink: 0;
 
-    @media (max-width: 758px) {
+    @media (max-width: 1200px) {
       grid-template-columns: 180px auto 220px;
     }
 
@@ -264,8 +277,11 @@
     grid-template-columns: 220px auto;
     grid-gap: 2em;
     width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 
-    @media (max-width: 758px) {
+    @media (max-width: 1200px) {
       grid-template-columns: 180px auto;
     }
   }
@@ -274,14 +290,17 @@
 .GroupLogDashboard {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .LogsMenu {
   display: flex;
   flex-direction: column;
   grid-gap: 0.4em;
+  overflow-y: auto;
+  max-height: 100%;
 
-  @media (max-width: 758px) {
+  @media (max-width: 1200px) {
     font-size: 0.8em;
   }
 
@@ -305,14 +324,17 @@
 .LogPosts {
   display: grid;
   grid-template-columns: auto 320px;
+  grid-template-rows: auto 1fr;
   grid-gap: 2em;
   text-align: center;
+  height: 100%;
 
-  @media (max-width: 758px) {
+  @media (max-width: 1200px) {
     grid-template-columns: auto 220px;
   }
 
   &__menu {
+    grid-column: 1 / -1;
     margin-bottom: 1em;
   }
 
@@ -322,6 +344,10 @@
   }
 
   &__posts {
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 100%;
+
     &__banner {
       &--week {
         font-weight: 800;
@@ -334,6 +360,10 @@
       padding: 1em;
       margin: 1em 0;
       border: 1px solid #242424;
+
+      &--selected {
+        border: 2px solid #242424;
+      }
 
       &__header {
         display: grid;
@@ -376,6 +406,81 @@
   }
 }
 
+.LogPostsCurrency {
+  &__input {
+    width: 90px;
+  }
+}
+
+.LogPostComments {
+  // overflow-y: auto;
+  // max-height: 100%;
+  min-height: 0;
+
+  &__wrapper {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 1em;
+  }
+
+  &__notice {
+    padding: 1em;
+    font-size: 0.9em;
+  }
+
+  &__item {
+    position: relative;
+    background: #fff;
+    // text-align: center;
+    border-radius: 10px;
+    padding: 0.5em;
+    border: #242424 solid 1px;
+
+    &::after {
+        content: '';
+        position: absolute;
+        display: block;
+        width: 0;
+        z-index: 1;
+        border-style: solid;
+        border-width: 0 12px 12px 0;
+        border-color: transparent #fff transparent transparent;
+        top: 22%;
+        left: -10px;
+        margin-top: -10px;
+    }
+    &::before {
+        content: '';
+        position: absolute;
+        width: 0;
+        z-index: 0;
+        border-style: solid;
+        border-width: 0 13px 13px 0;
+        border-color: transparent #242424 transparent transparent;
+        top: 22%;
+        left: -12px;
+        margin-top: -11px;
+        display: block;
+    }
+
+    &__container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__body {
+      padding: 1em;
+      font-size: 0.8em;
+      text-align: left;
+    }
+
+    &__footer {
+      font-size: 0.7em;
+      text-align: right;
+    }
+  }
+}
+
 .Modal {
   &__backdrop {
     position: absolute;
@@ -400,7 +505,7 @@
     border-radius: 4px;
     width: 100%;
 
-    @media (min-width: 758px) {
+    @media (min-width: 1200px) {
       max-width: 700px;
     }
   }
@@ -410,7 +515,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 2px 8px;
-    background-color: #000;
+    background-color: #242424;
   }
 
   &__title {

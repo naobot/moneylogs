@@ -18,47 +18,58 @@ const RegistrationHandler = () => {
   const { isValid } = useValidatePassword(password)
   const { addNewUser } = useRegisterNewUser()
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     setRegistrationPending(true)
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
-        addNewUser({
-          userId: user.uid,
-          displayName: displayName,
-          email: email,
-        })
-        .then(async () => {
-          await sendEmailVerification(auth.currentUser)
-          await updateProfile(auth.currentUser, { displayName: displayName })
-          await signInWithEmailAndPassword(auth, email, password)
 
-          const authInfo: AuthUser = {
-            userId: user.uid,
-            nickname: user.displayName,
-            email: user.email,
-            isAuth: true,
-          }
+    try {
+      // Create Firebase auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-          localStorage.setItem('auth', JSON.stringify(authInfo))
-          setRegistrationPending(false)
-          navigate('/')
-        })
+      // Add user to Firestore using the mutation
+      await addNewUser.mutate({
+        userId: user.uid,
+        displayName: displayName,
+        email: email,
       })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        setRegistrationPending(false)
-        console.log(`${errorCode}: ${errorMessage}`)
-      })
+
+      // Complete the registration process
+      await sendEmailVerification(auth.currentUser)
+      await updateProfile(auth.currentUser, { displayName: displayName })
+      await signInWithEmailAndPassword(auth, email, password)
+
+      const authInfo: AuthUser = {
+        userId: user.uid,
+        nickname: user.displayName,
+        email: user.email,
+        isAuth: true,
+      }
+
+      localStorage.setItem('auth', JSON.stringify(authInfo))
+      setRegistrationPending(false)
+      navigate('/me')
+
+    } catch (error: any) {
+      const errorCode = error.code
+      const errorMessage = error.message
+      setRegistrationPending(false)
+      console.log(`${errorCode}: ${errorMessage}`)
+    }
   }
 
   return (
     <>
       <div className="InfoBox Registration">
-        <ControlledInput value={displayName} onChange={(e: any) => setDisplayName(e?.target?.value)} label='Name' />
-        <ControlledInput value={email} onChange={(e: any) => setEmail(e?.target?.value)} label='Email' />
+        <ControlledInput
+          value={displayName}
+          onChange={(e: any) => setDisplayName(e?.target?.value)}
+          label='Name'
+        />
+        <ControlledInput
+          value={email}
+          onChange={(e: any) => setEmail(e?.target?.value)}
+          label='Email'
+        />
         <ControlledInput
           type='password'
           value={password}

@@ -50,7 +50,7 @@ const MainNav = () => {
         {isLoggedIn &&
         <>
           <Button to='/' title='Home' icon='home' />
-          <Button to='/me' title='My Preferences' icon='user' />
+          {/*<Button to='/me' title='My Preferences' icon='user' />*/}
           {isLoading && <div>...</div>}
           {isSuccess && <div className="MainNav__list">
             {currentGroups.map((group) => (

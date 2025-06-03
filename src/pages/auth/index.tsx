@@ -9,6 +9,7 @@ export const Auth = () => {
 
   return (
     <div className='LoginPage Window'>
+      <h1>moneylogs<small>[beta]</small></h1>
       <div className='Menu'>
         <Button
           onClick={() => setCurrentView('register')}

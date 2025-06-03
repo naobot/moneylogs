@@ -1,8 +1,8 @@
-import { addDoc, collection, serverTimestamp, Timestamp } from "firebase/firestore"
+import { addDoc, collection, deleteDoc, doc, increment, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore"
 // @ts-ignore
 import { db } from '../config/firebase-config'
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase"
-import { Currency, Datetime } from "../types/user"
+import { Currency } from "../types/user"
 
 type AddNewLogPostArgs = {
   groupId: string
@@ -17,6 +17,17 @@ export type LogData = {
   postDate: number
 }
 
+type AddCommentArgs = {
+  logPostId: string
+  userId: string
+  content: string
+}
+
+type DeleteCommentArgs = {
+  logPostId: string
+  commentId: string
+}
+
 export const useLogPostQuery = () => {
   const logPostsCollectionRef = collection(db, 'log_posts')
 
@@ -24,7 +35,6 @@ export const useLogPostQuery = () => {
   const addNewLogPostFn = async ({ groupId, userId, logData }: AddNewLogPostArgs): Promise<string> => {
     const { userDocRef, userName } = await getUserDocRef(userId)
     const { groupDocRef, groupName } = await getGroupDocRef(groupId)
-
     const res = await addDoc(logPostsCollectionRef, {
       amount: logData?.amount,
       currency: logData?.currency,
@@ -36,18 +46,55 @@ export const useLogPostQuery = () => {
       group: groupDocRef,
       groupName,
     })
-
     if (!res?.id) {
       throw new Error('Failed to create log post')
     }
-
     return res.id
   }
 
+  const addCommentFn = async ({ logPostId, userId, content }: AddCommentArgs): Promise<string> => {
+    const { userDocRef, userName } = await getUserDocRef(userId)
+
+    // Add the comment to the subcollection
+    const commentRes = await addDoc(collection(db, 'log_posts', logPostId, 'comments'), {
+      authorId: userDocRef,
+      authorName: userName,
+      content,
+      createdAt: serverTimestamp()
+    })
+
+    // Increment the counter on the parent log post
+    await updateDoc(doc(db, 'log_posts', logPostId), {
+      commentCount: increment(1)
+    })
+
+    if (!commentRes?.id) {
+      throw new Error('Failed to create comment')
+    }
+    return commentRes.id
+  }
+
+  const deleteCommentFn = async ({ logPostId, commentId }: DeleteCommentArgs): Promise<void> => {
+    // Delete the comment
+    await deleteDoc(doc(db, 'log_posts', logPostId, 'comments', commentId))
+
+    // Decrement the counter
+    await updateDoc(doc(db, 'log_posts', logPostId), {
+      commentCount: increment(-1)
+    })
+  }
+
+  // Mutations
   const addNewLogPostMutation = useMutation(addNewLogPostFn)
+  const addCommentMutation = useMutation(addCommentFn)
+  const deleteCommentMutation = useMutation(deleteCommentFn)
 
   return {
     addNewLogPost: addNewLogPostMutation,
     addNewLogPostFn,
+    addComment: addCommentMutation,
+    addCommentFn,
+    deleteComment: deleteCommentMutation,
+    deleteCommentFn,
   }
 }
