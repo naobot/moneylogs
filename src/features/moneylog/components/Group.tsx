@@ -32,7 +32,7 @@ export const Group = ({ groupId }) => {
   const memberIds = useMemo(() => {
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
-  }, [group?.members])
+  }, [group?.id, group?.members])
 
   const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
 
@@ -93,6 +93,7 @@ export const Group = ({ groupId }) => {
               }
             </div>
           </div>
+
           <div className="Group__header__center">
             {isActiveLogMyLog && (
               <div
@@ -105,8 +106,8 @@ export const Group = ({ groupId }) => {
               </div>
             )}
           </div>
-          <div className="Group__header__right">
 
+          <div className="Group__header__right">
           </div>
         </div>
         <div className="Group__body">

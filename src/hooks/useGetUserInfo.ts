@@ -87,13 +87,13 @@ export const useGetMultipleUsers = (documentIds: string[]) => {
 
   // Aggregate results from all chunks
   const aggregatedData = useMemo(() => {
-    return queryResults.reduce((allUsers, result) => {
-      if (result.data) {
+    return queryResults.reduce((allUsers, result, index) => {
+      if (result.data && index < chunks.length && chunks[index]?.length > 0) {
         return [...allUsers, ...result.data]
       }
       return allUsers
     }, [] as UserData[])
-  }, [queryResults.map(r => r.data).join(',')])
+  }, [queryResults.map(r => r.data).join(','), chunks.length])
 
   // Aggregate loading/error states
   const isLoading = queryResults.some(result => result.isLoading)
