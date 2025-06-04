@@ -148,6 +148,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
         const weeksAgo = now.startOf('week').diff(postWeekStart, 'week')
         const weekText = weeksAgo === 0 ? 'This week' :
                         weeksAgo === 1 ? '1 week ago' :
+                        weeksAgo < 0 ? 'Upcoming' :
                         `${weeksAgo} weeks ago`
 
         displayRows.push({
