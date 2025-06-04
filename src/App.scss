@@ -348,6 +348,9 @@
 }
 
 .LogPostMenu {
+  display: inline-flex;
+  align-items: center;
+
   &__item {
     opacity: 0.3;
     transition: 0.3s ease-in-out;
@@ -442,12 +445,7 @@
 
       &__footer {
         display: flex;
-        justify-content: space-between;
-
-        &__left, &__center, &__right {
-          display: inline-flex;
-          align-items: flex-end;
-        }
+        justify-content: center;
       }
 
       &__amount {

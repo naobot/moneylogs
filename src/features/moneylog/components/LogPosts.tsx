@@ -1,6 +1,6 @@
 import cx from "classnames"
-import { ChangeEvent, Dispatch, useEffect, useMemo, useState } from "react"
-import { Currency, LogPost } from "../../../types/user"
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
+import { Currency, Log, LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
@@ -48,7 +48,7 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
 
-  const { addComment, deleteComment } = useLogPostQuery()
+  const { addComment } = useLogPostQuery()
 
   const handleAddComment = async () => {
     if (!newCommentContent?.trim()) return
@@ -116,13 +116,24 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
   )
 }
 
-const LogPostEditor = ({ type, groupId, userId, isCreateNewEntrySet }) => {
-  const [newEntryContent, newEntryContentSet] = useState<string|null>()
-  const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
-  const [newEntryDate, newEntryDateSet] = useState<number>(Date.now())
-  const [selectedCurrency, selectedCurrencySet] = useState<Currency>('JPY')
+const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = null, amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+  type: 'edit' | 'new'
+  postId?: string
+  groupId: string
+  userId: string
+  isCreateNewEntrySet: Dispatch<SetStateAction<boolean>>
+  setCurrentlyEditingPostId: Dispatch<SetStateAction<string | null>>
+  content?: string | null
+  amount?: number
+  currency?: Currency
+  date?: number
+}) => {
+  const [newEntryContent, newEntryContentSet] = useState<string|null>(content)
+  const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
+  const [newEntryDate, newEntryDateSet] = useState<number>(date)
+  const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
 
-  const { addNewLogPost } = useLogPostQuery()
+  const { addNewLogPost, editLogPost } = useLogPostQuery()
 
   const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
     localStorage.setItem('ML__lastCurrency', e.target.value)
@@ -154,9 +165,34 @@ const LogPostEditor = ({ type, groupId, userId, isCreateNewEntrySet }) => {
     }
   }
 
+  const handleEditPost = async () => {
+    if (!postId || !selectedCurrency || !newEntryContent) {
+      return
+    }
+
+    try {
+      await editLogPost.mutate({
+        postId,
+        logData: {
+          amount: newEntryAmount,
+          currency: selectedCurrency,
+          content: newEntryContent,
+          postDate: newEntryDate,
+        }
+      })
+
+      isCreateNewEntrySet(false)
+      setCurrentlyEditingPostId(null)
+      newEntryContentSet(null)
+      newEntryAmountSet(0)
+    } catch (err) {
+      console.error('Failed to create log post:', err)
+    }
+  }
+
   useEffect(() => {
     const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
-    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
+    if (type == 'new' && lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
     }
   }, [])
@@ -204,7 +240,7 @@ const LogPostEditor = ({ type, groupId, userId, isCreateNewEntrySet }) => {
             text={'×'}
             aria-label="Close"
             title="Close"
-            onClick={() => isCreateNewEntrySet(false)}
+            onClick={type === 'new' ? () => isCreateNewEntrySet(false) : () => setCurrentlyEditingPostId(null)}
           />
         </div>
       </div>
@@ -228,7 +264,7 @@ const LogPostEditor = ({ type, groupId, userId, isCreateNewEntrySet }) => {
           size="sm"
           text="Submit"
           disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}
-          onClick={handleNewLogPost}
+          onClick={type === 'new' ? handleNewLogPost : handleEditPost}
         />
       </div>
     </div>
@@ -311,6 +347,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
   }, [logs])
 
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
+  const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
 
   const { deleteLogPost } = useLogPostQuery()
 
@@ -330,24 +367,6 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     } catch (err) {
       console.error('Failed to delete log post:', err)
     }
-  }
-
-  const handleEditPost = async (postId: string) => {
-    if (!postId) {
-      return
-    }
-
-    // try {
-    //   await deleteLogPost.mutate({
-    //     logPostId: postId,
-    //   })
-
-    //   if (selectedPostId === postId) {
-    //     setSelectedPostId(null)
-    //   }
-    // } catch (err) {
-    //   console.error('Failed to delete log post:', err)
-    // }
   }
 
   useEffect(() => {
@@ -390,19 +409,6 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
             </div>
           </>}
 
-          {/*{isMyLog && (
-            <div className="LogPosts__menu">
-              <div
-                className="handler"
-                onClick={() => {
-                  isCreateNewEntrySet(true)
-                }}
-              >
-                <Icon type={'document'} />
-              </div>
-            </div>
-          )}*/}
-
           {isCreateNewEntry && (
             <LogPostEditor
               type="new"
@@ -436,6 +442,23 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
             else {
               const postTime = dayjs((item as LogPost).postDate?.seconds * 1000)
               const createdTime = dayjs((item as LogPost).createdAt?.seconds * 1000)
+
+              if (currentlyEditingPostId === (item as LogPost).id) {
+                return <LogPostEditor
+                  key={(item as LogPost).id}
+                  type={'edit'}
+                  postId={(item as LogPost).id}
+                  groupId={groupId}
+                  userId={userId}
+                  isCreateNewEntrySet={isCreateNewEntrySet}
+                  setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                  content={(item as LogPost).content}
+                  amount={(item as LogPost).amount}
+                  currency={(item as LogPost).currency}
+                  date={(item as LogPost).postDate?.seconds * 1000}
+                />
+              }
+
               return (
                 <div
                   className={cx("LogPosts__posts__item", {
@@ -478,21 +501,18 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                   {isMyLog && (
                     <>
                       <div className="LogPosts__posts__item__footer">
-                        <div></div>
-                        <div className="LogPosts__posts__item__footer__center LogPostMenu">
+                        <div className="LogPostMenu">
                           <IconText
                             className="handler LogPostMenu__item"
                             type='pencil'
-                            size={18}
-                            onClick={() => handleEditPost((item as LogPost).id)}
+                            size={16}
+                            onClick={() => setCurrentlyEditingPostId((item as LogPost).id)}
                           />
                           <IconText
                             className="handler LogPostMenu__item"
                             type='trash'
                             onClick={() => handleDeletePost((item as LogPost).id)}
                           />
-                        </div>
-                        <div className="LogPosts__posts__item__footer__right">
                         </div>
                       </div>
                     </>

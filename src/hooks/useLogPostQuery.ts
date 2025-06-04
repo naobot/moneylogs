@@ -52,6 +52,22 @@ export const useLogPostQuery = () => {
     return res.id
   }
 
+  const editLogPostFn = async ({ postId, logData }: { postId: string; logData: LogData }): Promise<void> => {
+    const updateData: Partial<{
+      content: string
+      postDate: Timestamp
+      amount: number
+      currency: string
+    }> = {}
+
+    if (logData.content !== undefined) updateData.content = logData.content
+    if (logData.postDate !== undefined) updateData.postDate = Timestamp.fromMillis(logData.postDate)
+    if (logData.amount !== undefined) updateData.amount = logData.amount
+    if (logData.currency !== undefined) updateData.currency = logData.currency
+
+    await updateDoc(doc(db, 'log_posts', postId), updateData)
+  }
+
   const deleteLogPostFn = async ({ logPostId }: { logPostId: string }): Promise<void> => {
     await deleteDoc(doc(db, 'log_posts', logPostId))
   }
@@ -90,6 +106,7 @@ export const useLogPostQuery = () => {
   // Mutations
   const addNewLogPostMutation = useMutation(addNewLogPostFn)
   const addCommentMutation = useMutation(addCommentFn)
+  const editLogPostMutation = useMutation(editLogPostFn)
   const deleteCommentMutation = useMutation(deleteCommentFn)
   const deleteLogPostMutation = useMutation(deleteLogPostFn)
 
@@ -102,5 +119,7 @@ export const useLogPostQuery = () => {
     deleteCommentFn,
     deleteLogPost: deleteLogPostMutation,
     deleteLogPostFn,
+    editLogPost: editLogPostMutation,
+    editLogPostFn,
   }
 }
