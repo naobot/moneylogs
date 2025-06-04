@@ -116,6 +116,125 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
   )
 }
 
+const LogPostEditor = ({ type, groupId, userId, isCreateNewEntrySet }) => {
+  const [newEntryContent, newEntryContentSet] = useState<string|null>()
+  const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
+  const [newEntryDate, newEntryDateSet] = useState<number>(Date.now())
+  const [selectedCurrency, selectedCurrencySet] = useState<Currency>('JPY')
+
+  const { addNewLogPost } = useLogPostQuery()
+
+  const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
+    localStorage.setItem('ML__lastCurrency', e.target.value)
+    selectedCurrencySet(e.target.value as Currency)
+  }
+
+  const handleNewLogPost = async () => {
+    if (!selectedCurrency || !newEntryContent) {
+      return
+    }
+
+    try {
+      await addNewLogPost.mutate({
+        groupId,
+        userId,
+        logData: {
+          amount: newEntryAmount,
+          currency: selectedCurrency,
+          content: newEntryContent,
+          postDate: newEntryDate,
+        }
+      })
+
+      isCreateNewEntrySet(false)
+      newEntryContentSet(null)
+      newEntryAmountSet(0)
+    } catch (err) {
+      console.error('Failed to create log post:', err)
+    }
+  }
+
+  useEffect(() => {
+    const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
+    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
+      selectedCurrencySet(lastCurrency as Currency)
+    }
+  }, [])
+
+  return (
+    <div className="LogPosts__posts__item">
+      <div
+        className="LogPosts__posts__item__header"
+      >
+        <div
+          className="LogPosts__posts__item__header__left"
+        >
+          <input
+            type="datetime-local"
+            id="meeting-time"
+            name="meeting-time"
+            value={dayjs(newEntryDate).format('YYYY-MM-DDTHH:mm')}
+            onChange={(e) => newEntryDateSet(dayjs(e?.target?.value, 'YYYY-MM-DDTHH:mm').unix() * 1000)}
+          />
+        </div>
+        <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+          <input
+            type="number"
+            onChange={(e) => newEntryAmountSet(e?.target?.value)}
+            value={newEntryAmount}
+            className="LogPostsCurrency__input"
+          />
+          <select
+            name="currency"
+            id="newEntry-currency"
+            onChange={handleSelectCurrency}
+            value={selectedCurrency}
+          >
+            {CURRENCIES.map((x) => (
+              <option key={x} value={x}>{x}</option>
+            ))}
+          </select>
+        </div>
+        <div
+          className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
+        >
+          <Button
+            buttonStyle="primary-border-lite"
+            size="sm"
+            text={'×'}
+            aria-label="Close"
+            title="Close"
+            onClick={() => isCreateNewEntrySet(false)}
+          />
+        </div>
+      </div>
+      <div
+        className="LogPosts__posts__item__body"
+      >
+        <div className="LogPosts__posts__item__content container" data-color-mode="light">
+          <div className="LogPosts__posts__item__content__editor">
+            <MDEditor
+              value={newEntryContent ?? ''}
+              onChange={newEntryContentSet}
+              preview='edit'
+            />
+            <MDEditor.Markdown source={newEntryContent ?? ''} />
+          </div>
+        </div>
+      </div>
+      <div className="LogPosts__posts__item__footer">
+        <Button
+          buttonStyle="primary-border"
+          size="sm"
+          text="Submit"
+          disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}
+          onClick={handleNewLogPost}
+        />
+      </div>
+    </div>
+  )
+}
+
 const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
 
@@ -191,39 +310,9 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     return displayRows
   }, [logs])
 
-  const [newEntryContent, newEntryContentSet] = useState<string|null>()
-  const [newEntryAmount, newEntryAmountSet] = useState<number>(0)
-  const [newEntryDate, newEntryDateSet] = useState<number>(Date.now())
-  const [selectedCurrency, selectedCurrencySet] = useState<Currency>('JPY')
-
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
 
-  const { addNewLogPost, deleteLogPost } = useLogPostQuery()
-
-  const handleNewLogPost = async () => {
-    if (!selectedCurrency || !newEntryContent) {
-      return
-    }
-
-    try {
-      await addNewLogPost.mutate({
-        groupId,
-        userId,
-        logData: {
-          amount: newEntryAmount,
-          currency: selectedCurrency,
-          content: newEntryContent,
-          postDate: newEntryDate,
-        }
-      })
-
-      isCreateNewEntrySet(false)
-      newEntryContentSet(null)
-      newEntryAmountSet(0)
-    } catch (err) {
-      console.error('Failed to create log post:', err)
-    }
-  }
+  const { deleteLogPost } = useLogPostQuery()
 
   const handleDeletePost = async (postId: string) => {
     if (!postId) {
@@ -262,22 +351,12 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
   }
 
   useEffect(() => {
-    const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
-    if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
-      selectedCurrencySet(lastCurrency as Currency)
-    }
-
     isCreateNewEntrySet(false)
   }, [])
 
   useEffect(() => {
     setSelectedPostId(null)
   }, [userId])
-
-  const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
-    localStorage.setItem('ML__lastCurrency', e.target.value)
-    selectedCurrencySet(e.target.value as Currency)
-  }
 
   const handleCommentsClick = (postId: string) => {
     setSelectedPostId(postId)
@@ -325,76 +404,12 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           )}*/}
 
           {isCreateNewEntry && (
-            <div className="LogPosts__posts__item">
-              <div
-                className="LogPosts__posts__item__header"
-              >
-                <div
-                  className="LogPosts__posts__item__header__left"
-                >
-                  <input
-                    type="datetime-local"
-                    id="meeting-time"
-                    name="meeting-time"
-                    value={dayjs(newEntryDate).format('YYYY-MM-DDTHH:mm')}
-                    onChange={(e) => newEntryDateSet(dayjs(e?.target?.value, 'YYYY-MM-DDTHH:mm').unix() * 1000)}
-                  />
-                </div>
-                <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-                  <input
-                    type="number"
-                    onChange={(e) => newEntryAmountSet(e?.target?.value)}
-                    value={newEntryAmount}
-                    className="LogPostsCurrency__input"
-                  />
-                  <select
-                    name="currency"
-                    id="newEntry-currency"
-                    onChange={handleSelectCurrency}
-                    value={selectedCurrency}
-                  >
-                    {CURRENCIES.map((x) => (
-                      <option key={x} value={x}>{x}</option>
-                    ))}
-                  </select>
-                </div>
-                <div
-                  className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
-                >
-                  <Button
-                    buttonStyle="primary-border-lite"
-                    size="sm"
-                    text={'×'}
-                    aria-label="Close"
-                    title="Close"
-                    onClick={() => isCreateNewEntrySet(false)}
-                  />
-                </div>
-              </div>
-              <div
-                className="LogPosts__posts__item__body"
-              >
-                <div className="LogPosts__posts__item__content container" data-color-mode="light">
-                  <div className="LogPosts__posts__item__content__editor">
-                    <MDEditor
-                      value={newEntryContent ?? ''}
-                      onChange={newEntryContentSet}
-                      preview='edit'
-                    />
-                    <MDEditor.Markdown source={newEntryContent ?? ''} />
-                  </div>
-                </div>
-              </div>
-              <div className="LogPosts__posts__item__footer">
-                <Button
-                  buttonStyle="primary-border"
-                  size="sm"
-                  text="Submit"
-                  disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}
-                  onClick={handleNewLogPost}
-                />
-              </div>
-            </div>
+            <LogPostEditor
+              type="new"
+              groupId={groupId}
+              userId={userId}
+              isCreateNewEntrySet={isCreateNewEntrySet}
+            />
           )}
 
           {calendarMarkedPosts?.length > 0 && calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {

@@ -30,7 +30,6 @@ export const Group = ({ groupId }) => {
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
   const memberIds = useMemo(() => {
-    console.log(group?.members) // this returns more than 10
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.members])
