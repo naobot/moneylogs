@@ -243,6 +243,24 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     }
   }
 
+  const handleEditPost = async (postId: string) => {
+    if (!postId) {
+      return
+    }
+
+    // try {
+    //   await deleteLogPost.mutate({
+    //     logPostId: postId,
+    //   })
+
+    //   if (selectedPostId === postId) {
+    //     setSelectedPostId(null)
+    //   }
+    // } catch (err) {
+    //   console.error('Failed to delete log post:', err)
+    // }
+  }
+
   useEffect(() => {
     const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
     if (lastCurrency && CURRENCIES.includes(lastCurrency)) {
@@ -446,9 +464,15 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     <>
                       <div className="LogPosts__posts__item__footer">
                         <div></div>
-                        <div className="LogPosts__posts__item__footer__center">
+                        <div className="LogPosts__posts__item__footer__center LogPostMenu">
                           <IconText
-                            className="handler"
+                            className="handler LogPostMenu__item"
+                            type='pencil'
+                            size={18}
+                            onClick={() => handleEditPost((item as LogPost).id)}
+                          />
+                          <IconText
+                            className="handler LogPostMenu__item"
                             type='trash'
                             onClick={() => handleDeletePost((item as LogPost).id)}
                           />

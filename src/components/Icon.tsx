@@ -7,7 +7,7 @@ type IconProps = {
   fill?: string
 }
 
-export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'exit' | 'document' | 'user' | 'speech' | 'plus' | 'trash'
+export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'exit' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil'
 
 const Icon = ({ type, size, fill }: IconProps) => {
   const rkIcons = [
@@ -17,7 +17,11 @@ const Icon = ({ type, size, fill }: IconProps) => {
     'speech',
     'plus',
   ]
-  const iconSet = rkIcons.includes(type) ? 'reandra-khansa' : 'nakals'
+  const kyIcons = [
+    'pencil',
+  ]
+
+  const iconSet = rkIcons.includes(type) ? 'reandra-khansa' : kyIcons.includes(type) ? 'kanyayee' : 'nakals'
   const whiteFilter = 'invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%) contrast(100%)'
 
   const cssStyles = useMemo(() => ({

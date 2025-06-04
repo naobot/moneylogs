@@ -347,6 +347,18 @@
   }
 }
 
+.LogPostMenu {
+  &__item {
+    opacity: 0.3;
+    transition: 0.3s ease-in-out;
+    will-transition: opacity;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
 .LogPosts {
   display: grid;
   grid-template-columns: auto 320px;
