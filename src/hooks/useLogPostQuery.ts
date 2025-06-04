@@ -52,6 +52,10 @@ export const useLogPostQuery = () => {
     return res.id
   }
 
+  const deleteLogPostFn = async ({ logPostId }: { logPostId: string }): Promise<void> => {
+    await deleteDoc(doc(db, 'log_posts', logPostId))
+  }
+
   const addCommentFn = async ({ logPostId, userId, content }: AddCommentArgs): Promise<string> => {
     const { userDocRef, userName } = await getUserDocRef(userId)
 
@@ -75,7 +79,6 @@ export const useLogPostQuery = () => {
   }
 
   const deleteCommentFn = async ({ logPostId, commentId }: DeleteCommentArgs): Promise<void> => {
-    // Delete the comment
     await deleteDoc(doc(db, 'log_posts', logPostId, 'comments', commentId))
 
     // Decrement the counter
@@ -88,6 +91,7 @@ export const useLogPostQuery = () => {
   const addNewLogPostMutation = useMutation(addNewLogPostFn)
   const addCommentMutation = useMutation(addCommentFn)
   const deleteCommentMutation = useMutation(deleteCommentFn)
+  const deleteLogPostMutation = useMutation(deleteLogPostFn)
 
   return {
     addNewLogPost: addNewLogPostMutation,
@@ -96,5 +100,7 @@ export const useLogPostQuery = () => {
     addCommentFn,
     deleteComment: deleteCommentMutation,
     deleteCommentFn,
+    deleteLogPost: deleteLogPostMutation,
+    deleteLogPostFn,
   }
 }
