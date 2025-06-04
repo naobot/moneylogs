@@ -428,6 +428,16 @@
 
       }
 
+      &__footer {
+        display: flex;
+        justify-content: space-between;
+
+        &__left, &__center, &__right {
+          display: inline-flex;
+          align-items: flex-end;
+        }
+      }
+
       &__amount {
         display: inline-flex;
         grid-gap: 0.2rem;

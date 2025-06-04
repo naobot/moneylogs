@@ -114,7 +114,7 @@ export const Group = ({ groupId }) => {
           {(isLoadingGroup || isLoadingMembers) && <>...</>}
           {!isLoadingMembers && <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} />}
           {groupId &&
-            <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} />
+            <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
           }
         </div>
       </div>

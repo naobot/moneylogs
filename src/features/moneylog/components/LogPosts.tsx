@@ -5,7 +5,7 @@ import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
 import { useLogPostQuery } from "../../../hooks/useLogPostQuery"
-import { IconText } from "../../../components/Icon"
+import Icon, { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
 
@@ -198,24 +198,14 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
 
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
 
-  const { addNewLogPost } = useLogPostQuery()
+  const { addNewLogPost, deleteLogPost } = useLogPostQuery()
 
   const handleNewLogPost = async () => {
-    console.log('handleNewLogPost called', {
-      selectedCurrency,
-      newEntryContent,
-      userId: userId,
-      newEntryAmount,
-      newEntryDate
-    });
-
     if (!selectedCurrency || !newEntryContent) {
-      console.log('Early return due to missing data')
       return
     }
 
     try {
-      console.log('About to call addNewLogPost.mutate')
       await addNewLogPost.mutate({
         groupId,
         userId,
@@ -232,6 +222,24 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
       newEntryAmountSet(0)
     } catch (err) {
       console.error('Failed to create log post:', err)
+    }
+  }
+
+  const handleDeletePost = async (postId: string) => {
+    if (!postId) {
+      return
+    }
+
+    try {
+      await deleteLogPost.mutate({
+        logPostId: postId,
+      })
+
+      if (selectedPostId === postId) {
+        setSelectedPostId(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete log post:', err)
     }
   }
 
@@ -434,6 +442,22 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                       <MDEditor.Markdown source={(item as LogPost).content} />
                     </div>
                   </div>
+                  {isMyLog && (
+                    <>
+                      <div className="LogPosts__posts__item__footer">
+                        <div></div>
+                        <div className="LogPosts__posts__item__footer__center">
+                          <IconText
+                            className="handler"
+                            type='trash'
+                            onClick={() => handleDeletePost((item as LogPost).id)}
+                          />
+                        </div>
+                        <div className="LogPosts__posts__item__footer__right">
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )
             }
