@@ -18,6 +18,14 @@ $breakpoint-xl: 1300px;
   width: 100%;
 }
 
+html {
+  position: relative;
+}
+
+.disable-scroll {
+  overflow: hidden !important;
+}
+
 .wmde-markdown {
   font-family: Terminal, monospace !important;
   font-size: 1em !important;
@@ -417,10 +425,7 @@ $breakpoint-xl: 1300px;
 
       &--selected {
         border: 2px solid #242424;
-
-        @media (max-width: $breakpoint-md) {
-          z-index: 51;
-        }
+        z-index: 51;
       }
 
       &__header {
@@ -481,18 +486,14 @@ $breakpoint-xl: 1300px;
   overflow-y: auto;
 
   &__handler {
-    display: none;
-
-    @media (max-width: $breakpoint-md) {
-      display: block;
-      position: fixed;
-      width: 100vw;
-      height: 100vh;
-      top: 0;
-      left: 0;
-      background-color: rgba(0,0,0,0.1);
-      z-index: 49;
-    }
+    display: block;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.1);
+    z-index: 49;
   }
 
   @media (max-width: $breakpoint-md) {
@@ -539,6 +540,7 @@ $breakpoint-xl: 1300px;
     border: #242424 solid 1px;
     display: flex;
     flex-direction: column;
+    z-index: 50;
 
     @media (min-width: $breakpoint-md) {
       &::after {
@@ -575,7 +577,6 @@ $breakpoint-xl: 1300px;
       height: 100%;
       white-space: pre-wrap;
       flex: none;
-      z-index: 50;
     }
 
     &__container {
