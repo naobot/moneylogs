@@ -523,10 +523,9 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           })}
           {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
-
-        <div className="LogPostComments">
-          {selectedPostId && <LogPostComments postId={selectedPostId} />}
-        </div>
+      </div>
+      <div className="LogPostComments">
+        {selectedPostId && <LogPostComments postId={selectedPostId} />}
       </div>
     </>
   )

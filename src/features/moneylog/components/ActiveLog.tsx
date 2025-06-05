@@ -22,7 +22,7 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
   }, [userId, groupId])
 
   return (
-    <div className="GroupLogDashboard">
+    <>
       {/*{(isLoading || logPostRes?.isLoading) && <div>...</div>}*/}
       {(isSuccess && logPostRes?.isSuccess) && (
         <>
@@ -37,6 +37,6 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
         </>
       )}
       {isError && error && <div>{error?.message}</div>}
-    </div>
+    </>
   )
 }

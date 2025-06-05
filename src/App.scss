@@ -1,3 +1,5 @@
+$sidebar-width: 420px;
+
 :root {
   font-family: Terminal, monospace;
   color-scheme: light;
@@ -189,7 +191,7 @@
 
 .Window {
   margin-bottom: 1em;
-  padding: 2em;
+  padding: 30px;
   border: 2px solid #242424;
   border-radius: 4px;
   width: 100%;
@@ -235,8 +237,8 @@
 
   &__header {
     display: grid;
-    grid-template-columns: 220px auto 320px;
-    grid-gap: 2em;
+    grid-template-columns: $sidebar-width auto $sidebar-width;
+    grid-gap: 30px;
     align-items: center;
     width: 100%;
     margin-bottom: 1em;
@@ -247,7 +249,7 @@
     flex-shrink: 0;
 
     @media (max-width: 1200px) {
-      grid-template-columns: 180px auto 220px;
+      grid-template-columns: $sidebar-width auto $sidebar-width;
     }
 
     &__left {
@@ -273,28 +275,17 @@
   }
 
   &__body {
-    display: grid;
-    grid-template-columns: 220px auto;
-    grid-gap: 2em;
+    display: flex;
+    /*grid-template-columns: 220px auto;*/
+    grid-gap: 30px;
     width: 100%;
     flex: 1;
     overflow-y: auto;
     min-height: 0;
-
-    @media (max-width: 768px) {
-      display: flex;
-      flex-direction: column;
-      overflow-y: hidden;
-      overflow-x: hidden;
-    }
-
-    @media (max-width: 1200px) {
-      grid-template-columns: 180px auto;
-    }
   }
 }
 
-.GroupLogDashboard {
+/*.GroupLogDashboard {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -302,23 +293,24 @@
   @media (max-width: 768px) {
     overflow-y: auto;
   }
-}
+}*/
 
 .LogsMenu {
   display: flex;
   flex-direction: column;
   grid-gap: 0.4em;
   overflow-y: auto;
+  width: $sidebar-width;
   max-height: 100%;
 
-  @media (max-width: 768px) {
+/*  @media (max-width: 768px) {
     display: inline-flex;
     flex-direction: row;
     overflow-y: initial;
     overflow-x: auto;
     height: fit-content;
     font-size: 0.7em;
-  }
+  }*/
 
   @media (min-width: 767px) and (max-width: 1200px) {
     font-size: 0.8em;
@@ -363,21 +355,18 @@
 }
 
 .LogPosts {
-  display: grid;
-  grid-template-columns: auto 320px;
-  grid-template-rows: auto 1fr;
-  grid-gap: 2em;
+  display: flex;
   text-align: center;
   height: 100%;
 
-  @media (max-width: 768px) {
+/*  @media (max-width: 768px) {
     grid-template-columns: auto 180px;
     grid-template-rows: none;
-  }
+  }*/
 
-  @media (min-width: 767px) and (max-width: 1200px) {
-    grid-template-columns: auto 220px;
-  }
+  /*@media (min-width: 767px) and (max-width: 1200px) {*/
+    /*grid-template-columns: auto 220px;*/
+  /*}*/
 
   &__menu {
     grid-column: 1 / -1;
@@ -475,14 +464,15 @@
 }
 
 .LogPostComments {
-  // overflow-y: auto;
-  // max-height: 100%;
+  width: $sidebar-width;
   min-height: 0;
+  overflow-y: auto;
 
   &__wrapper {
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
+    margin-left: 20px;
   }
 
   &__notice {
