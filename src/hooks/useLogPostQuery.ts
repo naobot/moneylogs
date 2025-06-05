@@ -46,9 +46,15 @@ export const useLogPostQuery = () => {
       group: groupDocRef,
       groupName,
     })
+
     if (!res?.id) {
       throw new Error('Failed to create log post')
     }
+
+    await updateDoc(userDocRef, {
+      [`lastUpdated.${groupId}`]: serverTimestamp()
+    })
+
     return res.id
   }
 

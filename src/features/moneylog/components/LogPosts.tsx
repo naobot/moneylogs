@@ -1,13 +1,15 @@
 import cx from "classnames"
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
-import { Currency, Log, LogPost } from "../../../types/user"
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
+import { Currency, Log } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
-import { useLogPostQuery } from "../../../hooks/useLogPostQuery"
-import Icon, { IconText } from "../../../components/Icon"
+import { useLogPostQuery, LogPost } from "../../../hooks/useLogPostQuery"
+import { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
+import { useDisableScroll } from "../../../hooks/useDisableScroll"
+import { useGetUserInfo } from "../../../hooks/useGetUserInfo"
 
 type LogPostsProps = {
   groupId: string
@@ -19,7 +21,17 @@ type LogPostsProps = {
 }
 
 type LogPostCommentsProps = {
+  currentLogAuthorId: string
   postId: string
+  postSetter: Dispatch<React.SetStateAction<string|null>>
+}
+
+type LogPostProps = {
+  post: LogPost
+  selectedPostId: string | null
+  setSelectedPostId: Dispatch<React.SetStateAction<string|null>>
+  setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string|null>>
+  isMyLog: boolean
 }
 
 type DateBanner = {
@@ -43,7 +55,7 @@ const CURRENCIES: Array<Currency> = [
   'MYR',
 ]
 
-const LogPostComments = ({ postId }: LogPostCommentsProps) => {
+const LogPostComments = ({ currentLogAuthorId, postId, postSetter }: LogPostCommentsProps) => {
   const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
@@ -65,15 +77,25 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
     }
   }
 
-  return (
+  useEffect(() => {
+    console.log(comments)
+  }, [comments])
+
+  return (<>
+    <div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
-      {!isLoadingComments && isSuccessComments && comments?.length === 0 && (
+      {/*{!isLoadingComments && isSuccessComments && comments?.length === 0 && (
         <div className="LogPostComments__notice">No comments</div>
-      )}
+      )}*/}
       {!isLoadingComments && isSuccessComments && comments?.map(comment => {
         return (
-          <div key={comment.id} className="LogPostComments__item">
+          <div
+            key={comment.id}
+            className={cx("LogPostComments__item", {
+              "LogPostComments__item--highlight" : comment?.authorId?.id === currentLogAuthorId,
+            })}
+          >
             <div className="LogPostComments__item__container">
               <div className="LogPostComments__item__body" data-color-mode="light">
                 <MDEditor.Markdown source={comment.content} />
@@ -96,7 +118,7 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
                 onChange={newCommentContentSet}
                 preview='edit'
                 hideToolbar
-                height={120}
+                height={110}
               />
             )}
             {addComment?.isLoading && <>...</>}
@@ -113,12 +135,12 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
         </div>
       </div>
     </div>
-  )
+  </>)
 }
 
-const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = null, amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
-  postId?: string
+  postId?: string | null
   groupId: string
   userId: string
   isCreateNewEntrySet: Dispatch<SetStateAction<boolean>>
@@ -198,7 +220,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   }, [])
 
   return (
-    <div className="LogPosts__posts__item">
+    <div className="LogPosts__posts__item LogPosts__posts__item--selected">
       <div
         className="LogPosts__posts__item__header"
       >
@@ -267,6 +289,129 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
           onClick={type === 'new' ? handleNewLogPost : handleEditPost}
         />
       </div>
+    </div>
+  )
+}
+
+const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+  const postRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (postRef.current) {
+      postRef.current.focus()
+    }
+  }, [])
+
+  const postTime = useMemo(() => {
+    return dayjs(post.postDate?.seconds * 1000)
+  }, [post])
+  const createdTime = useMemo(() => {
+    return dayjs(post.createdAt?.seconds * 1000)
+  }, [post])
+
+  const { deleteLogPost } = useLogPostQuery()
+
+  const handleDeletePost = async (postId: string) => {
+    if (!postId) {
+      return
+    }
+
+    try {
+      await deleteLogPost.mutate({
+        logPostId: postId,
+      })
+
+      if (selectedPostId === postId) {
+        setSelectedPostId(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete log post:', err)
+    }
+  }
+
+  const handleCommentsClick = (postId: string) => {
+    setSelectedPostId(postId)
+  }
+
+
+  useEffect(() => {
+    if (selectedPostId === post.id) {
+      setTimeout(() => {
+        const logPostsContainer = document.querySelector('.LogPosts__posts')
+        const postElement = postRef.current
+
+        if (logPostsContainer && postElement) {
+          const containerRect = logPostsContainer.getBoundingClientRect()
+          const postRect = postElement.getBoundingClientRect()
+
+          const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
+
+          logPostsContainer.scrollTo({
+            top: scrollTop,
+            behavior: 'smooth'
+          })
+        }
+      }, 100)
+    }
+  }, [selectedPostId])
+
+  return (
+    <div
+      className={cx("LogPosts__posts__item", {
+        "LogPosts__posts__item--selected": selectedPostId===post.id,
+      })}
+      ref={postRef}
+    >
+      <div
+        className="LogPosts__posts__item__header"
+      >
+        <div
+          className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
+          title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
+        >
+          <IconText type='clock' text={postTime?.format("HH:mm")} />
+        </div>
+        <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+          {post.amount} {post.currency}
+        </div>
+        <div
+          className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
+        >
+          <IconText
+            type='speech'
+            text={(post?.commentCount ?? 0).toLocaleString()}
+            size={18}
+            className="handler"
+            onClick={() => handleCommentsClick(post.id)}
+          />
+        </div>
+      </div>
+      <div
+        className="LogPosts__posts__item__body"
+      >
+        <div className="LogPosts__posts__item__content" data-color-mode="light">
+          <MDEditor.Markdown source={post.content} />
+        </div>
+      </div>
+      {isMyLog && (
+        <>
+          <div className="LogPosts__posts__item__footer">
+            <div className="LogPostMenu">
+              <IconText
+                className="handler LogPostMenu__item"
+                type='pencil'
+                size={16}
+                onClick={() => setCurrentlyEditingPostId(post.id)}
+              />
+              <IconText
+                className="handler LogPostMenu__item"
+                type='trash'
+                onClick={() => handleDeletePost(post.id)}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -348,26 +493,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
 
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
-
-  const { deleteLogPost } = useLogPostQuery()
-
-  const handleDeletePost = async (postId: string) => {
-    if (!postId) {
-      return
-    }
-
-    try {
-      await deleteLogPost.mutate({
-        logPostId: postId,
-      })
-
-      if (selectedPostId === postId) {
-        setSelectedPostId(null)
-      }
-    } catch (err) {
-      console.error('Failed to delete log post:', err)
-    }
-  }
+  useDisableScroll(!!selectedPostId)
 
   useEffect(() => {
     isCreateNewEntrySet(false)
@@ -377,9 +503,6 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     setSelectedPostId(null)
   }, [userId])
 
-  const handleCommentsClick = (postId: string) => {
-    setSelectedPostId(postId)
-  }
   return (
     <>
       <div className={cx("LogPosts", {
@@ -387,6 +510,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
       })}>
         <div className={cx("LogPosts__posts", {
           "LogPosts__posts--weekly": isWeeklyView,
+          "disable-scroll": selectedPostId,
         })}>
           {false && calendarMarkedPosts?.length > 0 && <>
             <div className="LogPosts__menu">
@@ -415,6 +539,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               groupId={groupId}
               userId={userId}
               isCreateNewEntrySet={isCreateNewEntrySet}
+              setCurrentlyEditingPostId={setCurrentlyEditingPostId}
             />
           )}
 
@@ -440,9 +565,6 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               )
             }
             else {
-              const postTime = dayjs((item as LogPost).postDate?.seconds * 1000)
-              const createdTime = dayjs((item as LogPost).createdAt?.seconds * 1000)
-
               if (currentlyEditingPostId === (item as LogPost).id) {
                 return <LogPostEditor
                   key={(item as LogPost).id}
@@ -460,62 +582,19 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               }
 
               return (
-                <div
-                  className={cx("LogPosts__posts__item", {
-                    "LogPosts__posts__item--weekly": isWeeklyView,
-                    "LogPosts__posts__item--selected": selectedPostId===(item as LogPost).id
-                  })}
-                  key={(item as LogPost).id}
-                >
-                  <div
-                    className="LogPosts__posts__item__header"
-                  >
-                    <div
-                      className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
-                      title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
-                    >
-                      <IconText type='clock' text={postTime?.format("HH:mm")} />
-                    </div>
-                    <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-                      {(item as LogPost).amount} {(item as LogPost).currency}
-                    </div>
-                    <div
-                      className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
-                    >
-                      <IconText
-                        type='speech'
-                        text={((item as LogPost)?.commentCount ?? 0).toLocaleString()}
-                        size={18}
-                        className="handler"
-                        onClick={() => handleCommentsClick((item as LogPost).id)}
-                      />
-                    </div>
-                  </div>
-                  <div
-                    className="LogPosts__posts__item__body"
-                  >
-                    <div className="LogPosts__posts__item__content" data-color-mode="light">
-                      <MDEditor.Markdown source={(item as LogPost).content} />
-                    </div>
-                  </div>
-                  {isMyLog && (
-                    <>
-                      <div className="LogPosts__posts__item__footer">
-                        <div className="LogPostMenu">
-                          <IconText
-                            className="handler LogPostMenu__item"
-                            type='pencil'
-                            size={16}
-                            onClick={() => setCurrentlyEditingPostId((item as LogPost).id)}
-                          />
-                          <IconText
-                            className="handler LogPostMenu__item"
-                            type='trash'
-                            onClick={() => handleDeletePost((item as LogPost).id)}
-                          />
-                        </div>
-                      </div>
-                    </>
+                <div key={(item as LogPost).id}>
+                  <LogPostItem
+                    post={(item as LogPost)}
+                    isMyLog={isMyLog}
+                    selectedPostId={selectedPostId}
+                    setSelectedPostId={setSelectedPostId}
+                    setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                    // key={(item as LogPost).id}
+                  />
+                  {i == calendarMarkedPosts?.length - 1 && (
+                    <div className={cx("LogPosts__posts__filler", {
+                      "LogPosts__posts__filler--active" : selectedPostId
+                    })}></div>
                   )}
                 </div>
               )
@@ -523,10 +602,9 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
           })}
           {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
-
-        <div className="LogPostComments">
-          {selectedPostId && <LogPostComments postId={selectedPostId} />}
-        </div>
+      </div>
+      <div className="LogPostComments">
+        {selectedPostId && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPostId} postSetter={setSelectedPostId} />}
       </div>
     </>
   )

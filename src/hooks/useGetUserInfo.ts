@@ -19,6 +19,16 @@ export type UserData = {
   logs: Array<MoneyLog>;
   userId: string;
   currentLogId: string;
+  viewTracking?: {
+    [key: string]: { // group ID
+      [key: string]: { // log author ID
+        lastViewedAt: {
+          seconds: number;
+          nanoseconds: number;
+        }
+      }
+    }
+  }
 }
 
 export const useGetUserInfo = (userId: string) => {
@@ -85,15 +95,30 @@ export const useGetMultipleUsers = (documentIds: string[]) => {
     })
   )
 
-  // Aggregate results from all chunks
+  // Aggregate results from all chunks with proper deduplication
   const aggregatedData = useMemo(() => {
-    return queryResults.reduce((allUsers, result, index) => {
+    const allUsers: UserData[] = []
+    const seenIds = new Set<string>()
+
+    queryResults.forEach((result, index) => {
       if (result.data && index < chunks.length && chunks[index]?.length > 0) {
-        return [...allUsers, ...result.data]
+        result.data.forEach(user => {
+          if (!seenIds.has(user.id)) {
+            seenIds.add(user.id)
+            allUsers.push(user)
+          }
+        })
       }
-      return allUsers
-    }, [] as UserData[])
-  }, [queryResults.map(r => r.data).join(','), chunks.length])
+    })
+
+    return allUsers
+  }, [
+    // Use a stable dependency based on the actual data IDs
+    queryResults.map(r =>
+      r.data?.map(user => user.id).sort().join(',') || ''
+    ).join('|'),
+    chunks.length
+  ])
 
   // Aggregate loading/error states
   const isLoading = queryResults.some(result => result.isLoading)
@@ -106,7 +131,7 @@ export const useGetMultipleUsers = (documentIds: string[]) => {
     isLoading,
     isSuccess,
     isError,
-    error: errors.length > 0 ? errors[0] : null, // Return first error for simplicity
-    errors // Optionally return all errors
+    error: errors.length > 0 ? errors[0] : null,
+    errors
   }
 }

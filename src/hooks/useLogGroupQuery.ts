@@ -23,22 +23,6 @@ type AddGroupToMemberArgs = {
 
 export const useLogGroupQuery = () => {
   const groupsCollectionRef = collection(db, 'log_groups')
-  // const usersCollectionRef = collection(db, 'users')
-
-  // // Helper function to get user document reference
-  // const getUserDocRef = async (currentUserId: string) => {
-  //   const queryUsers = query(
-  //     usersCollectionRef,
-  //     where('userId', '==', currentUserId),
-  //   )
-  //   const userSnapshot = await getDocs(queryUsers)
-  //   if (userSnapshot.empty) {
-  //     throw new Error('User does not exist')
-  //   }
-
-  //   const userDocId = userSnapshot.docs[0].id
-  //   return { userDocId, userDocRef: doc(db, 'users', userDocId) }
-  // }
 
   // Core mutation functions
   const addNewLogGroupFn = async ({ title, max_participants, start, end, currentUserId }: AddNewLogGroupArgs): Promise<string> => {
