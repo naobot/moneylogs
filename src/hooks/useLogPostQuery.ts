@@ -104,17 +104,6 @@ export const useLogPostQuery = () => {
       throw new Error('Log post not found')
     }
 
-    const logPostData = logPostDoc.data()
-    const logPostAuthor = logPostData.author // DocumentReference
-    const groupRef = logPostData.group // DocumentReference
-    const groupId = groupRef.id
-
-    await updateDoc(doc(db, 'log_posts', logPostId), {
-      commentCount: increment(1),
-      latestCommentAt: serverTimestamp(),
-      commentSubscribers: arrayUnion(userDocRef)
-    })
-
     if (!commentRes?.id) {
       throw new Error('Failed to create comment')
     }
