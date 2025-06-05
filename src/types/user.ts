@@ -1,3 +1,5 @@
+import { DocumentReference } from "firebase/firestore"
+
 export type Datetime = {
   seconds: number
   nanoseconds: number
@@ -65,7 +67,7 @@ export type LogPost = {
 
 export type Comment = {
   id: string
-  authorId: string // user by userId
+  authorId: DocumentReference
   authorName: string
   content: string
   createdAt: Datetime

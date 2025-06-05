@@ -5,7 +5,7 @@ import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
 import { useLogPostQuery, LogPost } from "../../../hooks/useLogPostQuery"
-import Icon, { IconText } from "../../../components/Icon"
+import { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
 import { useDisableScroll } from "../../../hooks/useDisableScroll"
@@ -20,6 +20,7 @@ type LogPostsProps = {
 }
 
 type LogPostCommentsProps = {
+  currentLogAuthorId: string
   postId: string
   postSetter: Dispatch<React.SetStateAction<string|null>>
 }
@@ -53,7 +54,7 @@ const CURRENCIES: Array<Currency> = [
   'MYR',
 ]
 
-const LogPostComments = ({ postId, postSetter }: LogPostCommentsProps) => {
+const LogPostComments = ({ currentLogAuthorId, postId, postSetter }: LogPostCommentsProps) => {
   const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
@@ -75,6 +76,10 @@ const LogPostComments = ({ postId, postSetter }: LogPostCommentsProps) => {
     }
   }
 
+  useEffect(() => {
+    console.log(comments)
+  }, [comments])
+
   return (<>
     <div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>
     <div className="LogPostComments__wrapper">
@@ -84,7 +89,12 @@ const LogPostComments = ({ postId, postSetter }: LogPostCommentsProps) => {
       )}*/}
       {!isLoadingComments && isSuccessComments && comments?.map(comment => {
         return (
-          <div key={comment.id} className="LogPostComments__item">
+          <div
+            key={comment.id}
+            className={cx("LogPostComments__item", {
+              "LogPostComments__item--highlight" : comment?.authorId?.id === currentLogAuthorId,
+            })}
+          >
             <div className="LogPostComments__item__container">
               <div className="LogPostComments__item__body" data-color-mode="light">
                 <MDEditor.Markdown source={comment.content} />
@@ -593,7 +603,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPostId && <LogPostComments postId={selectedPostId} postSetter={setSelectedPostId} />}
+        {selectedPostId && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPostId} postSetter={setSelectedPostId} />}
       </div>
     </>
   )

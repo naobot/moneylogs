@@ -560,6 +560,45 @@ html {
     flex-direction: column;
     z-index: 50;
 
+    &--highlight {
+      background: #242424;
+      color: #fff;
+
+      @media (min-width: $breakpoint-md) {
+        &::after {
+            content: '';
+            position: absolute;
+            display: block;
+            width: 0;
+            z-index: 1;
+            border-style: solid;
+            border-width: 0 12px 12px 0;
+            border-color: transparent #242424 transparent transparent !important;
+            top: 22%;
+            left: -10px;
+            margin-top: -10px;
+        }
+        &::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            z-index: 0;
+            border-style: solid;
+            border-width: 0 13px 13px 0;
+            border-color: transparent #242424 transparent transparent !important;
+            top: 22%;
+            left: -12px;
+            margin-top: -11px;
+            display: block;
+        }
+      }
+
+      .wmde-markdown {
+        background-color: #242424;
+        color: #fff;
+      }
+    }
+
     @media (min-width: $breakpoint-md) {
       &::after {
           content: '';
@@ -605,6 +644,7 @@ html {
     }
 
     &__body {
+      background-color: transparent;
       padding: 1em;
       font-size: 0.8em;
       text-align: left;
