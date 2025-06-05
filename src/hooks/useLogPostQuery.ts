@@ -97,6 +97,12 @@ export const useLogPostQuery = () => {
       commentCount: increment(1)
     })
 
+    await updateDoc(userDocRef, {
+      [`commentSubscriptions.${logPostId}.subscribedAt`]: serverTimestamp(),
+      [`commentSubscriptions.${logPostId}.lastViewedAt`]: serverTimestamp(),
+      [`commentSubscriptions.${logPostId}.latestCommentAt`]: serverTimestamp(),
+    })
+
     if (!commentRes?.id) {
       throw new Error('Failed to create comment')
     }
