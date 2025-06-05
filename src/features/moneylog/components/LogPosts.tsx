@@ -508,7 +508,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
         logPostId: selectedPost.id
       })
     }
-  }, [selectedPost, userId, loggedInUser])
+  }, [selectedPost?.id, loggedInUser?.userId])
 
   return (
     <>
