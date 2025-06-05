@@ -397,6 +397,17 @@ html {
     min-height: 0;
     max-height: 100%;
 
+    &__filler {
+      height: 1000px;
+      max-height: 0;
+      will-change: max-height;
+      /*transition: max-height 0.25s ease-in-out;*/
+
+      &--active {
+        max-height: 1000px;
+      }
+    }
+
     &__banner {
       align-items: center;
 
@@ -446,7 +457,7 @@ html {
       }
 
       &__body {
-
+        font-size: 0.9em;
       }
 
       &__footer {
@@ -513,6 +524,7 @@ html {
     flex-direction: column;
     grid-gap: 1em;
     margin: 0 0 0 20px;
+    padding: 0 0 10px 0;
     min-width: 0;
 
     @media (max-width: $breakpoint-md) {
@@ -530,6 +542,7 @@ html {
   &__notice {
     padding: 1em;
     font-size: 0.9em;
+    text-align: center;
   }
 
   &__item {

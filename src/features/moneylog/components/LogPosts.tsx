@@ -1,5 +1,5 @@
 import cx from "classnames"
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
 import { Currency, Log } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
@@ -79,9 +79,9 @@ const LogPostComments = ({ postId, postSetter }: LogPostCommentsProps) => {
     <div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
-      {!isLoadingComments && isSuccessComments && comments?.length === 0 && (
+      {/*{!isLoadingComments && isSuccessComments && comments?.length === 0 && (
         <div className="LogPostComments__notice">No comments</div>
-      )}
+      )}*/}
       {!isLoadingComments && isSuccessComments && comments?.map(comment => {
         return (
           <div key={comment.id} className="LogPostComments__item">
@@ -127,7 +127,7 @@ const LogPostComments = ({ postId, postSetter }: LogPostCommentsProps) => {
   </>)
 }
 
-const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = null, amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
   groupId: string
@@ -283,6 +283,14 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
 }
 
 const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+  const postRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (postRef.current) {
+      postRef.current.focus()
+    }
+  }, [])
+
   const postTime = useMemo(() => {
     return dayjs(post.postDate?.seconds * 1000)
   }, [post])
@@ -314,11 +322,34 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEdit
     setSelectedPostId(postId)
   }
 
+
+  useEffect(() => {
+    if (selectedPostId === post.id) {
+      setTimeout(() => {
+        const logPostsContainer = document.querySelector('.LogPosts__posts')
+        const postElement = postRef.current
+
+        if (logPostsContainer && postElement) {
+          const containerRect = logPostsContainer.getBoundingClientRect()
+          const postRect = postElement.getBoundingClientRect()
+
+          const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
+
+          logPostsContainer.scrollTo({
+            top: scrollTop,
+            behavior: 'smooth'
+          })
+        }
+      }, 100)
+    }
+  }, [selectedPostId])
+
   return (
     <div
       className={cx("LogPosts__posts__item", {
         "LogPosts__posts__item--selected": selectedPostId===post.id,
       })}
+      ref={postRef}
     >
       <div
         className="LogPosts__posts__item__header"
@@ -540,14 +571,21 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               }
 
               return (
-                <LogPostItem
-                  post={(item as LogPost)}
-                  isMyLog={isMyLog}
-                  selectedPostId={selectedPostId}
-                  setSelectedPostId={setSelectedPostId}
-                  setCurrentlyEditingPostId={setCurrentlyEditingPostId}
-                  key={(item as LogPost).id}
-                />
+                <>
+                  <LogPostItem
+                    post={(item as LogPost)}
+                    isMyLog={isMyLog}
+                    selectedPostId={selectedPostId}
+                    setSelectedPostId={setSelectedPostId}
+                    setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                    key={(item as LogPost).id}
+                  />
+                  {i == calendarMarkedPosts?.length - 1 && (
+                    <div className={cx("LogPosts__posts__filler", {
+                      "LogPosts__posts__filler--active" : selectedPostId
+                    })}></div>
+                  )}
+                </>
               )
             }
           })}
