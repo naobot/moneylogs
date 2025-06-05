@@ -9,7 +9,7 @@ type IconProps = {
 
 export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled'
 
-const Icon = ({ type, size, fill }: IconProps) => {
+const Icon = ({ type, size = 24, fill }: IconProps) => {
   const rkIcons = [
     'exit',
     'document',
