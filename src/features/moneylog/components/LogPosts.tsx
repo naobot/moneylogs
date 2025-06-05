@@ -96,7 +96,7 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
                 onChange={newCommentContentSet}
                 preview='edit'
                 hideToolbar
-                height={120}
+                height={110}
               />
             )}
             {addComment?.isLoading && <>...</>}
