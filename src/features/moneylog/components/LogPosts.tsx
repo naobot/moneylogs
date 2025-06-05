@@ -294,9 +294,18 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
   const { user: loggedInUser } = useCurrentUser()
 
   const hasUnreadComments = useMemo(() => {
-    if (!post.latestCommentAt || !loggedInUser?.commentSubscriptions) return false
+    if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
 
-    const userLastViewed = loggedInUser.commentSubscriptions[post.id]?.lastViewedAt
+    // First check: Is the current user subscribed to this post's comments?
+    const isSubscribed = post.commentSubscribers.some(subscriber =>
+      subscriber === loggedInUser.id
+    )
+
+    // If not subscribed, no unread indicator
+    if (!isSubscribed) return false
+
+    // If subscribed, check if there are unread comments
+    const userLastViewed = loggedInUser.commentSubscriptions?.[post.id]?.lastViewedAt
 
     // If user has never viewed comments on this post, and there are comments, it's unread
     if (!userLastViewed && post.commentCount && post.commentCount > 0) return true
