@@ -83,7 +83,7 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, setter }
       onClick={() => setter(member)}
     >
       {member.hasUnreadPosts && <Icon type="notification" />}
-      {hasUnreadComments && <Icon type="speech" />}
+      {displayUser?.id !== member?.id && hasUnreadComments && <Icon type={"speech"} size={18} />}
       <div>
         {member?.displayName}
       </div>

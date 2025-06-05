@@ -291,6 +291,23 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
 
 const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
+  const { user: loggedInUser } = useCurrentUser()
+
+  const hasUnreadComments = useMemo(() => {
+    if (!post.latestCommentAt || !loggedInUser?.commentSubscriptions) return false
+
+    const userLastViewed = loggedInUser.commentSubscriptions[post.id]?.lastViewedAt
+
+    // If user has never viewed comments on this post, and there are comments, it's unread
+    if (!userLastViewed && post.commentCount && post.commentCount > 0) return true
+
+    // If user has viewed before, compare timestamps
+    if (userLastViewed) {
+      return post.latestCommentAt.seconds > userLastViewed.seconds
+    }
+
+    return false
+  }, [post.latestCommentAt, post.commentCount, post.id, loggedInUser?.commentSubscriptions])
 
   useEffect(() => {
     if (postRef.current) {
@@ -374,9 +391,9 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
           className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
         >
           <IconText
-            type='speech'
+            type={hasUnreadComments ? 'speech-filled' : 'speech'}
             text={(post?.commentCount ?? 0).toLocaleString()}
-            size={18}
+            size={hasUnreadComments ? 16 : 18}
             className="handler"
             onClick={() => handleCommentsClick(post.id)}
           />

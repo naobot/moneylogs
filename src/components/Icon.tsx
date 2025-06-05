@@ -7,7 +7,7 @@ type IconProps = {
   fill?: string
 }
 
-export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil'
+export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled'
 
 const Icon = ({ type, size, fill }: IconProps) => {
   const rkIcons = [
@@ -15,6 +15,7 @@ const Icon = ({ type, size, fill }: IconProps) => {
     'document',
     'user',
     'speech',
+    'speech-filled',
     'plus',
   ]
   const kyIcons = [

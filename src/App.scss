@@ -95,6 +95,8 @@ html {
 }
 
 .Icon {
+  display: inline-flex;
+  align-items: center;
   width: 21px;
   height: 21px;
 
@@ -313,6 +315,10 @@ html {
   flex: 1;
   transition: 0.3s ease-in-out;
 
+  .Icon {
+    padding-top: 6px;
+  }
+
   @media (max-width: $breakpoint-md) {
     display: inline-flex;
     flex-direction: row;
@@ -331,6 +337,7 @@ html {
   &__item {
     display: grid;
     grid-template-columns: 1fr auto;
+    align-items: center;
     padding: 0.8em 1em;
     border: 2px solid var(--c-black);
     text-align: right;
