@@ -52,6 +52,9 @@ export const useLogPostQuery = () => {
     }
 
     await updateDoc(userDocRef, {
+      [`commentSubscriptions.${res.id}.subscribedAt`]: serverTimestamp(),
+      [`commentSubscriptions.${res.id}.lastViewedAt`]: serverTimestamp(),
+      [`commentSubscriptions.${res.id}.latestCommentAt`]: serverTimestamp(),
       [`lastUpdated.${groupId}`]: serverTimestamp()
     })
 
