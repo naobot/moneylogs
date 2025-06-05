@@ -1,15 +1,14 @@
 import cx from "classnames"
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
-import { Currency, Log } from "../../../types/user"
+import { Currency, LogPost } from "../../../types/user"
 import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
-import { useLogPostQuery, LogPost } from "../../../hooks/useLogPostQuery"
+import { useLogPostQuery } from "../../../hooks/useLogPostQuery"
 import { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
 import { useDisableScroll } from "../../../hooks/useDisableScroll"
-import { useGetUserInfo } from "../../../hooks/useGetUserInfo"
 
 type LogPostsProps = {
   groupId: string
@@ -76,10 +75,6 @@ const LogPostComments = ({ currentLogAuthorId, postId, postSetter }: LogPostComm
       console.error('Failed to add comment:', err)
     }
   }
-
-  useEffect(() => {
-    console.log(comments)
-  }, [comments])
 
   return (<>
     <div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>
