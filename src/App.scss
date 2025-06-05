@@ -1,10 +1,16 @@
-$sidebar-width: 420px;
+$breakpoint-sm: 600px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1300px;
 
 :root {
   font-family: Terminal, monospace;
   color-scheme: light;
   background-color: #fefefe;
   color: #242424;
+
+  --sidebar-width: 420px;
+  --main-width: 700px;
 }
 
 #root {
@@ -237,7 +243,7 @@ $sidebar-width: 420px;
 
   &__header {
     display: grid;
-    grid-template-columns: $sidebar-width auto $sidebar-width;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 30px;
     align-items: center;
     width: 100%;
@@ -247,10 +253,6 @@ $sidebar-width: 420px;
     padding: 0.5em;
     font-size: 0.8em;
     flex-shrink: 0;
-
-    @media (max-width: 1200px) {
-      grid-template-columns: $sidebar-width auto $sidebar-width;
-    }
 
     &__left {
       display: inline-flex;
@@ -276,45 +278,47 @@ $sidebar-width: 420px;
 
   &__body {
     display: flex;
-    /*grid-template-columns: 220px auto;*/
-    grid-gap: 30px;
+    grid-gap: 20px;
     width: 100%;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
+
+    @media (max-width: $breakpoint-md) {
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+    }
   }
 }
-
-/*.GroupLogDashboard {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-
-  @media (max-width: 768px) {
-    overflow-y: auto;
-  }
-}*/
 
 .LogsMenu {
   display: flex;
   flex-direction: column;
   grid-gap: 0.4em;
   overflow-y: auto;
-  width: $sidebar-width;
   max-height: 100%;
+  flex: 1;
 
-/*  @media (max-width: 768px) {
+  @media (max-width: $breakpoint-md) {
     display: inline-flex;
     flex-direction: row;
-    overflow-y: initial;
+    /*white-space: nowrap;*/
+    min-height: 60px;
+    width: 100%;
+    overflow-y: hidden;
     overflow-x: auto;
-    height: fit-content;
-    font-size: 0.7em;
-  }*/
+    font-size: 0.6em;
+  }
 
-  @media (min-width: 767px) and (max-width: 1200px) {
+  @media (min-width: $breakpoint-md) and (max-width: $breakpoint-xl) {
     font-size: 0.8em;
   }
+
+  /*@media (min-width: $breakpoint-md) and (max-width: $breakpoint-lg) {
+    font-size: 0.8em;
+  }*/
 
   &__item {
     display: block;
@@ -322,7 +326,7 @@ $sidebar-width: 420px;
     border: 2px solid #242424;
     text-align: right;
 
-    @media (max-width: 768px) {
+    @media (max-width: $breakpoint-md) {
       display: flex;
       text-align: center;
       align-items: center;
@@ -357,16 +361,18 @@ $sidebar-width: 420px;
 .LogPosts {
   display: flex;
   text-align: center;
+  width: var(--main-width);
+  max-width: 65%;
   height: 100%;
 
-/*  @media (max-width: 768px) {
-    grid-template-columns: auto 180px;
-    grid-template-rows: none;
-  }*/
-
-  /*@media (min-width: 767px) and (max-width: 1200px) {*/
-    /*grid-template-columns: auto 220px;*/
-  /*}*/
+  @media (max-width: $breakpoint-md) {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    width: 100%;
+    height: initial;
+    overflow-y: auto;
+  }
 
   &__menu {
     grid-column: 1 / -1;
@@ -464,15 +470,41 @@ $sidebar-width: 420px;
 }
 
 .LogPostComments {
-  width: $sidebar-width;
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
+
+  @media (max-width: $breakpoint-md) {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: $breakpoint-xl) {
+    font-size: 0.8em;
+  }
 
   &__wrapper {
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
-    margin-left: 20px;
+    margin: 0 0 0 20px;
+    min-width: 0;
+
+    @media (max-width: $breakpoint-md) {
+      display: inline-flex;
+      flex-direction: row;
+      margin: 20px 0 0 0;
+      width: 100%;
+      padding: 0 10px 10px 10px;
+      height: 180px;
+      align-items: stretch;
+      /*overflow-x: hidden;*/
+      overflow-x: auto;
+    }
   }
 
   &__notice {
@@ -483,47 +515,69 @@ $sidebar-width: 420px;
   &__item {
     position: relative;
     background: #fff;
-    // text-align: center;
     border-radius: 10px;
     padding: 0.5em;
     border: #242424 solid 1px;
 
-    &::after {
-        content: '';
-        position: absolute;
-        display: block;
-        width: 0;
-        z-index: 1;
-        border-style: solid;
-        border-width: 0 12px 12px 0;
-        border-color: transparent #fff transparent transparent;
-        top: 22%;
-        left: -10px;
-        margin-top: -10px;
+    @media (min-width: $breakpoint-md) {
+      &::after {
+          content: '';
+          position: absolute;
+          display: block;
+          width: 0;
+          z-index: 1;
+          border-style: solid;
+          border-width: 0 12px 12px 0;
+          border-color: transparent #fff transparent transparent;
+          top: 22%;
+          left: -10px;
+          margin-top: -10px;
+      }
+      &::before {
+          content: '';
+          position: absolute;
+          width: 0;
+          z-index: 0;
+          border-style: solid;
+          border-width: 0 13px 13px 0;
+          border-color: transparent #242424 transparent transparent;
+          top: 22%;
+          left: -12px;
+          margin-top: -11px;
+          display: block;
+      }
     }
-    &::before {
-        content: '';
-        position: absolute;
-        width: 0;
-        z-index: 0;
-        border-style: solid;
-        border-width: 0 13px 13px 0;
-        border-color: transparent #242424 transparent transparent;
-        top: 22%;
-        left: -12px;
-        margin-top: -11px;
-        display: block;
+
+    @media (max-width: $breakpoint-md) {
+      min-width: 200px;
+      max-width: 220px;
+      height: 100%;
+      white-space: pre-wrap;
+      flex: none;
     }
 
     &__container {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     &__body {
       padding: 1em;
       font-size: 0.8em;
       text-align: left;
+      min-width: 0;
+      overflow-wrap: break-word;
+
+      .wmde-markdown {
+        overflow-wrap: break-word;
+        word-break: break-word;
+
+        p {
+          overflow-wrap: break-word;
+          word-break: break-word;
+        }
+      }
     }
 
     &__footer {
