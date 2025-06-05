@@ -65,7 +65,8 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
     }
   }
 
-  return (
+  return (<>
+    <div className="LogPostComments__handler handler"></div>
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
       {!isLoadingComments && isSuccessComments && comments?.length === 0 && (
@@ -113,7 +114,7 @@ const LogPostComments = ({ postId }: LogPostCommentsProps) => {
         </div>
       </div>
     </div>
-  )
+  </>)
 }
 
 const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = null, amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
