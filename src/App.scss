@@ -80,7 +80,6 @@ html {
   justify-content: center;
   padding: 1em 1em 0 1em;
   width: 100%;
-  // height: calc(100vh - 54px);
   flex: 1;
   overflow-y: hidden;
 }
@@ -325,12 +324,9 @@ html {
     font-size: 0.8em;
   }
 
-  /*@media (min-width: $breakpoint-md) and (max-width: $breakpoint-lg) {
-    font-size: 0.8em;
-  }*/
-
   &__item {
-    display: block;
+    display: grid;
+    grid-template-columns: 1fr auto;
     padding: 0.8em 1em;
     border: 2px solid #242424;
     text-align: right;
@@ -348,6 +344,9 @@ html {
     &--active, &:hover {
       background-color: #242424;
       color: #fefefe;
+    }
+
+    &--new {
     }
 
     &:hover {

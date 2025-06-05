@@ -9,6 +9,7 @@ import { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
 import { useDisableScroll } from "../../../hooks/useDisableScroll"
+import { useGetUserInfo } from "../../../hooks/useGetUserInfo"
 
 type LogPostsProps = {
   groupId: string

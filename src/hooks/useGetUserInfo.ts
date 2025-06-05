@@ -19,6 +19,16 @@ export type UserData = {
   logs: Array<MoneyLog>;
   userId: string;
   currentLogId: string;
+  viewTracking?: {
+    [key: string]: { // group ID
+      [key: string]: { // log author ID
+        lastViewedAt: {
+          seconds: number;
+          nanoseconds: number;
+        }
+      }
+    }
+  }
 }
 
 export const useGetUserInfo = (userId: string) => {

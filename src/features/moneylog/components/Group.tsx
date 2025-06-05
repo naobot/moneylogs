@@ -8,6 +8,7 @@ import { ActiveLog } from "../../../features/moneylog/components/ActiveLog"
 import { useGetMultipleUsers, UserData } from "../../../hooks/useGetUserInfo"
 import { useLogGroupQuery } from "../../../hooks/useLogGroupQuery"
 import { useGetGroup } from "../../../hooks/useGetGroup"
+import { useUserQuery } from "../../../hooks/useUserQuery"
 
 import Modal from "../../../components/Modal"
 
@@ -20,11 +21,13 @@ export const Group = ({ groupId }) => {
   const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
+  const { updateViewTrackingFn } = useUserQuery()
+
   const isProcessingJoin = useMemo(() => {
     return addGroupToMember.isLoading || addMemberToGroup.isLoading
   }, [addGroupToMember, addMemberToGroup])
 
-  const [displayUser, setDisplayUser] = useState<UserData>()
+  const [displayUser, setDisplayUser] = useState<UserData>(loggedInUser)
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
@@ -67,10 +70,12 @@ export const Group = ({ groupId }) => {
     return dayjs(secondsDate * 1000)?.format(formatString)
   }
 
-  useEffect(() => {
-    // Initialize with loggedInUser
+useEffect(() => {
+  // Only initialize if displayUser is not already set
+  if (loggedInUser && !displayUser) {
     setDisplayUser(loggedInUser)
-  }, [loggedInUser])
+  }
+}, [loggedInUser, displayUser, groupId])
 
   useEffect(() => {
     if (isSuccessGroup && !currentUserIsMember) {
@@ -80,7 +85,30 @@ export const Group = ({ groupId }) => {
 
   useEffect(() => {
     isCreateNewEntrySet(false)
+    setDisplayUser(loggedInUser)
   }, [group])
+
+  useEffect(() => {
+    const updateViewTracking = async () => {
+      // Only track if we have all required data and user is viewing someone else's logs
+      if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id) ) return
+
+      // Don't track when viewing own logs - optional decision
+      if (loggedInUser.userId === displayUser.userId) return
+
+      try {
+        await updateViewTrackingFn({
+          userId: loggedInUser.userId,
+          logGroupId: groupId,
+          viewedUserId: displayUser.userId
+        })
+      } catch (error) {
+        console.error('Failed to update view tracking:', error)
+      }
+    }
+
+    updateViewTracking()
+  }, [displayUser?.userId, loggedInUser?.userId, groupId, memberIds])
 
   return (
     <>
@@ -113,7 +141,7 @@ export const Group = ({ groupId }) => {
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
           {!isLoadingGroup && !isLoadingMembers && groupId && (<>
-            <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} />
+            <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} groupId={groupId} />
             <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
           </>)}
         </div>
