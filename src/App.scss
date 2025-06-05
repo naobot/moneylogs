@@ -1,7 +1,9 @@
 :root {
+  --c-white: #f5f3f0;
+
   font-family: Terminal, monospace;
   color-scheme: light;
-  background-color: #fefefe;
+  background-color: var(--c-white);
   color: #242424;
 }
 
@@ -11,6 +13,7 @@
 }
 
 .wmde-markdown {
+  background-color: transparent;
   font-family: Terminal, monospace !important;
   font-size: 1em !important;
 }
@@ -106,17 +109,17 @@
 
   &--active {
     background-color: #242424 !important;
-    color: #fefefe !important;
+    color: var(--c-white) !important;
     cursor: default;
   }
 
   &--primary {
-    background-color: #fefefe;
+    background-color: var(--c-white);
     color: #242424;
   }
 
   &--primary-border {
-    background-color: #fefefe;
+    background-color: var(--c-white);
     color: #242424;
     border: 2px solid #242424;
     font-weight: 700;
@@ -124,19 +127,19 @@
     &:hover {
       border: 2px solid #242424 !important;
       background-color: #242424;
-      color: #fefefe;
+      color: var(--c-white);
     }
   }
 
   &--primary-border-lite {
-    background-color: #fefefe;
+    background-color: var(--c-white);
     color: #242424;
     border: 1px solid #242424;
 
     &:hover {
       border: 1px solid #242424 !important;
       background-color: #242424;
-      color: #fefefe;
+      color: var(--c-white);
     }
   }
 
@@ -241,7 +244,7 @@
     width: 100%;
     margin-bottom: 1em;
     background-color: #242424;
-    color: #fff;
+    color: #e8e6e3;
     padding: 0.5em;
     font-size: 0.8em;
     flex-shrink: 0;
@@ -338,7 +341,7 @@
 
     &--active, &:hover {
       background-color: #242424;
-      color: #fefefe;
+      color: var(--c-white);
     }
 
     &:hover {
@@ -492,7 +495,7 @@
 
   &__item {
     position: relative;
-    background: #fff;
+    background: var(--c-white);
     // text-align: center;
     border-radius: 10px;
     padding: 0.5em;
@@ -506,7 +509,7 @@
         z-index: 1;
         border-style: solid;
         border-width: 0 12px 12px 0;
-        border-color: transparent #fff transparent transparent;
+        border-color: transparent var(--c-white) transparent transparent;
         top: 22%;
         left: -10px;
         margin-top: -10px;
@@ -560,7 +563,7 @@
   &__content {
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--c-white);
     z-index: 55;
     cursor: default;
     border: 2px solid #242424;
@@ -582,7 +585,7 @@
 
   &__title {
     font-size: 1em;
-    color: #fff;
+    color: var(--c-white);
     margin: 0.2em 0;
   }
 
@@ -592,7 +595,7 @@
       border: none;
       padding: 0.4em;
       background-color: transparent;
-      color: #fff;
+      color: var(--c-white);
       font-weight: 800;
     }
   }
