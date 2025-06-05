@@ -140,7 +140,7 @@ useEffect(() => {
         </div>
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {!isLoadingGroup && !isLoadingMembers && groupId && (<>
+          {!isLoadingGroup && !isLoadingMembers && groupId && displayUser && (<>
             <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} groupId={groupId} />
             <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
           </>)}

@@ -31,6 +31,14 @@ export type User = {
   email: string
   displayName: string
   currentLog: string
+  hasUnreadComments?: {
+    [groupId: string]: boolean
+  }
+  commentSubscriptions?: {
+    [logPostId: string]: {
+      [lastViewedAt: string]: Datetime
+    }
+  }
 }
 
 export type Group = {
@@ -64,6 +72,8 @@ export type LogPost = {
   authorName?: string
   groupId: string
   groupName?: string
+  commentSubscribers?: Array<string>
+  latestCommentAt?: Datetime
 }
 
 export type Comment = {

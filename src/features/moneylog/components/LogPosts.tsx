@@ -9,6 +9,7 @@ import { IconText } from "../../../components/Icon"
 import { useGetComments } from "../../../hooks/useGetLogPostComments"
 import { useCurrentUser } from "../../../utils/auth"
 import { useDisableScroll } from "../../../hooks/useDisableScroll"
+import { useUserQuery } from "../../../hooks/useUserQuery"
 
 type LogPostsProps = {
   groupId: string
@@ -22,13 +23,13 @@ type LogPostsProps = {
 type LogPostCommentsProps = {
   currentLogAuthorId: string
   postId: string
-  postSetter: Dispatch<React.SetStateAction<string|null>>
+  postSetter: Dispatch<React.SetStateAction<LogPost|null>>
 }
 
 type LogPostProps = {
   post: LogPost
   selectedPostId: string | null
-  setSelectedPostId: Dispatch<React.SetStateAction<string|null>>
+  setSelectedPost: Dispatch<React.SetStateAction<LogPost|null>>
   setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string|null>>
   isMyLog: boolean
 }
@@ -288,7 +289,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   )
 }
 
-const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -317,15 +318,15 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEdit
       })
 
       if (selectedPostId === postId) {
-        setSelectedPostId(null)
+        setSelectedPost(null)
       }
     } catch (err) {
       console.error('Failed to delete log post:', err)
     }
   }
 
-  const handleCommentsClick = (postId: string) => {
-    setSelectedPostId(postId)
+  const handleCommentsClick = (postObj: LogPost) => {
+    setSelectedPost(post)
   }
 
 
@@ -413,6 +414,8 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPostId, setCurrentlyEdit
 
 const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
+  const { markCommentsAsViewedFn } = useUserQuery()
+  const { user: loggedInUser } = useCurrentUser()
 
   const calendarMarkedPosts = useMemo(() => {
     const displayRows: Array<LogPost | DateBanner> = []
@@ -486,17 +489,26 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     return displayRows
   }, [logs])
 
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
+  const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
-  useDisableScroll(!!selectedPostId)
+  useDisableScroll(!!selectedPost)
 
   useEffect(() => {
     isCreateNewEntrySet(false)
   }, [])
 
   useEffect(() => {
-    setSelectedPostId(null)
+    setSelectedPost(null)
   }, [userId])
+
+  useEffect(() => {
+    if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
+      markCommentsAsViewedFn({
+        userId: loggedInUser.userId,
+        logPostId: selectedPost.id
+      })
+    }
+  }, [selectedPost, userId, loggedInUser])
 
   return (
     <>
@@ -505,7 +517,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
       })}>
         <div className={cx("LogPosts__posts", {
           "LogPosts__posts--weekly": isWeeklyView,
-          "disable-scroll": selectedPostId,
+          "disable-scroll": selectedPost,
         })}>
           {false && calendarMarkedPosts?.length > 0 && <>
             <div className="LogPosts__menu">
@@ -581,14 +593,14 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                   <LogPostItem
                     post={(item as LogPost)}
                     isMyLog={isMyLog}
-                    selectedPostId={selectedPostId}
-                    setSelectedPostId={setSelectedPostId}
+                    selectedPostId={selectedPost?.id ?? null}
+                    setSelectedPost={setSelectedPost}
                     setCurrentlyEditingPostId={setCurrentlyEditingPostId}
                     // key={(item as LogPost).id}
                   />
                   {i == calendarMarkedPosts?.length - 1 && (
                     <div className={cx("LogPosts__posts__filler", {
-                      "LogPosts__posts__filler--active" : selectedPostId
+                      "LogPosts__posts__filler--active" : selectedPost?.id
                     })}></div>
                   )}
                 </div>
@@ -599,7 +611,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPostId && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPostId} postSetter={setSelectedPostId} />}
+        {selectedPost && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPost.id} postSetter={setSelectedPost} />}
       </div>
     </>
   )

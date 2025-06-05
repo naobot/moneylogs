@@ -3,6 +3,7 @@ import { useFirebaseCollection } from './useFirebase'
 // @ts-ignore
 import { db } from '../config/firebase-config'
 import { useMemo } from "react";
+import { Datetime } from "../types/user";
 
 export type MoneyLog = {
   id: number;
@@ -19,6 +20,14 @@ export type UserData = {
   logs: Array<MoneyLog>;
   userId: string;
   currentLogId: string;
+  commentSubscriptions?: {
+    [logPostId: string]: {
+      [lastViewedAt: string]: Datetime
+    }
+  }
+  hasUnreadComments?: {
+    [groupId: string]: boolean
+  }
   viewTracking?: {
     [key: string]: { // group ID
       [key: string]: { // log author ID

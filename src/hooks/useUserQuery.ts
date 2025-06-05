@@ -35,6 +35,14 @@ export const useUserQuery = () => {
     })
   }
 
+  const markCommentsAsViewedFn = async ({ userId, logPostId }: { userId: string, logPostId: string }): Promise<void> => {
+    const { userDocRef } = await getUserDocRef(userId)
+
+    await updateDoc(userDocRef, {
+      [`commentSubscriptions.${logPostId}.lastViewedAt`]: serverTimestamp()
+    })
+  }
+
   // Mutations
   const updateViewTrackingMutation = useMutation(updateViewTrackingFn)
   const updateDisplayNameMutation = useMutation(updateDisplayNameFn)
@@ -44,5 +52,6 @@ export const useUserQuery = () => {
     updateViewTrackingFn,
     updateDisplayName: updateDisplayNameMutation,
     updateDisplayNameFn,
+    markCommentsAsViewedFn,
   }
 }

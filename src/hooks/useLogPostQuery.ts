@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, increment, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore"
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, increment, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore"
 // @ts-ignore
 import { db } from '../config/firebase-config'
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase"
@@ -35,6 +35,7 @@ export const useLogPostQuery = () => {
   const addNewLogPostFn = async ({ groupId, userId, logData }: AddNewLogPostArgs): Promise<string> => {
     const { userDocRef, userName } = await getUserDocRef(userId)
     const { groupDocRef, groupName } = await getGroupDocRef(groupId)
+
     const res = await addDoc(logPostsCollectionRef, {
       amount: logData?.amount,
       currency: logData?.currency,
@@ -45,6 +46,7 @@ export const useLogPostQuery = () => {
       postDate: Timestamp.fromMillis(logData?.postDate),
       group: groupDocRef,
       groupName,
+      commentSubscribers: [userDocRef],
     })
 
     if (!res?.id) {
@@ -52,9 +54,7 @@ export const useLogPostQuery = () => {
     }
 
     await updateDoc(userDocRef, {
-      [`commentSubscriptions.${res.id}.subscribedAt`]: serverTimestamp(),
       [`commentSubscriptions.${res.id}.lastViewedAt`]: serverTimestamp(),
-      [`commentSubscriptions.${res.id}.latestCommentAt`]: serverTimestamp(),
       [`lastUpdated.${groupId}`]: serverTimestamp()
     })
 
@@ -94,13 +94,25 @@ export const useLogPostQuery = () => {
 
     // Increment the counter on the parent log post
     await updateDoc(doc(db, 'log_posts', logPostId), {
-      commentCount: increment(1)
+      commentCount: increment(1),
+      latestCommentAt: serverTimestamp(),
+      commentSubscribers: arrayUnion(userDocRef),
     })
 
-    await updateDoc(userDocRef, {
-      [`commentSubscriptions.${logPostId}.subscribedAt`]: serverTimestamp(),
-      [`commentSubscriptions.${logPostId}.lastViewedAt`]: serverTimestamp(),
-      [`commentSubscriptions.${logPostId}.latestCommentAt`]: serverTimestamp(),
+    const logPostDoc = await getDoc(doc(db, 'log_posts', logPostId))
+    if (!logPostDoc.exists()) {
+      throw new Error('Log post not found')
+    }
+
+    const logPostData = logPostDoc.data()
+    const logPostAuthor = logPostData.author // DocumentReference
+    const groupRef = logPostData.group // DocumentReference
+    const groupId = groupRef.id
+
+    await updateDoc(doc(db, 'log_posts', logPostId), {
+      commentCount: increment(1),
+      latestCommentAt: serverTimestamp(),
+      commentSubscribers: arrayUnion(userDocRef)
     })
 
     if (!commentRes?.id) {
