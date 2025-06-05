@@ -15,5 +15,8 @@ export const useCurrentUser = () => {
 
   const userInfo = useGetUserInfo(currentUserId || '')
 
-  return currentUserId ? userInfo : null
+  return {
+    userInfo: currentUserId ? userInfo : null,
+    user: currentUserId ? userInfo?.user : null,
+  }
 }

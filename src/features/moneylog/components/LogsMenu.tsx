@@ -1,6 +1,7 @@
-import { Dispatch, SetStateAction, useEffect } from "react"
+import { Dispatch, SetStateAction } from "react"
 import { UserData } from "../../../hooks/useGetUserInfo"
 import cx from 'classnames'
+import { useCurrentUser } from "../../../utils/auth"
 
 type LogsMenuProps = {
   displayUser: UserData
@@ -9,6 +10,8 @@ type LogsMenuProps = {
 }
 
 const LogsMenu = ({ displayUser, logMembers, setter }: LogsMenuProps) => {
+  const { user } = useCurrentUser()
+
   return (
     <>
       <div className="LogsMenu">
@@ -16,7 +19,8 @@ const LogsMenu = ({ displayUser, logMembers, setter }: LogsMenuProps) => {
           return (
             <div
               className={cx("LogsMenu__item", {
-                'LogsMenu__item--active' : displayUser?.id === member?.id
+                'LogsMenu__item--active' : displayUser?.id === member?.id,
+                'LogsMenu__item--first' : member?.id === user?.id,
               })}
               key={member.id}
               onClick={() => setter(member)}

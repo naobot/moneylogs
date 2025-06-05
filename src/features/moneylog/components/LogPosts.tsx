@@ -571,21 +571,21 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               }
 
               return (
-                <>
+                <div key={(item as LogPost).id}>
                   <LogPostItem
                     post={(item as LogPost)}
                     isMyLog={isMyLog}
                     selectedPostId={selectedPostId}
                     setSelectedPostId={setSelectedPostId}
                     setCurrentlyEditingPostId={setCurrentlyEditingPostId}
-                    key={(item as LogPost).id}
+                    // key={(item as LogPost).id}
                   />
                   {i == calendarMarkedPosts?.length - 1 && (
                     <div className={cx("LogPosts__posts__filler", {
                       "LogPosts__posts__filler--active" : selectedPostId
                     })}></div>
                   )}
-                </>
+                </div>
               )
             }
           })}

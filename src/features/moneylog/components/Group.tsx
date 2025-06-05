@@ -111,11 +111,11 @@ export const Group = ({ groupId }) => {
           </div>
         </div>
         <div className="Group__body">
-          {(isLoadingGroup || isLoadingMembers) && <>...</>}
-          {!isLoadingMembers && <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} />}
-          {groupId &&
+          {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
+          {!isLoadingGroup && !isLoadingMembers && groupId && (<>
+            <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} />
             <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
-          }
+          </>)}
         </div>
       </div>
       {!currentUserIsMember &&

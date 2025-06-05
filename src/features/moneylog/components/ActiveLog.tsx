@@ -23,8 +23,7 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
 
   return (
     <>
-      {/*{(isLoading || logPostRes?.isLoading) && <div>...</div>}*/}
-      {(isSuccess && logPostRes?.isSuccess) && (
+      {(!isLoading && isSuccess && logPostRes?.isSuccess) && (
         <>
           <LogPosts
             groupId={groupId}
@@ -36,7 +35,7 @@ export const ActiveLog = ({ groupId, userId, isCreateNewEntry, isCreateNewEntryS
           />
         </>
       )}
-      {isError && error && <div>{error?.message}</div>}
+      {isError && error && <div className="LogPosts">{error?.message}</div>}
     </>
   )
 }

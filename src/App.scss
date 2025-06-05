@@ -10,7 +10,7 @@ $breakpoint-xl: 1300px;
   color: #242424;
 
   --sidebar-width: 420px;
-  --main-width: 700px;
+  --main-width: 800px;
 }
 
 #root {
@@ -340,6 +340,10 @@ html {
       align-items: center;
     }
 
+    &--first {
+      order: -1;
+    }
+
     &--active, &:hover {
       background-color: #242424;
       color: #fefefe;
@@ -369,8 +373,8 @@ html {
 .LogPosts {
   display: flex;
   text-align: center;
-  width: var(--main-width);
-  max-width: 65%;
+  max-width: var(--main-width);
+  width: 60vw;
   height: 100%;
 
   @media (max-width: $breakpoint-md) {
@@ -396,6 +400,7 @@ html {
     overflow-y: auto;
     min-height: 0;
     max-height: 100%;
+    width: 100%;
 
     &__filler {
       height: 1000px;
