@@ -78,7 +78,7 @@ const LogPostComments = ({ currentLogAuthorId, postId, postSetter }: LogPostComm
   }
 
   return (<>
-    <div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>
+    {/*<div className="LogPostComments__handler handler" onClick={() => postSetter(null)}></div>*/}
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
       {/*{!isLoadingComments && isSuccessComments && comments?.length === 0 && (
@@ -639,6 +639,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
       <div className="LogPostComments">
         {selectedPost && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPost.id} postSetter={setSelectedPost} />}
       </div>
+      {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
   )
 }

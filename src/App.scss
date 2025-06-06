@@ -449,6 +449,12 @@ html {
       margin: 1em 0;
       border: 1px solid var(--c-black);
       background-color: #fff;
+      transition: 0.3s ease-in-out;
+
+      @media (max-width: $breakpoint-md) {
+        max-height: calc(100vh - 180px - 330px);
+        min-height: 220px;
+      }
 
       &--selected {
         border: 2px solid var(--c-black);
@@ -474,11 +480,14 @@ html {
 
       &__body {
         font-size: 0.9em;
+        overflow-y: auto;
+        flex: 1;
       }
 
       &__footer {
         display: flex;
         justify-content: center;
+        margin-top: 0.5em;
       }
 
       &__amount {
@@ -519,7 +528,7 @@ html {
     height: 100vh;
     top: 0;
     left: 0;
-    background-color: rgba(0,0,0,0.1);
+    background-color: rgba(0,0,0,0.2);
     z-index: 49;
   }
 
@@ -529,6 +538,7 @@ html {
     bottom: 0;
     width: 100%;
     overflow-x: hidden;
+    z-index: 51;
   }
 
   @media (max-width: $breakpoint-xl) {
