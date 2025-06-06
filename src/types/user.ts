@@ -72,7 +72,7 @@ export type LogPost = {
   authorName?: string
   groupId: string
   groupName?: string
-  commentSubscribers?: Array<string>
+  commentSubscribers?: Array<DocumentReference>
   latestCommentAt?: Datetime
 }
 

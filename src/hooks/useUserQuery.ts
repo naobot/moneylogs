@@ -26,7 +26,7 @@ export const useUserQuery = () => {
       [`viewTracking.${logGroupId}.${viewedUserDocRef?.id}.lastViewedAt`]: serverTimestamp()
     })
 
-    console.log(`📝 update view tracking: ${userDocRef?.id} viewed ${viewedUserDocRef?.id}`)
+    // console.log(`📝 update view tracking: ${userDocRef?.id} viewed ${viewedUserDocRef?.id}`)
   }
 
   const updateDisplayNameFn = async ({ userId, displayName }: UpdateDisplayNameArgs): Promise<void> => {

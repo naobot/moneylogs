@@ -298,7 +298,7 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
 
     // First check: Is the current user subscribed to this post's comments?
     const isSubscribed = post.commentSubscribers.some(subscriber =>
-      subscriber === loggedInUser.id
+      subscriber.id === loggedInUser.id
     )
 
     // If not subscribed, no unread indicator

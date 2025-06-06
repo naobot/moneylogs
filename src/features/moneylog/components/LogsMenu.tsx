@@ -79,14 +79,28 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChange
     // Skip checking own posts for comments
     if (member.id === user?.id) return false
 
+    // if (member.id === 'HM0YyRDKeDRmuBxB8V2N') {
+    //   console.log("checking log member maddie!")
+    // }
+
     const memberPosts = logPostRes?.data || []
     return memberPosts.some(post => {
-      // First check: Is the current user subscribed to this post's comments?
+      // if (post.id === 'zKBFd9Lv8bl4rcdKxKuh') {
+      //   console.log("looking at maddie's popular post")
+      //   console.log("post.commentSubscribers:", post.commentSubscribers?.map(x => x?.id))
+      // }
+
       if (!post.commentSubscribers || !user?.id) return false
 
+      // First check: Is the current user subscribed to this post's comments?
       const isSubscribed = post.commentSubscribers.some(subscriber =>
-        subscriber === user.id
+        subscriber.id === user.id
       )
+
+      // if (post.id === 'zKBFd9Lv8bl4rcdKxKuh') {
+      //   console.log("it's me:", user.id)
+      //   console.log("am I subscribed to maddie's popular post?", isSubscribed)
+      // }
 
       // If not subscribed, no unread indicator
       if (!isSubscribed) return false
@@ -102,12 +116,12 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChange
       className={cx("LogsMenu__item", {
         'LogsMenu__item--active': displayUser?.id === member?.id,
         'LogsMenu__item--first': member?.id === user?.id,
-        'LogsMenu__item--new': member.hasUnreadPosts,
+        // 'LogsMenu__item--new': member.hasUnreadPosts && displayUser?.id !== member?.id,
       })}
       onClick={() => onChangeUser(member)}
     >
-      {member.hasUnreadPosts && <Icon type="notification" />}
-      {displayUser?.id !== member?.id && hasUnreadComments && <Icon type={"speech"} size={18} />}
+      {displayUser?.id !== member?.id && member.hasUnreadPosts && <Icon type="notification" />}
+      {displayUser?.id !== member?.id && !member.hasUnreadPosts && hasUnreadComments && <Icon type={"speech"} size={18} />}
       <div>
         {member?.displayName}
       </div>
