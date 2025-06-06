@@ -25,6 +25,10 @@ $breakpoint-xl: 1300px;
   }
 }
 
+ul {
+  list-style-position: inside;
+}
+
 html {
   position: relative;
 }
