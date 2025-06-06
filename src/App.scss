@@ -25,7 +25,8 @@ $breakpoint-xl: 1300px;
   }
 }
 
-ul {
+ul, .wmde-markdown ul {
+  padding-left: 0;
   list-style-position: inside;
 }
 
