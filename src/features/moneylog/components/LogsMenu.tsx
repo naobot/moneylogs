@@ -8,11 +8,11 @@ import { UserData } from "../../../hooks/useGetUserInfo"
 interface LogsMenuProps {
   displayUser: UserData
   logMembers: any[]
-  setter: (member: any) => void
+  onChangeUser: Function
   groupId: string
 }
 
-const LogsMenu = ({ displayUser, logMembers, setter, groupId }: LogsMenuProps) => {
+const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuProps) => {
   const { user } = useCurrentUser()
 
   const serializedMembers = useMemo(() => {
@@ -49,7 +49,7 @@ const LogsMenu = ({ displayUser, logMembers, setter, groupId }: LogsMenuProps) =
               displayUser={displayUser}
               user={user}
               groupId={groupId}
-              setter={setter}
+              onChangeUser={onChangeUser}
             />
           )
         })}
@@ -59,7 +59,7 @@ const LogsMenu = ({ displayUser, logMembers, setter, groupId }: LogsMenuProps) =
 }
 
 // Separate component to handle individual member's comment checking
-const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, setter }) => {
+const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChangeUser }) => {
   const logPostRes = useGetLogPosts({ groupId, userId: member.userId })
 
   const hasUnreadComments = useMemo(() => {
@@ -91,7 +91,7 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, setter }
         'LogsMenu__item--first': member?.id === user?.id,
         'LogsMenu__item--new': member.hasUnreadPosts,
       })}
-      onClick={() => setter(member)}
+      onClick={() => onChangeUser(member)}
     >
       {member.hasUnreadPosts && <Icon type="notification" />}
       {displayUser?.id !== member?.id && hasUnreadComments && <Icon type={"speech"} size={18} />}

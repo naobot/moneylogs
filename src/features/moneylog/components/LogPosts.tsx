@@ -351,11 +351,6 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
     }
   }
 
-  const handleCommentsClick = (postObj: LogPost) => {
-    setSelectedPost(post)
-  }
-
-
   useEffect(() => {
     if (selectedPostId === post.id) {
       setTimeout(() => {
@@ -404,7 +399,7 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
             text={(post?.commentCount ?? 0).toLocaleString()}
             size={hasUnreadComments ? 16 : 18}
             className="handler"
-            onClick={() => handleCommentsClick(post.id)}
+            onClick={() => setSelectedPost(post)}
           />
         </div>
       </div>
@@ -622,7 +617,6 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
                     selectedPostId={selectedPost?.id ?? null}
                     setSelectedPost={setSelectedPost}
                     setCurrentlyEditingPostId={setCurrentlyEditingPostId}
-                    // key={(item as LogPost).id}
                   />
                   {i == calendarMarkedPosts?.length - 1 && (
                     <div className={cx("LogPosts__posts__filler", {

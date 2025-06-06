@@ -110,6 +110,21 @@ useEffect(() => {
     updateViewTracking()
   }, [displayUser?.userId, loggedInUser?.userId, groupId, memberIds])
 
+  const handleUserChange = (newUser: any) => {
+    setDisplayUser(newUser)
+
+    setTimeout(() => {
+      const logPostsContainer = document.querySelector('.LogPosts__posts')
+
+      if (logPostsContainer) {
+        logPostsContainer.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+      }
+    }, 100)
+  }
+
   return (
     <>
       <div className="Group">
@@ -141,7 +156,12 @@ useEffect(() => {
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
           {!isLoadingGroup && !isLoadingMembers && groupId && displayUser && (<>
-            <LogsMenu logMembers={members} displayUser={displayUser} setter={setDisplayUser} groupId={groupId} />
+            <LogsMenu
+              logMembers={members}
+              displayUser={displayUser}
+              onChangeUser={handleUserChange}
+              groupId={groupId}
+            />
             <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
           </>)}
         </div>
