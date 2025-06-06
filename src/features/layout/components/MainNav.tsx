@@ -67,7 +67,8 @@ const MainNav = () => {
           <Button
             title="New Log Group"
             to={'/create'}
-            icon="plus"
+            text="+"
+            buttonStyle="primary-border-lite"
           />
         </>}
       </div>
