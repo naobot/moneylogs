@@ -19,6 +19,10 @@ $breakpoint-xl: 1300px;
 #root {
   display: flex;
   width: 100%;
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 0.8em;
+  }
 }
 
 html {
@@ -77,6 +81,10 @@ html {
   grid-gap: 0.4em;
   font-size: 0.8em;
   align-items: center;
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 0.7em;
+  }
 }
 
 .Content {
@@ -86,6 +94,10 @@ html {
   width: 100%;
   flex: 1;
   overflow-y: hidden;
+
+  @media (max-width: $breakpoint-sm) {
+    padding: 0.5em 0.5em 0 0.5em;
+  }
 }
 
 .IconText {
@@ -267,6 +279,10 @@ html {
     font-size: 0.8em;
     flex-shrink: 0;
 
+    @media (max-width: $breakpoint-sm) {
+      font-size: 0.7em;
+    }
+
     &__left {
       display: inline-flex;
       justify-content: flex-start;
@@ -319,11 +335,18 @@ html {
     padding-top: 6px;
   }
 
+  @media (max-width: $breakpoint-sm) {
+    min-height: none;
+  }
+
+  @media (min-width: $breakpoint-sm) and (max-width: $breakpoint-md) {
+    min-height: 60px;
+  }
+
   @media (max-width: $breakpoint-md) {
     display: inline-flex;
     flex-direction: row;
     flex: none;
-    min-height: 60px;
     width: 100%;
     overflow-y: hidden;
     overflow-x: auto;
@@ -341,6 +364,10 @@ html {
     padding: 0.8em 1em;
     border: 2px solid var(--c-black);
     text-align: right;
+
+    @media (max-width: $breakpoint-sm) {
+      padding: 0.2em 0.8em;
+    }
 
     @media (max-width: $breakpoint-md) {
       display: flex;
