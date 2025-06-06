@@ -17,24 +17,37 @@ const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuPr
 
   const serializedMembers = useMemo(() => {
     if (!logMembers) return []
+
     return logMembers.map(member => {
       // Skip checking own posts
       if (member.id === user?.id) {
-        return { ...member, hasUnread: false }
+        return { ...member, hasUnreadPosts: false }
       }
       const memberLastUpdated = member.lastUpdated?.[groupId]
       const userLastViewed = user?.viewTracking?.[groupId]?.[member.id]?.lastViewedAt
+
+      // if (member.id === 'HM0YyRDKeDRmuBxB8V2N') {
+      //   console.log("checking log member maddie!")
+      //   console.log("maddie's memberLastUpdated:", memberLastUpdated)
+      //   console.log("i last viewed maddie:", userLastViewed)
+      // }
+
       // If member has never posted or user has never viewed, no unread
       if (!memberLastUpdated) {
-        return { ...member, hasUnread: false }
+        return { ...member, hasUnreadPosts: false }
       }
       // If user has never viewed this member's posts, they have unread
       if (!userLastViewed) {
-        return { ...member, hasUnread: true }
+        return { ...member, hasUnreadPosts: true }
       }
       // Compare timestamps (Firebase timestamps have seconds property)
-      const hasUnread = memberLastUpdated.seconds > userLastViewed.seconds
-      return { ...member, hasUnread }
+      const hasUnreadPosts = memberLastUpdated.seconds > userLastViewed.seconds
+
+      // if (member.id === 'HM0YyRDKeDRmuBxB8V2N') {
+      //   console.log("i have unread maddie posts?", hasUnreadPosts)
+      // }
+
+      return { ...member, hasUnreadPosts }
     })
   }, [user?.viewTracking, logMembers, groupId, user?.id])
 
