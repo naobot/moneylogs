@@ -5,11 +5,12 @@ type IconProps = {
   type: IconType
   size?: number
   fill?: string
+  onClick?: MouseEventHandler<HTMLDivElement>
 }
 
-export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled'
+export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled' | 'calculator'
 
-const Icon = ({ type, size = 24, fill }: IconProps) => {
+const Icon = ({ type, size = 24, fill, onClick = null }: IconProps) => {
   const rkIcons = [
     'exit',
     'document',
@@ -32,7 +33,7 @@ const Icon = ({ type, size = 24, fill }: IconProps) => {
   }), [size, fill])
 
   return (
-    <div className="Icon" style={size ? { height: size, width: size } : undefined}>
+    <div className={cx("Icon", { "handler": onClick })} style={size ? { height: size, width: size } : undefined} onClick={onClick}>
       <img
         src={`/icons/${iconSet}-${type}.svg`}
         style={cssStyles}

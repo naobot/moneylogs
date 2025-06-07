@@ -116,6 +116,7 @@ html {
   align-items: center;
   width: 21px;
   height: 21px;
+  margin-bottom: -5px;
 
   &--sm {
     width: 16px;
@@ -522,11 +523,23 @@ html {
         margin-top: 0.5em;
       }
 
+      &__date {
+        display: inline-flex;
+        align-items: center;
+      }
+
       &__amount {
         display: inline-flex;
+        align-items: center;
         grid-gap: 0.2rem;
         justify-content: center;
         font-weight: 700;
+      }
+
+      &__comments {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
       }
 
       &__content {
