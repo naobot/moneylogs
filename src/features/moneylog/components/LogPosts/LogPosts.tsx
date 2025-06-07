@@ -1,15 +1,17 @@
 import cx from "classnames"
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
-import { Currency, LogPost } from "../../../types/user"
-import Button from "../../../components/Button"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
-import { useLogPostQuery } from "../../../hooks/useLogPostQuery"
-import { IconText } from "../../../components/Icon"
-import { useGetComments } from "../../../hooks/useGetLogPostComments"
-import { useCurrentUser } from "../../../utils/auth"
-import { useDisableScroll } from "../../../hooks/useDisableScroll"
-import { useUserQuery } from "../../../hooks/useUserQuery"
+
+import { Currency, LogPost } from "@/types/user"
+import { useCurrentUser } from "@/utils/auth"
+import { useLogPostQuery } from "@/hooks/useLogPostQuery"
+import { useGetComments } from "@/hooks/useGetLogPostComments"
+import { useDisableScroll } from "@/hooks/useDisableScroll"
+import { useUserQuery } from "@/hooks/useUserQuery"
+
+import Button from "@/components/Button"
+import { IconText } from "@/components/Icon"
 
 type LogPostsProps = {
   groupId: string

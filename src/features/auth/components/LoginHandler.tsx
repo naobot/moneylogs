@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { signInWithEmailAndPassword } from "firebase/auth"
-
 // @ts-ignore
-import { auth } from '../../../config/firebase-config'
-import { AuthUser } from "../../../types/user"
-import ControlledInput from "../../../components/ControlledInput"
-import Button from "../../../components/Button"
+import { auth } from '@/config/firebase-config'
+
+import { AuthUser } from "@/types/user"
+
+import ControlledInput from "@/components/ControlledInput"
+import Button from "@/components/Button"
 
 const LoginHandler = () => {
   const navigate = useNavigate()

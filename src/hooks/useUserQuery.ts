@@ -1,6 +1,6 @@
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 import { useMutation, getUserDocRef } from "./useFirebase"
 
 type UpdateViewTrackingArgs = {

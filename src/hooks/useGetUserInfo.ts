@@ -1,9 +1,9 @@
 import { collection, where, query } from "firebase/firestore"
 import { useFirebaseCollection } from './useFirebase'
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 import { useMemo } from "react";
-import { Datetime } from "../types/user";
+import { Datetime } from "@/types/user"
 
 export type MoneyLog = {
   id: number;

@@ -1,8 +1,8 @@
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, increment, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase"
-import { Currency } from "../types/user"
+import { Currency } from "@/types/user"
 
 type AddNewLogPostArgs = {
   groupId: string

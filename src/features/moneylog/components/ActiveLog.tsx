@@ -1,8 +1,10 @@
 import { Dispatch, useEffect } from "react"
-import LogPosts from "./LogPosts"
-import { useGetGroup } from "../../../hooks/useGetGroup"
-import { useGetLogPosts } from "../../../hooks/useGetLogPosts"
-import { useCurrentUser } from "../../../utils/auth"
+
+import { useGetGroup } from "@/hooks/useGetGroup"
+import { useGetLogPosts } from "@/hooks/useGetLogPosts"
+import { useCurrentUser } from "@/utils/auth"
+
+import LogPosts from "./LogPosts/LogPosts"
 
 type ActiveLogProps = {
   groupId: string

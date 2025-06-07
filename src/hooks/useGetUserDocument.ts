@@ -1,7 +1,7 @@
 import { doc, onSnapshot } from "firebase/firestore"
 import { useEffect, useState } from "react"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 import { getUserDocRef } from "./useFirebase"
 
 interface UserDocument {

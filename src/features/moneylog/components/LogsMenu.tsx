@@ -1,9 +1,13 @@
 import { useEffect, useMemo } from "react"
-import { useCurrentUser } from "../../../utils/auth"
+
+import { useCurrentUser } from "@/utils/auth"
+
+import { useGetLogPosts } from "@/hooks/useGetLogPosts"
+import { UserData } from "@/hooks/useGetUserInfo"
+
+import Icon from "@/components/Icon"
+
 import cx from "classnames"
-import Icon from "../../../components/Icon"
-import { useGetLogPosts } from "../../../hooks/useGetLogPosts"
-import { UserData } from "../../../hooks/useGetUserInfo"
 
 interface LogsMenuProps {
   displayUser: UserData

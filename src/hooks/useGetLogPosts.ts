@@ -1,6 +1,7 @@
 import { collection, where, orderBy, query, doc, limit } from "firebase/firestore"
-import { LogPost } from "../types/user"
-import { db } from '../config/firebase-config'
+import { LogPost } from "@/types/user"
+// @ts-ignore
+import { db } from '@/config/firebase-config'
 import { useGetUserInfo } from "./useGetUserInfo"
 import { useFirebaseCollection } from "./useFirebase"
 

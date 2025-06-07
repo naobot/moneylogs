@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { collection, doc, getDoc, getDocs, limit, onSnapshot, query, Query, QueryDocumentSnapshot, runTransaction, Transaction, where } from "firebase/firestore"
 import { FirebaseError } from "firebase/app"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 
 export type FirebaseQuery<T> = {
   data: T[]

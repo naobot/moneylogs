@@ -1,6 +1,7 @@
 import { collection, limit, orderBy, query } from "firebase/firestore"
 import { Comment } from "../types/user" // assuming you have a Comment type
-import { db } from '../config/firebase-config'
+// @ts-ignore
+import { db } from '@/config/firebase-config'
 import { useFirebaseCollection } from "./useFirebase"
 
 export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {

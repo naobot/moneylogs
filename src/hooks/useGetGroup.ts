@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { doc, getDoc } from "firebase/firestore"
-import { Group } from "../types/user"
+import { Group } from "@/types/user"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 
 export const useGetGroup = (groupId?: string) => {
   const [state, setState] = useState({

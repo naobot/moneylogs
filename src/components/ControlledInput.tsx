@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import { ChangeEventHandler, useEffect } from "react"
+import { ChangeEventHandler } from "react"
 import Icon from './Icon'
 
 type ControlledInputProps = {

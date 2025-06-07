@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
-import { signOut } from "firebase/auth"
-import { Link, useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 // @ts-ignore
-import { auth } from '../../../config/firebase-config'
+import { auth } from '@/config/firebase-config'
+import { signOut } from "firebase/auth"
 
-import { useCurrentUser } from "../../../utils/auth"
-import { useGetCurrentGroups } from "../../../hooks/useGetCurrentGroups"
+import { useCurrentUser } from "@/utils/auth"
+import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups"
 
-import Button from "../../../components/Button"
+import Button from "@/components/Button"
 
 const MainNav = () => {
   const navigate = useNavigate()

@@ -1,9 +1,9 @@
 import { collection, where, query, Timestamp, doc, getDocs, limit } from "firebase/firestore"
-import { AuthUser, Group } from "../types/user"
+import { AuthUser, Group } from "@/types/user"
 import { useFirebaseCollection } from "./useFirebase"
 import { useEffect, useState } from "react"
 // @ts-ignore
-import { db } from '../config/firebase-config'
+import { db } from '@/config/firebase-config'
 
 export type GroupsResponse = {
   currentGroups: Array<Group>

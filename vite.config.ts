@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import cdn from 'vite-plugin-cdn-import'
 import react from '@vitejs/plugin-react'
-import type { Plugin } from "vite";
+import type { Plugin } from "vite"
+import path from 'path'
 
 interface SourcemapExclude {
     excludeNodeModules?: boolean;
@@ -39,6 +40,9 @@ export default defineConfig({
     sourcemap: false,
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js']
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   }
 })

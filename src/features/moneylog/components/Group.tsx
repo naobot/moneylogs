@@ -1,21 +1,20 @@
 import { useEffect, useMemo, useState } from "react"
-
-import { useCurrentUser } from "../../../utils/auth"
-import { parseReferenceArray } from "../../../utils/helpers"
-
-import LogsMenu from "../../../features/moneylog/components/LogsMenu"
-import { ActiveLog } from "../../../features/moneylog/components/ActiveLog"
-import { useGetMultipleUsers, UserData } from "../../../hooks/useGetUserInfo"
-import { useLogGroupQuery } from "../../../hooks/useLogGroupQuery"
-import { useGetGroup } from "../../../hooks/useGetGroup"
-import { useUserQuery } from "../../../hooks/useUserQuery"
-
-import Modal from "../../../components/Modal"
-
-// @ts-ignore
-import { db } from '../../config/firebase-config'
 import dayjs from "dayjs"
-import { IconText } from "../../../components/Icon"
+// @ts-ignore
+import { db } from '@/config/firebase-config'
+
+import { useCurrentUser } from "@/utils/auth"
+import { parseReferenceArray } from "@/utils/helpers"
+
+import LogsMenu from "@/features/moneylog/components/LogsMenu"
+import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
+import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
+import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
+import { useGetGroup } from "@/hooks/useGetGroup"
+import { useUserQuery } from "@/hooks/useUserQuery"
+
+import Modal from "@/components/Modal"
+import { IconText } from "@/components/Icon"
 
 export const Group = ({ groupId }) => {
   const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)

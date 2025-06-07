@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import ControlledInput from "../../../../components/ControlledInput";
-import useValidatePassword from "../../hooks/useValidatePassword";
+import ControlledInput from "@/components/ControlledInput"
+import useValidatePassword from "../hooks/useValidatePassword"
 
 const PasswordValidator = () => {
   const [password, setPassword] = useState('')
