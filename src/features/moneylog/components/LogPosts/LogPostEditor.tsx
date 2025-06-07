@@ -1,6 +1,6 @@
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
-import MDEditor, { selectLine } from "@uiw/react-md-editor"
+import MDEditor from "@uiw/react-md-editor"
 
 import { Currency } from "@/types/user"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
@@ -31,20 +31,20 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     switch (selectedCurrency) {
       case 'JPY':
       case 'CNY':
-        return /(?<=[¥￥])(\d+,)*\d+/g
+        return /\-?([¥￥])\-?(\d+,)*\d+/g
       case 'USD':
       case 'CAD':
       case 'NTD':
       case 'AUD':
-        return /(?<=\$)(\d+,)*\d+/g
+        return /\-?(\$)\-?(\d+,)*\d+/g
       case 'KRW':
-        return /(?<=₩)(\d+,)*\d+?/g
+        return /\-?(₩)\-?(\d+,)*\d+?/g
       case 'EUR':
-        return /(?<=€)(\d+,)*\d+?/g
+        return /\-?(€)\-?(\d+,)*\d+?/g
       case 'GBP':
-        return /(?<=£)(\d+,)*\d+?/g
+        return /\-?(£)\-?(\d+,)*\d+?/g
       case 'MYR':
-        return /(\d+,)*\d+(?=\w?RM)/g
+        return /\-?(\d+,)*\d+(?=\w?RM)/g
       default:
         return
     }
@@ -110,7 +110,12 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   const handleClickCalculator = () => {
     if (newEntryContent && selectedCurrency && regexMatcher) {
       const foundAmounts = newEntryContent.match(regexMatcher)
-      const foundTotal = foundAmounts?.map(x => Number(x)).reduce((a,b) => a + b)
+
+      console.log(foundAmounts)
+
+      const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£]/g, ''))).reduce((a,b) => a + b)
+
+      console.log(foundTotal)
 
       if (foundTotal) {
         newEntryAmountSet(foundTotal)
