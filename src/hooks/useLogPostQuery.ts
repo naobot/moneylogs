@@ -36,13 +36,15 @@ export const useLogPostQuery = () => {
     const { userDocRef, userName } = await getUserDocRef(userId)
     const { groupDocRef, groupName } = await getGroupDocRef(groupId)
 
+    const updateTime = serverTimestamp()
+
     const res = await addDoc(logPostsCollectionRef, {
       amount: logData?.amount,
       currency: logData?.currency,
       content: logData?.content,
       author: userDocRef,
       authorName: userName,
-      createdAt: serverTimestamp(),
+      createdAt: updateTime,
       postDate: Timestamp.fromMillis(logData?.postDate),
       group: groupDocRef,
       groupName,
@@ -54,8 +56,8 @@ export const useLogPostQuery = () => {
     }
 
     await updateDoc(userDocRef, {
-      [`commentSubscriptions.${res.id}.lastViewedAt`]: serverTimestamp(),
-      [`lastUpdated.${groupId}`]: serverTimestamp()
+      [`commentSubscriptions.${res.id}.lastViewedAt`]: updateTime,
+      [`lastUpdated.${groupId}`]: updateTime,
     })
 
     return res.id
@@ -84,18 +86,20 @@ export const useLogPostQuery = () => {
   const addCommentFn = async ({ logPostId, userId, content }: AddCommentArgs): Promise<string> => {
     const { userDocRef, userName } = await getUserDocRef(userId)
 
+    const updateTime = serverTimestamp()
+
     // Add the comment to the subcollection
     const commentRes = await addDoc(collection(db, 'log_posts', logPostId, 'comments'), {
       authorId: userDocRef,
       authorName: userName,
       content,
-      createdAt: serverTimestamp()
+      createdAt: updateTime,
     })
 
     // Increment the counter on the parent log post
     await updateDoc(doc(db, 'log_posts', logPostId), {
       commentCount: increment(1),
-      latestCommentAt: serverTimestamp(),
+      latestCommentAt: updateTime,
       commentSubscribers: arrayUnion(userDocRef),
     })
 
@@ -103,6 +107,10 @@ export const useLogPostQuery = () => {
     if (!logPostDoc.exists()) {
       throw new Error('Log post not found')
     }
+
+    await updateDoc(userDocRef, {
+      [`commentSubscriptions.${logPostId}.lastViewedAt`]: updateTime,
+    })
 
     if (!commentRes?.id) {
       throw new Error('Failed to create comment')
