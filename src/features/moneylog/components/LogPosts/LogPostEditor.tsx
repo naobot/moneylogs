@@ -36,13 +36,13 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
       case 'CAD':
       case 'NTD':
       case 'AUD':
-        return /\-?(\$)\-?(\d+,)*\d+/g
+        return /\-?(\$)\-?(\d+,)*\d+(\.\d\d)?/g
       case 'KRW':
         return /\-?(₩)\-?(\d+,)*\d+?/g
       case 'EUR':
-        return /\-?(€)\-?(\d+,)*\d+?/g
+        return /\-?(€)\-?(\d+,)*\d+(\.\d\d)?/g
       case 'GBP':
-        return /\-?(£)\-?(\d+,)*\d+?/g
+        return /\-?(£)\-?(\d+,)*\d+(\.\d\d)?/g
       case 'MYR':
         return /\-?(\d+,)*\d+(?=\w?RM)/g
       default:
