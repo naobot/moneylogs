@@ -111,11 +111,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     if (newEntryContent && selectedCurrency && regexMatcher) {
       const foundAmounts = newEntryContent.match(regexMatcher)
 
-      console.log(foundAmounts)
-
       const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£]/g, ''))).reduce((a,b) => a + b)
-
-      console.log(foundTotal)
 
       if (foundTotal) {
         newEntryAmountSet(foundTotal)
