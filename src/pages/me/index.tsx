@@ -1,14 +1,128 @@
-import { useCurrentUser } from "../../utils/auth"
+import cx from 'classnames'
+import { useEffect, useMemo, useState } from "react"
+import { useTimezoneSelect, allTimezones } from "react-timezone-select"
+
+import { useCurrentUser } from "@/utils/auth"
+import { useMutation } from '@/hooks/useFirebase'
+import { useUserQuery } from '@/hooks/useUserQuery'
+
+import Button from "@/components/Button"
+import ControlledInput from "@/components/ControlledInput"
 
 export const UserSettings = () => {
   const { user } = useCurrentUser()
+  const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
+  const [newDisplayName, setNewDisplayName] = useState('')
+  const [newDisplayLocation, setNewDisplayLocation] = useState('')
+  const [newTimezone, setNewTimezone] = useState<string>()
+
+  const isSubmittable = useMemo(() => {
+    return !!user?.userId && !!newTimezone
+  }, [user?.userId, newTimezone])
+
+  const { updateUserProfile } = useUserQuery()
+
+  const { mutate: updateUserInfo, isLoading: createPending } = useMutation(
+    async (userData: {
+      userId: string
+      displayName: string
+      displayLocation?: string
+      timezone: string
+    }) => {
+      return await updateUserProfile.mutate(userData)
+    }
+  )
+
+  useEffect(() => {
+    if (user?.displayName) {
+      setNewDisplayName(user?.displayName)
+    }
+    if (user?.displayLocation) {
+      setNewDisplayLocation(user?.displayLocation)
+    }
+    if (user?.timezone) {
+      setNewTimezone(user?.timezone)
+    }
+  }, [user])
+
+  const handleUpdateUserInfo = async () => {
+    if (!user?.userId || !newTimezone) return
+
+    try {
+      await updateUserInfo({
+        userId: user?.userId,
+        displayName: newDisplayName,
+        displayLocation: newDisplayLocation ?? undefined,
+        timezone: newTimezone,
+      })
+
+      console.log('Successfully updated user info')
+    } catch (err) {
+      console.error('Failed to update user info:', err)
+      // Error state is handled by useMutation
+    }
+  }
 
   return (
-    <div className="Window">
+    <div className="Window UserSettings">
       <div className="Window__heading">
-        <p>hi {user?.displayName}</p>
-        <p>please wait for nao to send you a group link</p>
+        {user?.displayName && <h2>hi {user?.displayName}</h2>}
       </div>
+
+      <div className="UserSettings__form">
+        <ControlledInput
+          onChange={(e: any) => setNewDisplayName(e?.target?.value)}
+          label="Display name"
+          value={newDisplayName}
+        />
+
+        <ControlledInput
+          onChange={(e: any) => setNewDisplayLocation(e?.target?.value)}
+          label="Display location"
+          value={newDisplayLocation}
+        />
+
+        {newDisplayName.length > 0 && (
+          <p>
+            Your name will display as <strong>{newDisplayName} {newDisplayLocation.length > 0 && <>({newDisplayLocation})</>}</strong>
+          </p>
+        )}
+
+        <div
+          className={cx("ControlledInput", {
+            "ControlledInput--warning": !newTimezone
+          })}
+        >
+          <label>
+            My timezone
+          </label>
+          <select
+            onChange={(e) => {
+              parseTimezone(e.currentTarget.value)
+              setNewTimezone(e.currentTarget.value)
+            }}
+            value={newTimezone}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="Menu">
+        <Button
+          text="Set my user profile"
+          size="lg"
+          buttonStyle="primary-border"
+          disabled={!isSubmittable}
+          loading={createPending}
+          onClick={handleUpdateUserInfo}
+        />
+      </div>
+
+      {/* TODO: Show log group history, including past ones */}
     </div>
   )
 }

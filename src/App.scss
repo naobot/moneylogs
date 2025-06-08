@@ -71,6 +71,10 @@ html {
   &__item {
     align-content: center;
     font-size: 1em;
+
+    &--icon {
+      padding: 0.4em 0 !important;
+    }
   }
 
   &__list {
@@ -265,7 +269,7 @@ html {
   }
 }
 
-.CreateNewLog {
+.CreateNewLog, .UserSettings {
   display: flex;
   flex-direction: column;
   grid-gap: 1em;
@@ -371,6 +375,14 @@ html {
     padding: 0.8em 1em;
     border: 2px solid var(--c-black);
     text-align: right;
+
+    &__subtitle {
+      font-size: 0.7em;
+
+      @media (max-width: $breakpoint-sm) {
+        display: none;
+      }
+    }
 
     @media (max-width: $breakpoint-sm) {
       padding: 0.2em 0.8em;

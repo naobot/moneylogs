@@ -16,10 +16,12 @@ export type UserData = {
     nanoseconds: number;
   }
   displayName: string;
+  displayLocation?: string;
   email: string;
   logs: Array<MoneyLog>;
   userId: string;
   currentLogId: string;
+  timezone?: string;
   commentSubscriptions?: {
     [logPostId: string]: {
       [lastViewedAt: string]: Datetime

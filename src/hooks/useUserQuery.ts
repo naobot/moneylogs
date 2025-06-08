@@ -9,9 +9,11 @@ type UpdateViewTrackingArgs = {
   viewedUserId: string
 }
 
-type UpdateDisplayNameArgs = {
+type UpdateUserProfileArgs = {
   userId: string
   displayName: string
+  displayLocation?: string
+  timezone: string
 }
 
 export const useUserQuery = () => {
@@ -31,12 +33,14 @@ export const useUserQuery = () => {
     // console.log(`📝 update view tracking: ${userDocRef?.id} viewed ${viewedUserDocRef?.id}`)
   }
 
-  const updateDisplayNameFn = async ({ userId, displayName }: UpdateDisplayNameArgs): Promise<void> => {
+  const updateUserProfileFn = async ({ userId, displayName, displayLocation, timezone }: UpdateUserProfileArgs): Promise<void> => {
     const { userDocRef } = await getUserDocRef(userId)
 
     console.log('✍️ executing write on users collection')
     await updateDoc(userDocRef, {
-      displayName
+      displayName,
+      displayLocation,
+      timezone,
     })
   }
 
@@ -51,13 +55,13 @@ export const useUserQuery = () => {
 
   // Mutations
   const updateViewTrackingMutation = useMutation(updateViewTrackingFn)
-  const updateDisplayNameMutation = useMutation(updateDisplayNameFn)
+  const updateUserProfileMutation = useMutation(updateUserProfileFn)
 
   return {
     updateViewTracking: updateViewTrackingMutation,
     updateViewTrackingFn,
-    updateDisplayName: updateDisplayNameMutation,
-    updateDisplayNameFn,
+    updateUserProfile: updateUserProfileMutation,
+    updateUserProfileFn,
     markCommentsAsViewedFn,
   }
 }
