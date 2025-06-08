@@ -13,6 +13,7 @@ import Button from "@/components/Button"
 import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
+import Modal from "@/components/Modal"
 
 type LogPostsProps = {
   groupId: string
@@ -55,6 +56,7 @@ export const CURRENCIES: Array<Currency> = [
 const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
+  const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
 
   const hasUnreadComments = useMemo(() => {
     if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
@@ -136,63 +138,88 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
   }, [selectedPostId])
 
   return (
-    <div
-      className={cx("LogPosts__posts__item", {
-        "LogPosts__posts__item--selected": selectedPostId===post.id,
-      })}
-      ref={postRef}
-    >
+    <>
       <div
-        className="LogPosts__posts__item__header"
+        className={cx("LogPosts__posts__item", {
+          "LogPosts__posts__item--selected": selectedPostId===post.id,
+        })}
+        ref={postRef}
       >
         <div
-          className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
-          title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
+          className="LogPosts__posts__item__header"
         >
-          <IconText type='clock' text={postTime?.format("HH:mm")} />
-        </div>
-        <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-          {post.amount} {post.currency}
-        </div>
-        <div
-          className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
-        >
-          <IconText
-            type={hasUnreadComments ? 'speech-filled' : 'speech'}
-            text={(post?.commentCount ?? 0).toLocaleString()}
-            size={hasUnreadComments ? 16 : 18}
-            className="handler"
-            onClick={() => setSelectedPost(post)}
-          />
-        </div>
-      </div>
-      <div
-        className="LogPosts__posts__item__body"
-      >
-        <div className="LogPosts__posts__item__content" data-color-mode="light">
-          <MDEditor.Markdown source={post.content} />
-        </div>
-      </div>
-      {isMyLog && (
-        <>
-          <div className="LogPosts__posts__item__footer">
-            <div className="LogPostMenu">
-              <IconText
-                className="handler LogPostMenu__item"
-                type='pencil'
-                size={16}
-                onClick={() => setCurrentlyEditingPostId(post.id)}
-              />
-              <IconText
-                className="handler LogPostMenu__item"
-                type='trash'
-                onClick={() => handleDeletePost(post.id)}
-              />
-            </div>
+          <div
+            className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
+            title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
+          >
+            <IconText type='clock' text={postTime?.format("HH:mm")} />
           </div>
-        </>
-      )}
-    </div>
+          <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+            {post.amount} {post.currency}
+          </div>
+          <div
+            className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
+          >
+            <IconText
+              type={hasUnreadComments ? 'speech-filled' : 'speech'}
+              text={(post?.commentCount ?? 0).toLocaleString()}
+              size={hasUnreadComments ? 16 : 18}
+              className="handler"
+              onClick={() => setSelectedPost(post)}
+            />
+          </div>
+        </div>
+        <div
+          className="LogPosts__posts__item__body"
+        >
+          <div className="LogPosts__posts__item__content" data-color-mode="light">
+            <MDEditor.Markdown source={post.content} />
+          </div>
+        </div>
+        {isMyLog && (
+          <>
+            <div className="LogPosts__posts__item__footer">
+              <div className="LogPostMenu">
+                <IconText
+                  className="handler LogPostMenu__item"
+                  type='pencil'
+                  size={16}
+                  onClick={() => setCurrentlyEditingPostId(post.id)}
+                />
+                <IconText
+                  className="handler LogPostMenu__item"
+                  type='trash'
+                  onClick={() => setIsShowDeleteWarning(true)}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      <Modal
+        isOpen={isShowDeleteWarning}
+        onClose={() => setIsShowDeleteWarning(false)}
+      >
+        <Modal.Header
+          title={'Warning'}
+        >
+          Warning
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Are you sure you want to delete this post?
+          </p>
+        </Modal.Body>
+        <Modal.Actions>
+          <Button
+            onClick={() => handleDeletePost(post.id)}
+            text="Delete"
+            buttonStyle="primary-border"
+          />
+          <Modal.CancelButton text="Nevermind" />
+        </Modal.Actions>
+      </Modal>
+    </>
   )
 }
 

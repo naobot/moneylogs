@@ -15,6 +15,7 @@ import { useUserQuery } from "@/hooks/useUserQuery"
 
 import Modal from "@/components/Modal"
 import { IconText } from "@/components/Icon"
+import Button from "@/components/Button"
 
 export const Group = ({ group, groupId }) => {
   // const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
@@ -168,17 +169,21 @@ useEffect(() => {
       {!currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}
-        title=""
-        okButtonText={"Join"}
-        showOkButton
-        onOk={handleJoinGroup}
-        showCloseButton
-        onClose={() => setShowInviteModal(false)}
-        disabled={isProcessingJoin}
       >
-        <p>
-          You've been invited to join this moneylog!
-        </p>
+        <Modal.Header></Modal.Header>
+        <Modal.Body>
+          <p>
+            You've been invited to join this moneylog!
+          </p>
+        </Modal.Body>
+        <Modal.Actions>
+          <Button
+            onClick={handleJoinGroup}
+            buttonStyle="primary-border"
+            text="Join"
+            disabled={isProcessingJoin}
+          />
+        </Modal.Actions>
       </Modal>}
     </>
   )
