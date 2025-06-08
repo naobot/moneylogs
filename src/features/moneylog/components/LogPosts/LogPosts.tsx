@@ -1,6 +1,7 @@
 import cx from "classnames"
 import { Dispatch, useEffect, useMemo, useRef, useState } from "react"
 import dayjs from "dayjs"
+
 import MDEditor from "@uiw/react-md-editor"
 
 import { Currency, LogPost } from "@/types/user"
@@ -14,8 +15,10 @@ import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
 import Modal from "@/components/Modal"
+import { UserData } from "@/hooks/useGetUserInfo"
 
 type LogPostsProps = {
+  user: UserData
   groupId: string
   userId: string
   logs: LogPost[]
@@ -25,6 +28,7 @@ type LogPostsProps = {
 }
 
 type LogPostProps = {
+  user: UserData
   post: LogPost
   selectedPostId: string | null
   setSelectedPost: Dispatch<React.SetStateAction<LogPost|null>>
@@ -53,7 +57,11 @@ export const CURRENCIES: Array<Currency> = [
   'MYR',
 ]
 
-const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+export const useUserTimezone = (date: string | Date | number, userTimezone?: string) => {
+  return dayjs(date).tz(userTimezone || dayjs.tz.guess())
+}
+
+const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
@@ -90,10 +98,10 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
   }, [])
 
   const postTime = useMemo(() => {
-    return dayjs(post.postDate?.seconds * 1000)
+    return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
   }, [post])
   const createdTime = useMemo(() => {
-    return dayjs(post.createdAt?.seconds * 1000)
+    return useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone)
   }, [post])
 
   const { deleteLogPost } = useLogPostQuery()
@@ -223,14 +231,14 @@ const LogPostItem = ({ post, selectedPostId, setSelectedPost, setCurrentlyEditin
   )
 }
 
-const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
+const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()
 
   const calendarMarkedPosts = useMemo(() => {
     const displayRows: Array<LogPost | DateBanner> = []
-    const now = dayjs()
+    const now = dayjs().tz(user?.timezone || dayjs.tz.guess())
     let currentWeekStart: dayjs.Dayjs | null = null
     let currentDay: number | null = null
     let runningTotals: { [key: string]: number } = {}
@@ -238,7 +246,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
     let dailyTotals: { [key: string]: number } = {}
 
     logs?.forEach((post) => {
-      const logPostDate = dayjs(post?.postDate?.seconds * 1000)
+      const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, user?.timezone)
       const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
 
       if (!(post.currency in runningTotals)) {
@@ -402,6 +410,7 @@ const LogPosts = ({ groupId, userId, logs, isCreateNewEntry = false, isCreateNew
               return (
                 <div key={(item as LogPost).id}>
                   <LogPostItem
+                    user={user}
                     post={(item as LogPost)}
                     isMyLog={isMyLog}
                     selectedPostId={selectedPost?.id ?? null}

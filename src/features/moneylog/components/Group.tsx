@@ -162,7 +162,15 @@ useEffect(() => {
               onChangeUser={handleUserChange}
               groupId={groupId}
             />
-            <ActiveLog group={group} groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
+            <ActiveLog
+              group={group}
+              groupId={groupId}
+              displayUser={displayUser}
+              userId={displayUser?.userId}
+              isCreateNewEntry={isCreateNewEntry}
+              isCreateNewEntrySet={isCreateNewEntrySet}
+              isMyLog={isActiveLogMyLog}
+            />
           </>)}
         </div>
       </div>
