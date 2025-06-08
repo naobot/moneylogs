@@ -92,7 +92,7 @@ useEffect(() => {
       // Only track if we have all required data and user is viewing someone else's logs
       if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id) ) return
 
-      // Don't track when viewing own logs - optional decision
+      // Don't track when viewing own logs
       if (loggedInUser.userId === displayUser.userId) return
 
       try {
