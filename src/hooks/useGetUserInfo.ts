@@ -90,6 +90,9 @@ export const useGetMultipleUsers = (documentIds: string[]) => {
       queryBuilder: () => {
         const chunk = chunks[index]
         if (!chunk || chunk.length === 0) return null
+
+        console.log('⬇️ executing read on users collection (chunking)')
+
         return query(
           collection(db, 'users'),
           where('__name__', 'in', chunk)

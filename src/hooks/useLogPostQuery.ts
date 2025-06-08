@@ -38,6 +38,7 @@ export const useLogPostQuery = () => {
 
     const updateTime = serverTimestamp()
 
+    console.log('✍️ executing write on log_posts collection')
     const res = await addDoc(logPostsCollectionRef, {
       amount: logData?.amount,
       currency: logData?.currency,
@@ -55,6 +56,7 @@ export const useLogPostQuery = () => {
       throw new Error('Failed to create log post')
     }
 
+    console.log('✍️ executing write on users collection')
     await updateDoc(userDocRef, {
       [`commentSubscriptions.${res.id}.lastViewedAt`]: updateTime,
       [`lastUpdated.${groupId}`]: updateTime,
@@ -76,10 +78,12 @@ export const useLogPostQuery = () => {
     if (logData.amount !== undefined) updateData.amount = logData.amount
     if (logData.currency !== undefined) updateData.currency = logData.currency
 
+    console.log('✍️ executing write on log_posts collection')
     await updateDoc(doc(db, 'log_posts', postId), updateData)
   }
 
   const deleteLogPostFn = async ({ logPostId }: { logPostId: string }): Promise<void> => {
+    console.log('🗑️ executing delete on log_posts collection')
     await deleteDoc(doc(db, 'log_posts', logPostId))
   }
 
@@ -88,6 +92,7 @@ export const useLogPostQuery = () => {
 
     const updateTime = serverTimestamp()
 
+    console.log('✍️ executing write on log_posts collection')
     // Add the comment to the subcollection
     const commentRes = await addDoc(collection(db, 'log_posts', logPostId, 'comments'), {
       authorId: userDocRef,
@@ -96,6 +101,7 @@ export const useLogPostQuery = () => {
       createdAt: updateTime,
     })
 
+    console.log('✍️ executing write on log_posts collection')
     // Increment the counter on the parent log post
     await updateDoc(doc(db, 'log_posts', logPostId), {
       commentCount: increment(1),
@@ -103,11 +109,13 @@ export const useLogPostQuery = () => {
       commentSubscribers: arrayUnion(userDocRef),
     })
 
+    console.log('⬇️ executing read on log_posts collection')
     const logPostDoc = await getDoc(doc(db, 'log_posts', logPostId))
     if (!logPostDoc.exists()) {
       throw new Error('Log post not found')
     }
 
+    console.log('✍️ executing write on log_posts collection')
     await updateDoc(userDocRef, {
       [`commentSubscriptions.${logPostId}.lastViewedAt`]: updateTime,
     })
@@ -119,8 +127,10 @@ export const useLogPostQuery = () => {
   }
 
   const deleteCommentFn = async ({ logPostId, commentId }: DeleteCommentArgs): Promise<void> => {
+    console.log('🗑️ executing delete on log_posts collection')
     await deleteDoc(doc(db, 'log_posts', logPostId, 'comments', commentId))
 
+    console.log('✍️ executing write on log_posts collection')
     // Decrement the counter
     await updateDoc(doc(db, 'log_posts', logPostId), {
       commentCount: increment(-1)

@@ -18,6 +18,8 @@ export const useGetGroup = (groupId?: string) => {
 
     try {
       const docRef = doc(db, "log_groups", groupId)
+
+      console.log('⬇️ executing read on log_groups collection')
       const docSnap = await getDoc(docRef)
 
       if (docSnap.exists()) {

@@ -10,14 +10,14 @@ import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
-import { useGetGroup } from "@/hooks/useGetGroup"
+// import { useGetGroup } from "@/hooks/useGetGroup"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
 import Modal from "@/components/Modal"
 import { IconText } from "@/components/Icon"
 
-export const Group = ({ groupId }) => {
-  const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
+export const Group = ({ group, groupId }) => {
+  // const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const { updateViewTrackingFn } = useUserQuery()
@@ -77,10 +77,10 @@ useEffect(() => {
 }, [loggedInUser, displayUser, groupId])
 
   useEffect(() => {
-    if (isSuccessGroup && !currentUserIsMember) {
+    if (!currentUserIsMember) {
       setShowInviteModal(true)
     }
-  }, [currentUserIsMember, isSuccessGroup])
+  }, [currentUserIsMember])
 
   useEffect(() => {
     isCreateNewEntrySet(false)
@@ -154,14 +154,14 @@ useEffect(() => {
         </div>
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {!isLoadingGroup && !isLoadingMembers && groupId && displayUser && (<>
+          {!isLoadingMembers && groupId && displayUser && (<>
             <LogsMenu
               logMembers={members}
               displayUser={displayUser}
               onChangeUser={handleUserChange}
               groupId={groupId}
             />
-            <ActiveLog groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
+            <ActiveLog group={group} groupId={groupId} userId={displayUser?.userId} isCreateNewEntry={isCreateNewEntry} isCreateNewEntrySet={isCreateNewEntrySet} isMyLog={isActiveLogMyLog} />
           </>)}
         </div>
       </div>

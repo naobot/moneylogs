@@ -124,6 +124,8 @@ export const getUserDocRef = async (userId: string) => { // userId is the auth i
     where('userId', '==', userId),
     limit(60),
   )
+
+  console.log('⬇️ executing read on users collection')
   const userSnapshot = await getDocs(queryUsers)
   if (userSnapshot.empty) {
     throw new Error('User does not exist')
@@ -136,6 +138,8 @@ export const getUserDocRef = async (userId: string) => { // userId is the auth i
 
 export const getGroupDocRef = async (groupId: string) => {
   const groupDocRef = doc(db, 'log_groups', groupId) // Fixed collection name
+
+  console.log('⬇️ executing read on log_groups collection')
   const groupSnapshot = await getDoc(groupDocRef)
 
   if (!groupSnapshot.exists()) {

@@ -12,6 +12,8 @@ export const useGetLogPosts = ({ groupId, userId }) => {
     queryBuilder: () => {
       if (!user?.id || !groupId) return null
 
+      console.log('⬇️ executing read on log_posts collection')
+
       return query(
         collection(db, 'log_posts'),
         where('author', '==', doc(db, 'users', user.id)),

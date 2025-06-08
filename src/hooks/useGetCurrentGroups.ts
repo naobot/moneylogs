@@ -43,6 +43,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
           where('userId', '==', currentUserId),
           limit(60)
         )
+
+        console.log('⬇️ executing read on users collection')
         const snapshot = await getDocs(usersQuery)
 
         if (!snapshot.empty) {
@@ -65,6 +67,7 @@ export const useGetCurrentGroups = (): GroupsResponse => {
     queryBuilder: () => {
       if (!userDocId) return null
 
+      console.log('⬇️ executing read on log_groups collection')
       return query(
         collection(db, 'log_groups'),
         where('start', '<=', Timestamp.now()),

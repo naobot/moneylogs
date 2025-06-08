@@ -51,6 +51,8 @@ export const useLogGroupQuery = () => {
     const { userDocRef } = await getUserDocRef(currentUserId)
 
     await runTransaction(db, async (transaction) => {
+      console.log('⬇️ executing read on users collection')
+
       const userDoc = await transaction.get(userDocRef)
       if (!userDoc.exists()) {
         throw new Error('User does not exist')
@@ -72,6 +74,8 @@ export const useLogGroupQuery = () => {
     const groupDocRef = doc(db, 'log_groups', groupId)
 
     await runTransaction(db, async (transaction) => {
+      console.log('⬇️ executing read on log_groups collection')
+
       const groupDoc = await transaction.get(groupDocRef)
       if (!groupDoc.exists()) {
         throw new Error('Log group does not exist')
@@ -87,6 +91,7 @@ export const useLogGroupQuery = () => {
 
       if (!userRefExists) {
         const newMembersList = [userDocRef, ...existingMembers]
+        console.log('✍️ executing write on users collection')
         transaction.update(groupDocRef, { members: newMembersList })
       }
     })

@@ -19,9 +19,11 @@ export const useUserQuery = () => {
   const updateViewTrackingFn = async ({ userId, logGroupId, viewedUserId }: UpdateViewTrackingArgs): Promise<void> => {
     const { userDocRef } = await getUserDocRef(userId)
 
+    console.log('⬇️ executing read on users collection')
     // viewedUserId is also the auth id so get the doc ref id first
     const { userDocRef: viewedUserDocRef} = await getUserDocRef(viewedUserId)
 
+    console.log('✍️ executing write on users collection')
     await updateDoc(userDocRef, {
       [`viewTracking.${logGroupId}.${viewedUserDocRef?.id}.lastViewedAt`]: serverTimestamp()
     })
@@ -32,6 +34,7 @@ export const useUserQuery = () => {
   const updateDisplayNameFn = async ({ userId, displayName }: UpdateDisplayNameArgs): Promise<void> => {
     const { userDocRef } = await getUserDocRef(userId)
 
+    console.log('✍️ executing write on users collection')
     await updateDoc(userDocRef, {
       displayName
     })
@@ -40,6 +43,7 @@ export const useUserQuery = () => {
   const markCommentsAsViewedFn = async ({ userId, logPostId }: { userId: string, logPostId: string }): Promise<void> => {
     const { userDocRef } = await getUserDocRef(userId)
 
+    console.log('✍️ executing write on users collection')
     await updateDoc(userDocRef, {
       [`commentSubscriptions.${logPostId}.lastViewedAt`]: serverTimestamp()
     })

@@ -25,7 +25,7 @@ export const Home = () => {
     <>
       {isLoading && <div className="InfoBox">...</div>}
       {latestActiveGroup &&
-        <Group groupId={latestActiveGroup?.id} />
+        <Group group={latestActiveGroup} groupId={latestActiveGroup?.id} />
       }
     </>
   )

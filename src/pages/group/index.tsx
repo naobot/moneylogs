@@ -25,6 +25,7 @@ export const GroupPage = () => {
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   const memberIds = useMemo(() => {
+    console.log(group)
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.members])
@@ -53,15 +54,15 @@ export const GroupPage = () => {
   }
 
   useEffect(() => {
-    if (isSuccessGroup && !currentUserIsMember) {
+    if (isSuccessGroup && group && group.members && !currentUserIsMember) {
       setShowInviteModal(true)
     }
   }, [currentUserIsMember, isSuccessGroup])
 
   return (
     <>
-      {groupId && <Group groupId={groupId} />}
-      {!currentUserIsMember &&
+      {isSuccessGroup && group && groupId && <Group group={group} groupId={groupId} />}
+      {isSuccessGroup && !currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}
         title=""

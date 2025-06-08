@@ -8,6 +8,8 @@ export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {
   return useFirebaseCollection<Comment>({
     queryBuilder: () => {
       if (!logPostId) return null
+
+      console.log('⬇️ executing read on log_posts collection')
       return query(
         collection(db, 'log_posts', logPostId, 'comments'),
         orderBy('createdAt', 'asc'),
