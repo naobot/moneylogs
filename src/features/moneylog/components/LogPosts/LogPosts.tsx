@@ -9,13 +9,13 @@ import { useCurrentUser } from "@/utils/auth"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useDisableScroll } from "@/hooks/useDisableScroll"
 import { useUserQuery } from "@/hooks/useUserQuery"
+import { UserData } from "@/hooks/useGetUserInfo"
 
+import Modal from "@/components/Modal"
 import Button from "@/components/Button"
 import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
-import Modal from "@/components/Modal"
-import { UserData } from "@/hooks/useGetUserInfo"
 
 type LogPostsProps = {
   user: UserData
