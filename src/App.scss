@@ -376,6 +376,14 @@ html {
     border: 2px solid var(--c-black);
     text-align: right;
 
+    &__subtitle {
+      font-size: 0.7em;
+
+      @media (max-width: $breakpoint-sm) {
+        display: none;
+      }
+    }
+
     @media (max-width: $breakpoint-sm) {
       padding: 0.2em 0.8em;
     }

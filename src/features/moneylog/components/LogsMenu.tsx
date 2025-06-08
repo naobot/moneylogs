@@ -126,8 +126,15 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChange
     >
       {displayUser?.id !== member?.id && member.hasUnreadPosts && <Icon type="notification" />}
       {displayUser?.id !== member?.id && !member.hasUnreadPosts && hasUnreadComments && <Icon type={"speech"} size={18} />}
-      <div>
-        {member?.displayName}
+      <div className="LogsMenu__item__content">
+        <div className="LogsMenu__item__title">
+          {member?.displayName}
+        </div>
+        {member?.displayLocation && (
+          <div className="LogsMenu__item__subtitle">
+            ({member?.displayLocation})
+          </div>
+        )}
       </div>
     </div>
   )
