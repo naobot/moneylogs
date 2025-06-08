@@ -31,14 +31,14 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     switch (selectedCurrency) {
       case 'JPY':
       case 'CNY':
-        return /\-?([¥￥])\-?(\d+,)*\d+/g
+        return /\-?([¥￥])\-?(\d+,)*\d+万?/g
       case 'USD':
       case 'CAD':
       case 'NTD':
       case 'AUD':
         return /\-?(\$)\-?(\d+,)*\d+(\.\d\d)?/g
       case 'KRW':
-        return /\-?(₩)\-?(\d+,)*\d+?/g
+        return /\-?(₩)\-?(\d+,)*\d+k?/g
       case 'EUR':
         return /\-?(€)\-?(\d+,)*\d+(\.\d\d)?/g
       case 'GBP':
@@ -111,7 +111,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     if (newEntryContent && selectedCurrency && regexMatcher) {
       const foundAmounts = newEntryContent.match(regexMatcher)
 
-      const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£]/g, ''))).reduce((a,b) => a + b)
+      const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£,]/g, '').replaceAll('k', '000').replaceAll('万', '0000'))).reduce((a,b) => a + b)
 
       if (foundTotal) {
         newEntryAmountSet(foundTotal)

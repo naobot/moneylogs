@@ -1,6 +1,5 @@
 import { useMemo } from "react"
 import { useGetCurrentGroups } from "../../hooks/useGetCurrentGroups"
-import { useCurrentUser } from "../../utils/auth"
 import { Group } from "../../features/moneylog/components/Group"
 
 export const Home = () => {
