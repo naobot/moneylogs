@@ -49,8 +49,8 @@ const MainNav = () => {
       <div className='MainNav__item Menu'>
         {isLoggedIn &&
         <>
-          <Button to='/' title='Home' icon='home' />
-          {/*<Button to='/me' title='My Preferences' icon='user' />*/}
+          <Button className="MainNav__item--icon" to='/' title='Home' icon='home' />
+          <Button className="MainNav__item--icon" to='/me' title='My Preferences' icon='user' />
           {isLoading && <div>...</div>}
           {isSuccess && <div className="MainNav__list">
             {currentGroups.map((group) => (

@@ -23,7 +23,6 @@ export const CreateNewLog = () => {
   const { user } = useCurrentUser()
   const { addNewLogGroup } = useLogGroupQuery()
 
-  // Use mutation hook for better state management
   const { mutate: createGroup, isLoading: createPending, isError, error } = useMutation(
     async (groupData: {
       title: string
