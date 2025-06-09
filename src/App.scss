@@ -345,6 +345,7 @@ html {
   max-height: 100%;
   flex: 1;
   transition: 0.3s ease-in-out;
+  margin-bottom: 1em;
 
   @media (max-width: $breakpoint-sm) {
     min-height: none;
@@ -362,6 +363,7 @@ html {
     overflow-y: hidden;
     overflow-x: auto;
     font-size: 0.6em;
+    margin-bottom: 0;
   }
 
   @media (min-width: $breakpoint-md) and (max-width: $breakpoint-xl) {
