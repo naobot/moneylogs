@@ -56,10 +56,6 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
             const itemBodyContainer = ref.firstChild as HTMLElement
             const heightDiff = itemBodyContainer?.offsetHeight - commentBoxHeight
 
-            // console.log('commentBoxHeight', commentBoxHeight)
-            // console.log('itemBodyContainer height', itemBodyContainer?.offsetHeight)
-            // console.log('heightDiff', heightDiff)
-
             if (heightDiff > 0) {
               if (heightDiff > 40) {
                 ref?.classList?.add('LogPostComments__item--grow-xl')
