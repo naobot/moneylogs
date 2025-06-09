@@ -37,6 +37,7 @@ type LogPostProps = {
 }
 
 type DateBanner = {
+  isFuture: boolean
   type: 'week' | 'day'
   text: string
   total: { [key: string]: number }
@@ -268,6 +269,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
                         `${weeksAgo} weeks ago`
 
         displayRows.push({
+          isFuture: weeksAgo < 0,
           text: weekText,
           type: 'week',
           _isBanner: true,
@@ -293,6 +295,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
           _isBanner: true,
           runningTotal: runningTotals,
           total: dailyTotals,
+          isFuture: now.diff(logPostDate) < 0,
         })
       }
 
@@ -373,6 +376,8 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
             if ('_isBanner' in item && item._isBanner) {
               const currencyKeys = Object.keys(item?.total)
               const formattedTotals = currencyKeys.map(x => `${item?.total[x]?.toLocaleString()} ${x}`)
+
+              if (item.isFuture) return
 
               return (
               <div
