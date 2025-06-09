@@ -41,6 +41,13 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
   }, [postId])
 
   useLayoutEffect(() => {
+    const delay = setTimeout(() => {
+      commentRefs.current?.get('newComment')?.scrollIntoView({ behavior: 'smooth' })
+    }, 1000)
+    return () => clearTimeout(delay)
+  }, [postId, comments])
+
+  useLayoutEffect(() => {
     if (commentRefs) {
       const delay = setTimeout(() => {
         commentRefs.current.forEach((ref) => {
