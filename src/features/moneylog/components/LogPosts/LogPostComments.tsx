@@ -1,5 +1,5 @@
 import cx from "classnames"
-import { useState } from "react"
+import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 import MDEditor from "@uiw/react-md-editor"
 
 import { useCurrentUser } from "@/utils/auth"
@@ -17,6 +17,7 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
   const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
+  const commentRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const { addComment } = useLogPostQuery()
 
@@ -35,17 +36,57 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
     }
   }
 
+  useEffect(() => {
+    commentRefs.current = new Map();
+  }, [postId])
+
+  useLayoutEffect(() => {
+    if (commentRefs) {
+      const delay = setTimeout(() => {
+        commentRefs.current.forEach((ref) => {
+          if (ref) {
+            const commentBoxHeight = ref.offsetHeight
+            const itemBodyContainer = ref.firstChild as HTMLElement
+            const heightDiff = itemBodyContainer?.offsetHeight - commentBoxHeight
+
+            // console.log('commentBoxHeight', commentBoxHeight)
+            // console.log('itemBodyContainer height', itemBodyContainer?.offsetHeight)
+            // console.log('heightDiff', heightDiff)
+
+            if (heightDiff > 0) {
+              if (heightDiff > 40) {
+                ref?.classList?.add('LogPostComments__item--grow-xl')
+              } else {
+                ref?.classList?.add('LogPostComments__item--grow')
+              }
+            }
+
+            ref?.classList?.remove('LogPostComments__item--hidden')
+          }
+        })
+      }, 500)
+      return () => clearTimeout(delay)
+    }
+  }, [postId, comments])
+
   return (<>
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
       {/*{!isLoadingComments && isSuccessComments && comments?.length === 0 && (
         <div className="LogPostComments__notice">No comments</div>
       )}*/}
-      {!isLoadingComments && isSuccessComments && comments?.map(comment => {
+      {!isLoadingComments && isSuccessComments && comments?.map((comment, i) => {
         return (
           <div
+            ref={(el) => {
+              if (el) {
+                commentRefs.current.set(comment.id, el);
+              } else {
+                commentRefs.current.delete(comment.id);
+              }
+            }}
             key={comment.id}
-            className={cx("LogPostComments__item", {
+            className={cx("LogPostComments__item LogPostComments__item--hidden", {
               "LogPostComments__item--highlight" : comment?.authorId?.id === currentLogAuthorId,
             })}
           >
@@ -62,7 +103,14 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
           </div>
         )
       })}
-      <div className="LogPostComments__item">
+      <div
+        className="LogPostComments__item LogPostComments__item--hidden"
+        ref={(elm) => {
+          if (elm) {
+            commentRefs.current.set('newComment', elm)
+          }
+        }}
+      >
         <div className="LogPostComments__item__container">
           <div className="LogPostComments__item__body container" data-color-mode="light">
             {!addComment?.isLoading && (

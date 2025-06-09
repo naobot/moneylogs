@@ -632,13 +632,30 @@ html {
   &__item {
     position: relative;
     background: var(--c-white);
-    // text-align: center;
     border-radius: 10px;
     padding: 0.5em;
     border: var(--c-black) solid 1px;
     display: flex;
     flex-direction: column;
     z-index: 52;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+
+    &--hidden {
+      opacity: 0 !important;
+    }
+
+    @media (max-width: $breakpoint-md) {
+      &--grow {
+        width: fit-content;
+        max-width: 420px !important;
+      }
+
+      &--grow-xl {
+        width: fit-content;
+        max-width: 600px !important;
+      }
+    }
 
     &--highlight {
       background: var(--c-black);
@@ -739,6 +756,10 @@ html {
         p {
           overflow-wrap: break-word;
           word-break: break-word;
+
+          @media (max-width: $breakpoint-md) {
+            margin-bottom: 0.2rem;
+          }
         }
       }
     }
