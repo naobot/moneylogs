@@ -8,6 +8,7 @@ import { parseReferenceArray } from "@/utils/helpers"
 
 import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
+import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
 import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
 import { useGetLogPosts } from "@/hooks/useGetLogPosts"
@@ -40,7 +41,10 @@ export const Group = ({ group, groupId }) => {
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.id, group?.members])
 
-  const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
+  // const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
+  const { users: members, isLoading: isLoadingMembers } = useGetGroupUsers({
+    userIds: memberIds
+  })
 
   const isActiveLogMyLog = useMemo(() => {
     return loggedInUser?.id === displayUser?.id
@@ -62,8 +66,6 @@ export const Group = ({ group, groupId }) => {
           groupId,
         }),
       ])
-
-      refetch()
     } catch (error) {
       console.error('Failed to join group:', error)
     }
@@ -169,7 +171,7 @@ useEffect(() => {
             <ActiveLog
               group={group}
               groupId={groupId}
-              logPosts={logPostRes.posts}
+              logPosts={logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
               displayUser={displayUser}
               userId={displayUser?.userId}
               isCreateNewEntry={isCreateNewEntry}
