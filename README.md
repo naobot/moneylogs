@@ -11,7 +11,7 @@ Make sure to run `npm install` first on initial install.
 To run locally:
 
 ```bash
-npm run 
+npm run
 ```
 
 or
@@ -26,7 +26,7 @@ The app will run locally on port 5173.
 
 Data is handled by Firebase. Please contact me if you need any details on data collections and their schemas.
 
-**Warning:** All app data is currently shared with live, production data. Please be very careful in development, and create a dummy log group for testing.
+⚠️ **Warning:** All app data is currently shared with live, production data. Please be very careful in development, and create a dummy log group for testing.
 
 ## Deployment
 
