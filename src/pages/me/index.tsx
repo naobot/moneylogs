@@ -95,7 +95,7 @@ export const UserSettings = () => {
           })}
         >
           <label>
-            My timezone
+            My timezone is
           </label>
           <select
             onChange={(e) => {

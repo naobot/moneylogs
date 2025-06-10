@@ -36,7 +36,7 @@ export const useLogPostQuery = () => {
     const { userDocRef, userName } = await getUserDocRef(userId)
     const { groupDocRef, groupName } = await getGroupDocRef(groupId)
 
-    const updateTime = serverTimestamp()
+    // const updateTime = serverTimestamp()
 
     console.log('✍️ executing write on log_posts collection')
     const res = await addDoc(logPostsCollectionRef, {
@@ -45,7 +45,7 @@ export const useLogPostQuery = () => {
       content: logData?.content,
       author: userDocRef,
       authorName: userName,
-      createdAt: updateTime,
+      // createdAt: updateTime,
       postDate: Timestamp.fromMillis(logData?.postDate),
       group: groupDocRef,
       groupName,
