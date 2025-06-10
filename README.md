@@ -1,50 +1,33 @@
-# React + TypeScript + Vite
+# moneylogs
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a personal finance microblogging app built in React with Vite. It is currently in closed beta at https://moneylogs-89ebf.web.app/
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Installation requires [Node.js](https://nodejs.org/en/) v20+.
 
-## Expanding the ESLint configuration
+Make sure to run `npm install` first on initial install.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+To run locally:
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm run 
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+or
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npx vite
 ```
+
+The app will run locally on port 5173.
+
+## Data
+
+Data is handled by Firebase. Please contact me if you need any details on data collections and their schemas.
+
+**Warning:** All app data is currently shared with live, production data. Please be very careful in development, and create a dummy log group for testing.
+
+## Deployment
+
+Pushes and merges to `main` are automatically deployed via GitHub Actions. Please make all PRs merge to `develop`.
