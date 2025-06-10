@@ -8,6 +8,7 @@ export const updateCommentMetadata = functions.firestore
   .onCreate(async (snap, context) => {
     const { postId } = context.params
 
+    // Update the parent post's latestCommentAt field
     await admin.firestore()
       .collection('log_posts')
       .doc(postId)
