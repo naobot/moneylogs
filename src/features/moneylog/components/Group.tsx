@@ -8,8 +8,10 @@ import { parseReferenceArray } from "@/utils/helpers"
 
 import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
+import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
 import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
+import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 // import { useGetGroup } from "@/hooks/useGetGroup"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
@@ -22,6 +24,8 @@ export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const { updateViewTrackingFn } = useUserQuery()
+
+  const logPostRes = useGetLogPosts({ groupId })
 
   const isProcessingJoin = useMemo(() => {
     return addGroupToMember.isLoading || addMemberToGroup.isLoading
@@ -37,7 +41,10 @@ export const Group = ({ group, groupId }) => {
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.id, group?.members])
 
-  const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
+  // const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
+  const { users: members, isLoading: isLoadingMembers } = useGetGroupUsers({
+    userIds: memberIds
+  })
 
   const isActiveLogMyLog = useMemo(() => {
     return loggedInUser?.id === displayUser?.id
@@ -59,8 +66,6 @@ export const Group = ({ group, groupId }) => {
           groupId,
         }),
       ])
-
-      refetch()
     } catch (error) {
       console.error('Failed to join group:', error)
     }
@@ -94,7 +99,7 @@ useEffect(() => {
       if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id) ) return
 
       // Don't track when viewing own logs
-      if (loggedInUser.userId === displayUser.userId) return
+      // if (loggedInUser.userId === displayUser.userId) return
 
       try {
         await updateViewTrackingFn({
@@ -155,9 +160,10 @@ useEffect(() => {
         </div>
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {!isLoadingMembers && groupId && displayUser && (<>
+          {logPostRes.isSuccess && !isLoadingMembers && groupId && displayUser && (<>
             <LogsMenu
               logMembers={members}
+              logPosts={logPostRes.posts}
               displayUser={displayUser}
               onChangeUser={handleUserChange}
               groupId={groupId}
@@ -165,6 +171,7 @@ useEffect(() => {
             <ActiveLog
               group={group}
               groupId={groupId}
+              logPosts={logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
               displayUser={displayUser}
               userId={displayUser?.userId}
               isCreateNewEntry={isCreateNewEntry}

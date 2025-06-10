@@ -25,7 +25,6 @@ export const GroupPage = () => {
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   const memberIds = useMemo(() => {
-    console.log(group)
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.members])
@@ -62,21 +61,22 @@ export const GroupPage = () => {
   return (
     <>
       {isSuccessGroup && group && groupId && <Group group={group} groupId={groupId} />}
-      {isSuccessGroup && !currentUserIsMember &&
-      <Modal
-        isOpen={showInviteModal}
-        title=""
-        okButtonText={"Join"}
-        showOkButton
-        onOk={handleJoinGroup}
-        showCloseButton
-        onClose={() => setShowInviteModal(false)}
-        disabled={isProcessingJoin}
-      >
-        <p>
-          You've been invited to join this moneylog!
-        </p>
-      </Modal>}
+      {isSuccessGroup && group && groupId && !currentUserIsMember && (
+        <Modal
+          isOpen={showInviteModal}
+          title=""
+          okButtonText={"Join"}
+          showOkButton
+          onOk={handleJoinGroup}
+          showCloseButton
+          onClose={() => setShowInviteModal(false)}
+          disabled={isProcessingJoin}
+        >
+          <p>
+            You've been invited to join this moneylog!
+          </p>
+        </Modal>
+      )}
     </>
   )
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react"
 
 import { useCurrentUser } from "@/utils/auth"
 
-import { useGetLogPosts } from "@/hooks/useGetLogPosts"
+import { LogPost } from "@/types/user"
 import { UserData } from "@/hooks/useGetUserInfo"
 
 import Icon from "@/components/Icon"
@@ -12,11 +12,12 @@ import cx from "classnames"
 interface LogsMenuProps {
   displayUser: UserData
   logMembers: any[]
+  logPosts: Array<LogPost>
   onChangeUser: Function
   groupId: string
 }
 
-const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuProps) => {
+const LogsMenu = ({ displayUser, logMembers, logPosts, onChangeUser, groupId }: LogsMenuProps) => {
   const { user } = useCurrentUser()
 
   const serializedMembers = useMemo(() => {
@@ -24,7 +25,7 @@ const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuPr
 
     return logMembers.map(member => {
       // Skip checking own posts
-      if (member.id === user?.id) {
+      if (!logMembers || !user?.id || user?.viewTracking === undefined) {
         return { ...member, hasUnreadPosts: false }
       }
       const memberLastUpdated = member.lastUpdated?.[groupId]
@@ -62,6 +63,7 @@ const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuPr
           return (
             <LogsMenuItemWithComments
               key={member.id}
+              logPosts={logPosts.filter((post) => post.author.id == member.id)}
               member={member}
               displayUser={displayUser}
               user={user}
@@ -76,9 +78,7 @@ const LogsMenu = ({ displayUser, logMembers, onChangeUser, groupId }: LogsMenuPr
 }
 
 // Separate component to handle individual member's comment checking
-const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChangeUser }) => {
-  const logPostRes = useGetLogPosts({ groupId, userId: member.userId })
-
+const LogsMenuItemWithComments = ({ member, logPosts, displayUser, user, groupId, onChangeUser }) => {
   const hasUnreadComments = useMemo(() => {
     // Skip checking own posts for comments
     if (member.id === user?.id) return false
@@ -87,7 +87,7 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChange
     //   console.log("checking log member maddie!")
     // }
 
-    const memberPosts = logPostRes?.data || []
+    const memberPosts = logPosts || []
     return memberPosts.some(post => {
       // if (post.id === 'zKBFd9Lv8bl4rcdKxKuh') {
       //   console.log("looking at maddie's popular post")
@@ -113,7 +113,7 @@ const LogsMenuItemWithComments = ({ member, displayUser, user, groupId, onChange
       const userLastViewed = user?.commentSubscriptions?.[post.id]?.lastViewedAt
       return post.latestCommentAt && (!userLastViewed || post.latestCommentAt.seconds > userLastViewed.seconds)
     })
-  }, [logPostRes?.data, user, member.id])
+  }, [logPosts, user, member.id])
 
   return (
     <div
