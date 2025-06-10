@@ -25,7 +25,6 @@ export const GroupPage = () => {
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   const memberIds = useMemo(() => {
-    console.log(group)
     if (!group?.members) return []
     return parseReferenceArray(group.members).map(ref => ref.id)
   }, [group?.members])

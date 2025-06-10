@@ -10,6 +10,7 @@ import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
+import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 // import { useGetGroup } from "@/hooks/useGetGroup"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
@@ -22,6 +23,8 @@ export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const { updateViewTrackingFn } = useUserQuery()
+
+  const logPostRes = useGetLogPosts({ groupId })
 
   const isProcessingJoin = useMemo(() => {
     return addGroupToMember.isLoading || addMemberToGroup.isLoading
@@ -155,9 +158,10 @@ useEffect(() => {
         </div>
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {!isLoadingMembers && groupId && displayUser && (<>
+          {logPostRes.isSuccess && !isLoadingMembers && groupId && displayUser && (<>
             <LogsMenu
               logMembers={members}
+              logPosts={logPostRes.posts}
               displayUser={displayUser}
               onChangeUser={handleUserChange}
               groupId={groupId}
@@ -165,6 +169,7 @@ useEffect(() => {
             <ActiveLog
               group={group}
               groupId={groupId}
+              logPosts={logPostRes.posts}
               displayUser={displayUser}
               userId={displayUser?.userId}
               isCreateNewEntry={isCreateNewEntry}
