@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 
 import { useCurrentUser } from "@/utils/auth"
 
@@ -63,7 +63,7 @@ const LogsMenu = ({ displayUser, logMembers, logPosts, onChangeUser, groupId }: 
           return (
             <LogsMenuItemWithComments
               key={member.id}
-              logPosts={logPosts.filter((post) => post.authorId == member.id)}
+              logPosts={logPosts.filter((post) => post.author.id == member.id)}
               member={member}
               displayUser={displayUser}
               user={user}

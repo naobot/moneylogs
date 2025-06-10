@@ -99,7 +99,7 @@ useEffect(() => {
       if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id) ) return
 
       // Don't track when viewing own logs
-      if (loggedInUser.userId === displayUser.userId) return
+      // if (loggedInUser.userId === displayUser.userId) return
 
       try {
         await updateViewTrackingFn({
