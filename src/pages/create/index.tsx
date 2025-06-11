@@ -2,12 +2,13 @@ import dayjs from "dayjs"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { useCurrentUser } from "../../utils/auth"
-import { useLogGroupQuery } from "../../hooks/useLogGroupQuery"
-import { useMutation } from "../../hooks/useFirebase"
+import { useCurrentUser } from "@/contexts"
 
-import ControlledInput from "../../components/ControlledInput"
-import Button from "../../components/Button"
+import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
+import { useMutation } from "@/hooks/useFirebase"
+
+import ControlledInput from "@/components/ControlledInput"
+import Button from "@/components/Button"
 
 
 export const CreateNewLog = () => {

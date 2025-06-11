@@ -5,7 +5,8 @@ import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
 
 import { Currency, LogPost } from "@/types/user"
-import { useCurrentUser } from "@/utils/auth"
+import { useCurrentUser } from "@/contexts"
+
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useDisableScroll } from "@/hooks/useDisableScroll"
 import { useUserQuery } from "@/hooks/useUserQuery"

@@ -1,8 +1,7 @@
-import { useEffect, useMemo } from "react"
-
-import { useCurrentUser } from "@/utils/auth"
+import { useMemo } from "react"
 
 import { LogPost } from "@/types/user"
+import { useCurrentUser } from "@/contexts"
 import { UserData } from "@/hooks/useGetUserInfo"
 
 import Icon from "@/components/Icon"

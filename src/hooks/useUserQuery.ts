@@ -7,7 +7,6 @@ type UpdateViewTrackingArgs = {
   userId: string
   logGroupId: string
   viewedUserId: string
-  userMap: Map<string, string>
 }
 
 type UpdateUserProfileArgs = {

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 // @ts-ignore
 import { auth } from '@/config/firebase-config'
 import { signOut } from "firebase/auth"
 
-import { useCurrentUser } from "@/utils/auth"
+import { useCurrentUser } from "@/contexts"
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups"
 
 import Button from "@/components/Button"

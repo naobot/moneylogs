@@ -1,8 +1,9 @@
 import cx from "classnames"
-import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import MDEditor from "@uiw/react-md-editor"
 
-import { useCurrentUser } from "@/utils/auth"
+import { useCurrentUser } from "@/contexts"
+
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useGetComments } from "@/hooks/useGetLogPostComments"
 

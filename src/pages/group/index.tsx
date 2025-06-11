@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { useCurrentUser } from "../../utils/auth"
-import { parseReferenceArray } from "../../utils/helpers"
-import { useLogGroupQuery } from "../../hooks/useLogGroupQuery"
-import { useGetGroup } from "../../hooks/useGetGroup"
+import { useCurrentUser } from "@/contexts"
 
-import Modal from "../../components/Modal"
+import { parseReferenceArray } from "@/utils/helpers"
+import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
+import { useGetGroup } from "@/hooks/useGetGroup"
+import { Group } from "@/features/moneylog/components/Group"
+
+import Modal from "@/components/Modal"
 
 // @ts-ignore
-import { db } from '../../config/firebase-config'
-import { Group } from "../../features/moneylog/components/Group"
+import { db } from '@/config/firebase-config'
 
 export const GroupPage = () => {
   const navigate = useNavigate()

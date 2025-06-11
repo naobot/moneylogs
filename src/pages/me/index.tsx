@@ -2,7 +2,8 @@ import cx from 'classnames'
 import { useEffect, useMemo, useState } from "react"
 import { useTimezoneSelect, allTimezones } from "react-timezone-select"
 
-import { useCurrentUser } from "@/utils/auth"
+import { useCurrentUser } from '@/contexts'
+
 import { useMutation } from '@/hooks/useFirebase'
 import { useUserQuery } from '@/hooks/useUserQuery'
 

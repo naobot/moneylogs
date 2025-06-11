@@ -22,7 +22,8 @@
       "@/components/*": ["src/components/*"],
       "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"]
+      "@/utils/*": ["src/utils/*"],
+      "@/contexts/*": ["src/contexts/*"]
     }
   },
   "include": ["src /**/*"],

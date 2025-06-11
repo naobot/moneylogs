@@ -3,13 +3,12 @@ import dayjs from "dayjs"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
 
-import { useCurrentUser } from "@/utils/auth"
-import { parseReferenceArray } from "@/utils/helpers"
+import { useCurrentUser } from "@/contexts"
 
 import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
-import { useGetMultipleUsers, UserData } from "@/hooks/useGetUserInfo"
+import { UserData } from "@/hooks/useGetUserInfo"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
 import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 // import { useGetGroup } from "@/hooks/useGetGroup"
@@ -36,22 +35,23 @@ export const Group = ({ group, groupId }) => {
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
-  const memberIds = useMemo(() => {
-    if (!group?.members) return []
-    return parseReferenceArray(group.members).map(ref => ref.id)
-  }, [group?.id, group?.members])
-
   // const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
-  const { users: members, isLoading: isLoadingMembers } = useGetGroupUsers({
-    userIds: memberIds
-  })
+  const { users: members, isLoading: isLoadingMembers, userIdToDocRefMap } = useGetGroupUsers(groupId)
+
+  const memberIds = useMemo(() => {
+    if (!members) return []
+    return members.map(ref => ref.id)
+  }, [groupId, members])
 
   const isActiveLogMyLog = useMemo(() => {
     return loggedInUser?.id === displayUser?.id
   }, [loggedInUser, displayUser])
   const currentUserIsMember = useMemo(() => {
-    return memberIds.includes(loggedInUser?.id)
-  }, [loggedInUser, memberIds])
+    if (loggedInUser?.id && groupId) {
+      return memberIds.includes(loggedInUser?.id)
+    }
+    return false
+  }, [loggedInUser, memberIds, groupId])
 
   const handleJoinGroup = async () => {
     console.log('Attempting to join!')
@@ -75,13 +75,13 @@ export const Group = ({ group, groupId }) => {
     return dayjs(secondsDate * 1000)?.format(formatString)
   }
 
-  const userIdToDocRefMap = useMemo(() => {
-    const map = new Map<string, string>();
-    members.forEach(user => {
-      map.set(user.userId, user.id) // or however you access the doc ref ID
-    })
-    return map
-  }, [members])
+  // const userIdToDocRefMap = useMemo(() => {
+  //   const map = new Map<string, string>();
+  //   members.forEach(user => {
+  //     map.set(user.userId, user.id) // or however you access the doc ref ID
+  //   })
+  //   return map
+  // }, [members])
 
   useEffect(() => {
     // Only initialize if displayUser is not already set
@@ -104,7 +104,7 @@ export const Group = ({ group, groupId }) => {
   useEffect(() => {
     const updateViewTracking = async () => {
       // Only track if we have all required data and user is viewing someone else's logs
-      if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return;
+      if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return
       if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id)) return
 
       const viewingUserDocRefId = userIdToDocRefMap.get(loggedInUser.userId)
@@ -120,7 +120,6 @@ export const Group = ({ group, groupId }) => {
           userId: viewingUserDocRefId,
           logGroupId: groupId,
           viewedUserId: viewedUserDocRefId,
-          userMap: userIdToDocRefMap,
         })
       } catch (error) {
         console.error('Failed to update view tracking:', error)
@@ -128,7 +127,7 @@ export const Group = ({ group, groupId }) => {
     }
 
     updateViewTracking()
-  }, [displayUser?.userId, loggedInUser?.userId, groupId, memberIds])
+  }, [displayUser?.userId, loggedInUser?.userId, groupId])
 
   const handleUserChange = (newUser: any) => {
     setDisplayUser(newUser)
@@ -196,7 +195,7 @@ export const Group = ({ group, groupId }) => {
           </>)}
         </div>
       </div>
-      {!currentUserIsMember &&
+      {isLoadingMembers && !currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}
       >

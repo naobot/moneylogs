@@ -1,114 +1,188 @@
-import { useEffect, useState } from "react"
-import { collection, query, where, onSnapshot, Unsubscribe, documentId, or } from "firebase/firestore"
+import { useEffect, useMemo, useState } from "react"
+import { collection, query, where, onSnapshot, getDoc, doc, DocumentSnapshot } from "firebase/firestore"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
-import { UserData } from "./useGetUserInfo"
 
-type UseGetGroupUsersParams = {
-  userIds: string[] // Array of user document IDs
+// type UseGetGroupUsersParams = {
+//   userIds: string[] // Array of user document IDs
+// }
+
+interface CacheableUserData {
+  id: string
+  userId: string
+  displayName: string
+  email: string
+  timezone?: string
+  groups: string[]
 }
 
-export const useGetGroupUsers = ({ userIds }: UseGetGroupUsersParams) => {
-  const [state, setState] = useState({
-    users: [] as UserData[],
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: undefined as any,
-  })
+interface RealtimeUserData {
+  viewTracking: Record<string, any>
+  commentSubscriptions: Record<string, any>
+  lastSeen?: Date
+}
+
+export interface FullUserData extends CacheableUserData, RealtimeUserData {}
+
+const CACHE_DURATION = 15 * 60 * 1000 // 15 minutes
+const getCacheKey = (groupId: string) => `groupUsers_${groupId}`
+
+const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
+  try {
+    const cached = localStorage.getItem(getCacheKey(groupId))
+    if (!cached) return null
+
+    const { data, timestamp } = JSON.parse(cached)
+    const isExpired = Date.now() - timestamp > CACHE_DURATION
+
+    if (isExpired) {
+      localStorage.removeItem(getCacheKey(groupId))
+      return null
+    }
+
+    console.log('📱 Using cached user profiles')
+    return data
+  } catch {
+    return null
+  }
+};
+
+const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
+  try {
+    const cacheData = {
+      data: users,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(getCacheKey(groupId), JSON.stringify(cacheData))
+    console.log('💾 Cached user profiles')
+  } catch (error) {
+    console.warn('Failed to cache users:', error)
+  }
+};
+
+export const useGetGroupUsers = (groupId: string) => {
+  const [users, setUsers] = useState<FullUserData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Create user ID to doc ref mapping (for your view tracking)
+  const userIdToDocRefMap = useMemo(() => {
+    const map = new Map<string, string>()
+    users.forEach(user => {
+      map.set(user.userId || user.id, user.id) // Adjust based on your user object structure
+    });
+    return map
+  }, [users])
 
   useEffect(() => {
-    if (!userIds || userIds.length === 0) {
-      setState({
-        users: [],
-        isLoading: false,
-        isSuccess: true,
-        isError: false,
-        error: undefined
-      })
-      return
+    if (!groupId) return
+
+    // Try to get cached user profiles first
+    const cachedUsers = getCachedUsers(groupId)
+
+    if (cachedUsers) {
+      // Use cached data immediately for instant display
+      // (Real-time listener will update with fresh data)
+      setUsers(cachedUsers as FullUserData[])
+      setIsLoading(false)
     }
 
-    setState(prev => ({ ...prev, isLoading: true }))
+    // Set up real-time listener (always runs, even with cache)
+    console.log('🔄 setting up real-time listeners for users')
 
-    // For groups up to 30 users, just make 3 simple queries (10 users each)
-    const chunk1 = userIds.slice(0, 10)
-    const chunk2 = userIds.slice(10, 20)
-    const chunk3 = userIds.slice(20, 30)
+    // Your existing chunked user fetching logic here
+    const setupUserListeners = async () => {
+      try {
+        // Get group members list first
+        const groupDoc = await getDoc(doc(db, 'log_groups', groupId))
+        const memberRefs = groupDoc.data()?.members || []
 
-    const unsubscribeFunctions: Unsubscribe[] = []
-    // Use an object to track users by chunk index - persists across listener fires
-    const usersByChunk: { [key: number]: any[] } = {}
-    const activeChunks = [chunk1, chunk2, chunk3].filter(chunk => chunk.length > 0)
-    const totalQueries = activeChunks.length
+        // Chunk members into groups of 10 (Firestore 'in' query limit)
+        const chunks = chunkArray(memberRefs, 10)
+        const unsubscribeFns: (() => void)[] = []
 
-    console.log(`🔄 setting up ${totalQueries} real-time listeners for ${userIds.length} users`)
+        let allUsers: FullUserData[] = []
+        let chunksReceived = 0
 
-    const handleQueryResult = (chunkUsers: any[], chunkIndex: number) => {
-      console.log(`📡 received ${chunkUsers.length} users from query ${chunkIndex + 1}`)
+        chunks.forEach((chunk, chunkIndex) => {
+          const chunkQuery = query(
+            collection(db, 'users'),
+            where('__name__', 'in', chunk)
+          );
 
-      // Update this chunk's users
-      usersByChunk[chunkIndex] = chunkUsers
+          const unsubscribe = onSnapshot(chunkQuery, (snapshot) => {
+            const chunkUsers: FullUserData[] = []
 
-      // Check if we have all chunks
-      const completedChunks = Object.keys(usersByChunk).length
-      if (completedChunks === totalQueries) {
-        // Combine all chunks
-        const allUsers = Object.values(usersByChunk).flat()
+            snapshot.forEach((doc: DocumentSnapshot) => {
+              const userData = doc.data();
+              if (userData) {
+                chunkUsers.push({
+                  id: doc.id,
+                  ...userData
+                } as FullUserData);
+              }
+            })
 
-        // console.log('All queries completed! Updating state with', allUsers.length, 'users')
-        setState({
-          users: allUsers,
-          isLoading: false,
-          isSuccess: true,
-          isError: false,
-          error: undefined
-        })
+            console.log(`📡 received ${chunkUsers.length} users from query ${chunkIndex + 1}`)
+
+            // Update the specific chunk in allUsers array
+            const startIndex = chunkIndex * 10
+            allUsers.splice(startIndex, 10, ...chunkUsers)
+
+            chunksReceived++
+
+            // Update state with current users
+            setUsers([...allUsers])
+            setIsLoading(false)
+
+            // Cache only stable user profile data (not real-time fields)
+            if (chunksReceived === chunks.length) {
+              const cacheableData: CacheableUserData[] = chunkUsers.map(user => ({
+                id: user.id,
+                userId: user.userId,
+                displayName: user.displayName,
+                email: user.email,
+                timezone: user.timezone,
+                groups: user.groups,
+                // Only include stable fields, exclude viewTracking, etc.
+              }));
+
+              // Update cache with fresh stable data
+              setCachedUsers(groupId, cacheableData)
+            }
+          });
+
+          unsubscribeFns.push(unsubscribe)
+        });
+
+        // Return cleanup function
+        return () => {
+          console.log('🔌 cleaning up real-time listeners on users collection')
+          unsubscribeFns.forEach(fn => fn())
+        };
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch users')
+        setIsLoading(false)
       }
-    }
+    };
 
-    // Set up queries for each non-empty chunk
-    [chunk1, chunk2, chunk3].forEach((chunk, index) => {
-      if (chunk.length === 0) return
+    setupUserListeners()
 
-      const usersQuery = query(
-        collection(db, "users"),
-        where(documentId(), "in", chunk)
-      )
-
-      const unsubscribe: Unsubscribe = onSnapshot(
-        usersQuery,
-        (querySnapshot) => {
-          const chunkUsers = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-
-          handleQueryResult(chunkUsers, index)
-        },
-        (error) => {
-          console.error(`❌ real-time listener error for query ${index + 1}:`, error)
-          setState({
-            users: [],
-            isLoading: false,
-            isSuccess: false,
-            isError: true,
-            error
-          })
-        }
-      )
-
-      unsubscribeFunctions.push(unsubscribe)
-    })
-
-    // Cleanup function
-    return () => {
-      console.log('🔌 cleaning up real-time listeners on users collection')
-      unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
-    }
-  }, [userIds.join(',')]) // Simple array comparison
+  }, [groupId])
 
   return {
-    ...state
+    users,
+    userIdToDocRefMap,
+    isLoading,
+    error
   }
 }
+
+const chunkArray = <T>(array: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size))
+  }
+  return chunks
+};
