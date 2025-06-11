@@ -75,12 +75,20 @@ export const Group = ({ group, groupId }) => {
     return dayjs(secondsDate * 1000)?.format(formatString)
   }
 
-useEffect(() => {
-  // Only initialize if displayUser is not already set
-  if (loggedInUser && !displayUser) {
-    setDisplayUser(loggedInUser)
-  }
-}, [loggedInUser, displayUser, groupId])
+  const userIdToDocRefMap = useMemo(() => {
+    const map = new Map<string, string>();
+    members.forEach(user => {
+      map.set(user.userId, user.id) // or however you access the doc ref ID
+    })
+    return map
+  }, [members])
+
+  useEffect(() => {
+    // Only initialize if displayUser is not already set
+    if (loggedInUser && !displayUser) {
+      setDisplayUser(loggedInUser)
+    }
+  }, [loggedInUser, displayUser, groupId])
 
   useEffect(() => {
     if (!currentUserIsMember) {
@@ -96,16 +104,23 @@ useEffect(() => {
   useEffect(() => {
     const updateViewTracking = async () => {
       // Only track if we have all required data and user is viewing someone else's logs
-      if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id) ) return
+      if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return;
+      if (!loggedInUser?.userId || !groupId || !displayUser?.userId || !memberIds.includes(displayUser?.id)) return
 
-      // Don't track when viewing own logs
-      // if (loggedInUser.userId === displayUser.userId) return
+      const viewingUserDocRefId = userIdToDocRefMap.get(loggedInUser.userId)
+      const viewedUserDocRefId = userIdToDocRefMap.get(displayUser.userId)
+
+      if (!viewingUserDocRefId || !viewedUserDocRefId) {
+        console.error('User not found in map', { viewingUserDocRefId, viewedUserDocRefId })
+        return
+      }
 
       try {
         await updateViewTrackingFn({
-          userId: loggedInUser.userId,
+          userId: viewingUserDocRefId,
           logGroupId: groupId,
-          viewedUserId: displayUser.userId
+          viewedUserId: viewedUserDocRefId,
+          userMap: userIdToDocRefMap,
         })
       } catch (error) {
         console.error('Failed to update view tracking:', error)

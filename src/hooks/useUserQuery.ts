@@ -7,6 +7,7 @@ type UpdateViewTrackingArgs = {
   userId: string
   logGroupId: string
   viewedUserId: string
+  userMap: Map<string, string>
 }
 
 type UpdateUserProfileArgs = {
@@ -19,18 +20,16 @@ type UpdateUserProfileArgs = {
 export const useUserQuery = () => {
   // Core mutation functions
   const updateViewTrackingFn = async ({ userId, logGroupId, viewedUserId }: UpdateViewTrackingArgs): Promise<void> => {
-    const { userDocRef } = await getUserDocRef(userId)
+    // const { userDocRef } = await getUserDocRef(userId)
 
-    console.log('⬇️ executing read on users collection')
+    // console.log('⬇️ executing read on users collection')
     // viewedUserId is also the auth id so get the doc ref id first
-    const { userDocRef: viewedUserDocRef} = await getUserDocRef(viewedUserId)
+    // const { userDocRef: viewedUserDocRef} = await getUserDocRef(viewedUserId)
 
     console.log('✍️ executing write on users collection')
-    await updateDoc(userDocRef, {
-      [`viewTracking.${logGroupId}.${viewedUserDocRef?.id}.lastViewedAt`]: serverTimestamp()
+    await updateDoc(doc(db, 'users', userId), {
+      [`viewTracking.${logGroupId}.${viewedUserId}.lastViewedAt`]: serverTimestamp()
     })
-
-    // console.log(`📝 update view tracking: ${userDocRef?.id} viewed ${viewedUserDocRef?.id}`)
   }
 
   const updateUserProfileFn = async ({ userId, displayName, displayLocation, timezone }: UpdateUserProfileArgs): Promise<void> => {

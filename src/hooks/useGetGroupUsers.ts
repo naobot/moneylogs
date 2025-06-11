@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { collection, query, where, onSnapshot, Unsubscribe, documentId, or } from "firebase/firestore"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
+import { UserData } from "./useGetUserInfo"
 
 type UseGetGroupUsersParams = {
   userIds: string[] // Array of user document IDs
@@ -9,7 +10,7 @@ type UseGetGroupUsersParams = {
 
 export const useGetGroupUsers = ({ userIds }: UseGetGroupUsersParams) => {
   const [state, setState] = useState({
-    users: [] as any[],
+    users: [] as UserData[],
     isLoading: false,
     isSuccess: false,
     isError: false,
