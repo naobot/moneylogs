@@ -11,6 +11,7 @@ import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useDisableScroll } from "@/hooks/useDisableScroll"
 import { useUserQuery } from "@/hooks/useUserQuery"
 import { UserData } from "@/hooks/useGetUserInfo"
+import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Modal from "@/components/Modal"
 import Button from "@/components/Button"
@@ -237,6 +238,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()
+  const { trackUserAction } = useReadTracking()
 
   const calendarMarkedPosts = useMemo(() => {
     const displayRows: Array<LogPost | DateBanner> = []
@@ -326,12 +328,17 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
   useEffect(() => {
     if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
+      trackUserAction('view_post', {
+        post_id: selectedPost?.id,
+        user_id: loggedInUser?.id,
+      })
+
       markCommentsAsViewedFn({
         userId: loggedInUser.userId,
         logPostId: selectedPost.id
       })
     }
-  }, [selectedPost?.id, loggedInUser?.userId])
+  }, [selectedPost?.id, loggedInUser?.userId, trackUserAction])
 
   return (
     <>

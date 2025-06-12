@@ -9,6 +9,7 @@ import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
 import { UserData } from "@/hooks/useGetUserInfo"
+import { useReadTracking } from "@/hooks/useReadTracking"
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
 import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 // import { useGetGroup } from "@/hooks/useGetGroup"
@@ -23,6 +24,7 @@ export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const { updateViewTrackingFn } = useUserQuery()
+  const { trackUserAction } = useReadTracking()
 
   const logPostRes = useGetLogPosts({ groupId })
 
@@ -100,6 +102,13 @@ export const Group = ({ group, groupId }) => {
     isCreateNewEntrySet(false)
     setDisplayUser(loggedInUser)
   }, [group])
+
+  useEffect(() => {
+    trackUserAction('view_group', {
+      user_id: loggedInUser?.id,
+      group_id: groupId,
+    })
+  }, [groupId, trackUserAction])
 
   useEffect(() => {
     const updateViewTracking = async () => {
