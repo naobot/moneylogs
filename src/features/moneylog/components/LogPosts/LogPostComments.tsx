@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/contexts"
 
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useGetComments } from "@/hooks/useGetLogPostComments"
+import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
 
@@ -18,6 +19,8 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
   const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
+  const { trackUserAction } = useReadTracking()
+
   const commentRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const { addComment } = useLogPostQuery()
@@ -31,6 +34,12 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
         userId: user?.userId,
         content: newCommentContent,
       })
+
+      trackUserAction('new_comment', {
+        user_id: user?.id,
+        post_id: postId,
+      })
+
       newCommentContentSet('')
     } catch (err) {
       console.error('Failed to add comment:', err)

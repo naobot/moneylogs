@@ -18,8 +18,10 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
+declare const __APP_VERSION__: string
+
 const environment = import.meta.env.VITE_FIREBASE_ENV ?? 'unknown'
-const appVersion = process.env.npm_package_version ?? 'unknown'
+const appVersion = __APP_VERSION__ ?? 'unknown'
 const isDevelopment = environment === 'development'
 
 const analytics = getAnalytics(app)
@@ -34,16 +36,16 @@ if (typeof window !== 'undefined' && !isDevelopment) {
 }
 export { analytics }
 
-if (isDevelopment && typeof window !== 'undefined') {
-  // Only connect if not already connected
-  try {
-    connectFirestoreEmulator(db, 'localhost', 8080)
-    connectAuthEmulator(auth, 'http://localhost:9099')
-  } catch (error) {
-    // Emulators already connected or not running
-    console.log('Emulators may already be connected or not running')
-  }
-}
+// if (isDevelopment && typeof window !== 'undefined') {
+//   // Only connect if not already connected
+//   try {
+//     connectFirestoreEmulator(db, 'localhost', 8080)
+//     connectAuthEmulator(auth, 'http://localhost:9099')
+//   } catch (error) {
+//     // Emulators already connected or not running
+//     console.log('Emulators may already be connected or not running')
+//   }
+// }
 
 // Enable offline persistence
 enableNetwork(db).then(() => {

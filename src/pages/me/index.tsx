@@ -6,11 +6,13 @@ import { useCurrentUser } from '@/contexts'
 
 import { useMutation } from '@/hooks/useFirebase'
 import { useUserQuery } from '@/hooks/useUserQuery'
+import { useReadTracking } from '@/hooks/useReadTracking'
 
 import Button from "@/components/Button"
 import ControlledInput from "@/components/ControlledInput"
 
 export const UserSettings = () => {
+  const { trackUserAction } = useReadTracking()
   const { user } = useCurrentUser()
   const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
 
@@ -31,7 +33,13 @@ export const UserSettings = () => {
       displayLocation?: string
       timezone: string
     }) => {
-      return await updateUserProfile.mutate(userData)
+      await updateUserProfile.mutate(userData)
+
+      trackUserAction('update_user_profile', {
+        user_id: user?.id,
+      })
+
+      return
     }
   )
 

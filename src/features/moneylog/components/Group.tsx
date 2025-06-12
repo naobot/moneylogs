@@ -130,6 +130,11 @@ export const Group = ({ group, groupId }) => {
           logGroupId: groupId,
           viewedUserId: viewedUserDocRefId,
         })
+
+        trackUserAction('update_user_last_viewed', {
+          user_id: loggedInUser?.id,
+          group_id: groupId,
+        })
       } catch (error) {
         console.error('Failed to update view tracking:', error)
       }

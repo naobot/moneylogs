@@ -4,6 +4,7 @@ import MDEditor from "@uiw/react-md-editor"
 
 import { Currency } from "@/types/user"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
+import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
 
@@ -26,6 +27,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
+  const { trackUserAction } = useReadTracking()
 
   const regexMatcher = useMemo(() => {
     switch (selectedCurrency) {
@@ -73,6 +75,11 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
           postDate: newEntryDate,
         }
       })
+
+    trackUserAction('new_comment', {
+      user_id: userId,
+      post_id: postId,
+    })
 
       isCreateNewEntrySet(false)
       newEntryContentSet(null)
