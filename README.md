@@ -2,6 +2,10 @@
 
 This is a personal finance microblogging app built in React with Vite. It is currently in closed beta at https://moneylogs-89ebf.web.app/
 
+## Environment variables
+
+Please message me for local `.env` variables.
+
 ## Installation
 
 Installation requires [Node.js](https://nodejs.org/en/) v20+.
