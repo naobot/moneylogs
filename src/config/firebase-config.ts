@@ -1,38 +1,36 @@
 import { initializeApp } from "firebase/app"
-import { getAnalytics } from "firebase/analytics"
-import { getFirestore, enableNetwork } from "firebase/firestore"
-import { getAuth } from "firebase/auth"
+import { getAnalytics, setDefaultEventParameters } from "firebase/analytics"
+import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore"
+import { connectAuthEmulator, getAuth } from "firebase/auth"
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDDhnpAzuM3TyPJEgRSgSvpcMQrl18DMEk",
-  authDomain: "moneylogs-89ebf.firebaseapp.com",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: "moneylogs-89ebf",
-  storageBucket: "moneylogs-89ebf.firebasestorage.app",
-  messagingSenderId: "272073869426",
-  appId: "1:272073869426:web:dd96782f802554cf41daeb",
-  measurementId: "G-MZ8E93J89D"
-};
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
-const environment = import.meta.env.VITE_FIREBASE_ENV || 'unknown'
-const appVersion = import.meta.env.VITE_APP_VERSION || 'unknown'
+const environment = import.meta.env.VITE_FIREBASE_ENV ?? 'unknown'
+const appVersion = process.env.npm_package_version ?? 'unknown'
 const isDevelopment = environment === 'development'
 
 const analytics = getAnalytics(app)
 
 if (typeof window !== 'undefined' && !isDevelopment) {
-  analytics = getAnalytics(app);
-
   // Set default parameters for all analytics events
-  setDefaultEventParameters(analytics, {
+  setDefaultEventParameters({
     environment: environment,
     app_version: appVersion,
-    build_type: isDevelopment ? 'development' : 'production'
-  });
+    build_type: isDevelopment ? 'development' : 'production',
+  })
 }
 export { analytics }
 
