@@ -26,7 +26,7 @@ const isDevelopment = environment === 'development'
 
 const analytics = getAnalytics(app)
 
-if (typeof window !== 'undefined' && !isDevelopment) {
+if (typeof window !== 'undefined') {
   // Set default parameters for all analytics events
   setDefaultEventParameters({
     environment: environment,

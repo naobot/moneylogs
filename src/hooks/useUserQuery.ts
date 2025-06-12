@@ -2,7 +2,6 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
 import { useMutation, getUserDocRef } from "./useFirebase"
-import { useReadTracking } from "./useReadTracking"
 
 type UpdateViewTrackingArgs = {
   userId: string
