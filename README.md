@@ -46,6 +46,20 @@ npx vite
 
 The app will run locally on port **5173**.
 
+## Dummy data
+
+Because they are locally run, development data is completely tied to your current development session and wiped each time. 
+
+To have some dummy data to work with, execute the seed script:
+
+```bash
+npm run seed-emulator
+```
+
+Create a temporary account for testing at [http://localhost:5173/login](http://localhost:5173/login), then visit any group at its shareable URL to join it as a member.
+
+An example of a shareable URL is `http://localhost:5173/g/LOG_GROUP_DOC_REF_ID` where `LOG_GROUP_DOC_REF_ID` is the ID of any item in the `log_groups` collection, which can be viewed [here](http://localhost:1331/firestore/default/data/log_groups/) after the seed script has been run and the emulators are running.
+
 ### Troubleshooting
 
 #### 'Port taken' errors
