@@ -9,6 +9,7 @@ import { useGetGroup } from "@/hooks/useGetGroup"
 import { Group } from "@/features/moneylog/components/Group"
 
 import Modal from "@/components/Modal"
+import Button from "@/components/Button"
 
 // @ts-ignore
 import { db } from '@/config/firebase-config'
@@ -65,17 +66,21 @@ export const GroupPage = () => {
       {isSuccessGroup && group && groupId && !currentUserIsMember && (
         <Modal
           isOpen={showInviteModal}
-          title=""
-          okButtonText={"Join"}
-          showOkButton
-          onOk={handleJoinGroup}
-          showCloseButton
-          onClose={() => setShowInviteModal(false)}
-          disabled={isProcessingJoin}
         >
-          <p>
-            You've been invited to join this moneylog!
-          </p>
+          <Modal.Header></Modal.Header>
+          <Modal.Body>
+            <p>
+              You've been invited to join this moneylog!
+            </p>
+          </Modal.Body>
+          <Modal.Actions>
+            <Button
+              onClick={handleJoinGroup}
+              buttonStyle="primary-border"
+              text="Join"
+              disabled={isProcessingJoin}
+            />
+          </Modal.Actions>
         </Modal>
       )}
     </>
