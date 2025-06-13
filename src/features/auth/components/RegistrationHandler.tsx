@@ -47,7 +47,7 @@ const RegistrationHandler = () => {
 
       localStorage.setItem('auth', JSON.stringify(authInfo))
       setRegistrationPending(false)
-      navigate('/me')
+      window.location.href = "/me"
 
     } catch (error: any) {
       const errorCode = error.code

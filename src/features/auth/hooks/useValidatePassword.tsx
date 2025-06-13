@@ -3,11 +3,15 @@ import { getAuth, PasswordValidationStatus, validatePassword } from "firebase/au
 
 const useValidatePassword = (password: string) => {
   const [isValid, setIsValid] = useState(false)
-  const [status, setStatus] = useState<PasswordValidationStatus>()
+  const [status, setStatus] = useState<PasswordValidationStatus | { isValid: boolean }>()
 
   const handleValidate = async (password: string) => {
-    const validateStatus = await validatePassword(getAuth(), password)
-    setStatus(validateStatus)
+    if (import.meta.env.VITE_FIREBASE_ENV == 'development') {
+      setStatus({ isValid: true })
+    } else {
+      const validateStatus = await validatePassword(getAuth(), password)
+      setStatus(validateStatus)
+    }
   }
 
   useEffect(() => {
