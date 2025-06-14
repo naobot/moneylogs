@@ -59,15 +59,10 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
       (querySnapshot) => {
         console.log(`📡 received ${querySnapshot.size} log posts from real-time listener`)
 
-        const posts = querySnapshot.docs.map(doc => {
-          const rawData = doc.data()
-          console.log('Raw document data:', doc.id, rawData)
-
-          return {
-            id: doc.id,
-            ...doc.data()
-            }
-        })
+        const posts = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
 
         setState({
           posts,
