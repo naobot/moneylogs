@@ -13,13 +13,6 @@ export const Home = () => {
     }
   }, [currentGroups])
 
-  // useEffect(() => {
-  //   // console.log(currentGroups)
-  //   if (isSuccess) {
-  //     console.log(currentGroups)
-  //   }
-  // }, [currentGroups])
-
   return (
     <>
       {isLoading && <div className="InfoBox">...</div>}

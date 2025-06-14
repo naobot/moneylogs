@@ -1,9 +1,10 @@
 import { PropsWithChildren } from 'react'
 import { BrowserRouter as Router, Route, Routes, NavigateProps, Navigate } from 'react-router-dom'
-
+import { useAuthState } from 'react-firebase-hooks/auth'
+// @ts-ignore
+import { auth } from './config/firebase-config'
 import Layout from './features/layout/Layout'
 
-import { useCurrentUser } from './contexts'
 import { Auth } from './pages/auth'
 import { Home } from './pages/home'
 import { UserSettings } from './pages/me'
@@ -14,16 +15,18 @@ import { GroupPage } from './pages/group'
 
 const CheckAuth = ({
   children,
-  auth = true,
+  auth: requireAuth = true,
   ...props
 }: PropsWithChildren<
   Partial<NavigateProps> & {
     auth?: boolean
   }
 >) => {
-  const { user } = useCurrentUser()
+  const [user, loading] = useAuthState(auth)
 
-  if (!user) {
+  if (loading) return <div>Loading...</div>
+
+  if (!user && requireAuth) {
     return <Navigate to={'/login'} replace {...props} />
   }
 
