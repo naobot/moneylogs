@@ -118,10 +118,10 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     if (newEntryContent && selectedCurrency && regexMatcher) {
       const foundAmounts = newEntryContent.match(regexMatcher)
 
-      const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£,]/g, '').replaceAll('k', '000').replaceAll('万', '0000'))).reduce((a,b) => a + b)
+      const foundTotal = foundAmounts?.map(x => Number(x.replaceAll(/[¥￥\$₩€£,]/g, '').replaceAll('k', '000').replaceAll('万', '0000'))).reduce((a,b) => a + b).toFixed(2)
 
       if (foundTotal) {
-        newEntryAmountSet(foundTotal)
+        newEntryAmountSet(Number(foundTotal))
       }
     }
   }

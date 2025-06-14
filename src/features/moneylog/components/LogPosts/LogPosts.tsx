@@ -166,7 +166,7 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
             <IconText type='clock' text={postTime?.format("HH:mm")} />
           </div>
           <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-            {post.amount} {post.currency}
+            {(post.amount)?.toLocaleString()} {post.currency}
           </div>
           <div
             className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"

@@ -123,8 +123,8 @@ const LogsMenuItemWithComments = ({ member, logPosts, displayUser, user, groupId
       })}
       onClick={() => onChangeUser(member)}
     >
-      {displayUser?.id !== member?.id && member.hasUnreadPosts && <Icon type="notification" />}
-      {displayUser?.id !== member?.id && !member.hasUnreadPosts && hasUnreadComments && <Icon type={"speech"} size={18} />}
+      {member?.id !== user?.id && displayUser?.id !== member?.id && member.hasUnreadPosts && <Icon type="notification" />}
+      {displayUser?.id !== member?.id && (!member.hasUnreadPosts || member?.id === user?.id) && hasUnreadComments && <Icon type={"speech"} size={18} />}
       <div className="LogsMenu__item__content">
         <div className="LogsMenu__item__title">
           {member?.displayName}

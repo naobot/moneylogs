@@ -36,7 +36,7 @@ const RegistrationHandler = () => {
       // Complete the registration process
       await sendEmailVerification(auth.currentUser)
       await updateProfile(auth.currentUser, { displayName: displayName })
-      await signInWithEmailAndPassword(auth, email, password)
+      const loggedInUser = await signInWithEmailAndPassword(auth, email, password)
 
       const authInfo: AuthUser = {
         userId: user.uid,
@@ -45,9 +45,12 @@ const RegistrationHandler = () => {
         isAuth: true,
       }
 
-      localStorage.setItem('auth', JSON.stringify(authInfo))
+      // localStorage.setItem('auth', JSON.stringify(authInfo))
       setRegistrationPending(false)
-      navigate('/me')
+
+      if (loggedInUser.user) {
+        window.location.href = "/me"
+      }
 
     } catch (error: any) {
       const errorCode = error.code

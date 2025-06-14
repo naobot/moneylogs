@@ -36,16 +36,16 @@ if (typeof window !== 'undefined') {
 }
 export { analytics }
 
-// if (isDevelopment && typeof window !== 'undefined') {
-//   // Only connect if not already connected
-//   try {
-//     connectFirestoreEmulator(db, 'localhost', 8080)
-//     connectAuthEmulator(auth, 'http://localhost:9099')
-//   } catch (error) {
-//     // Emulators already connected or not running
-//     console.log('Emulators may already be connected or not running')
-//   }
-// }
+if (isDevelopment && typeof window !== 'undefined') {
+  // Only connect if not already connected
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8888)
+    connectAuthEmulator(auth, 'http://localhost:9099')
+  } catch (error) {
+    // Emulators already connected or not running
+    console.log('Emulators may already be connected or not running')
+  }
+}
 
 // Enable offline persistence
 enableNetwork(db).then(() => {

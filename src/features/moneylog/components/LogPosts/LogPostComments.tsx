@@ -85,9 +85,6 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
   return (<>
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
-      {/*{!isLoadingComments && isSuccessComments && comments?.length === 0 && (
-        <div className="LogPostComments__notice">No comments</div>
-      )}*/}
       {!isLoadingComments && isSuccessComments && comments?.map((comment, i) => {
         return (
           <div
@@ -133,6 +130,9 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
                 preview='edit'
                 hideToolbar
                 height={110}
+                textareaProps={{
+                  maxLength: 400,
+                }}
               />
             )}
             {addComment?.isLoading && <>...</>}
