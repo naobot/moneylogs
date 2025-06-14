@@ -209,7 +209,7 @@ export const Group = ({ group, groupId }) => {
           </>)}
         </div>
       </div>
-      {isLoadingMembers && !currentUserIsMember &&
+      {/*{isLoadingMembers && !currentUserIsMember &&
       <Modal
         isOpen={showInviteModal}
       >
@@ -227,7 +227,7 @@ export const Group = ({ group, groupId }) => {
             disabled={isProcessingJoin}
           />
         </Modal.Actions>
-      </Modal>}
+      </Modal>}*/}
     </>
   )
 }
