@@ -17,10 +17,10 @@ export const Home = () => {
   return (
     <>
       {isLoading && <div className="InfoBox">...</div>}
-      {latestActiveGroup &&
+      {!isLoading && isSuccess && latestActiveGroup &&
         <Group group={latestActiveGroup} groupId={latestActiveGroup?.id} />
       }
-      {!latestActiveGroup && (
+      {!isLoading && isSuccess && !latestActiveGroup && (
         <div>
           <h3>You are not currently part of any log groups</h3>
           <p>

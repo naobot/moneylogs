@@ -188,7 +188,7 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   return {
     currentGroups,
     isLoading: combinedIsLoading,
-    isSuccess: (isSuccess && !!userDocId) || (!!cachedGroups && cachedGroups.length > 0),
+    isSuccess: !combinedIsLoading && (isSuccess && !!userDocId) || (!!cachedGroups && cachedGroups.length > 0),
     isError: combinedIsError,
     error: combinedError
   }
