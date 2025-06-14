@@ -129,22 +129,7 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
 
   useEffect(() => {
     if (selectedPostId === post.id) {
-      setTimeout(() => {
-        const logPostsContainer = document.querySelector('.LogPosts__posts')
-        const postElement = postRef.current
-
-        if (logPostsContainer && postElement) {
-          const containerRect = logPostsContainer.getBoundingClientRect()
-          const postRect = postElement.getBoundingClientRect()
-
-          const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
-
-          logPostsContainer.scrollTo({
-            top: scrollTop,
-            behavior: 'smooth'
-          })
-        }
-      }, 100)
+      scrollPostToTop(postRef)
     }
   }, [selectedPostId])
 
@@ -318,9 +303,17 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
   useDisableScroll(!!selectedPost)
 
+  const postEditorRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     isCreateNewEntrySet(false)
   }, [])
+
+  useEffect(() => {
+    if (isCreateNewEntry) {
+      postEditorRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [isCreateNewEntry, postEditorRef])
 
   useEffect(() => {
     setSelectedPost(null)
@@ -372,6 +365,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
           {isCreateNewEntry && (
             <LogPostEditor
+              ref={postEditorRef}
               type="new"
               groupId={groupId}
               userId={userId}
@@ -451,3 +445,23 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 }
 
 export default LogPosts
+
+function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>) {
+    setTimeout(() => {
+        const logPostsContainer = document.querySelector('.LogPosts__posts')
+        const postElement = postRef.current
+
+        if (logPostsContainer && postElement) {
+            const containerRect = logPostsContainer.getBoundingClientRect()
+            const postRect = postElement.getBoundingClientRect()
+
+            const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
+
+            logPostsContainer.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth'
+            })
+        }
+    }, 100)
+}
+

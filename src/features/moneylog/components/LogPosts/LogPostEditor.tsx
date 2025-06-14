@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, Dispatch, forwardRef, SetStateAction, useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
 
@@ -11,7 +11,7 @@ import Button from "@/components/Button"
 import { CURRENCIES } from "./LogPosts"
 import Icon from "@/components/Icon"
 
-const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
   groupId: string
@@ -22,7 +22,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   amount?: number
   currency?: Currency
   date?: number
-}) => {
+}, ref) => {
   const [newEntryContent, newEntryContentSet] = useState<string|null>(content)
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
@@ -134,7 +134,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   }, [])
 
   return (
-    <div className="LogPosts__posts__item LogPosts__posts__item--selected">
+    <div className="LogPosts__posts__item LogPosts__posts__item--selected" ref={ref}>
       <div
         className="LogPosts__posts__item__header"
       >
@@ -209,6 +209,6 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
       </div>
     </div>
   )
-}
+})
 
 export default LogPostEditor
