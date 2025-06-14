@@ -35,7 +35,7 @@ firebase emulators:start
 ## Run local dev server
 
 ```bash
-npm run
+npm run dev
 ```
 
 or
