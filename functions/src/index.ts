@@ -20,6 +20,10 @@ export const updatePostMetadata = onDocumentCreated(
       // Batch these operations to use the same timestamp
       const batch = db.batch()
 
+      batch.update(db.collection('log_posts').doc(postId), {
+        createdAt: timestamp
+      })
+
       // Update the user's lastUpdated field
       batch.update(db.collection('users').doc(postData.author.id), {
         [`lastUpdated.${postData.group.id}`]: timestamp

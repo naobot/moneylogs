@@ -56,12 +56,6 @@ export const useLogPostQuery = () => {
       throw new Error('Failed to create log post')
     }
 
-    // console.log('✍️ executing write on users collection')
-    // await updateDoc(userDocRef, {
-    //   [`commentSubscriptions.${res.id}.lastViewedAt`]: updateTime,
-    //   [`lastUpdated.${groupId}`]: updateTime,
-    // })
-
     return res.id
   }
 
@@ -105,7 +99,6 @@ export const useLogPostQuery = () => {
     // Increment the counter on the parent log post
     await updateDoc(doc(db, 'log_posts', logPostId), {
       commentCount: increment(1),
-      // latestCommentAt: updateTime,
       commentSubscribers: arrayUnion(userDocRef),
     })
 
@@ -114,11 +107,6 @@ export const useLogPostQuery = () => {
     if (!logPostDoc.exists()) {
       throw new Error('Log post not found')
     }
-
-    // console.log('✍️ executing write on log_posts collection')
-    // await updateDoc(userDocRef, {
-    //   [`commentSubscriptions.${logPostId}.lastViewedAt`]: updateTime,
-    // })
 
     if (!commentRes?.id) {
       throw new Error('Failed to create comment')

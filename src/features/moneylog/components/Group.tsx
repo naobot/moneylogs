@@ -10,30 +10,20 @@ import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
 import { UserData } from "@/hooks/useGetUserInfo"
 import { useReadTracking } from "@/hooks/useReadTracking"
-import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
 import { useGetLogPosts } from "@/hooks/useGetLogPosts"
-// import { useGetGroup } from "@/hooks/useGetGroup"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
-import Modal from "@/components/Modal"
 import { IconText } from "@/components/Icon"
-import Button from "@/components/Button"
 
 export const Group = ({ group, groupId }) => {
   // const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
-  const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const { updateViewTrackingFn } = useUserQuery()
   const { trackUserAction } = useReadTracking()
 
   const logPostRes = useGetLogPosts({ groupId })
 
-  const isProcessingJoin = useMemo(() => {
-    return addGroupToMember.isLoading || addMemberToGroup.isLoading
-  }, [addGroupToMember, addMemberToGroup])
-
   const [displayUser, setDisplayUser] = useState<UserData>(loggedInUser)
-  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
@@ -48,42 +38,10 @@ export const Group = ({ group, groupId }) => {
   const isActiveLogMyLog = useMemo(() => {
     return loggedInUser?.id === displayUser?.id
   }, [loggedInUser, displayUser])
-  const currentUserIsMember = useMemo(() => {
-    if (loggedInUser?.id && groupId) {
-      return memberIds.includes(loggedInUser?.id)
-    }
-    return false
-  }, [loggedInUser, memberIds, groupId])
-
-  const handleJoinGroup = async () => {
-    console.log('Attempting to join!')
-    try {
-      await Promise.all([
-        addGroupToMember.mutate({
-          currentUserId: loggedInUser.userId,
-          groupId,
-        }),
-        addMemberToGroup.mutate({
-          currentUserId: loggedInUser.userId,
-          groupId,
-        }),
-      ])
-    } catch (error) {
-      console.error('Failed to join group:', error)
-    }
-  }
 
   const formatDate = (secondsDate: number, formatString: string) => {
     return dayjs(secondsDate * 1000)?.format(formatString)
   }
-
-  // const userIdToDocRefMap = useMemo(() => {
-  //   const map = new Map<string, string>();
-  //   members.forEach(user => {
-  //     map.set(user.userId, user.id) // or however you access the doc ref ID
-  //   })
-  //   return map
-  // }, [members])
 
   useEffect(() => {
     // Only initialize if displayUser is not already set
@@ -93,14 +51,7 @@ export const Group = ({ group, groupId }) => {
   }, [loggedInUser, displayUser, groupId])
 
   useEffect(() => {
-    if (!currentUserIsMember) {
-      setShowInviteModal(true)
-    }
-  }, [currentUserIsMember])
-
-  useEffect(() => {
     isCreateNewEntrySet(false)
-    setDisplayUser(loggedInUser)
   }, [group])
 
   useEffect(() => {
@@ -209,25 +160,6 @@ export const Group = ({ group, groupId }) => {
           </>)}
         </div>
       </div>
-      {/*{isLoadingMembers && !currentUserIsMember &&
-      <Modal
-        isOpen={showInviteModal}
-      >
-        <Modal.Header></Modal.Header>
-        <Modal.Body>
-          <p>
-            You've been invited to join this moneylog!
-          </p>
-        </Modal.Body>
-        <Modal.Actions>
-          <Button
-            onClick={handleJoinGroup}
-            buttonStyle="primary-border"
-            text="Join"
-            disabled={isProcessingJoin}
-          />
-        </Modal.Actions>
-      </Modal>}*/}
     </>
   )
 }
