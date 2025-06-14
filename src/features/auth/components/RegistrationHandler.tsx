@@ -45,7 +45,7 @@ const RegistrationHandler = () => {
         isAuth: true,
       }
 
-      localStorage.setItem('auth', JSON.stringify(authInfo))
+      // localStorage.setItem('auth', JSON.stringify(authInfo))
       setRegistrationPending(false)
 
       if (loggedInUser.user) {

@@ -3,13 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom"
 // @ts-ignore
 import { auth } from '@/config/firebase-config'
 import { signOut } from "firebase/auth"
+import { useAuthState } from 'react-firebase-hooks/auth'
 
-import { useCurrentUser } from "@/contexts"
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups"
 
 import Button from "@/components/Button"
 
 const MainNav = () => {
+  const [firebaseUser] = useAuthState(auth)
+  const isLoggedIn = !!firebaseUser
+
   const navigate = useNavigate()
   const location = useLocation()
   const isHome = location.pathname === '/'
@@ -23,8 +26,7 @@ const MainNav = () => {
     }
     return null
   }, [currentGroupId, currentGroups, isHome])
-  const currentUserData = useCurrentUser()
-  const isLoggedIn = !!currentUserData?.user
+
   const [signOutPending, setSignOutPending] = useState(false)
 
   const handleSignOut = () => {
@@ -32,7 +34,7 @@ const MainNav = () => {
     signOut(auth)
       .then(() => {
         console.log('sign out successful')
-        localStorage.removeItem('auth')
+        // localStorage.removeItem('auth')
         setSignOutPending(false)
         navigate('/login')
       })

@@ -13,7 +13,7 @@ import { CreateNewLog } from './pages/create'
 import './App.scss'
 import { GroupPage } from './pages/group'
 
-const CheckAuth = ({
+export const CheckAuth = ({
   children,
   auth: requireAuth = true,
   ...props

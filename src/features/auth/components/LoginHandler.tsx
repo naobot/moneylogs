@@ -28,7 +28,7 @@ const LoginHandler = () => {
           email: user.email,
           isAuth: true,
         }
-        localStorage.setItem('auth', JSON.stringify(authInfo))
+        // localStorage.setItem('auth', JSON.stringify(authInfo))
         setLoginPending(false)
         navigate('/')
       })

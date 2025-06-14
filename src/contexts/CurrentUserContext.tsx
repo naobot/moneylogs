@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { auth } from '@/config/firebase-config'
 import { useGetUserInfo, UserData } from '@/hooks/useGetUserInfo'
-import { AuthUser } from '@/types/user'
 
 interface CurrentUserContextType {
   user: UserData | undefined
@@ -15,43 +16,27 @@ interface CurrentUserContextType {
 const CurrentUserContext = createContext<CurrentUserContextType | undefined>(undefined)
 
 export const CurrentUserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  // Use Firebase auth as the source of truth
+  const [firebaseUser, firebaseLoading] = useAuthState(auth)
 
-  // Get current user ID from localStorage
-  useEffect(() => {
-    const getCurrentUserId = (): string | null => {
-      const authData = localStorage.getItem('auth')
-      if (authData) {
-        const user = JSON.parse(authData) as AuthUser
-        return user.userId
-      }
-      return null
-    }
+  // Get user info based on Firebase auth state
+  const userInfo = useGetUserInfo(firebaseUser?.uid || '')
 
-    const userId = getCurrentUserId()
-    setCurrentUserId(userId)
-
-    // Optional: Listen for localStorage changes
-    const handleStorageChange = () => {
-      const newUserId = getCurrentUserId()
-      setCurrentUserId(newUserId)
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  // Single instance of useGetUserInfo for the entire app
-  const userInfo = useGetUserInfo(currentUserId || '')
+  // Combine Firebase loading state with user info loading
+  const combinedContextValue = {
+    ...userInfo,
+    isLoading: firebaseLoading || userInfo.isLoading,
+    // If Firebase auth is loading or user is null, treat as no user
+    user: firebaseUser ? userInfo.user : undefined,
+  }
 
   return (
-    <CurrentUserContext.Provider value={userInfo}>
+    <CurrentUserContext.Provider value={combinedContextValue}>
       {children}
     </CurrentUserContext.Provider>
   )
 }
 
-// Hook to use the current user context
 export const useCurrentUser = (): CurrentUserContextType => {
   const context = useContext(CurrentUserContext)
   if (context === undefined) {

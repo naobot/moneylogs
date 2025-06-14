@@ -1,9 +1,10 @@
 import { collection, where, query, Timestamp, doc, getDocs, limit } from "firebase/firestore"
-import { AuthUser, Group } from "@/types/user"
+import { Group } from "@/types/user"
 import { useFirebaseCollection } from "./useFirebase"
 import { useEffect, useState } from "react"
 // @ts-ignore
-import { db } from '@/config/firebase-config'
+import { auth, db } from '@/config/firebase-config'
+import { useAuthState } from "react-firebase-hooks/auth"
 
 export type GroupsResponse = {
   currentGroups: Array<Group>
@@ -91,17 +92,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   const [userIdFetchError, setUserIdFetchError] = useState<any>(null)
   const [cachedGroups, setCachedGroupsState] = useState<Group[] | null>(null)
 
-  // Get current user from localStorage within the hook
-  const getCurrentUserId = (): string | null => {
-    const authData = localStorage.getItem('auth')
-    if (authData) {
-      const user = JSON.parse(authData) as AuthUser
-      return user.userId
-    }
-    return null
-  }
-
-  const currentUserId = getCurrentUserId()
+  const [firebaseUser, firebaseLoading] = useAuthState(auth)
+  const currentUserId = firebaseUser?.uid || null
 
   // Check for cached groups immediately
   useEffect(() => {
@@ -186,7 +178,7 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   })
 
   // Combine loading states and errors
-  const combinedIsLoading = isLoading || (!userDocId && !userIdFetchError && !!currentUserId)
+  const combinedIsLoading = firebaseLoading || isLoading || (!userDocId && !userIdFetchError && !!currentUserId)
   const combinedIsError = isError || !!userIdFetchError
   const combinedError = error || userIdFetchError
 
