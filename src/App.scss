@@ -581,6 +581,7 @@ html {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  z-index: 52;
 
   &__handler {
     display: block;
@@ -640,7 +641,6 @@ html {
     border: var(--c-black) solid 1px;
     display: flex;
     flex-direction: column;
-    z-index: 52;
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
 
