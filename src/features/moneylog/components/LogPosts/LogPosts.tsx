@@ -18,6 +18,7 @@ import Button from "@/components/Button"
 import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
+import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 
 type LogPostsProps = {
   user: UserData
@@ -69,6 +70,8 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
 
+  const { parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
   const hasUnreadComments = useMemo(() => {
     if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
 
@@ -101,6 +104,9 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
   }, [])
 
   const postTime = useMemo(() => {
+    if (post.timezone) {
+      useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
+    }
     return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
   }, [post])
   const createdTime = useMemo(() => {
@@ -129,22 +135,7 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
 
   useEffect(() => {
     if (selectedPostId === post.id) {
-      setTimeout(() => {
-        const logPostsContainer = document.querySelector('.LogPosts__posts')
-        const postElement = postRef.current
-
-        if (logPostsContainer && postElement) {
-          const containerRect = logPostsContainer.getBoundingClientRect()
-          const postRect = postElement.getBoundingClientRect()
-
-          const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
-
-          logPostsContainer.scrollTo({
-            top: scrollTop,
-            behavior: 'smooth'
-          })
-        }
-      }, 100)
+      scrollPostToTop(postRef)
     }
   }, [selectedPostId])
 
@@ -180,6 +171,17 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
             />
           </div>
         </div>
+        {post.timezone && (
+          <div
+            className="LogPosts__posts__item__header"
+          >
+            <div
+              className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter"
+            >
+              {parseTimezone(post.timezone).label}
+            </div>
+          </div>
+        )}
         <div
           className="LogPosts__posts__item__body"
         >
@@ -318,9 +320,17 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
   useDisableScroll(!!selectedPost)
 
+  const postEditorRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     isCreateNewEntrySet(false)
   }, [])
+
+  useEffect(() => {
+    if (isCreateNewEntry) {
+      postEditorRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [isCreateNewEntry, postEditorRef])
 
   useEffect(() => {
     setSelectedPost(null)
@@ -372,6 +382,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
           {isCreateNewEntry && (
             <LogPostEditor
+              ref={postEditorRef}
               type="new"
               groupId={groupId}
               userId={userId}
@@ -451,3 +462,23 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 }
 
 export default LogPosts
+
+function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>) {
+    setTimeout(() => {
+        const logPostsContainer = document.querySelector('.LogPosts__posts')
+        const postElement = postRef.current
+
+        if (logPostsContainer && postElement) {
+            const containerRect = logPostsContainer.getBoundingClientRect()
+            const postRect = postElement.getBoundingClientRect()
+
+            const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
+
+            logPostsContainer.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth'
+            })
+        }
+    }, 100)
+}
+

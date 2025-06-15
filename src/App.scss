@@ -493,6 +493,7 @@ html {
       display: flex;
       position: relative;
       flex-direction: column;
+      gap: 0.5em;
       padding: 1em;
       margin: 1em 0;
       border: 1px solid var(--c-black);
@@ -518,9 +519,25 @@ html {
 
         &__left {
           text-align: left;
+          display: inline-flex;
+          grid-gap: 0.2rem;
+          font-weight: 700;
+
+          input {
+            max-width: 100px;
+          }
         }
         &__center {
           text-align: center;
+          display: inline-flex;
+          align-items: center;
+          grid-gap: 0.2rem;
+          justify-content: center;
+          font-weight: 700;
+
+          input {
+            max-width: 60px;
+          }
         }
         &__right {
           text-align: right;
@@ -542,14 +559,6 @@ html {
       &__date {
         display: inline-flex;
         align-items: center;
-      }
-
-      &__amount {
-        display: inline-flex;
-        align-items: center;
-        grid-gap: 0.2rem;
-        justify-content: center;
-        font-weight: 700;
       }
 
       &__comments {
@@ -575,6 +584,11 @@ html {
   &__input {
     width: 90px;
   }
+}
+
+.TimezoneSetter {
+  font-size: 0.6rem;
+  font-weight: 500;
 }
 
 .LogPostComments {

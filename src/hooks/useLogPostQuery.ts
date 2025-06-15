@@ -15,6 +15,7 @@ export type LogData = {
   content: string
   currency: Currency
   postDate: number
+  timezone?: string
 }
 
 type AddCommentArgs = {
@@ -36,7 +37,11 @@ export const useLogPostQuery = () => {
     const { userDocRef, userName } = await getUserDocRef(userId)
     const { groupDocRef, groupName } = await getGroupDocRef(groupId)
 
-    // const updateTime = serverTimestamp()
+    const postData: Partial<{
+      timezone: string
+    }> = {}
+
+    if (logData.timezone !== undefined) postData.timezone = logData.timezone
 
     console.log('✍️ executing write on log_posts collection')
     const res = await addDoc(logPostsCollectionRef, {
@@ -45,11 +50,11 @@ export const useLogPostQuery = () => {
       content: logData?.content,
       author: userDocRef,
       authorName: userName,
-      // createdAt: updateTime,
       postDate: Timestamp.fromMillis(logData?.postDate),
       group: groupDocRef,
       groupName,
       commentSubscribers: [userDocRef],
+      ...postData
     })
 
     if (!res?.id) {
@@ -65,12 +70,14 @@ export const useLogPostQuery = () => {
       postDate: Timestamp
       amount: number
       currency: string
+      timezone: string
     }> = {}
 
     if (logData.content !== undefined) updateData.content = logData.content
     if (logData.postDate !== undefined) updateData.postDate = Timestamp.fromMillis(logData.postDate)
     if (logData.amount !== undefined) updateData.amount = logData.amount
     if (logData.currency !== undefined) updateData.currency = logData.currency
+      if (logData.timezone !== undefined) updateData.timezone = logData.timezone
 
     console.log('✍️ executing write on log_posts collection')
     await updateDoc(doc(db, 'log_posts', postId), updateData)

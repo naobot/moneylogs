@@ -60,6 +60,7 @@ export type Log = {
 }
 
 export type LogPost = {
+  timezone?: string
   id: string
   createdAt: Datetime
   postDate: Datetime // editable date

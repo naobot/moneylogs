@@ -1,17 +1,20 @@
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, Dispatch, forwardRef, SetStateAction, useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
+import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 
+import { useCurrentUser } from "@/contexts"
 import { Currency } from "@/types/user"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
-
-import { CURRENCIES } from "./LogPosts"
 import Icon from "@/components/Icon"
 
-const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+import { CURRENCIES } from "./LogPosts"
+import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
+
+const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
   groupId: string
@@ -22,11 +25,18 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   amount?: number
   currency?: Currency
   date?: number
-}) => {
+}, ref) => {
+  const { user } = useCurrentUser()
+
   const [newEntryContent, newEntryContentSet] = useState<string|null>(content)
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
+  const [newTimezone, setNewTimezone] = useState<string|null>(user?.timezone ?? null)
+  const [showTimezone, setShowTimezone] = useState(false)
+
+  const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
   const { trackUserAction } = useReadTracking()
 
   const regexMatcher = useMemo(() => {
@@ -73,6 +83,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
           currency: selectedCurrency,
           content: newEntryContent,
           postDate: newEntryDate,
+          timezone: newTimezone ?? undefined,
         }
       })
 
@@ -126,7 +137,19 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
     }
   }
 
+  const handleClickLocation = (option: DropdownOption) => {
+    setNewTimezone(option.value)
+    setShowTimezone(true)
+  }
+
   useEffect(() => {
+    if (!newTimezone) {
+      setShowTimezone(false)
+    }
+  }, [newTimezone])
+
+  useEffect(() => {
+    setNewTimezone(null)
     const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
     if (type == 'new' && lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
@@ -134,13 +157,22 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
   }, [])
 
   return (
-    <div className="LogPosts__posts__item LogPosts__posts__item--selected">
+    <div className="LogPosts__posts__item LogPosts__posts__item--selected" ref={ref}>
       <div
         className="LogPosts__posts__item__header"
       >
         <div
           className="LogPosts__posts__item__header__left"
         >
+          <CustomDropdown
+            options={options}
+            onSelect={handleClickLocation}
+          >
+            <Icon
+              type={"location"}
+              onClick={handleClickLocation}
+            />
+          </CustomDropdown>
           <input
             type="datetime-local"
             id="meeting-time"
@@ -152,7 +184,7 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
         <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
           <input
             type="number"
-            onChange={(e) => newEntryAmountSet(e?.target?.value)}
+            onChange={(e) => newEntryAmountSet(Number(e?.target?.value))}
             value={newEntryAmount}
             className="LogPostsCurrency__input"
           />
@@ -184,6 +216,19 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
           />
         </div>
       </div>
+      {showTimezone && newTimezone && (
+        <div
+          className="LogPosts__posts__item__header"
+        >
+          <div
+            className="LogPosts__posts__item__header__left"
+          >
+            <div className="TimezoneSetter">
+              {parseTimezone(newTimezone).label}
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className="LogPosts__posts__item__body"
       >
@@ -209,6 +254,6 @@ const LogPostEditor = ({ type, postId = null, groupId, userId, isCreateNewEntryS
       </div>
     </div>
   )
-}
+})
 
 export default LogPostEditor

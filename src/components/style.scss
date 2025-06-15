@@ -1,0 +1,32 @@
+.CustomDropdown {
+  position: relative;
+  display: inline-block;
+
+  &__trigger {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  &__list {
+    position: absolute;
+    left: 0;
+    margin-top: 1em;
+    min-width: 240px;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #242424;
+
+    &__wrapper {
+      overflow: auto;
+      max-height: 120px;
+    }
+
+    &__option {
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 3px 2px;
+      transition: 0.3s ease-in-out;
+    }
+  }
+}
