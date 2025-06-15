@@ -1,15 +1,18 @@
 import { ChangeEvent, Dispatch, forwardRef, SetStateAction, useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
+import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 
+import { useCurrentUser } from "@/contexts"
 import { Currency } from "@/types/user"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
+import Icon from "@/components/Icon"
 
 import { CURRENCIES } from "./LogPosts"
-import Icon from "@/components/Icon"
+import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
 
 const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
@@ -23,10 +26,17 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
   currency?: Currency
   date?: number
 }, ref) => {
+  const { user } = useCurrentUser()
+
   const [newEntryContent, newEntryContentSet] = useState<string|null>(content)
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
+  const [newTimezone, setNewTimezone] = useState<string|null>(user?.timezone ?? null)
+  const [showTimezone, setShowTimezone] = useState(false)
+
+  const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
   const { trackUserAction } = useReadTracking()
 
   const regexMatcher = useMemo(() => {
@@ -73,6 +83,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
           currency: selectedCurrency,
           content: newEntryContent,
           postDate: newEntryDate,
+          timezone: newTimezone ?? undefined,
         }
       })
 
@@ -126,7 +137,19 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
     }
   }
 
+  const handleClickLocation = (option: DropdownOption) => {
+    setNewTimezone(option.value)
+    setShowTimezone(true)
+  }
+
   useEffect(() => {
+    if (!newTimezone) {
+      setShowTimezone(false)
+    }
+  }, [newTimezone])
+
+  useEffect(() => {
+    setNewTimezone(null)
     const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
     if (type == 'new' && lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
@@ -141,6 +164,15 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
         <div
           className="LogPosts__posts__item__header__left"
         >
+          <CustomDropdown
+            options={options}
+            onSelect={handleClickLocation}
+          >
+            <Icon
+              type={"location"}
+              onClick={handleClickLocation}
+            />
+          </CustomDropdown>
           <input
             type="datetime-local"
             id="meeting-time"
@@ -152,7 +184,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
         <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
           <input
             type="number"
-            onChange={(e) => newEntryAmountSet(e?.target?.value)}
+            onChange={(e) => newEntryAmountSet(Number(e?.target?.value))}
             value={newEntryAmount}
             className="LogPostsCurrency__input"
           />
@@ -184,6 +216,19 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
           />
         </div>
       </div>
+      {showTimezone && newTimezone && (
+        <div
+          className="LogPosts__posts__item__header"
+        >
+          <div
+            className="LogPosts__posts__item__header__left"
+          >
+            <div className="TimezoneSetter">
+              {parseTimezone(newTimezone).label}
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className="LogPosts__posts__item__body"
       >

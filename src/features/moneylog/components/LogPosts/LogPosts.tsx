@@ -18,6 +18,7 @@ import Button from "@/components/Button"
 import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
+import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 
 type LogPostsProps = {
   user: UserData
@@ -69,6 +70,8 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
 
+  const { parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
   const hasUnreadComments = useMemo(() => {
     if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
 
@@ -101,6 +104,9 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
   }, [])
 
   const postTime = useMemo(() => {
+    if (post.timezone) {
+      useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
+    }
     return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
   }, [post])
   const createdTime = useMemo(() => {
@@ -165,6 +171,17 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
             />
           </div>
         </div>
+        {post.timezone && (
+          <div
+            className="LogPosts__posts__item__header"
+          >
+            <div
+              className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter"
+            >
+              {parseTimezone(post.timezone).label}
+            </div>
+          </div>
+        )}
         <div
           className="LogPosts__posts__item__body"
         >
