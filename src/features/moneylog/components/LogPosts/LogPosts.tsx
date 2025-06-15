@@ -171,7 +171,7 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
             />
           </div>
         </div>
-        {post.timezone && (
+        {post.timezone && (post.timezone !== user.timezone) && (
           <div
             className="LogPosts__posts__item__header"
           >
