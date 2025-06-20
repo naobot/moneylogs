@@ -407,7 +407,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
       })
 
       markCommentsAsViewedFn({
-        userId: loggedInUser.userId,
+        userId: loggedInUser.id,
         logPostId: selectedPost.id
       })
     }
