@@ -4,8 +4,10 @@ import { Group, LogPost } from "@/types/user"
 import { UserData } from "@/hooks/useGetUserInfo"
 
 import LogPosts from "./LogPosts/LogPosts"
+import AllLogsDigest from "./LogPosts/AllLogsDigest"
 
 type ActiveLogProps = {
+  displayAll: boolean
   displayUser: UserData
   logPosts: Array<LogPost>
   group: Group
@@ -16,7 +18,7 @@ type ActiveLogProps = {
   isMyLog: boolean
 }
 
-export const ActiveLog = ({ displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
+export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
 
   useEffect(() => {
     isCreateNewEntrySet(false)
@@ -24,6 +26,7 @@ export const ActiveLog = ({ displayUser, logPosts, group, groupId, userId, isCre
 
   return (
     <>
+    {!displayAll && displayUser && (
       <LogPosts
         groupId={groupId}
         user={displayUser}
@@ -33,6 +36,14 @@ export const ActiveLog = ({ displayUser, logPosts, group, groupId, userId, isCre
         isCreateNewEntry={isCreateNewEntry}
         isCreateNewEntrySet={isCreateNewEntrySet}
       />
+    )}
+    {displayAll && (
+      <AllLogsDigest
+        groupId={groupId}
+        logs={logPosts}
+        isCreateNewEntrySet={isCreateNewEntrySet}
+      />
+    )}
     </>
   )
 }

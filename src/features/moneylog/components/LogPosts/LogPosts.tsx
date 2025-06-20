@@ -15,7 +15,7 @@ import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Modal from "@/components/Modal"
 import Button from "@/components/Button"
-import { IconText } from "@/components/Icon"
+import Icon, { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
 import { allTimezones, useTimezoneSelect } from "react-timezone-select"
@@ -67,7 +67,7 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
   return dayjs(date).tz(userTimezone || dayjs.tz.guess())
 }
 
-const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
@@ -113,7 +113,7 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
   useExternalLinkHandler(postRef, [post])
 
   const postTime = useMemo(() => {
-    if (post.timezone) {
+    if (post.timezone && !isDigestMode) {
       return useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
     }
     return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
@@ -172,7 +172,7 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
       <div
         className={cx("LogPosts__posts__item", {
           "LogPosts__posts__item--selected": selectedPostId===post.id,
-          "LogPosts__posts__item--pinned": isPinned,
+          "LogPosts__posts__item--pinned": isPinned && !isDigestMode,
         })}
         ref={postRef}
       >
@@ -201,7 +201,19 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
               />
             </div>
           </div>
-          {post.timezone && (post.timezone !== user.timezone) && (
+          {isDigestMode && (
+            <div
+              className="LogPosts__posts__item__header"
+            >
+              <div
+                className="LogPosts__posts__item__header__left"
+              >
+                <Icon type={"user"} />
+                {post.authorName}
+              </div>
+            </div>
+          )}
+          {!isDigestMode && post.timezone && (post.timezone !== user.timezone) && (
             <div
               className="LogPosts__posts__item__header"
             >
@@ -216,7 +228,7 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
         <div
           className="LogPosts__posts__item__body"
         >
-          <div className="LogPosts__posts__item__content" data-color-mode={isPinned ? "dark" : "light"}>
+          <div className="LogPosts__posts__item__content" data-color-mode={(isPinned && !isDigestMode) ? "dark" : "light"}>
             <MDEditor.Markdown source={post.content} />
           </div>
         </div>
@@ -224,12 +236,14 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
           <>
             <div className="LogPosts__posts__item__footer">
               <div className="LogPostMenu">
-                <IconText
-                  className={cx("handler LogPostMenu__item", { 'LogPostMenu__item--active': isPinned })}
-                  type='pin'
-                  size={16}
-                  onClick={isPinned ? () => handlePinPost(post.id) : () => setShowPinWarning(true)}
-                />
+                {!isDigestMode && (
+                  <IconText
+                    className={cx("handler LogPostMenu__item", { 'LogPostMenu__item--active': (isPinned && !isDigestMode) })}
+                    type='pin'
+                    size={16}
+                    onClick={(isPinned && !isDigestMode) ? () => handlePinPost(post.id) : () => setShowPinWarning(true)}
+                  />
+                )}
                 <IconText
                   className="handler LogPostMenu__item"
                   type='pencil'
@@ -529,7 +543,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
 export default LogPosts
 
-function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>) {
+export function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>) {
     setTimeout(() => {
         const logPostsContainer = document.querySelector('.LogPosts__posts')
         const postElement = postRef.current

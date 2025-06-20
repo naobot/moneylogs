@@ -23,11 +23,11 @@ export const Group = ({ group, groupId }) => {
 
   const logPostRes = useGetLogPosts({ groupId })
 
+  const [displayAll, setDisplayAll] = useState(false)
   const [displayUser, setDisplayUser] = useState<UserData>(loggedInUser)
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
-  // const { users: members, isLoading: isLoadingMembers } = useGetMultipleUsers(memberIds)
   const { users: members, isLoading: isLoadingMembers, userIdToDocRefMap } = useGetGroupUsers(groupId)
 
   const memberIds = useMemo(() => {
@@ -95,7 +95,12 @@ export const Group = ({ group, groupId }) => {
   }, [displayUser?.userId, loggedInUser?.userId, groupId])
 
   const handleUserChange = (newUser: any) => {
-    setDisplayUser(newUser)
+    if (newUser) {
+      setDisplayUser(newUser)
+      setDisplayAll(false)
+    } else {
+      setDisplayAll(true)
+    }
 
     setTimeout(() => {
       const logPostsContainer = document.querySelector('.LogPosts__posts')
@@ -143,6 +148,7 @@ export const Group = ({ group, groupId }) => {
             <LogsMenu
               logMembers={members}
               logPosts={logPostRes.posts}
+              displayAll={displayAll}
               displayUser={displayUser}
               onChangeUser={handleUserChange}
               groupId={groupId}
@@ -150,7 +156,8 @@ export const Group = ({ group, groupId }) => {
             <ActiveLog
               group={group}
               groupId={groupId}
-              logPosts={logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
+              logPosts={displayAll ? logPostRes.posts : logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
+              displayAll={displayAll}
               displayUser={displayUser}
               userId={displayUser?.userId}
               isCreateNewEntry={isCreateNewEntry}

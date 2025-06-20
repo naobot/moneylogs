@@ -68,7 +68,7 @@ export type LogPost = {
   amount: number // amount spent in the day
   currency: Currency
   commentCount?: number
-  authorId?: string
+  authorId: string
   author: DocumentReference
   authorName?: string
   groupId: string
