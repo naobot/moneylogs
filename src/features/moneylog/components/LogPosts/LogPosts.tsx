@@ -19,6 +19,7 @@ import { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
 import { allTimezones, useTimezoneSelect } from "react-timezone-select"
+import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler"
 
 type LogPostsProps = {
   user: UserData
@@ -108,6 +109,8 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
       postRef.current.focus()
     }
   }, [])
+
+  useExternalLinkHandler(postRef, [post])
 
   const postTime = useMemo(() => {
     if (post.timezone) {
