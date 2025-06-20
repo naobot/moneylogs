@@ -115,6 +115,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
           currency: selectedCurrency,
           content: newEntryContent,
           postDate: newEntryDate,
+          timezone: newTimezone ?? undefined,
         }
       })
 
