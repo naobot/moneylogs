@@ -15,7 +15,7 @@ import Icon from "@/components/Icon"
 import { CURRENCIES } from "./LogPosts"
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
 
-const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinned, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinned, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, timezone = null, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
   groupId: string
@@ -27,6 +27,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
   currency?: Currency
   date?: number
   isPinned?: boolean
+  timezone?: string
 }, ref) => {
   const { user } = useCurrentUser()
 
@@ -34,8 +35,8 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
-  const [newTimezone, setNewTimezone] = useState<string|null>(user?.timezone ?? null)
-  const [showTimezone, setShowTimezone] = useState(false)
+  const [newTimezone, setNewTimezone] = useState<string|null>(timezone ?? user?.timezone ?? null)
+  const [showTimezone, setShowTimezone] = useState(!!timezone)
 
   const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
 
@@ -152,8 +153,13 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
   }, [newTimezone])
 
   useEffect(() => {
-    setNewTimezone(null)
+    if (!timezone) {
+      setShowTimezone(false)
+      setNewTimezone(null)
+    }
+
     const lastCurrency = (localStorage.getItem('ML__lastCurrency') as Currency)
+
     if (type == 'new' && lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
     }

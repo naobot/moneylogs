@@ -76,7 +76,7 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
   const { parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
 
   const isPinned = useMemo(() => {
-    return post.id === user?.pinnedPosts?.[groupId].pinnedPost
+    return post.id === user?.pinnedPosts?.[groupId]?.pinnedPost
   }, [user, post])
 
   const hasUnreadComments = useMemo(() => {
@@ -492,6 +492,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
                   currency={(item as LogPost).currency}
                   date={(item as LogPost).postDate?.seconds * 1000}
                   isPinned={currentlyEditingPostId === (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId].pinnedPost}
+                  timezone={(item as LogPost).timezone ?? undefined}
                 />
               }
 
