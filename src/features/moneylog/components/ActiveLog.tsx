@@ -1,4 +1,5 @@
-import { Dispatch, useEffect } from "react"
+import { Dispatch, useEffect, useMemo } from "react"
+import dayjs from "dayjs"
 
 import { Group, LogPost } from "@/types/user"
 import { UserData } from "@/hooks/useGetUserInfo"
@@ -19,6 +20,14 @@ type ActiveLogProps = {
 }
 
 export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
+  const recentLogs = useMemo(() => {
+    const twentyFourHoursAgo = dayjs().subtract(24, 'hours');
+
+    return logPosts.filter(post => {
+      const postDateTime = dayjs(post.postDate.toDate())
+      return postDateTime.isAfter(twentyFourHoursAgo)
+    })
+  }, [logPosts])
 
   useEffect(() => {
     isCreateNewEntrySet(false)
@@ -40,7 +49,7 @@ export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, gr
     {displayAll && (
       <AllLogsDigest
         groupId={groupId}
-        logs={logPosts}
+        logs={recentLogs}
         isCreateNewEntrySet={isCreateNewEntrySet}
       />
     )}
