@@ -9,6 +9,7 @@ import Icon from "@/components/Icon"
 import cx from "classnames"
 
 interface LogsMenuProps {
+  displayAll: boolean
   displayUser: UserData
   logMembers: any[]
   logPosts: Array<LogPost>
@@ -16,7 +17,7 @@ interface LogsMenuProps {
   groupId: string
 }
 
-const LogsMenu = ({ displayUser, logMembers, logPosts, onChangeUser, groupId }: LogsMenuProps) => {
+const LogsMenu = ({ displayAll = false, displayUser, logMembers, logPosts, onChangeUser, groupId }: LogsMenuProps) => {
   const { user } = useCurrentUser()
 
   const serializedMembers = useMemo(() => {
@@ -58,9 +59,22 @@ const LogsMenu = ({ displayUser, logMembers, logPosts, onChangeUser, groupId }: 
   return (
     <>
       <div className="LogsMenu">
+        <div
+          className={cx("LogsMenu__item LogsMenu__item--zeroeth", {
+            "LogsMenu__item--active": displayAll,
+          })}
+          onClick={() => onChangeUser()}
+        >
+          <div className="LogsMenu__item__content">
+            <div className="LogsMenu__item__title">
+              Daily Digest
+            </div>
+          </div>
+        </div>
         {serializedMembers?.map((member) => {
           return (
             <LogsMenuItemWithComments
+              displayAll={displayAll}
               key={member.id}
               logPosts={logPosts.filter((post) => post.author.id == member.id)}
               member={member}
@@ -77,7 +91,7 @@ const LogsMenu = ({ displayUser, logMembers, logPosts, onChangeUser, groupId }: 
 }
 
 // Separate component to handle individual member's comment checking
-const LogsMenuItemWithComments = ({ member, logPosts, displayUser, user, groupId, onChangeUser }) => {
+const LogsMenuItemWithComments = ({ displayAll, member, logPosts, displayUser, user, groupId, onChangeUser }) => {
   const hasUnreadComments = useMemo(() => {
     // Skip checking own posts for comments
     if (member.id === user?.id) return false
@@ -117,7 +131,7 @@ const LogsMenuItemWithComments = ({ member, logPosts, displayUser, user, groupId
   return (
     <div
       className={cx("LogsMenu__item", {
-        'LogsMenu__item--active': displayUser?.id === member?.id,
+        'LogsMenu__item--active': !displayAll && displayUser?.id === member?.id,
         'LogsMenu__item--first': member?.id === user?.id,
         // 'LogsMenu__item--new': member.hasUnreadPosts && displayUser?.id !== member?.id,
       })}
