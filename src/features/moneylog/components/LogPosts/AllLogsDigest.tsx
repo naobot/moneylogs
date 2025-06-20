@@ -1,5 +1,5 @@
 import cx from 'classnames'
-import { Dispatch, Fragment, useEffect, useState } from "react"
+import { Dispatch, Fragment, useEffect, useMemo, useState } from "react"
 
 import { useCurrentUser } from "@/contexts"
 import { LogPost } from "@/types/user"
@@ -11,6 +11,7 @@ import LogPostEditor from './LogPostEditor'
 import { LogPostItem } from './LogPosts'
 import LogPostComments from './LogPostComments'
 import dayjs from 'dayjs'
+import { FullUserData, useGetGroupUsers } from '@/hooks/useGetGroupUsers'
 
 const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
   groupId: string
@@ -20,6 +21,22 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()
   const { trackUserAction } = useReadTracking()
+  const { users: members } = useGetGroupUsers(groupId)
+
+  const memberMap = useMemo(() => {
+    const result = new Map<string, FullUserData>
+
+    members.forEach(member => result.set(member.id, member))
+
+    return result
+  }, [members])
+
+  const visibleLogs = useMemo(() => {
+    return logs.filter(log => {
+      const authorsPinnedPost = memberMap.get(log.author.id)?.pinnedPosts?.[groupId]?.pinnedPost
+      return authorsPinnedPost !== log.id
+    })
+  }, [logs, memberMap, groupId])
 
   const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
@@ -49,18 +66,18 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
         <div className={cx("LogPosts__posts", {
           "disable-scroll": selectedPost,
         })}>
-          {logs.length > 0 && (
+          {visibleLogs.length > 0 && (
             <div
               className={cx("LogPosts__posts__banner LogPosts__posts__item__header LogPosts__posts__banner--week")}
             >
               <div className="LogPosts__posts__banner__left"></div>
               <div className="LogPosts__posts__banner__center">
-                Posts from {dayjs(logs?.[logs.length-1]?.postDate?.seconds * 1000).format('ddd D MMM YYYY')}
+                Posts from {dayjs(logs?.[visibleLogs.length-1]?.postDate?.seconds * 1000).format('ddd D MMM YYYY')}
               </div>
               <div></div>
             </div>
           )}
-          {logs?.map((item: LogPost, i) => {
+          {visibleLogs?.map((item: LogPost, i) => {
             const isMyPost = item.author.id == loggedInUser?.id
 
             if (currentlyEditingPostId === (item as LogPost).id) {
@@ -101,11 +118,11 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
             )
           })
         }
-        {logs?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
+        {visibleLogs?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPost && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPost.id} />}
+        {selectedPost && <LogPostComments currentLogAuthorId={visibleLogs?.[0]?.author?.id} postId={selectedPost.id} />}
       </div>
       {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>

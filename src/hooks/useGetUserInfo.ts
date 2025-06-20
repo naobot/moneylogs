@@ -1,9 +1,8 @@
 import { useMemo, useState, useEffect, useRef } from "react"
-import { collection, where, query, onSnapshot } from "firebase/firestore"
+import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore"
 import { useFirebaseCollection } from './useFirebase'
 // @ts-ignore
 import { db } from '@/config/firebase-config'
-import { Datetime } from "@/types/user"
 
 export type MoneyLog = {
   id: number
@@ -29,7 +28,7 @@ export type UserData = {
   }
   commentSubscriptions?: {
     [logPostId: string]: {
-      [lastViewedAt: string]: Datetime
+      [lastViewedAt: string]: Timestamp
     }
   }
   hasUnreadComments?: {
@@ -38,10 +37,7 @@ export type UserData = {
   viewTracking?: {
     [key: string]: { // group ID
       [key: string]: { // log author ID
-        lastViewedAt: {
-          seconds: number
-          nanoseconds: number
-        }
+        lastViewedAt: Timestamp
       }
     }
   }
