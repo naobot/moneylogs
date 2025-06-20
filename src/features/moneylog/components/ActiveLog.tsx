@@ -21,11 +21,12 @@ type ActiveLogProps = {
 
 export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
   const recentLogs = useMemo(() => {
-    const twentyFourHoursAgo = dayjs().subtract(24, 'hours');
+    const now = dayjs()
+    const twentyFourHoursAgo = dayjs().subtract(24, 'hours')
 
     return logPosts.filter(post => {
       const postDateTime = dayjs(post.postDate.toDate())
-      return postDateTime.isAfter(twentyFourHoursAgo)
+      return postDateTime.isAfter(twentyFourHoursAgo) && postDateTime.isBefore(now)
     })
   }, [logPosts])
 
