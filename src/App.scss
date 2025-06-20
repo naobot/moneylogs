@@ -118,6 +118,7 @@ html {
   display: inline-flex;
   grid-gap: 0.2em;
   align-items: center;
+  justify-content: center;
 }
 
 .Icon {
@@ -419,12 +420,16 @@ html {
   align-items: center;
 
   &__item {
+    width: 20px;
     opacity: 0.3;
     transition: 0.3s ease-in-out;
-    will-transition: opacity;
 
     &:hover {
       opacity: 1;
+    }
+
+    &--active {
+      opacity: 0.8;
     }
   }
 }
@@ -456,6 +461,9 @@ html {
   }
 
   &__posts {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 1em;
     overflow-y: auto;
     min-height: 0;
     max-height: 100%;
@@ -477,7 +485,7 @@ html {
 
       &--week {
         font-weight: 800;
-        margin-bottom: 0.5em;
+        margin-bottom: -0.5em;
       }
 
       &__left {
@@ -495,7 +503,6 @@ html {
       flex-direction: column;
       gap: 0.5em;
       padding: 1em;
-      margin: 1em 0;
       border: 1px solid var(--c-black);
       background-color: #fff;
       transition: 0.3s ease-in-out;
@@ -504,6 +511,24 @@ html {
       @media (max-width: $breakpoint-md) {
         max-height: calc(100vh - 180px - 330px) !important;
         min-height: 80px;
+      }
+
+      &--first {
+        order: -1;
+      }
+
+      &--pinned {
+        order: -1;
+        color: #fff;
+        background-color: var(--c-black);
+
+        .LogPostMenu__item {
+          filter: invert(1);
+        }
+
+        .wmde-markdown {
+          color: #fff !important;
+        }
       }
 
       &--selected {
@@ -523,9 +548,9 @@ html {
           grid-gap: 0.2rem;
           font-weight: 700;
 
-          input {
+          /*input {
             max-width: 100px;
-          }
+          }*/
         }
         &__center {
           text-align: center;

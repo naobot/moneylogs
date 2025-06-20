@@ -22,6 +22,11 @@ export type UserData = {
   userId: string
   currentLogId: string
   timezone?: string
+  pinnedPosts?: {
+    [logGroupId: string]: {
+      [pinnedPost: string]: string
+    }
+  }
   commentSubscriptions?: {
     [logPostId: string]: {
       [lastViewedAt: string]: Datetime
@@ -56,25 +61,9 @@ interface CacheableUserData {
   userId: string
   currentLogId: string
   timezone?: string
-}
-
-interface RealtimeUserData {
-  commentSubscriptions?: {
-    [logPostId: string]: {
-      [lastViewedAt: string]: Datetime
-    }
-  }
-  hasUnreadComments?: {
-    [groupId: string]: boolean
-  }
-  viewTracking?: {
-    [key: string]: {
-      [key: string]: {
-        lastViewedAt: {
-          seconds: number
-          nanoseconds: number
-        }
-      }
+  pinnedPosts?: {
+    [logGroupId: string]: {
+      [pinnedPost: string]: string
     }
   }
 }
@@ -173,6 +162,7 @@ export const useGetUserInfo = (userId: string) => {
             userId: userData.userId,
             currentLogId: userData.currentLogId,
             timezone: userData.timezone,
+            pinnedPosts: userData.pinnedPosts,
             // Exclude: commentSubscriptions, hasUnreadComments, viewTracking
           }
 

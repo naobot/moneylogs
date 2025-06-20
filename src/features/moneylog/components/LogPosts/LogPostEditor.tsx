@@ -1,3 +1,4 @@
+import cx from 'classnames'
 import { ChangeEvent, Dispatch, forwardRef, SetStateAction, useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
 import MDEditor from "@uiw/react-md-editor"
@@ -14,7 +15,7 @@ import Icon from "@/components/Icon"
 import { CURRENCIES } from "./LogPosts"
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
 
-const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
+const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinned, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
   groupId: string
@@ -25,6 +26,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
   amount?: number
   currency?: Currency
   date?: number
+  isPinned?: boolean
 }, ref) => {
   const { user } = useCurrentUser()
 
@@ -157,7 +159,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isCrea
   }, [])
 
   return (
-    <div className="LogPosts__posts__item LogPosts__posts__item--selected" ref={ref}>
+    <div className={cx("LogPosts__posts__item LogPosts__posts__item--selected", { "LogPosts__posts__item--first": isPinned })} ref={ref}>
       <div
         className="LogPosts__posts__item__header"
       >
