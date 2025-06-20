@@ -60,7 +60,7 @@ export const UserSettings = () => {
 
     try {
       await updateUserInfo({
-        userId: user?.userId,
+        userId: user?.id,
         displayName: newDisplayName,
         displayLocation: newDisplayLocation ?? undefined,
         timezone: newTimezone,
