@@ -12,8 +12,13 @@ interface CacheableUserData {
   userId: string
   displayName: string
   email: string
-  timezone?: string
   groups: string[]
+  timezone?: string
+  pinnedPosts?: {
+    [logGroupId: string]: {
+      [pinnedPost: string]: string
+    }
+  }
 }
 
 interface RealtimeUserData {
