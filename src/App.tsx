@@ -12,6 +12,7 @@ import { CreateNewLog } from './pages/create'
 
 import './App.scss'
 import { GroupPage } from './pages/group'
+import { About } from './pages/about'
 
 export const CheckAuth = ({
   children,
@@ -40,6 +41,7 @@ const App = () => {
         <Layout>
           <Routes>
             <Route path='/login' element={<Auth />} />
+            <Route path='/about' element={<About />} />
             <Route path='/create' element={<CreateNewLog />} />
             <Route path='/' element={<CheckAuth><Home /></CheckAuth>} />
             <Route path='/me' element={<CheckAuth><UserSettings /></CheckAuth>} />
