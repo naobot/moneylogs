@@ -16,26 +16,26 @@ type UpdateUserProfileArgs = {
   timezone: string
 }
 
+type UpdatePinnedPostArgs = {
+  userId: string
+  logGroupId: string
+  postId: string
+}
+
 export const useUserQuery = () => {
   // Core mutation functions
   const updateViewTrackingFn = async ({ userId, logGroupId, viewedUserId }: UpdateViewTrackingArgs): Promise<void> => {
-    // const { userDocRef } = await getUserDocRef(userId)
-
-    // console.log('⬇️ executing read on users collection')
-    // viewedUserId is also the auth id so get the doc ref id first
-    // const { userDocRef: viewedUserDocRef} = await getUserDocRef(viewedUserId)
-
     console.log('✍️ executing write on users collection')
+
     await updateDoc(doc(db, 'users', userId), {
       [`viewTracking.${logGroupId}.${viewedUserId}.lastViewedAt`]: serverTimestamp()
     })
   }
 
   const updateUserProfileFn = async ({ userId, displayName, displayLocation, timezone }: UpdateUserProfileArgs): Promise<void> => {
-    const { userDocRef } = await getUserDocRef(userId)
-
     console.log('✍️ executing write on users collection')
-    await updateDoc(userDocRef, {
+
+    await updateDoc(doc(db, 'users', userId), {
       displayName,
       displayLocation,
       timezone,
@@ -43,17 +43,25 @@ export const useUserQuery = () => {
   }
 
   const markCommentsAsViewedFn = async ({ userId, logPostId }: { userId: string, logPostId: string }): Promise<void> => {
-    const { userDocRef } = await getUserDocRef(userId)
-
     console.log('✍️ executing write on users collection')
-    await updateDoc(userDocRef, {
+
+    await updateDoc(doc(db, 'users', userId), {
       [`commentSubscriptions.${logPostId}.lastViewedAt`]: serverTimestamp()
+    })
+  }
+
+  const updatePinnedPostFn = async ({ userId, logGroupId, postId }: UpdatePinnedPostArgs): Promise<void> => {
+    console.log('✍️ executing write on users collection')
+
+    await updateDoc(doc(db, 'users', userId), {
+      [`pinnedPosts.${logGroupId}.pinnedPost`]: postId
     })
   }
 
   // Mutations
   const updateViewTrackingMutation = useMutation(updateViewTrackingFn)
   const updateUserProfileMutation = useMutation(updateUserProfileFn)
+  const updatePinnedPostMutation = useMutation(updatePinnedPostFn)
 
   return {
     updateViewTracking: updateViewTrackingMutation,
@@ -61,5 +69,7 @@ export const useUserQuery = () => {
     updateUserProfile: updateUserProfileMutation,
     updateUserProfileFn,
     markCommentsAsViewedFn,
+    updatePinnedPost: updatePinnedPostMutation,
+    updatePinnedPostFn,
   }
 }
