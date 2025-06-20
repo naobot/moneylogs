@@ -315,7 +315,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
     let dailyTotals: { [key: string]: number } = {}
 
     logs?.forEach((post) => {
-      const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, user?.timezone)
+      const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, (post?.timezone ?? user?.timezone))
       const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
 
       if (!(post.currency in runningTotals)) {
