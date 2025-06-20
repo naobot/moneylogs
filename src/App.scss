@@ -501,6 +501,7 @@ html {
       display: flex;
       position: relative;
       flex-direction: column;
+      flex-shrink: 0;
       gap: 0.5em;
       padding: 1em;
       border: 1px solid var(--c-black);
