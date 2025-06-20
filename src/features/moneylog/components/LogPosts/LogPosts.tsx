@@ -201,7 +201,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
               />
             </div>
           </div>
-          {isDigestMode && (
+          {isDigestMode && user && (
             <div
               className="LogPosts__posts__item__header"
             >
@@ -209,7 +209,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
                 className="LogPosts__posts__item__header__left"
               >
                 <Icon type={"user"} />
-                {post.authorName}
+                {user.displayName} {user.displayLocation && <>({user.displayLocation})</>}
               </div>
             </div>
           )}

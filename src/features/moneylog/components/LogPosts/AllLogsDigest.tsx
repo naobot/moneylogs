@@ -79,6 +79,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
           )}
           {visibleLogs?.map((item: LogPost, i) => {
             const isMyPost = item.author.id == loggedInUser?.id
+            const authorData = memberMap.get(item.author.id)
 
             if (currentlyEditingPostId === (item as LogPost).id) {
               return <LogPostEditor
@@ -100,7 +101,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
             return (
               <Fragment key={(item as LogPost).id}>
                 <LogPostItem
-                  user={loggedInUser}
+                  user={isMyPost ? loggedInUser : authorData}
                   groupId={groupId}
                   post={(item as LogPost)}
                   isDigestMode={true}
