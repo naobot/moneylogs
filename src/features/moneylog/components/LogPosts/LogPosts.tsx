@@ -111,7 +111,7 @@ const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, set
 
   const postTime = useMemo(() => {
     if (post.timezone) {
-      useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
+      return useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
     }
     return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
   }, [post])

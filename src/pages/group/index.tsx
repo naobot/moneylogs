@@ -17,7 +17,7 @@ import { db } from '@/config/firebase-config'
 export const GroupPage = () => {
   const navigate = useNavigate()
   const { groupId } = useParams()
-  const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
+  const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery()
   const isProcessingJoin = useMemo(() => {
