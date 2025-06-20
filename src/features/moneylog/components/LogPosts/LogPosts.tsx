@@ -1,5 +1,5 @@
 import cx from "classnames"
-import { Dispatch, useEffect, useMemo, useRef, useState } from "react"
+import { Dispatch, Fragment, useEffect, useMemo, useRef, useState } from "react"
 import dayjs from "dayjs"
 
 import MDEditor from "@uiw/react-md-editor"
@@ -32,6 +32,7 @@ type LogPostsProps = {
 
 type LogPostProps = {
   user: UserData
+  groupId: string
   post: LogPost
   selectedPostId: string | null
   setSelectedPost: Dispatch<React.SetStateAction<LogPost|null>>
@@ -65,12 +66,17 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
   return dayjs(date).tz(userTimezone || dayjs.tz.guess())
 }
 
-const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
+const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
+  const [showPinWarning, setShowPinWarning] = useState(false)
 
   const { parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+
+  const isPinned = useMemo(() => {
+    return post.id === user?.pinnedPosts?.[groupId].pinnedPost
+  }, [user, post])
 
   const hasUnreadComments = useMemo(() => {
     if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
@@ -114,6 +120,7 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
   }, [post])
 
   const { deleteLogPost } = useLogPostQuery()
+  const { updatePinnedPost } = useUserQuery()
 
   const handleDeletePost = async (postId: string) => {
     if (!postId) {
@@ -133,6 +140,24 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
     }
   }
 
+  const handlePinPost = async (postId: string) => {
+    if (!postId) {
+      return
+    }
+
+    try {
+      await updatePinnedPost.mutate({
+        userId: user.id,
+        logGroupId: groupId,
+        postId: isPinned ? 'none' : postId,
+      })
+
+      setShowPinWarning(false)
+    } catch (err) {
+      console.error('Failed to pin log post:', err)
+    }
+  }
+
   useEffect(() => {
     if (selectedPostId === post.id) {
       scrollPostToTop(postRef)
@@ -144,48 +169,51 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
       <div
         className={cx("LogPosts__posts__item", {
           "LogPosts__posts__item--selected": selectedPostId===post.id,
+          "LogPosts__posts__item--pinned": isPinned,
         })}
         ref={postRef}
       >
-        <div
-          className="LogPosts__posts__item__header"
-        >
-          <div
-            className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
-            title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
-          >
-            <IconText type='clock' text={postTime?.format("HH:mm")} />
-          </div>
-          <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-            {(post.amount)?.toLocaleString()} {post.currency}
-          </div>
-          <div
-            className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
-          >
-            <IconText
-              type={hasUnreadComments ? 'speech-filled' : 'speech'}
-              text={(post?.commentCount ?? 0).toLocaleString()}
-              size={hasUnreadComments ? 16 : 18}
-              className="handler"
-              onClick={() => setSelectedPost(post)}
-            />
-          </div>
-        </div>
-        {post.timezone && (post.timezone !== user.timezone) && (
+        {!isPinned && (<>
           <div
             className="LogPosts__posts__item__header"
           >
             <div
-              className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter"
+              className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
+              title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
             >
-              {parseTimezone(post.timezone).label}
+              <IconText type='clock' text={postTime?.format("HH:mm")} />
+            </div>
+            <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+              {(post.amount)?.toLocaleString()} {post.currency}
+            </div>
+            <div
+              className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
+            >
+              <IconText
+                type={hasUnreadComments ? 'speech-filled' : 'speech'}
+                text={(post?.commentCount ?? 0).toLocaleString()}
+                size={hasUnreadComments ? 16 : 18}
+                className="handler"
+                onClick={() => setSelectedPost(post)}
+              />
             </div>
           </div>
-        )}
+          {post.timezone && (post.timezone !== user.timezone) && (
+            <div
+              className="LogPosts__posts__item__header"
+            >
+              <div
+                className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter"
+              >
+                {parseTimezone(post.timezone).label}
+              </div>
+            </div>
+          )}
+        </>)}
         <div
           className="LogPosts__posts__item__body"
         >
-          <div className="LogPosts__posts__item__content" data-color-mode="light">
+          <div className="LogPosts__posts__item__content" data-color-mode={isPinned ? "dark" : "light"}>
             <MDEditor.Markdown source={post.content} />
           </div>
         </div>
@@ -193,6 +221,12 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
           <>
             <div className="LogPosts__posts__item__footer">
               <div className="LogPostMenu">
+                <IconText
+                  className={cx("handler LogPostMenu__item", { 'LogPostMenu__item--active': isPinned })}
+                  type='pin'
+                  size={16}
+                  onClick={isPinned ? () => handlePinPost(post.id) : () => setShowPinWarning(true)}
+                />
                 <IconText
                   className="handler LogPostMenu__item"
                   type='pencil'
@@ -220,13 +254,39 @@ const LogPostItem = ({ user, post, selectedPostId, setSelectedPost, setCurrently
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete this post?
+            Are you sure you want to <strong>delete</strong> this post?
           </p>
         </Modal.Body>
         <Modal.Actions>
           <Button
             onClick={() => handleDeletePost(post.id)}
             text="Delete"
+            buttonStyle="primary-border"
+          />
+          <Modal.CancelButton text="Nevermind" />
+        </Modal.Actions>
+      </Modal>
+      <Modal
+        isOpen={showPinWarning}
+        onClose={() => setShowPinWarning(false)}
+      >
+        <Modal.Header
+          title={'Warning'}
+        >
+          Warning
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Are you sure you want to <strong>pin</strong> this post?
+          </p>
+          <p>
+            Your currently pinned post will return to being a regular post.
+          </p>
+        </Modal.Body>
+        <Modal.Actions>
+          <Button
+            onClick={() => handlePinPost(post.id)}
+            text="Pin"
             buttonStyle="primary-border"
           />
           <Modal.CancelButton text="Nevermind" />
@@ -428,13 +488,15 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
                   amount={(item as LogPost).amount}
                   currency={(item as LogPost).currency}
                   date={(item as LogPost).postDate?.seconds * 1000}
+                  isPinned={currentlyEditingPostId === (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId].pinnedPost}
                 />
               }
 
               return (
-                <div key={(item as LogPost).id}>
+                <Fragment key={(item as LogPost).id}>
                   <LogPostItem
-                    user={user}
+                    user={isMyLog ? loggedInUser : user}
+                    groupId={groupId}
                     post={(item as LogPost)}
                     isMyLog={isMyLog}
                     selectedPostId={selectedPost?.id ?? null}
@@ -446,7 +508,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
                       "LogPosts__posts__filler--active" : selectedPost?.id
                     })}></div>
                   )}
-                </div>
+                </Fragment>
               )
             }
           })}

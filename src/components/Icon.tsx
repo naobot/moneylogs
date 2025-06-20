@@ -8,9 +8,9 @@ type IconProps = {
   onClick?: MouseEventHandler<HTMLDivElement>
 }
 
-export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled' | 'calculator'
+export type IconType = 'home' | 'question' | 'warning' | 'notification' | 'clock' | 'exit' | 'location' | 'dollar' | 'document' | 'user' | 'speech' | 'plus' | 'trash' | 'pencil' | 'speech-filled' | 'calculator' | 'pin'
 
-const Icon = ({ type, size = 24, fill, onClick = null }: IconProps) => {
+const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = [
     'exit',
     'document',
@@ -22,8 +22,11 @@ const Icon = ({ type, size = 24, fill, onClick = null }: IconProps) => {
   const kyIcons = [
     'pencil',
   ]
+  const bluetipIcons = [
+    'pin',
+  ]
 
-  const iconSet = rkIcons.includes(type) ? 'reandra-khansa' : kyIcons.includes(type) ? 'kanyayee' : 'nakals'
+  const iconSet = rkIcons.includes(type) ? 'reandra-khansa' : kyIcons.includes(type) ? 'kanyayee' : bluetipIcons.includes(type) ? 'bluetip' : 'nakals'
   const whiteFilter = 'invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%) contrast(100%)'
 
   const cssStyles = useMemo(() => ({
