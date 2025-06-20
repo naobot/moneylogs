@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, Link } from "react-router-dom"
 // @ts-ignore
 import { auth } from '@/config/firebase-config'
 import { signOut } from "firebase/auth"
@@ -75,9 +75,12 @@ const MainNav = () => {
         </>}
       </div>
       <div className='MainNav__item MainNav__header'>
-        {/*<Link to={'/'}>moneylogs</Link>*/}
+
       </div>
       <div className="MainNev__item Menu">
+        <Link to={'/about'}>
+          moneylogs <small>{__APP_VERSION__}</small>
+        </Link>
         <Button
           title="Sign out"
           onClick={() => handleSignOut()}

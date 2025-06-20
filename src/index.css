@@ -18,12 +18,22 @@ div, nav, section {
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
+  font-weight: 700;
+  color: #000;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  /*color: #fff;*/
+  /*animation: chroab 400ms ease-in-out both;*/
+}
+
+@keyframes chroab {
+  0% {
+    text-shadow: 0 0 #d00031, 0 0 #2b8dfd, 0 6px 0 transparent, 8px 0 0 transparent
+  }
+  100% {
+    text-shadow: 0.06ex 0 #d00031, -0.06ex 0 #2b8dfd, 0 0.14ex 0 rgba(0,0,0,.8), 0.12ex 0 0 rgba(0,0,0,.8)
+  }
 }
 
 body {
