@@ -39,6 +39,7 @@ type LogPostProps = {
   setSelectedPost: Dispatch<React.SetStateAction<LogPost|null>>
   setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string|null>>
   isMyLog: boolean
+  isDigestMode: boolean
 }
 
 type DateBanner = {
