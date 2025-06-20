@@ -5,7 +5,7 @@ import MDEditor from "@uiw/react-md-editor"
 import { useCurrentUser } from "@/contexts"
 
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
-import { useGetComments } from "@/hooks/useGetLogPostComments"
+import { invalidateCommentCache, useGetComments } from "@/hooks/useGetLogPostComments"
 import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
@@ -16,7 +16,7 @@ type LogPostCommentsProps = {
 }
 
 const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) => {
-  const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments } = useGetComments({ logPostId: postId })
+  const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments, refreshComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
   const { trackUserAction } = useReadTracking()
@@ -34,6 +34,8 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
         userId: user?.userId,
         content: newCommentContent,
       })
+
+      refreshComments()
 
       trackUserAction('new_comment', {
         user_id: user?.id,
