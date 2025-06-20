@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import dayjs from "dayjs"
 import { collection, query, where, orderBy, onSnapshot, doc, Unsubscribe } from "firebase/firestore"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
+import { LogPost } from "@/types/user"
+import { invalidateCommentCache } from './useGetLogPostComments'
 
 type UseGetLogPostsParams = {
   groupId?: string
@@ -11,12 +13,15 @@ type UseGetLogPostsParams = {
 
 export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
   const [state, setState] = useState({
-    posts: [] as any[],
+    posts: [] as LogPost[],
     isLoading: false,
     isSuccess: false,
     isError: false,
     error: undefined as any,
   })
+
+  // Keep track of previous latestCommentAt values to detect changes
+  const previousCommentTimestamps = useRef<Map<string, any>>(new Map())
 
   useEffect(() => {
     if (!groupId || typeof groupId !== 'string') {
@@ -44,13 +49,6 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
       orderBy("postDate", "desc")
     )
 
-    // Create the real-time query
-    // const postsQuery = query(
-    //   collection(db, "log_posts"),
-    //   where("group", "==", groupDocRef),
-    //   orderBy("postDate", "desc") // or whatever ordering you prefer
-    // )
-
     console.log('🔄 setting up real-time listener on log_posts collection')
 
     // Set up the real-time listener
@@ -62,7 +60,28 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
         const posts = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }))
+        })) as LogPost[]
+
+        // Check for comment timestamp changes and invalidate cache accordingly
+        posts.forEach(post => {
+          const postId = post.id
+          const currentLatestCommentAt = post.latestCommentAt
+          const previousLatestCommentAt = previousCommentTimestamps.current.get(postId)
+
+          // If latestCommentAt has changed (Cloud Function updated it), invalidate the comment cache for this post
+          if (previousLatestCommentAt && currentLatestCommentAt) {
+            const currentTime = currentLatestCommentAt?.toMillis() || 0
+            const previousTime = previousLatestCommentAt?.toMillis() || 0
+
+            if (currentTime !== previousTime) {
+              console.log(`🔄 detected latestCommentAt update for post ${postId}, invalidating cache`)
+              invalidateCommentCache(postId)
+            }
+          }
+
+          // Update the tracking map
+          previousCommentTimestamps.current.set(postId, currentLatestCommentAt)
+        })
 
         setState({
           posts,
@@ -87,6 +106,8 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
     // Cleanup function - this is crucial!
     return () => {
       console.log('🔌 cleaning up real-time listener on log_posts collection')
+      // Clear the tracking map when the component unmounts or groupId changes
+      previousCommentTimestamps.current.clear()
       unsubscribe()
     }
   }, [groupId])

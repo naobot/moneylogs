@@ -1,4 +1,4 @@
-import { DocumentReference } from "firebase/firestore"
+import { DocumentReference, Timestamp } from "firebase/firestore"
 
 export type Datetime = {
   seconds: number
@@ -36,7 +36,7 @@ export type User = {
   }
   commentSubscriptions?: {
     [logPostId: string]: {
-      [lastViewedAt: string]: Datetime
+      [lastViewedAt: string]: Timestamp
     }
   }
 }
@@ -62,8 +62,8 @@ export type Log = {
 export type LogPost = {
   timezone?: string
   id: string
-  createdAt: Datetime
-  postDate: Datetime // editable date
+  createdAt: Timestamp
+  postDate: Timestamp // editable date
   content: string // formatted rich text
   amount: number // amount spent in the day
   currency: Currency
@@ -74,7 +74,7 @@ export type LogPost = {
   groupId: string
   groupName?: string
   commentSubscribers?: Array<DocumentReference>
-  latestCommentAt?: Datetime
+  latestCommentAt?: Timestamp
 }
 
 export type Comment = {
@@ -82,5 +82,5 @@ export type Comment = {
   authorId: DocumentReference
   authorName: string
   content: string
-  createdAt: Datetime
+  createdAt: Timestamp
 }
