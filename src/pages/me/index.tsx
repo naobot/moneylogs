@@ -11,6 +11,8 @@ import { useReadTracking } from '@/hooks/useReadTracking'
 import Button from "@/components/Button"
 import ControlledInput from "@/components/ControlledInput"
 
+import "./me.scss";
+
 export const UserSettings = () => {
   const { trackUserAction } = useReadTracking()
   const { user } = useCurrentUser()

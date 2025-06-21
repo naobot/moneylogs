@@ -1,0 +1,20 @@
+@use "/src/constants.scss";
+
+.UserSettings {
+  .ControlledInput {
+    @media (max-width: constants.$breakpoint-sm) {
+      flex-wrap: wrap;
+    }
+
+    label {
+      width: 20vw;
+      min-width: 125px;
+      max-width: 250px;
+    }
+
+    select {
+      width: 100%;
+      max-width: 600px;
+    }
+  }
+}
