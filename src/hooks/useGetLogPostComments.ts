@@ -1,9 +1,10 @@
+import { useEffect, useState } from "react"
 import { collection, limit, orderBy, query } from "firebase/firestore"
-import { Comment } from "../types/user"
+import { Comment } from "@/types/user"
+import { commentCacheEvents } from '@/utils/commentCacheEvents'
 // @ts-ignore
 import { db } from '@/config/firebase-config'
 import { useFirebaseCollection } from "./useFirebase"
-import { useEffect, useState } from "react"
 
 // Simple in-memory cache for comments
 const commentCache = new Map<string, {
@@ -22,6 +23,8 @@ const CACHE_DURATION = 5 * 60 * 1000
 export const invalidateCommentCache = (logPostId: string) => {
   console.log(`🗑️ invalidating comment cache for post ${logPostId}`)
   commentCache.delete(logPostId)
+  // Emit event to notify any active listeners
+  commentCacheEvents.emit(logPostId)
 }
 
 // Function to clear all comment cache (useful for cleanup)
@@ -42,6 +45,23 @@ export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {
   // Force refresh state - increment this to force a re-fetch
   const [forceRefresh, setForceRefresh] = useState(0)
 
+  // NEW: Subscribe to cache invalidation events
+  useEffect(() => {
+    if (!logPostId) return
+
+    console.log(`🎧 subscribing to cache invalidation events for post ${logPostId}`)
+
+    const unsubscribe = commentCacheEvents.subscribe(logPostId, () => {
+      console.log(`📨 received cache invalidation event for post ${logPostId}, forcing refresh`)
+      setForceRefresh(prev => prev + 1)
+    })
+
+    return () => {
+      console.log(`🔌 unsubscribing from cache invalidation events for post ${logPostId}`)
+      unsubscribe()
+    }
+  }, [logPostId])
+
   // Check if we should use cache
   const shouldUseCache = (logPostId: string) => {
     const cached = commentCache.get(logPostId)
@@ -59,9 +79,9 @@ export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {
   // Firebase query using your existing useFirebaseCollection hook
   const firebaseQuery = useFirebaseCollection<Comment>({
     queryBuilder: () => {
-      if (!logPostId || shouldUseCache(logPostId)) return null
+      if (!logPostId || (shouldUseCache(logPostId) && forceRefresh === 0)) return null
 
-      console.log('⬇️ executing read on log_posts comments collection for', logPostId)
+      console.log('⬇️ executing read on log_posts comments collection for', logPostId, 'forceRefresh:', forceRefresh)
       return query(
         collection(db, 'log_posts', logPostId, 'comments'),
         orderBy('createdAt', 'asc'),

@@ -74,7 +74,8 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
             const previousTime = previousLatestCommentAt?.toMillis() || 0
 
             if (currentTime !== previousTime) {
-              console.log(`🔄 detected latestCommentAt update for post ${postId}, invalidating cache`)
+              console.log(`🔄 detected latestCommentAt update for post ${postId}, invalidating cache and notifying listeners`)
+              // This now both deletes the cache AND emits events to active listeners
               invalidateCommentCache(postId)
             }
           }
