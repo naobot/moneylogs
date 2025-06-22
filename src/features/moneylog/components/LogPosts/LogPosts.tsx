@@ -128,7 +128,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
     if (!isDigestMode) {
       return `Posted on ${useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`
     } else {
-      const timezone = post.timezone ?? user.timezone ?? dayjs.tz.guess()
+      const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess()
 
       console.log(timezone)
 
