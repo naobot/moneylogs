@@ -114,13 +114,23 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
   useExternalLinkHandler(postRef, [post])
 
   const postTime = useMemo(() => {
-    if (post.timezone && !isDigestMode) {
-      return useUserTimezone(post.postDate?.seconds * 1000, post.timezone)
+    if (!isDigestMode) {
+      if (post.timezone) {
+        return useUserTimezone(post.postDate?.seconds * 1000, post.timezone).format("HH:mm")
+      } else {
+        return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone).format("HH:mm")
+      }
+    } else { // use relative time 'X ago'
+      return dayjs().to(dayjs(post.postDate?.seconds * 1000))
     }
-    return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone)
   }, [post])
-  const createdTime = useMemo(() => {
-    return useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone)
+  const hoverTimeInfo = useMemo(() => {
+    if (!isDigestMode) {
+      return `Posted on ${useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`
+    } else {
+      const timezone = post.timezone ?? user.timezone ?? dayjs.tz.guess()
+      return `Posted at ${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
+    }
   }, [post])
 
   const { deleteLogPost } = useLogPostQuery()
@@ -183,9 +193,9 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
           >
             <div
               className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
-              title={`Posted on ${createdTime?.format("ddd D MMM YYYY HH:mm")}`}
+              title={hoverTimeInfo}
             >
-              <IconText type='clock' text={postTime?.format("HH:mm")} />
+              <IconText type='clock' text={postTime} />
             </div>
             <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
               {(post.amount)?.toLocaleString()} {post.currency}
