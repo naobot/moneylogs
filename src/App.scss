@@ -513,10 +513,10 @@ html {
       border: 1px solid var(--c-black);
       background-color: #fff;
       transition: 0.3s ease-in-out;
-      max-height: calc(100vh - 180px);
+      max-height: 1000px; // explicitly declare so transition works
 
       @media (max-width: constants.$breakpoint-md) {
-        max-height: calc(100vh - 180px - 330px) !important;
+        // max-height: calc(100vh - 180px - 330px) !important;
         min-height: 80px;
       }
 
@@ -542,6 +542,11 @@ html {
       &--selected {
         border: 2px solid var(--c-black);
         z-index: 51;
+        max-height: calc(100vh - 180px);
+
+        @media (max-width: constants.$breakpoint-md) {
+          max-height: calc(100vh - 180px - 330px) !important;
+        }
       }
 
       &__header {
