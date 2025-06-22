@@ -513,7 +513,7 @@ html {
       border: 1px solid var(--c-black);
       background-color: #fff;
       transition: 0.3s ease-in-out;
-      max-height: 1000px; // explicitly declare so transition works
+      max-height: 1200px; // explicitly declare so transition works
 
       @media (max-width: constants.$breakpoint-md) {
         // max-height: calc(100vh - 180px - 330px) !important;
