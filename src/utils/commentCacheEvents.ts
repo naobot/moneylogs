@@ -1,3 +1,5 @@
+import { commentCache } from "@/hooks/useGetLogPostComments"
+
 type CacheEventListener = () => void
 
 class CommentCacheEventEmitter {
@@ -45,8 +47,7 @@ export const commentCacheEvents = new CommentCacheEventEmitter()
 export const invalidateCommentCacheWithEvent = (logPostId: string) => {
   console.log(`🗑️ invalidating comment cache for post ${logPostId} with event emission`)
 
-  // Your existing cache deletion logic (you'll need to import commentCache from your hook)
-  // commentCache.delete(logPostId)
+  commentCache.delete(logPostId)
 
   // Emit event to notify active listeners
   commentCacheEvents.emit(logPostId)

@@ -7,7 +7,7 @@ import { db } from '@/config/firebase-config'
 import { useFirebaseCollection } from "./useFirebase"
 
 // Simple in-memory cache for comments
-const commentCache = new Map<string, {
+export const commentCache = new Map<string, {
   data: Comment[],
   timestamp: number,
   isLoading: boolean,
@@ -45,7 +45,7 @@ export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {
   // Force refresh state - increment this to force a re-fetch
   const [forceRefresh, setForceRefresh] = useState(0)
 
-  // NEW: Subscribe to cache invalidation events
+  // Subscribe to cache invalidation events
   useEffect(() => {
     if (!logPostId) return
 
