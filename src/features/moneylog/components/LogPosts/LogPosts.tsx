@@ -129,6 +129,9 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
       return `Posted on ${useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`
     } else {
       const timezone = post.timezone ?? user.timezone ?? dayjs.tz.guess()
+
+      console.log(timezone)
+
       return `Posted at ${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
     }
   }, [post])
