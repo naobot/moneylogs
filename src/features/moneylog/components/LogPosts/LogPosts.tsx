@@ -130,11 +130,11 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
     } else {
       const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess()
 
-      console.log(timezone)
+      console.log(user)
 
-      return `Posted at ${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
+      return `${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
     }
-  }, [post])
+  }, [post, user])
 
   const { deleteLogPost } = useLogPostQuery()
   const { updatePinnedPost } = useUserQuery()
