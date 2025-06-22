@@ -5,7 +5,7 @@ import MDEditor from "@uiw/react-md-editor"
 import { useCurrentUser } from "@/contexts"
 
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
-import { invalidateCommentCache, useGetComments } from "@/hooks/useGetLogPostComments"
+import { useGetComments } from "@/hooks/useGetLogPostComments"
 import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
