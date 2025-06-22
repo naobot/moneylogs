@@ -130,8 +130,6 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
     } else {
       const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess()
 
-      console.log(user)
-
       return `${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
     }
   }, [post, user])
