@@ -88,9 +88,6 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
     <div className="LogPostComments__wrapper">
       {isLoadingComments && <>...</>}
       {!isLoadingComments && isSuccessComments && comments?.map((comment, i) => {
-        console.log('comment', comment)
-        console.log('currentLogAuthorId', currentLogAuthorId)
-
         return (
           <div
             ref={(el) => {

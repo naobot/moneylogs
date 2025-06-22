@@ -123,7 +123,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPost && <LogPostComments currentLogAuthorId={visibleLogs?.[0]?.author?.id} postId={selectedPost.id} />}
+        {selectedPost && <LogPostComments currentLogAuthorId={selectedPost.author?.id} postId={selectedPost.id} />}
       </div>
       {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
