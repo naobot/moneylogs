@@ -1,5 +1,6 @@
 import cx from "classnames"
 import { Dispatch, Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 import dayjs from "dayjs"
 
 import MDEditor from "@uiw/react-md-editor"
@@ -7,6 +8,7 @@ import MDEditor from "@uiw/react-md-editor"
 import { Currency, LogPost } from "@/types/user"
 import { useCurrentUser } from "@/contexts"
 
+import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler"
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
 import { useDisableScroll } from "@/hooks/useDisableScroll"
 import { useUserQuery } from "@/hooks/useUserQuery"
@@ -18,8 +20,6 @@ import Button from "@/components/Button"
 import Icon, { IconText } from "@/components/Icon"
 import LogPostEditor from "./LogPostEditor"
 import LogPostComments from "./LogPostComments"
-import { allTimezones, useTimezoneSelect } from "react-timezone-select"
-import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler"
 
 type LogPostsProps = {
   user: UserData
@@ -535,7 +535,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPost && <LogPostComments currentLogAuthorId={logs?.[0]?.author?.id} postId={selectedPost.id} />}
+        {selectedPost && <LogPostComments currentLogAuthorId={selectedPost.author.id} postId={selectedPost.id} />}
       </div>
       {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
