@@ -45,7 +45,7 @@ const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
       return null
     }
 
-    console.log('📱 Using cached user profiles')
+    console.log(`📱 Using cached user profiles for group ${groupId}`, data)
     return data
   } catch {
     return null
@@ -59,7 +59,7 @@ const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
       timestamp: Date.now()
     };
     localStorage.setItem(getCacheKey(groupId), JSON.stringify(cacheData))
-    console.log('💾 Cached user profiles')
+    console.log(`💾 Cached user profiles for group ${groupId}`)
   } catch (error) {
     console.warn('Failed to cache users:', error)
   }
@@ -75,15 +75,19 @@ export const useGetGroupUsers = (groupId: string) => {
     const map = new Map<string, string>()
     users.forEach(user => {
       map.set(user.userId || user.id, user.id) // Adjust based on your user object structure
-    });
+    })
     return map
   }, [users])
 
   useEffect(() => {
+    console.log(`getGroupUsers for ${groupId}`)
+
     if (!groupId) return
 
     // Try to get cached user profiles first
     const cachedUsers = getCachedUsers(groupId)
+
+    console.log(`Found cached users for ${groupId}`, cachedUsers)
 
     if (cachedUsers) {
       // Use cached data immediately for instant display
@@ -95,7 +99,6 @@ export const useGetGroupUsers = (groupId: string) => {
     // Set up real-time listener (always runs, even with cache)
     console.log('🔄 setting up real-time listeners for users')
 
-    // Your existing chunked user fetching logic here
     const setupUserListeners = async () => {
       try {
         // Get group members list first
@@ -119,12 +122,12 @@ export const useGetGroupUsers = (groupId: string) => {
             const chunkUsers: FullUserData[] = []
 
             snapshot.forEach((doc: DocumentSnapshot) => {
-              const userData = doc.data();
+              const userData = doc.data()
               if (userData) {
                 chunkUsers.push({
                   id: doc.id,
                   ...userData
-                } as FullUserData);
+                } as FullUserData)
               }
             })
 
@@ -155,24 +158,34 @@ export const useGetGroupUsers = (groupId: string) => {
               // Update cache with fresh stable data
               setCachedUsers(groupId, cacheableData)
             }
-          });
+          })
 
           unsubscribeFns.push(unsubscribe)
-        });
+        })
 
-        // Return cleanup function
+        // Return cleanup function which will be cleanUpFn
         return () => {
           console.log('🔌 cleaning up real-time listeners on users collection')
           unsubscribeFns.forEach(fn => fn())
-        };
+        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch users')
         setIsLoading(false)
       }
-    };
+    }
 
-    setupUserListeners()
+    let cleanup: (() => void) | undefined
+
+    setupUserListeners().then((cleanUpFn) => {
+      cleanup = cleanUpFn
+    })
+
+    return () => {
+      if (cleanup) {
+        cleanup()
+      }
+    }
 
   }, [groupId])
 

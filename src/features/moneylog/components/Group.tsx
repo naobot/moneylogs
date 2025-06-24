@@ -114,6 +114,14 @@ export const Group = ({ group, groupId }) => {
     }, 100)
   }
 
+  useEffect(() => {
+    console.log("groupId changed", groupId)
+  }, [groupId])
+
+  useEffect(() => {
+    console.log('members changed', members)
+  }, [members])
+
   return (
     <>
       <div className="Group">
