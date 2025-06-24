@@ -3,20 +3,25 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import MDEditor from "@uiw/react-md-editor"
 
 import { useCurrentUser } from "@/contexts"
+import { Comment } from "@/types/user"
 
 import { useLogPostQuery } from "@/hooks/useLogPostQuery"
-import { useGetComments } from "@/hooks/useGetLogPostComments"
 import { useReadTracking } from "@/hooks/useReadTracking"
 
 import Button from "@/components/Button"
 
+
 type LogPostCommentsProps = {
   currentLogAuthorId: string
   postId: string
+  comments: Comment[]
+  isLoadingComments?: boolean
+  isSuccessComments?: boolean
+  refreshComments: (string) => Promise<void>
 }
 
-const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) => {
-  const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments, refreshComments } = useGetComments({ logPostId: postId })
+const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingComments, isSuccessComments, refreshComments }: LogPostCommentsProps) => {
+  // const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments, refreshComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
   const { trackUserAction } = useReadTracking()
@@ -35,7 +40,7 @@ const LogPostComments = ({ currentLogAuthorId, postId }: LogPostCommentsProps) =
         content: newCommentContent,
       })
 
-      refreshComments()
+      refreshComments(postId)
 
       trackUserAction('new_comment', {
         user_id: user?.id,

@@ -1,5 +1,5 @@
 import cx from "classnames"
-import { Dispatch, Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { Dispatch, Fragment, memo, useEffect, useMemo, useRef, useState } from "react"
 import { allTimezones, useTimezoneSelect } from "react-timezone-select"
 import dayjs from "dayjs"
 
@@ -14,6 +14,7 @@ import { useDisableScroll } from "@/hooks/useDisableScroll"
 import { useUserQuery } from "@/hooks/useUserQuery"
 import { UserData } from "@/hooks/useGetUserInfo"
 import { useReadTracking } from "@/hooks/useReadTracking"
+import { useGetComments } from "@/hooks/useGetLogPostComments"
 
 import Modal from "@/components/Modal"
 import Button from "@/components/Button"
@@ -29,6 +30,7 @@ type LogPostsProps = {
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
   isMyLog: boolean
+  handleOpenComments: Function
 }
 
 type LogPostProps = {
@@ -40,6 +42,7 @@ type LogPostProps = {
   setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string|null>>
   isMyLog: boolean
   isDigestMode: boolean
+  onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void
 }
 
 type DateBanner = {
@@ -68,7 +71,7 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
   return dayjs(date).tz(userTimezone || dayjs.tz.guess())
 }
 
-export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false }: LogPostProps) => {
+export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
@@ -173,6 +176,10 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
     }
   }
 
+  const handleOpenComments = () => {
+    onOpenComments(post, hasUnreadComments) // Use the passed handler
+  }
+
   useEffect(() => {
     if (selectedPostId === post.id) {
       scrollPostToTop(postRef)
@@ -193,7 +200,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
             className="LogPosts__posts__item__header"
           >
             <div
-              className="LogPosts__posts__item__header__left LogPosts__posts__item__date"
+              className="LogPosts__posts__itemhandleOpenComments__header__left LogPosts__posts__item__date"
               title={hoverTimeInfo}
             >
               <IconText type='clock' text={postTime} />
@@ -209,7 +216,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
                 text={(post?.commentCount ?? 0).toLocaleString()}
                 size={hasUnreadComments ? 16 : 18}
                 className="handler"
-                onClick={() => setSelectedPost(post)}
+                onClick={handleOpenComments}
               />
             </div>
           </div>
@@ -325,7 +332,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
   )
 }
 
-const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
+const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()
@@ -407,9 +414,33 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
   const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
+  const [shouldForceFresh, setShouldForceFresh] = useState(false)
+
   useDisableScroll(!!selectedPost)
 
+  const {
+    data: comments,
+    isLoading: isLoadingComments,
+    isSuccess: isSuccessComments,
+    refreshComments
+  } = useGetComments({
+    logPostId: selectedPost?.id ?? null,
+    forceFresh: shouldForceFresh,
+  })
+
   const postEditorRef = useRef<HTMLDivElement>(null)
+
+  const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
+    // Always set shouldForceFresh based on whether we're opening a different post
+    // or if the same post has unread comments
+    const isNewPost = selectedPost?.id !== post.id
+    const shouldRefresh = isNewPost || hasUnreadComments
+
+    // console.log(`👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`)
+
+    setShouldForceFresh(shouldRefresh)
+    setSelectedPost(post)
+  }
 
   useEffect(() => {
     isCreateNewEntrySet(false)
@@ -423,7 +454,14 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
 
   useEffect(() => {
     setSelectedPost(null)
+    setShouldForceFresh(false)
   }, [userId])
+
+  useEffect(() => {
+    if (!selectedPost) {
+      setShouldForceFresh(false)
+    }
+  }, [selectedPost])
 
   useEffect(() => {
     if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
@@ -532,6 +570,7 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
                     selectedPostId={selectedPost?.id ?? null}
                     setSelectedPost={setSelectedPost}
                     setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                    onOpenComments={handleOpenComments}
                   />
                   {i == calendarMarkedPosts?.length - 1 && (
                     <div className={cx("LogPosts__posts__filler", {
@@ -546,12 +585,21 @@ const LogPosts = ({ groupId, user, userId, logs, isCreateNewEntry = false, isCre
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPost && <LogPostComments currentLogAuthorId={selectedPost.author.id} postId={selectedPost.id} />}
+        {selectedPost && (
+          <LogPostComments
+            currentLogAuthorId={selectedPost.author.id}
+            postId={selectedPost.id}
+            comments={comments}
+            isLoadingComments={isLoadingComments}
+            isSuccessComments={isSuccessComments}
+            refreshComments={refreshComments}
+          />
+          )}
       </div>
       {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
   )
-}
+})
 
 export default LogPosts
 

@@ -50,7 +50,7 @@ const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
   } catch {
     return null
   }
-};
+}
 
 const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
   try {
@@ -63,7 +63,7 @@ const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
   } catch (error) {
     console.warn('Failed to cache users:', error)
   }
-};
+}
 
 export const useGetGroupUsers = (groupId: string) => {
   const [users, setUsers] = useState<FullUserData[]>([])
@@ -80,14 +80,14 @@ export const useGetGroupUsers = (groupId: string) => {
   }, [users])
 
   useEffect(() => {
-    console.log(`getGroupUsers for ${groupId}`)
+    // console.log(`getGroupUsers for ${groupId}`)
 
     if (!groupId) return
 
     // Try to get cached user profiles first
     const cachedUsers = getCachedUsers(groupId)
 
-    console.log(`Found cached users for ${groupId}`, cachedUsers)
+    // console.log(`Found cached users for ${groupId}`, cachedUsers)
 
     if (cachedUsers) {
       // Use cached data immediately for instant display

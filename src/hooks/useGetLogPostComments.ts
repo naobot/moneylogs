@@ -1,150 +1,203 @@
-import { useEffect, useState } from "react"
-import { collection, limit, orderBy, query } from "firebase/firestore"
-import { Comment } from "@/types/user"
-import { commentCacheEvents } from '@/utils/commentCacheEvents'
+import { useEffect, useState, useCallback, useRef } from "react"
+import { collection, query, orderBy, getDocs } from "firebase/firestore"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
-import { useFirebaseCollection } from "./useFirebase"
 
-// Simple in-memory cache for comments
-export const commentCache = new Map<string, {
-  data: Comment[],
-  timestamp: number,
-  isLoading: boolean,
-  isSuccess: boolean,
-  isError: boolean,
-  error?: any
-}>()
+// Simple event emitter for browser
+class SimpleEventEmitter {
+  private events: { [key: string]: Function[] } = {}
+
+  on(event: string, callback: Function) {
+    if (!this.events[event]) {
+      this.events[event] = []
+    }
+    this.events[event].push(callback)
+  }
+
+  off(event: string, callback: Function) {
+    if (!this.events[event]) return
+    this.events[event] = this.events[event].filter(cb => cb !== callback)
+  }
+
+  emit(event: string, ...args: any[]) {
+    if (!this.events[event]) return
+    this.events[event].forEach(callback => callback(...args))
+  }
+}
+
+// Global event emitter for cache invalidation
+const cacheInvalidationEmitter = new SimpleEventEmitter()
+
+// Global comment cache with timestamp tracking
+const commentCache = new Map<string, { data: any[], timestamp: number }>()
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000
 
 // Function to invalidate cache for a specific post
-export const invalidateCommentCache = (logPostId: string) => {
-  console.log(`🗑️ invalidating comment cache for post ${logPostId}`)
-  commentCache.delete(logPostId)
-  // Emit event to notify any active listeners
-  commentCacheEvents.emit(logPostId)
+export const invalidateCommentCache = (postId: string) => {
+  console.log(`🗑️ invalidating comment cache for post ${postId}`)
+  commentCache.delete(postId)
+  // Emit event to notify all listeners
+  cacheInvalidationEmitter.emit(`invalidate-${postId}`)
 }
 
-// Function to clear all comment cache (useful for cleanup)
-export const clearCommentCache = () => {
-  console.log('🗑️ clearing all comment cache')
-  commentCache.clear()
-}
+// Function to check if cache is still valid
+const isCacheValid = (postId: string): boolean => {
+  const cached = commentCache.get(postId)
+  if (!cached) return false
 
-export const useGetComments = ({ logPostId }: { logPostId: string | null }) => {
-  const [cacheState, setCacheState] = useState({
-    data: [] as Comment[],
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: undefined as any
-  })
+  const now = Date.now()
+  const isExpired = now - cached.timestamp > CACHE_DURATION
 
-  // Force refresh state - increment this to force a re-fetch
-  const [forceRefresh, setForceRefresh] = useState(0)
-
-  // Subscribe to cache invalidation events
-  useEffect(() => {
-    if (!logPostId) return
-
-    console.log(`🎧 subscribing to cache invalidation events for post ${logPostId}`)
-
-    const unsubscribe = commentCacheEvents.subscribe(logPostId, () => {
-      console.log(`📨 received cache invalidation event for post ${logPostId}, forcing refresh`)
-      setForceRefresh(prev => prev + 1)
-    })
-
-    return () => {
-      console.log(`🔌 unsubscribing from cache invalidation events for post ${logPostId}`)
-      unsubscribe()
-    }
-  }, [logPostId])
-
-  // Check if we should use cache
-  const shouldUseCache = (logPostId: string) => {
-    const cached = commentCache.get(logPostId)
-    if (!cached) return false
-
-    const isExpired = Date.now() - cached.timestamp > CACHE_DURATION
-    if (isExpired) {
-      commentCache.delete(logPostId)
-      return false
-    }
-
-    return true
+  if (isExpired) {
+    console.log(`⏰ cache expired for post ${postId}`)
+    commentCache.delete(postId)
+    return false
   }
 
-  // Firebase query using your existing useFirebaseCollection hook
-  const firebaseQuery = useFirebaseCollection<Comment>({
-    queryBuilder: () => {
-      if (!logPostId || (shouldUseCache(logPostId) && forceRefresh === 0)) return null
+  return true
+}
 
-      console.log('⬇️ executing read on log_posts comments collection for', logPostId, 'forceRefresh:', forceRefresh)
-      return query(
-        collection(db, 'log_posts', logPostId, 'comments'),
-        orderBy('createdAt', 'asc'),
-        limit(60),
-      )
-    },
-    dataTransformer: (docs) => docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Comment[],
-    dependencies: [logPostId, forceRefresh], // forceRefresh will trigger re-fetch
-    enabled: !!logPostId && !shouldUseCache(logPostId)
+type UseGetCommentsParams = {
+  logPostId?: string | null
+  forceFresh?: boolean
+}
+
+export const useGetComments = ({ logPostId, forceFresh = false }: UseGetCommentsParams) => {
+  const [state, setState] = useState({
+    data: [] as any[],
+    isLoading: false,
+    isSuccess: false,
+    error: null as any,
   })
 
+  // Use ref to track the current postId to handle cleanup properly
+  const currentPostIdRef = useRef<string | null>(null)
+
+  // Track if we should skip cache for this specific instance
+  const skipCacheRef = useRef(false)
+
+  // Fetch comments from Firestore
+  const fetchComments = useCallback(async (postId: string, bypassCache: boolean = false) => {
+    try {
+      // Check cache first (unless bypassing)
+      if (!bypassCache && !skipCacheRef.current && isCacheValid(postId)) {
+        const cached = commentCache.get(postId)
+        if (cached) {
+          console.log(`💾 using cached comments for post ${postId}`)
+          setState({
+            data: cached.data,
+            isLoading: false,
+            isSuccess: true,
+            error: null,
+          })
+          return cached.data
+        }
+      }
+
+      console.log(`⬇️ fetching fresh comments for post ${postId} (bypassCache: ${bypassCache})`)
+      setState(prev => ({ ...prev, isLoading: true }))
+
+      const commentsRef = collection(db, "log_posts", postId, "comments")
+      const q = query(commentsRef, orderBy("createdAt", "asc"))
+      const querySnapshot = await getDocs(q)
+
+      const comments = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+
+      // Cache the results
+      console.log(`💾 caching fresh comments for post ${postId} (${comments.length} comments)`)
+      commentCache.set(postId, { data: comments, timestamp: Date.now() })
+
+      // Only update state if this is still the current post
+      if (currentPostIdRef.current === postId) {
+        setState({
+          data: comments,
+          isLoading: false,
+          isSuccess: true,
+          error: null,
+        })
+      }
+
+      return comments
+    } catch (error) {
+      console.error(`❌ error fetching comments for post ${postId}:`, error)
+      if (currentPostIdRef.current === postId) {
+        setState({
+          data: [],
+          isLoading: false,
+          isSuccess: false,
+          error,
+        })
+      }
+      throw error
+    }
+  }, [])
+
+  // Manual refresh function
+  const refreshComments = useCallback(async (postId?: string) => {
+    const targetPostId = postId || currentPostIdRef.current
+    if (!targetPostId) return
+
+    console.log(`🔄 manually refreshing comments for post ${targetPostId}`)
+    invalidateCommentCache(targetPostId)
+    skipCacheRef.current = true
+    await fetchComments(targetPostId, true)
+    skipCacheRef.current = false
+  }, [fetchComments])
+
+  // Main effect to handle comment loading and cache invalidation
   useEffect(() => {
     if (!logPostId) {
-      setCacheState({
+      setState({
         data: [],
         isLoading: false,
         isSuccess: false,
-        isError: false,
-        error: undefined
+        error: null,
       })
+      currentPostIdRef.current = null
       return
     }
 
-    // Check cache first
-    if (shouldUseCache(logPostId)) {
-      const cached = commentCache.get(logPostId)!
-      console.log(`💾 using cached comments for post ${logPostId}`)
-      setCacheState(cached)
-      return
+    // Update current post ref
+    currentPostIdRef.current = logPostId
+
+    // If forceFresh is true, invalidate cache immediately
+    if (forceFresh) {
+      console.log(`🚨 forceFresh enabled for post ${logPostId}, invalidating cache`)
+      invalidateCommentCache(logPostId)
+      skipCacheRef.current = true
     }
 
-    // If no valid cache, use Firebase data
-    setCacheState({
-      data: firebaseQuery.data || [],
-      isLoading: firebaseQuery.isLoading,
-      isSuccess: firebaseQuery.isSuccess,
-      isError: firebaseQuery.isError,
-      error: firebaseQuery.error
+    // Initial fetch
+    fetchComments(logPostId, forceFresh).finally(() => {
+      skipCacheRef.current = false
     })
 
-    // Cache the results when Firebase query succeeds
-    if (firebaseQuery.isSuccess && firebaseQuery.data) {
-      console.log(`💾 caching comments for post ${logPostId}`)
-      commentCache.set(logPostId, {
-        data: firebaseQuery.data,
-        timestamp: Date.now(),
-        isLoading: false,
-        isSuccess: true,
-        isError: false
-      })
+    // Listen for cache invalidation events
+    const handleInvalidation = () => {
+      console.log(`📢 received cache invalidation event for post ${logPostId}`)
+      if (currentPostIdRef.current === logPostId) {
+        fetchComments(logPostId, true)
+      }
     }
-  }, [logPostId, firebaseQuery.data, firebaseQuery.isLoading, firebaseQuery.isSuccess, firebaseQuery.isError, firebaseQuery.error, forceRefresh])
 
-  // Return both the state and a manual refresh function
-  return {
-    ...cacheState,
-    refreshComments: () => {
-      console.log(`🔄 manually refreshing comments for post ${logPostId}`)
-      invalidateCommentCache(logPostId)
-      setForceRefresh(prev => prev + 1)
+    console.log(`🎧 subscribing to cache invalidation events for post ${logPostId}`)
+    cacheInvalidationEmitter.on(`invalidate-${logPostId}`, handleInvalidation)
+
+    // Cleanup
+    return () => {
+      console.log(`🔌 unsubscribing from cache invalidation events for post ${logPostId}`)
+      cacheInvalidationEmitter.off(`invalidate-${logPostId}`, handleInvalidation)
+      currentPostIdRef.current = null
     }
+  }, [logPostId, forceFresh, fetchComments])
+
+  return {
+    ...state,
+    refreshComments,
   }
 }
