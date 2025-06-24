@@ -45,10 +45,10 @@ export const Group = ({ group, groupId }) => {
 
   useEffect(() => {
     // Only initialize if displayUser is not already set
-    if (loggedInUser && !displayUser) {
+    if (loggedInUser) {
       setDisplayUser(loggedInUser)
     }
-  }, [loggedInUser, displayUser, groupId])
+  }, [loggedInUser?.id, groupId])
 
   useEffect(() => {
     isCreateNewEntrySet(false)
