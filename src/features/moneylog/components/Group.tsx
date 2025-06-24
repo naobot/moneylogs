@@ -15,7 +15,7 @@ import { useUserQuery } from "@/hooks/useUserQuery"
 
 import { IconText } from "@/components/Icon"
 import { Timestamp } from "firebase/firestore"
-import LogsSummary from "./LogsSummary"
+import LogsSummary from "./LogsSummary/LogsSummary"
 
 export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
