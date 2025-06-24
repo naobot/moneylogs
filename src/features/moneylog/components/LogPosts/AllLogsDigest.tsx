@@ -7,6 +7,7 @@ import { LogPost } from "@/types/user"
 import { useReadTracking } from "@/hooks/useReadTracking"
 import { useUserQuery } from "@/hooks/useUserQuery"
 import { useDisableScroll } from "@/hooks/useDisableScroll"
+import { useGetComments } from "@/hooks/useGetLogPostComments"
 import LogPostEditor from './LogPostEditor'
 import { LogPostItem } from './LogPosts'
 import LogPostComments from './LogPostComments'
@@ -40,11 +41,43 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
 
   const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
+  const [shouldForceFresh, setShouldForceFresh] = useState(false)
+
   useDisableScroll(!!selectedPost)
+
+  // Single instance of the comment hook
+  const {
+    data: comments,
+    isLoading: isLoadingComments,
+    isSuccess: isSuccessComments,
+    refreshComments
+  } = useGetComments({
+    logPostId: selectedPost?.id ?? null,
+    forceFresh: shouldForceFresh,
+  })
+
+  const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
+    // Always set shouldForceFresh based on whether we're opening a different post
+    // or if the same post has unread comments
+    const isNewPost = selectedPost?.id !== post.id
+    const shouldRefresh = isNewPost || hasUnreadComments
+
+    console.log(`👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`)
+
+    setShouldForceFresh(shouldRefresh)
+    setSelectedPost(post)
+  }
 
   useEffect(() => {
     setSelectedPost(null)
+    setShouldForceFresh(false)
   }, [])
+
+  useEffect(() => {
+    if (!selectedPost) {
+      setShouldForceFresh(false)
+    }
+  }, [selectedPost])
 
   useEffect(() => {
     if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
@@ -109,6 +142,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
                   selectedPostId={selectedPost?.id ?? null}
                   setSelectedPost={setSelectedPost}
                   setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                  onOpenComments={handleOpenComments}
                 />
                 {i == logs?.length - 1 && (
                   <div className={cx("LogPosts__posts__filler", {
@@ -123,7 +157,16 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
         </div>
       </div>
       <div className="LogPostComments">
-        {selectedPost && <LogPostComments currentLogAuthorId={selectedPost.author?.id} postId={selectedPost.id} />}
+        {selectedPost && (
+          <LogPostComments
+            currentLogAuthorId={selectedPost.author?.id}
+            postId={selectedPost.id}
+            comments={comments}
+            isLoadingComments={isLoadingComments}
+            isSuccessComments={isSuccessComments}
+            refreshComments={refreshComments}
+          />
+        )}
       </div>
       {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
