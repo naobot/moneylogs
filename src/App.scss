@@ -109,6 +109,12 @@ html {
   @media (max-width: constants.$breakpoint-sm) {
     padding: 0.5em 0.5em 0 0.5em;
   }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 .IconText {
@@ -438,6 +444,53 @@ html {
       opacity: 0.8;
     }
   }
+}
+
+.LogsSummary {
+  display: flex;
+  flex-direction: column;
+  width: 60vw;
+  height: 100%;
+
+  h2 {
+    text-align: center;
+  }
+
+  &__highlight {
+    font-weight: 700;
+  }
+
+  &__bubble {
+    border-radius: 5px;
+    color: #fff;
+    background-color: var(--c-black);
+    font-size: 0.9em;
+    margin: 1em 0;
+    padding: 1em;
+  }
+
+  &__ScrollList {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    overflow-y: auto;
+    gap: 0.8em;
+  }
+}
+
+.PostPreview {
+  color: var(--c-black);
+  background-color: #fff;
+  border: 1px solid var(--c-black);
+  border-radius: 2px;
+  font-size: 0.7em;
+  padding: 0.8em;
+  max-width: 180px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.LogsSummaryRight {
+  flex: 1;
 }
 
 .LogPosts {

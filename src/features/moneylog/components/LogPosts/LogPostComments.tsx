@@ -18,9 +18,10 @@ type LogPostCommentsProps = {
   isLoadingComments?: boolean
   isSuccessComments?: boolean
   refreshComments: (string) => Promise<void>
+  isReadOnly: boolean
 }
 
-const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingComments, isSuccessComments, refreshComments }: LogPostCommentsProps) => {
+const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingComments, isSuccessComments, refreshComments, isReadOnly = false }: LogPostCommentsProps) => {
   // const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments, refreshComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
@@ -120,6 +121,7 @@ const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingCommen
           </div>
         )
       })}
+      {!isReadOnly && (
       <div
         className="LogPostComments__item LogPostComments__item--hidden"
         ref={(elm) => {
@@ -155,6 +157,7 @@ const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingCommen
           />
         </div>
       </div>
+      )}
     </div>
   </>)
 }

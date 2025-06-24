@@ -17,7 +17,7 @@ export type UserData = {
   displayName: string
   displayLocation?: string
   email: string
-  logs: Array<MoneyLog>
+  groups: Array<string>
   userId: string
   currentLogId: string
   timezone?: string
