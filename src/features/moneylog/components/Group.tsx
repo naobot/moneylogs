@@ -14,9 +14,10 @@ import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
 import { IconText } from "@/components/Icon"
+import { Timestamp } from "firebase/firestore"
+import LogsSummary from "./LogsSummary/LogsSummary"
 
 export const Group = ({ group, groupId }) => {
-  // const { group, isLoading: isLoadingGroup, isSuccess: isSuccessGroup, refetch } = useGetGroup(groupId)
   const { user: loggedInUser } = useCurrentUser()
   const { updateViewTrackingFn } = useUserQuery()
   const { trackUserAction } = useReadTracking()
@@ -24,11 +25,16 @@ export const Group = ({ group, groupId }) => {
   const logPostRes = useGetLogPosts({ groupId })
 
   const [displayAll, setDisplayAll] = useState(false)
-  const [displayUser, setDisplayUser] = useState<UserData>(loggedInUser)
+  const [displayUser, setDisplayUser] = useState<UserData|null>(loggedInUser)
+  const [displaySummary, setDisplaySummary] = useState(false)
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
   const { users: members, isLoading: isLoadingMembers, userIdToDocRefMap } = useGetGroupUsers(groupId)
+
+  const isReadOnly = useMemo(() => {
+    return group.end.toDate() < Timestamp.now().toDate()
+  }, [group])
 
   const memberIds = useMemo(() => {
     if (!members) return []
@@ -98,9 +104,27 @@ export const Group = ({ group, groupId }) => {
     if (newUser) {
       setDisplayUser(newUser)
       setDisplayAll(false)
+      setDisplaySummary(false)
     } else {
       setDisplayAll(true)
     }
+
+    setTimeout(() => {
+      const logPostsContainer = document.querySelector('.LogPosts__posts')
+
+      if (logPostsContainer) {
+        logPostsContainer.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+      }
+    }, 100)
+  }
+
+  const handleViewSummary = () => {
+    setDisplayUser(null)
+    setDisplayAll(false)
+    setDisplaySummary(true)
 
     setTimeout(() => {
       const logPostsContainer = document.querySelector('.LogPosts__posts')
@@ -127,7 +151,7 @@ export const Group = ({ group, groupId }) => {
           </div>
 
           <div className="Group__header__center">
-            {isActiveLogMyLog && (
+            {!isReadOnly && isActiveLogMyLog && (
               <div
                 className="handler Group__header__item"
                 onClick={() => {
@@ -144,26 +168,33 @@ export const Group = ({ group, groupId }) => {
         </div>
         <div className="Group__body">
           {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {logPostRes.isSuccess && !isLoadingMembers && groupId && displayUser && (<>
+          {logPostRes.isSuccess && !isLoadingMembers && groupId && (<>
             <LogsMenu
               logMembers={members}
               logPosts={logPostRes.posts}
               displayAll={displayAll}
+              displaySummary={displaySummary}
               displayUser={displayUser}
               onChangeUser={handleUserChange}
+              onViewSummary={handleViewSummary}
               groupId={groupId}
+              isReadOnly={isReadOnly}
             />
-            <ActiveLog
-              group={group}
-              groupId={groupId}
-              logPosts={displayAll ? logPostRes.posts : logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
-              displayAll={displayAll}
-              displayUser={displayUser}
-              userId={displayUser?.userId}
-              isCreateNewEntry={isCreateNewEntry}
-              isCreateNewEntrySet={isCreateNewEntrySet}
-              isMyLog={isActiveLogMyLog}
-            />
+            {displaySummary && (<LogsSummary group={group} logPosts={logPostRes.posts} />)}
+            {!displaySummary && displayUser && (
+              <ActiveLog
+                group={group}
+                groupId={groupId}
+                logPosts={displayAll ? logPostRes.posts : logPostRes.posts.filter((post) => post.author.id == displayUser.id)}
+                displayAll={displayAll}
+                displayUser={displayUser}
+                userId={displayUser?.userId}
+                isCreateNewEntry={isCreateNewEntry}
+                isCreateNewEntrySet={isCreateNewEntrySet}
+                isMyLog={isActiveLogMyLog}
+                isReadOnly={isReadOnly}
+              />
+            )}
           </>)}
         </div>
       </div>

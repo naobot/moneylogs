@@ -9,15 +9,18 @@ import Icon from "@/components/Icon"
 import cx from "classnames"
 
 interface LogsMenuProps {
+  displaySummary: boolean
   displayAll: boolean
-  displayUser: UserData
+  displayUser?: UserData | null
   logMembers: any[]
   logPosts: Array<LogPost>
   onChangeUser: Function
+  onViewSummary: Function
   groupId: string
+  isReadOnly: boolean
 }
 
-const LogsMenu = ({ displayAll = false, displayUser, logMembers, logPosts, onChangeUser, groupId }: LogsMenuProps) => {
+const LogsMenu = ({ displaySummary = false, displayAll = false, displayUser = null, logMembers, logPosts, onChangeUser, onViewSummary, groupId, isReadOnly = false }: LogsMenuProps) => {
   const { user } = useCurrentUser()
 
   const serializedMembers = useMemo(() => {
@@ -59,22 +62,39 @@ const LogsMenu = ({ displayAll = false, displayUser, logMembers, logPosts, onCha
   return (
     <>
       <div className="LogsMenu">
-        <div
-          className={cx("LogsMenu__item LogsMenu__item--zeroeth", {
-            "LogsMenu__item--active": displayAll,
-          })}
-          onClick={() => onChangeUser()}
-        >
-          <div className="LogsMenu__item__content">
-            <div className="LogsMenu__item__title">
-              Daily Digest
+        {isReadOnly && (
+          <div
+            className={cx("LogsMenu__item LogsMenu__item--zeroeth", {
+              "LogsMenu__item--active": displaySummary,
+            })}
+            onClick={() => onViewSummary()}
+          >
+            <div className="LogsMenu__item__content">
+              <div className="LogsMenu__item__title">
+                Log Group Summary
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        {!isReadOnly && (
+          <div
+            className={cx("LogsMenu__item LogsMenu__item--zeroeth", {
+              "LogsMenu__item--active": displayAll,
+            })}
+            onClick={() => onChangeUser()}
+          >
+            <div className="LogsMenu__item__content">
+              <div className="LogsMenu__item__title">
+                Daily Digest
+              </div>
+            </div>
+          </div>
+        )}
         {serializedMembers?.map((member) => {
           return (
             <LogsMenuItemWithComments
               displayAll={displayAll}
+              displaySummary={displaySummary}
               key={member.id}
               logPosts={logPosts.filter((post) => post.author.id == member.id)}
               member={member}
@@ -91,7 +111,7 @@ const LogsMenu = ({ displayAll = false, displayUser, logMembers, logPosts, onCha
 }
 
 // Separate component to handle individual member's comment checking
-const LogsMenuItemWithComments = ({ displayAll, member, logPosts, displayUser, user, groupId, onChangeUser }) => {
+const LogsMenuItemWithComments = ({ displayAll, displaySummary, member, logPosts, displayUser, user, groupId, onChangeUser }) => {
   const hasUnreadComments = useMemo(() => {
     // Skip checking own posts for comments
     if (member.id === user?.id) return false
@@ -131,7 +151,7 @@ const LogsMenuItemWithComments = ({ displayAll, member, logPosts, displayUser, u
   return (
     <div
       className={cx("LogsMenu__item", {
-        'LogsMenu__item--active': !displayAll && displayUser?.id === member?.id,
+        'LogsMenu__item--active': !displaySummary && !displayAll && displayUser?.id === member?.id,
         'LogsMenu__item--first': member?.id === user?.id,
         // 'LogsMenu__item--new': member.hasUnreadPosts && displayUser?.id !== member?.id,
       })}

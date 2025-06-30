@@ -14,10 +14,11 @@ import LogPostComments from './LogPostComments'
 import dayjs from 'dayjs'
 import { FullUserData, useGetGroupUsers } from '@/hooks/useGetGroupUsers'
 
-const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet }: {
+const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet, isReadOnly = false }: {
   groupId: string
   logs: LogPost[]
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
+  isReadOnly: boolean
 }) => {
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()

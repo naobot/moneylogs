@@ -30,7 +30,7 @@ type LogPostsProps = {
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
   isMyLog: boolean
-  handleOpenComments: Function
+  isReadOnly: boolean
 }
 
 type LogPostProps = {
@@ -43,6 +43,7 @@ type LogPostProps = {
   isMyLog: boolean
   isDigestMode: boolean
   onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void
+  isReadOnly: boolean
 }
 
 type DateBanner = {
@@ -71,7 +72,7 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
   return dayjs(date).tz(userTimezone || dayjs.tz.guess())
 }
 
-export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments }: LogPostProps) => {
+export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments, isReadOnly = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
@@ -251,7 +252,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
             <MDEditor.Markdown source={post.content} />
           </div>
         </div>
-        {isMyLog && (
+        {!isReadOnly && isMyLog && (
           <>
             <div className="LogPosts__posts__item__footer">
               <div className="LogPostMenu">
@@ -332,7 +333,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
   )
 }
 
-const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false }: LogPostsProps) => {
+const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false, isReadOnly = false }: LogPostsProps) => {
   const [isWeeklyView, isWeeklyViewSet] = useState(false)
   const { markCommentsAsViewedFn } = useUserQuery()
   const { user: loggedInUser } = useCurrentUser()
@@ -567,6 +568,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
                     groupId={groupId}
                     post={(item as LogPost)}
                     isMyLog={isMyLog}
+                    isReadOnly={isReadOnly}
                     selectedPostId={selectedPost?.id ?? null}
                     setSelectedPost={setSelectedPost}
                     setCurrentlyEditingPostId={setCurrentlyEditingPostId}
@@ -593,6 +595,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
             isLoadingComments={isLoadingComments}
             isSuccessComments={isSuccessComments}
             refreshComments={refreshComments}
+            isReadOnly={isReadOnly}
           />
           )}
       </div>

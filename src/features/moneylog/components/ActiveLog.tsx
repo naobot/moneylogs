@@ -17,9 +17,10 @@ type ActiveLogProps = {
   isCreateNewEntry: boolean
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
   isMyLog: boolean
+  isReadOnly: boolean
 }
 
-export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false }: ActiveLogProps) => {
+export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, groupId, userId, isCreateNewEntry, isCreateNewEntrySet, isMyLog = false, isReadOnly = false }: ActiveLogProps) => {
   const recentLogs = useMemo(() => {
     const now = dayjs()
     const twentyFourHoursAgo = dayjs().subtract(24, 'hours')
@@ -45,6 +46,7 @@ export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, gr
         logs={logPosts}
         isCreateNewEntry={isCreateNewEntry}
         isCreateNewEntrySet={isCreateNewEntrySet}
+        isReadOnly={isReadOnly}
       />
     )}
     {displayAll && (
@@ -52,6 +54,7 @@ export const ActiveLog = ({ displayAll = false, displayUser, logPosts, group, gr
         groupId={groupId}
         logs={recentLogs}
         isCreateNewEntrySet={isCreateNewEntrySet}
+        isReadOnly={isReadOnly}
       />
     )}
     </>

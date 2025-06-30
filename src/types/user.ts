@@ -46,16 +46,16 @@ export type Group = {
   title: string
   max_participants: number
   members: Array<string>
-  start: Datetime
-  end: Datetime
-  createdAt: Datetime
+  start: Timestamp
+  end: Timestamp
+  createdAt: Timestamp
   logs: Array<Log>
 }
 
 export type Log = {
   id: string
   ownerId: string // user by userId
-  createdAt: Datetime
+  createdAt: Timestamp
   posts: Array<LogPost>
 }
 

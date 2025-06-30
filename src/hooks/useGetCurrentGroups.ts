@@ -8,6 +8,7 @@ import { useAuthState } from "react-firebase-hooks/auth"
 
 export type GroupsResponse = {
   currentGroups: Array<Group>
+  allGroups: Array<Group>
   isLoading: boolean
   isSuccess: boolean
   isError: boolean
@@ -155,8 +156,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
       console.log('⬇️ executing read on log_groups collection')
       return query(
         collection(db, 'log_groups'),
-        where('start', '<=', Timestamp.now()),
-        where('end', '>=', Timestamp.now()),
+        // where('start', '<=', Timestamp.now()),
+        // where('end', '>=', Timestamp.now()),
         where('members', 'array-contains', doc(db, 'users', userDocId))
       )
     },
@@ -183,10 +184,11 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   const combinedError = error || userIdFetchError
 
   // Use cached data for instant display while fresh data loads
-  const currentGroups = data || cachedGroups || []
+  const allGroups = data || cachedGroups || []
 
   return {
-    currentGroups,
+    currentGroups: allGroups.filter(group => group.start.toDate() <= Timestamp.now().toDate() && group.end.toDate() >= Timestamp.now().toDate()),
+    allGroups,
     isLoading: combinedIsLoading,
     isSuccess: !combinedIsLoading && (isSuccess && !!userDocId) || (!!cachedGroups && cachedGroups.length > 0),
     isError: combinedIsError,
