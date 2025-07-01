@@ -61,7 +61,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet, isReadOnly = false 
     // Always set shouldForceFresh based on whether we're opening a different post
     // or if the same post has unread comments
     const isNewPost = selectedPost?.id !== post.id
-    const shouldRefresh = isNewPost || hasUnreadComments
+    const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly
 
     console.log(`👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`)
 

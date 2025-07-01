@@ -436,9 +436,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
     // Always set shouldForceFresh based on whether we're opening a different post
     // or if the same post has unread comments
     const isNewPost = selectedPost?.id !== post.id
-    const shouldRefresh = isNewPost || hasUnreadComments
-
-    // console.log(`👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`)
+    const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly
 
     setShouldForceFresh(shouldRefresh)
     setSelectedPost(post)
@@ -472,10 +470,12 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
         user_id: loggedInUser?.id,
       })
 
-      markCommentsAsViewedFn({
-        userId: loggedInUser.id,
-        logPostId: selectedPost.id
-      })
+      if (!isReadOnly) {
+        markCommentsAsViewedFn({
+          userId: loggedInUser.id,
+          logPostId: selectedPost.id
+        })
+      }
     }
   }, [selectedPost?.id, loggedInUser?.userId, trackUserAction])
 
