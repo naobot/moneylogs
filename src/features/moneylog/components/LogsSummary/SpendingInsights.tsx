@@ -206,6 +206,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
 
     // Count days with spending (any currency, any amount > 0)
     const daysWithSpending = dailyTotals.size
+    console.log(dailyTotals)
     const noSpendDays = totalDaysInPeriod - daysWithSpending
 
     return {
