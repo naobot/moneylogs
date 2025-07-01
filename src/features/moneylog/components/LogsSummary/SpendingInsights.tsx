@@ -340,7 +340,7 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
           <strong>Weekly averages:</strong>{' '}
           <span className="LogsSummary__highlight">
             {[...weeklyAverages.entries()]
-              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .map(([currency, avg]) => `${avg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
               .join(', ')
             }
           </span>
@@ -352,7 +352,7 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
           <strong>Daily averages:</strong>{' '}
           <span className="LogsSummary__highlight">
             {[...dailyAverages.entries()]
-              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .map(([currency, avg]) => `${avg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
               .join(', ')
             }
           </span>
@@ -375,12 +375,12 @@ const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
         <div key={`weekend-weekday-${currency}`}>
           <strong>{currency}:</strong>{' '}
           <span className="LogsSummary__highlight">
-            On weekends you spent an average of {data.weekendAvg.toFixed(2)}, compared to weekdays where you averaged {data.weekdayAvg.toFixed(2)}
+            On weekends you spent an average of {data.weekendAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}, compared to weekdays where you averaged {data.weekdayAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
           </span>
           {data.difference > 0 ? (
-            <span> (You spend {data.difference.toFixed(2)} more on weekends)</span>
+            <span> (You spend {data.difference.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} more on weekends)</span>
           ) : data.difference < 0 ? (
-            <span> (You spend {Math.abs(data.difference).toFixed(2)} more on weekdays)</span>
+            <span> (You spend {Math.abs(data.difference).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} more on weekdays)</span>
           ) : (
             <span> (You spend about the same regardless!)</span>
           )}
@@ -421,11 +421,6 @@ const LowSpenderAlert = ({ groupAnalytics, children }: { groupAnalytics?: GroupA
 const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
   const { noSpendDays, totalDaysInPeriod } = useSpendingData()
 
-  // Don't show if none
-  if (totalDaysInPeriod < 1) {
-    return null
-  }
-
   const noSpendPercentage = ((noSpendDays / totalDaysInPeriod) * 100).toFixed(1)
 
   return (
@@ -435,6 +430,7 @@ const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
         <span className="LogsSummary__highlight">
           {noSpendDays} out of {totalDaysInPeriod} days ({noSpendPercentage}%)
         </span>
+        {noSpendDays === 0 && <span> ... 😅</span>}
         {noSpendDays > 0 && (
           <span>
             {noSpendDays === 1 ? ' - great self-control!' : ' - excellent spending discipline!'}
