@@ -52,6 +52,10 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
               {''}
             </SpendingInsights.WeekendWeekdayText>
 
+            <SpendingInsights.NoSpendDaysText>
+              You had <strong>no spending</strong> on
+            </SpendingInsights.NoSpendDaysText>
+
             <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
               💡 <strong>Good news!</strong>
             </SpendingInsights.LowSpenderAlert>

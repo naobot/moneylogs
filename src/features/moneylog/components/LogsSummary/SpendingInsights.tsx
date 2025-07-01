@@ -13,6 +13,8 @@ interface SpendingData {
   weeklyAverages: Map<Currency, number>
   dailyAverages: Map<Currency, number>
   weekendVsWeekdayDiff: Map<Currency, { weekendAvg: number, weekdayAvg: number, difference: number }>
+  noSpendDays: number
+  totalDaysInPeriod: number
   group: Group
 }
 
@@ -190,6 +192,15 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
       }
     })
 
+    // New: Calculate no-spend days
+    const groupStartDate = dayjs(group.start.seconds * 1000)
+    const groupEndDate = dayjs(group.end.seconds * 1000)
+    const totalDaysInPeriod = groupEndDate.diff(groupStartDate, 'day') + 1 // +1 to include both start and end dates
+
+    // Count days with spending (any currency, any amount > 0)
+    const daysWithSpending = dailyTotals.size
+    const noSpendDays = totalDaysInPeriod - daysWithSpending
+
     return {
       totalSpent,
       expensiveWeek,
@@ -197,6 +208,8 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
       weeklyAverages,
       dailyAverages,
       weekendVsWeekdayDiff,
+      noSpendDays,
+      totalDaysInPeriod,
       group
     }
   }, [logPosts, group])
@@ -405,7 +418,35 @@ const LowSpenderAlert = ({ groupAnalytics, children }: { groupAnalytics?: GroupA
   )
 }
 
+const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
+  const { noSpendDays, totalDaysInPeriod } = useSpendingData()
+
+  // Don't show if none
+  if (totalDaysInPeriod < 1) {
+    return null
+  }
+
+  const noSpendPercentage = ((noSpendDays / totalDaysInPeriod) * 100).toFixed(1)
+
+  return (
+    <div className="LogsSummary__bubble">
+      <p>
+        {children}{' '}
+        <span className="LogsSummary__highlight">
+          {noSpendDays} out of {totalDaysInPeriod} days ({noSpendPercentage}%)
+        </span>
+        {noSpendDays > 0 && (
+          <span>
+            {noSpendDays === 1 ? ' - great self-control!' : ' - excellent spending discipline!'}
+          </span>
+        )}
+      </p>
+    </div>
+  )
+}
+
 // Attach sub-components to main component
+SpendingInsights.NoSpendDaysText = NoSpendDaysText
 SpendingInsights.TotalText = TotalText
 SpendingInsights.WeekText = WeekText
 SpendingInsights.DayText = DayText
