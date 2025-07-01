@@ -236,7 +236,7 @@ const TotalText = ({ children }: { children: ReactNode }) => {
             .join(', ')
           }
         </span>
-        <span> in total over the period of {dayjs(group.start.seconds * 1000).format('ddd D MM YYYY')} to {dayjs(group.end.seconds * 1000).format('ddd D MM YYYY')}</span>
+        <span> in total over the period of {dayjs(group.start.seconds * 1000).format('ddd D MMM YYYY')} to {dayjs(group.end.seconds * 1000).format('ddd D MMM YYYY')}</span>
       </p>
     </div>
   )
