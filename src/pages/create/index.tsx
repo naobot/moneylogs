@@ -48,8 +48,9 @@ export const CreateNewLog = () => {
   const isSubmittable = useMemo(() => {
     return !!logGroupTitle &&
            !!user?.userId &&
-           numParticipants > 0 &&
-           !dayjs(endDate).isBefore(dayjs(startDate))
+           numParticipants <= 30 && numParticipants > 0 &&
+           logGroupTitle.length <= 20 &&
+           !dateErrorMessage
   }, [logGroupTitle, user?.userId, numParticipants, startDate, endDate])
 
   const handleCreateNewGroup = async () => {
@@ -78,6 +79,8 @@ export const CreateNewLog = () => {
         onChange={(e: any) => setLogGroupTitle(e?.target?.value)}
         label="Title"
         value={logGroupTitle}
+        isError={logGroupTitle.length > 20}
+        errorMessage="Title must be under 20 characters"
       />
       <ControlledInput
         onChange={(e: any) => setNumParticipants(Number(e?.target?.value))}
@@ -86,6 +89,8 @@ export const CreateNewLog = () => {
         type="number"
         max={30}
         min={1}
+        isError={numParticipants > 30 || numParticipants < 1}
+        errorMessage="Invalid number"
       />
       {/*<ControlledInput
         onChange={(e: any) => setStartDate(e?.target?.value)}
