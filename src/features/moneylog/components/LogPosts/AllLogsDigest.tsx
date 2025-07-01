@@ -166,6 +166,7 @@ const AllLogsDigest = ({ groupId, logs, isCreateNewEntrySet, isReadOnly = false 
             isLoadingComments={isLoadingComments}
             isSuccessComments={isSuccessComments}
             refreshComments={refreshComments}
+            isReadOnly={isReadOnly}
           />
         )}
       </div>

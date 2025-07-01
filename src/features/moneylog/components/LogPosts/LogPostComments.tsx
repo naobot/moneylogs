@@ -17,12 +17,11 @@ type LogPostCommentsProps = {
   comments: Comment[]
   isLoadingComments?: boolean
   isSuccessComments?: boolean
-  refreshComments: (string) => Promise<void>
+  refreshComments?: (string) => Promise<void>
   isReadOnly: boolean
 }
 
 const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingComments, isSuccessComments, refreshComments, isReadOnly = false }: LogPostCommentsProps) => {
-  // const { data: comments, isLoading: isLoadingComments, isSuccess: isSuccessComments, refreshComments } = useGetComments({ logPostId: postId })
   const [newCommentContent, newCommentContentSet] = useState<string|null>()
   const { user } = useCurrentUser()
   const { trackUserAction } = useReadTracking()
@@ -32,7 +31,7 @@ const LogPostComments = ({ currentLogAuthorId, postId, comments, isLoadingCommen
   const { addComment } = useLogPostQuery()
 
   const handleAddComment = async () => {
-    if (!newCommentContent?.trim()) return
+    if (!refreshComments || !newCommentContent?.trim()) return
 
     try {
       await addComment.mutate({

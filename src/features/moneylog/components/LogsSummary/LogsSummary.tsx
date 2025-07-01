@@ -1,11 +1,14 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useCurrentUser } from "@/contexts"
 import { Group, LogPost } from "@/types/user"
 
+import { useGetComments } from "@/hooks/useGetLogPostComments"
 import { FullUserData } from "@/hooks/useGetGroupUsers"
 import { useGroupAnalytics } from "./hooks/useGroupAnalytics"
 
 import SpendingInsights from "./SpendingInsights"
+import HotPosts from "./HotPosts"
+import LogPostComments from "../LogPosts/LogPostComments"
 
 import './styles.scss'
 
@@ -24,13 +27,28 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
     return logPosts.filter(logPost => logPost.author.id === loggedInUser?.id)
   }, [logPosts, loggedInUser?.id])
 
+  const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
+
+    const {
+      data: comments,
+      isLoading: isLoadingComments,
+      isSuccess: isSuccessComments,
+    } = useGetComments({
+      logPostId: selectedPost?.id ?? null,
+      forceFresh: true,
+    })
+
+  const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
+    setSelectedPost(post)
+  }
+
   return (
     <>
       <div className="LogsSummary">
         <h2>Insights for {group.title}</h2>
 
         <div className="Window">
-          <h3>{loggedInUser?.displayName}'s spending</h3>
+          <h3>💰 {loggedInUser?.displayName}'s spending</h3>
           <SpendingInsights logPosts={myLogs} group={group}>
             <SpendingInsights.TotalText>
               You spent a <strong>total of</strong>
@@ -63,7 +81,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
         </div>
 
         <div className="Window">
-          <h3>Group spending</h3>
+          <h3>💸 Group spending</h3>
           <SpendingInsights logPosts={logPosts} group={group}>
             <SpendingInsights.TotalText>
               The group spent a <strong>total of</strong>
@@ -78,11 +96,30 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
             </SpendingInsights.DayText>
           </SpendingInsights>
         </div>
+
+        <HotPosts
+          logPosts={logPosts}
+          groupMembers={groupMembers}
+          groupId={group.id}
+          onOpenComments={handleOpenComments}
+          selectedPostId={selectedPost?.id ?? null}
+          setSelectedPost={setSelectedPost}
+        />
       </div>
 
-      <div className="LogsSummaryRight">
-        {/* right side content */}
+      <div className="LogsSummaryRight LogPostComments">
+        {selectedPost && (
+          <LogPostComments
+            currentLogAuthorId={selectedPost.author?.id}
+            postId={selectedPost.id}
+            comments={comments}
+            isLoadingComments={isLoadingComments}
+            isSuccessComments={isSuccessComments}
+            isReadOnly={true}
+          />
+        )}
       </div>
+      {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
     </>
   )
 }
