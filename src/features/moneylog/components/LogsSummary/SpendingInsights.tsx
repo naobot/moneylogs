@@ -316,10 +316,58 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
               // Get posts to display (either from multiple days or single most expensive day)
               const postsToShow = showMultipleDays ? someExpensivePosts : mostExpensiveEntry[1].posts
 
-              // Sort by amount (highest first) and take top 10
-              const topExpensivePosts = postsToShow
-                .sort((a, b) => b.amount - a.amount)
-                .slice(0, 10)
+              // Group posts by currency to handle comparison properly
+              const postsByCurrency = new Map<Currency, LogPost[]>()
+              postsToShow.forEach(post => {
+                if (!postsByCurrency.has(post.currency)) {
+                  postsByCurrency.set(post.currency, [])
+                }
+                postsByCurrency.get(post.currency)!.push(post)
+              })
+
+              // Get top posts per currency, then combine
+              const topPostsPerCurrency: LogPost[] = []
+              const postsPerCurrency = Math.max(1, Math.floor(10 / postsByCurrency.size)) // Distribute the 10 slots
+
+              postsByCurrency.forEach((currencyPosts, currency) => {
+                // Remove duplicates within this currency
+                const uniqueCurrencyPosts = currencyPosts.filter((post, index, array) =>
+                  array.findIndex(p => p.id === post.id) === index
+                )
+
+                // Sort by amount within currency and take top N for this currency
+                const topForCurrency = uniqueCurrencyPosts
+                  .sort((a, b) => b.amount - a.amount)
+                  .slice(0, postsPerCurrency)
+
+                topPostsPerCurrency.push(...topForCurrency)
+              })
+
+              // If we have leftover slots, fill them with the next highest from any currency
+              if (topPostsPerCurrency.length < 10) {
+                const remainingPosts = postsToShow
+                  .filter(post => !topPostsPerCurrency.some(tp => tp.id === post.id))
+                  .filter((post, index, array) => array.findIndex(p => p.id === post.id) === index) // dedupe
+
+                // Sort remaining posts by relative rank within their currency
+                const remainingWithRank = remainingPosts.map(post => {
+                  const currencyPosts = postsByCurrency.get(post.currency) || []
+                  const sortedCurrencyPosts = currencyPosts
+                    .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
+                    .sort((a, b) => b.amount - a.amount)
+                  const rank = sortedCurrencyPosts.findIndex(p => p.id === post.id)
+                  return { post, rank, percentile: rank / sortedCurrencyPosts.length }
+                })
+
+                const additionalPosts = remainingWithRank
+                  .sort((a, b) => a.percentile - b.percentile) // Best rank/percentile first
+                  .slice(0, 10 - topPostsPerCurrency.length)
+                  .map(x => x.post)
+
+                topPostsPerCurrency.push(...additionalPosts)
+              }
+
+              const topExpensivePosts = topPostsPerCurrency
 
               return topExpensivePosts.map(post =>
                 <div key={`PreviewPost__${post.id}`} className="PostPreview" data-color-mode="light">
