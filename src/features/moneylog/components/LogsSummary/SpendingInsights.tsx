@@ -57,7 +57,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
 
       // Calculate total spent
       let prevTotal = totalSpent.get(currency) || 0
-      totalSpent.set(currency, prevTotal + log.amount)
+      totalSpent.set(currency, prevTotal + Number(log.amount))
 
       // Generate keys for grouping - Monday as day 0
       const dayOfWeek = postDate.day() === 0 ? 6 : postDate.day() - 1 // Convert Sunday=0 to Sunday=6, others shift down by 1
@@ -73,7 +73,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
         })
       }
       const weekData = weeklyTotals.get(weekKey)!
-      weekData.currencyMap.set(currency, (weekData.currencyMap.get(currency) || 0) + log.amount)
+      weekData.currencyMap.set(currency, (weekData.currencyMap.get(currency) || 0) + Number(log.amount))
 
       // Track daily totals
       if (!dailyTotals.has(dayKey)) {
@@ -84,7 +84,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
         })
       }
       const dayData = dailyTotals.get(dayKey)!
-      dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + log.amount)
+      dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + Number(log.amount))
       dayData.posts = [...dayData.posts, logPost]
 
       // New: Weekend vs weekday tracking
