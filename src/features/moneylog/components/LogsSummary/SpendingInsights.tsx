@@ -280,14 +280,14 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
         if (expensiveDays.length === 1) {
           return (
             <p>{children}{' '}
-              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`)}</span>
+              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount} ${currency})`)}</span>
             </p>
           )
         } else {
           return (
             <>
               <p>{children}...</p>
-              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`}</li>)}</ul>
+              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount} ${currency})`}</li>)}</ul>
             </>
           )
         }
@@ -313,7 +313,15 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
 
               const someExpensivePosts = expensiveEntries.map(x => x[1].posts).flat().filter(x => x.amount > 0)
 
-              return (showMultipleDays ? someExpensivePosts : mostExpensiveEntry[1].posts).map(post =>
+              // Get posts to display (either from multiple days or single most expensive day)
+              const postsToShow = showMultipleDays ? someExpensivePosts : mostExpensiveEntry[1].posts
+
+              // Sort by amount (highest first) and take top 10
+              const topExpensivePosts = postsToShow
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 10)
+
+              return topExpensivePosts.map(post =>
                 <div key={`PreviewPost__${post.id}`} className="PostPreview" data-color-mode="light">
                   <MDEditor.Markdown source={post.content} />
                   {showAuthors && <div className="PostPreview__footer"><Icon type={"user"} />{post.authorName}</div>}
