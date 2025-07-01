@@ -110,7 +110,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
         console.error('Failed to start analytics processing:', error)
         setAnalyticsError(error instanceof Error ? error.message : 'Unknown error')
         setProcessingState(null)
-        setHasStartedProcessing(false) // Reset on error so user can retry
+        // setHasStartedProcessing(false) // Reset on error so user can retry
         unsubscribe?.()
       }
     }

@@ -285,11 +285,17 @@ async function backfillPostMetadata(logPosts: any[]) {
   logPosts.forEach(post => {
     const authorId = post.author.id
     const userData = userDataMap.get(authorId)
+    const timezone = post?.timezone || userData?.timezone
 
-    backfilledPosts[post.id] = {
+    const postMetadata: any = {
       authorDisplayName: userData?.displayName || post.authorName || 'Unknown User',
-      postTimezone: post?.timezone || userData?.timezone || 'UTC',
     }
+
+    if (timezone) {
+      postMetadata.postTimezone = timezone
+    }
+
+    backfilledPosts[post.id] = postMetadata
   })
 
   return backfilledPosts
