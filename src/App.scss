@@ -50,6 +50,31 @@ html {
   cursor: pointer;
 }
 
+.CopyTextArea {
+  display: flex;
+  flex-direction: column;
+
+  textarea {
+    flex: 1;
+    resize: none;
+    padding: 0.5em;
+    cursor: pointer;
+    text-align: center;
+    border: 2px solid var(--c-black);
+  }
+
+  &__block {
+    font-size: 0.8em;
+    padding: 0.4em;
+    transition: 0.3s ease-in-out;
+    opacity: 1;
+
+    &--hidden {
+      opacity: 0;
+    }
+  }
+}
+
 .Container {
   display: flex;
   flex-direction: column;

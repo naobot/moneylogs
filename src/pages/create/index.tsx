@@ -1,6 +1,7 @@
 import dayjs from "dayjs"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Timestamp } from "firebase/firestore"
 
 import { useCurrentUser } from "@/contexts"
 
@@ -50,7 +51,7 @@ export const CreateNewLog = () => {
       await createGroup({
         title: logGroupTitle,
         max_participants: numParticipants,
-        start: startDate,
+        start: dayjs(Timestamp.now().toDate()).format('YYYY-MM-DD HH:mm'),
         end: endDate,
         currentUserId: user.userId,
       })
@@ -76,12 +77,12 @@ export const CreateNewLog = () => {
         value={numParticipants}
         type="number"
       />
-      <ControlledInput
+      {/*<ControlledInput
         onChange={(e: any) => setStartDate(e?.target?.value)}
         label="Start date"
         value={startDate}
         type="date"
-      />
+      />*/}
       <ControlledInput
         onChange={(e: any) => setEndDate(e?.target?.value)}
         label="End date"

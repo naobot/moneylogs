@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react"
 import dayjs from "dayjs"
 // @ts-ignore
 import { db } from '@/config/firebase-config'
+import { Timestamp } from "firebase/firestore"
 
 import { useCurrentUser } from "@/contexts"
 
+import CopyTextArea from "@/features/layout/components/CopyTextArea"
 import LogsMenu from "@/features/moneylog/components/LogsMenu"
 import { ActiveLog } from "@/features/moneylog/components/ActiveLog"
 import { useGetGroupUsers } from "@/hooks/useGetGroupUsers"
@@ -14,11 +16,12 @@ import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
 import { IconText } from "@/components/Icon"
-import { Timestamp } from "firebase/firestore"
 import LogsSummary from "./LogsSummary/LogsSummary"
+import Modal from "@/components/Modal"
 
 export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
+  // const { pathname } = useLocation()
   const { updateViewTrackingFn } = useUserQuery()
   const { trackUserAction } = useReadTracking()
 
@@ -27,6 +30,7 @@ export const Group = ({ group, groupId }) => {
   const [displayAll, setDisplayAll] = useState(false)
   const [displayUser, setDisplayUser] = useState<UserData|null>(loggedInUser)
   const [displaySummary, setDisplaySummary] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
@@ -58,6 +62,7 @@ export const Group = ({ group, groupId }) => {
 
   useEffect(() => {
     isCreateNewEntrySet(false)
+    setShowInviteModal(false)
   }, [group])
 
   useEffect(() => {
@@ -164,6 +169,16 @@ export const Group = ({ group, groupId }) => {
           </div>
 
           <div className="Group__header__right">
+            {!isReadOnly &&
+              <div
+                className="handler Group__header__item"
+                onClick={() => {
+                  setShowInviteModal(true)
+                }}
+              >
+                <IconText type={'plus'} fill={'white'} text="invite" />
+              </div>
+            }
           </div>
         </div>
         <div className="Group__body">
@@ -198,6 +213,28 @@ export const Group = ({ group, groupId }) => {
           </>)}
         </div>
       </div>
+      <Modal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      >
+        <Modal.Header
+          title={'Invite'}
+        >
+          Invite
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Send the following URL to those you want to invite to participate in this log group.
+          </p>
+          <p>
+            Do not share the group URL with anyone you do not want participating!
+          </p>
+          <CopyTextArea value={`${window.location.host}/g/${groupId}`} />
+        </Modal.Body>
+        <Modal.Actions>
+          <Modal.CancelButton text="Close" />
+        </Modal.Actions>
+      </Modal>
     </>
   )
 }
