@@ -172,12 +172,12 @@ export const Group = ({ group, groupId }) => {
               {group &&
                 <>{formatDate(group.start?.seconds, 'D MMM')} to {formatDate(group.end?.seconds, 'D MMM')}</>
               }
-              {endingSoon && <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />}
+              {!isReadOnly && endingSoon && <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />}
             </div>
           </div>
 
           <div className="Group__header__center">
-            {!isReadOnly && isActiveLogMyLog && (
+            {!isReadOnly && !displayAll && isActiveLogMyLog && (
               <div
                 className="handler Group__header__item"
                 onClick={() => {
@@ -261,7 +261,7 @@ export const Group = ({ group, groupId }) => {
           <Modal.CancelButton text="Close" />
         </Modal.Actions>
       </Modal>
-      {endingSoon && (showEndWarningModal || neverViewedWarningModal) && (<Modal
+      {!isReadOnly && endingSoon && (showEndWarningModal || neverViewedWarningModal) && (<Modal
         isOpen={showEndWarningModal}
         onClose={() => setShowEndWarningModal(false)}
       >
