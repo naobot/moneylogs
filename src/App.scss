@@ -50,6 +50,35 @@ html {
   cursor: pointer;
 }
 
+.Loader {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+
+  &__wrapper {
+    width: 25%;
+    height: 12px;
+    min-width: 120px;
+    max-width: 450px;
+    text-align: center;
+    border-radius: 3px;
+    border: 1px solid var(--c-black);
+    padding: 3px;
+    opacity: 0.6;
+  }
+}
+
+.LoadingBar {
+  color: var(--c-black);
+  background-color: var(--c-black);
+  width: var(--progress);
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease-in-out;
+}
+
 .CopyTextArea {
   display: flex;
   flex-direction: column;
