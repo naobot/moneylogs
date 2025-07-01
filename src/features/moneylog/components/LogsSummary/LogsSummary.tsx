@@ -188,11 +188,11 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
       <div className="LogsSummary">
         <h2>Insights for {group.title}</h2>
 
-        {hasAnalytics && (
+        {/*{hasAnalytics && (
           <div className="LogsSummary__badge">
             📈 Using cached analytics from {new Date(group.analytics.processedAt.seconds * 1000).toLocaleDateString()}
           </div>
-        )}
+        )}*/}
 
         <div className="Window">
           <h3>💰 {loggedInUser?.displayName}'s spending</h3>
@@ -228,7 +228,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
         </div>
 
         <div className="Window">
-          <h3>💸 Group spending</h3>
+          <h3>💸 group spending</h3>
           <SpendingInsights logPosts={logPosts} group={group}>
             <SpendingInsights.TotalText>
               The group spent a <strong>total of</strong>
