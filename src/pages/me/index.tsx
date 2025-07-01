@@ -4,6 +4,7 @@ import { useTimezoneSelect, allTimezones } from "react-timezone-select"
 
 import { useCurrentUser } from '@/contexts'
 
+import { useGetCurrentGroups } from '@/hooks/useGetCurrentGroups'
 import { useMutation } from '@/hooks/useFirebase'
 import { useUserQuery } from '@/hooks/useUserQuery'
 import { useReadTracking } from '@/hooks/useReadTracking'
@@ -12,8 +13,12 @@ import Button from "@/components/Button"
 import ControlledInput from "@/components/ControlledInput"
 
 import "./me.scss";
+import GroupArchive from '@/features/moneylog/components/GroupArchive'
+
 
 export const UserSettings = () => {
+  const { allGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
+
   const { trackUserAction } = useReadTracking()
   const { user } = useCurrentUser()
   const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
@@ -133,7 +138,12 @@ export const UserSettings = () => {
         />
       </div>
 
-      {/* TODO: Show log group history, including past ones */}
+      {isSuccess && allGroups.length > 0 && (
+        <div>
+          <h3>Past groups</h3>
+          <GroupArchive groups={allGroups} />
+        </div>
+      )}
     </div>
   )
 }

@@ -9,7 +9,16 @@ interface SpendingData {
   totalSpent: Map<Currency, number>
   expensiveWeek: Map<Currency, { week: string, amount: number }>
   expensiveDay: Map<Currency, { day: string, amount: number, posts: LogPost[] }>
+  // New analytics
+  weeklyAverages: Map<Currency, number>
+  dailyAverages: Map<Currency, number>
+  weekendVsWeekdayDiff: Map<Currency, { weekendAvg: number, weekdayAvg: number, difference: number }>
   group: Group
+}
+
+// New interface for group-wide analytics (passed from parent)
+interface GroupAnalytics {
+  currencyPercentiles: Map<Currency, { p25: number, p50: number, p75: number }>
 }
 
 const SpendingContext = createContext<SpendingData | null>(null)
@@ -25,14 +34,19 @@ const useSpendingData = () => {
 interface SpendingInsightsProps {
   logPosts: Array<LogPost>
   group: Group
+  groupAnalytics?: GroupAnalytics // Optional for now, for low-spender detection
   children: ReactNode
 }
 
-const SpendingInsights = ({ logPosts, group, children }: SpendingInsightsProps) => {
+const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: SpendingInsightsProps) => {
   const spendingData = useMemo(() => {
     let totalSpent = new Map<Currency, number>()
     let weeklyTotals = new Map<string, { currencyMap: Map<Currency, number>, date: dayjs.Dayjs }>()
     let dailyTotals = new Map<string, { currencyMap: Map<Currency, number>, date: dayjs.Dayjs, posts: LogPost[] }>()
+
+    // New: Weekend vs weekday tracking
+    let weekendTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
+    let weekdayTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
 
     logPosts.forEach(log => {
       const currency = log.currency
@@ -70,9 +84,41 @@ const SpendingInsights = ({ logPosts, group, children }: SpendingInsightsProps) 
       const dayData = dailyTotals.get(dayKey)!
       dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + log.amount)
       dayData.posts = [...dayData.posts, logPost]
+
+      // New: Weekend vs weekday tracking
+      const isWeekend = postDate.day() === 0 || postDate.day() === 6 // Sunday or Saturday
+      const targetMap = isWeekend ? weekendTotals : weekdayTotals
+
+      if (!targetMap.has(currency)) {
+        targetMap.set(currency, { totalAmount: 0, dayCount: 0 })
+      }
+
+      // Only count each day once per currency (aggregate daily totals first)
+      const existingDayTotal = dailyTotals.get(dayKey)?.currencyMap.get(currency) || 0
+      // We need to check if this is the first transaction for this day/currency combo
+      const isFirstTransactionOfDay = (dailyTotals.get(dayKey)?.currencyMap.get(currency) || 0) === log.amount
+
+      if (isFirstTransactionOfDay) {
+        const currencyData = targetMap.get(currency)!
+        currencyData.dayCount += 1
+      }
     })
 
-    // Find most expensive week per currency
+    // After processing all transactions, finalize weekend/weekday totals by day
+    for (const [dayKey, dayData] of dailyTotals) {
+      const isWeekend = dayData.date.day() === 0 || dayData.date.day() === 6
+      const targetMap = isWeekend ? weekendTotals : weekdayTotals
+
+      for (const [currency, dayAmount] of dayData.currencyMap) {
+        if (!targetMap.has(currency)) {
+          targetMap.set(currency, { totalAmount: 0, dayCount: 0 })
+        }
+        const currencyData = targetMap.get(currency)!
+        currencyData.totalAmount += dayAmount
+      }
+    }
+
+    // Find most expensive week per currency (existing logic)
     let expensiveWeek = new Map<Currency, { week: string, amount: number }>()
     for (const [weekKey, weekData] of weeklyTotals) {
       const weekStart = weekData.date
@@ -87,7 +133,7 @@ const SpendingInsights = ({ logPosts, group, children }: SpendingInsightsProps) 
       }
     }
 
-    // Find most expensive day per currency
+    // Find most expensive day per currency (existing logic)
     let expensiveDay = new Map<Currency, { day: string, amount: number, posts: LogPost[] }>()
     for (const [dayKey, dayData] of dailyTotals) {
       const dayFormatted = dayData.date.format('ddd D MMM YYYY')
@@ -100,7 +146,59 @@ const SpendingInsights = ({ logPosts, group, children }: SpendingInsightsProps) 
       }
     }
 
-    return { totalSpent, expensiveWeek, expensiveDay, group }
+    // New: Calculate averages
+    const weeklyAverages = new Map<Currency, number>()
+    const dailyAverages = new Map<Currency, number>()
+    const weekendVsWeekdayDiff = new Map<Currency, { weekendAvg: number, weekdayAvg: number, difference: number }>()
+
+    // Get unique currencies
+    const currencies = new Set([...totalSpent.keys()])
+
+    currencies.forEach(currency => {
+      const total = totalSpent.get(currency) || 0
+      const weekCount = new Set([...weeklyTotals.keys()]).size
+      const dayCount = dailyTotals.size > 0 ? new Set(
+        [...dailyTotals.entries()]
+          .filter(([_, dayData]) => dayData.currencyMap.has(currency))
+          .map(([dayKey, _]) => dayKey)
+      ).size : 0
+
+      // Weekly average
+      if (weekCount > 0) {
+        weeklyAverages.set(currency, total / weekCount)
+      }
+
+      // Daily average
+      if (dayCount > 0) {
+        dailyAverages.set(currency, total / dayCount)
+      }
+
+      // Weekend vs weekday comparison
+      const weekendData = weekendTotals.get(currency)
+      const weekdayData = weekdayTotals.get(currency)
+
+      if (weekendData && weekdayData && weekendData.dayCount > 0 && weekdayData.dayCount > 0) {
+        const weekendAvg = weekendData.totalAmount / weekendData.dayCount
+        const weekdayAvg = weekdayData.totalAmount / weekdayData.dayCount
+        const difference = weekendAvg - weekdayAvg
+
+        weekendVsWeekdayDiff.set(currency, {
+          weekendAvg,
+          weekdayAvg,
+          difference
+        })
+      }
+    })
+
+    return {
+      totalSpent,
+      expensiveWeek,
+      expensiveDay,
+      weeklyAverages,
+      dailyAverages,
+      weekendVsWeekdayDiff,
+      group
+    }
   }, [logPosts, group])
 
   return (
@@ -110,6 +208,7 @@ const SpendingInsights = ({ logPosts, group, children }: SpendingInsightsProps) 
   )
 }
 
+// Existing components (unchanged)
 const TotalText = ({ children }: { children: ReactNode }) => {
   const { totalSpent, group } = useSpendingData()
 
@@ -215,9 +314,103 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
   )
 }
 
+// New components for the additional analytics
+const AveragesText = ({ children }: { children: ReactNode }) => {
+  const { weeklyAverages, dailyAverages } = useSpendingData()
+
+  return (
+    <div className="LogsSummary__bubble">
+      <p>{children}</p>
+
+      {weeklyAverages.size > 0 && (
+        <div>
+          <strong>Weekly averages:</strong>{' '}
+          <span className="LogsSummary__highlight">
+            {[...weeklyAverages.entries()]
+              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .join(', ')
+            }
+          </span>
+        </div>
+      )}
+
+      {dailyAverages.size > 0 && (
+        <div>
+          <strong>Daily averages:</strong>{' '}
+          <span className="LogsSummary__highlight">
+            {[...dailyAverages.entries()]
+              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .join(', ')
+            }
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
+  const { weekendVsWeekdayDiff } = useSpendingData()
+
+  if (weekendVsWeekdayDiff.size === 0) return
+
+  return (
+    <div className="LogsSummary__bubble">
+      <p>{children}</p>
+
+      {[...weekendVsWeekdayDiff.entries()].map(([currency, data]) => (
+        <div key={`weekend-weekday-${currency}`}>
+          <strong>{currency}:</strong>{' '}
+          <span className="LogsSummary__highlight">
+            On weekends you spent an average of {data.weekendAvg.toFixed(2)}, compared to weekdays where you averaged {data.weekdayAvg.toFixed(2)}
+          </span>
+          {data.difference > 0 ? (
+            <span> (You spend {data.difference.toFixed(2)} more on weekends)</span>
+          ) : data.difference < 0 ? (
+            <span> (You spend {Math.abs(data.difference).toFixed(2)} more on weekdays)</span>
+          ) : (
+            <span> (You spend about the same regardless!)</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const LowSpenderAlert = ({ groupAnalytics, children }: { groupAnalytics?: GroupAnalytics, children: ReactNode }) => {
+  const { dailyAverages } = useSpendingData()
+
+  if (!groupAnalytics) {
+    return null // Can't determine low spender status without group data
+  }
+
+  const lowSpenderCurrencies = [...dailyAverages.entries()]
+    .filter(([currency, userAvg]) => {
+      const percentiles = groupAnalytics.currencyPercentiles.get(currency)
+      return percentiles && userAvg <= percentiles.p25
+    })
+    .map(([currency]) => currency)
+
+  if (lowSpenderCurrencies.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="LogsSummary__bubble LogsSummary__bubble--alert">
+      <p>{children}</p>
+      <p>
+        You're amongst the <span className="LogsSummary__highlight">lowest spenders</span> in: <span className="LogsSummary__highlight">{lowSpenderCurrencies.join(', ')}</span>
+      </p>
+    </div>
+  )
+}
+
 // Attach sub-components to main component
 SpendingInsights.TotalText = TotalText
 SpendingInsights.WeekText = WeekText
 SpendingInsights.DayText = DayText
+SpendingInsights.AveragesText = AveragesText
+SpendingInsights.WeekendWeekdayText = WeekendWeekdayText
+SpendingInsights.LowSpenderAlert = LowSpenderAlert
 
 export default SpendingInsights

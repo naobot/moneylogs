@@ -1,6 +1,10 @@
 import { useMemo } from "react"
 import { useCurrentUser } from "@/contexts"
 import { Group, LogPost } from "@/types/user"
+
+import { FullUserData } from "@/hooks/useGetGroupUsers"
+import { useGroupAnalytics } from "./hooks/useGroupAnalytics"
+
 import SpendingInsights from "./SpendingInsights"
 
 import './styles.scss'
@@ -8,10 +12,13 @@ import './styles.scss'
 interface LogsSummaryProps {
   group: Group
   logPosts: Array<LogPost>
+  groupMembers: FullUserData[]
 }
 
-const LogsSummary = ({ group, logPosts }: LogsSummaryProps) => {
+const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   const { user: loggedInUser } = useCurrentUser()
+
+  const groupAnalytics = useGroupAnalytics(logPosts, group, groupMembers)
 
   const myLogs = useMemo(() => {
     return logPosts.filter(logPost => logPost.author.id === loggedInUser?.id)
@@ -36,6 +43,18 @@ const LogsSummary = ({ group, logPosts }: LogsSummaryProps) => {
             <SpendingInsights.DayText showPosts={true}>
               The <strong>day you spent the most</strong> was
             </SpendingInsights.DayText>
+
+            <SpendingInsights.AveragesText>
+              Here are your average <strong>spending patterns</strong>:
+            </SpendingInsights.AveragesText>
+
+            <SpendingInsights.WeekendWeekdayText>
+              {''}
+            </SpendingInsights.WeekendWeekdayText>
+
+            <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
+              💡 <strong>Good news!</strong>
+            </SpendingInsights.LowSpenderAlert>
           </SpendingInsights>
         </div>
 
@@ -58,7 +77,7 @@ const LogsSummary = ({ group, logPosts }: LogsSummaryProps) => {
       </div>
 
       <div className="LogsSummaryRight">
-        {/* Your right side content */}
+        {/* right side content */}
       </div>
     </>
   )

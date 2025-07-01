@@ -180,7 +180,7 @@ export const Group = ({ group, groupId }) => {
               groupId={groupId}
               isReadOnly={isReadOnly}
             />
-            {displaySummary && (<LogsSummary group={group} logPosts={logPostRes.posts} />)}
+            {displaySummary && (<LogsSummary group={group} groupMembers={members} logPosts={logPostRes.posts} />)}
             {!displaySummary && displayUser && (
               <ActiveLog
                 group={group}

@@ -5,7 +5,6 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups"
 import { Group } from "@/features/moneylog/components/Group"
 
 import { Timestamp } from "firebase/firestore"
-import { useCurrentUser } from "@/contexts"
 import GroupArchive from "@/features/moneylog/components/GroupArchive"
 
 export const Home = () => {
