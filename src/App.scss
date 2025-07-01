@@ -246,20 +246,30 @@ html {
   align-items: center;
   padding: 0.2em;
 
+  @media (max-width: constants.$breakpoint-sm) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   &--warning {
     input {
       border: 2px solid var(--c-black);
     }
   }
 
+  &__input {
+    display: inline-flex;
+    align-items: center;
+    grid-gap: 0.4em;
+  }
+
   label {
-    font-size: 0.8em;
+    font-size: 1em;
   }
 
   &__alert {
     display: inline-flex;
     align-items: center;
-    font-size: 0.8em;
   }
 }
 

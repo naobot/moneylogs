@@ -27,16 +27,18 @@ const ControlledInput = ({ value, onChange, label, isError, errorMessage, type =
         "ControlledInput--warning": isError
       })}
     >
-      <label>
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value ?? ''}
-        onChange={onChange}
-        max={max}
-        min={min}
-      />
+      <div className="ControlledInput__input">
+        <label>
+          {label}
+        </label>
+        <input
+          type={type}
+          value={value ?? ''}
+          onChange={onChange}
+          max={max}
+          min={min}
+        />
+      </div>
       <div className='ControlledInput__alert'>
         {isError && <Icon type='warning' />}
         {isError && errorMessage && <>{errorMessage}</>}
