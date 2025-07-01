@@ -332,6 +332,10 @@ html {
       font-size: 0.7em;
     }
 
+    &__left, &__center, &__right {
+      grid-gap: 1em;
+    }
+
     &__left {
       display: inline-flex;
       justify-content: flex-start;

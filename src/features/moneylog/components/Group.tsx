@@ -15,9 +15,10 @@ import { useReadTracking } from "@/hooks/useReadTracking"
 import { useGetLogPosts } from "@/hooks/useGetLogPosts"
 import { useUserQuery } from "@/hooks/useUserQuery"
 
-import { IconText } from "@/components/Icon"
+import Icon, { IconText } from "@/components/Icon"
 import LogsSummary from "./LogsSummary/LogsSummary"
 import Modal from "@/components/Modal"
+import { useUserTimezone } from "./LogPosts/LogPosts"
 
 export const Group = ({ group, groupId }) => {
   const { user: loggedInUser } = useCurrentUser()
@@ -31,6 +32,19 @@ export const Group = ({ group, groupId }) => {
   const [displayUser, setDisplayUser] = useState<UserData|null>(loggedInUser)
   const [displaySummary, setDisplaySummary] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showEndWarningModal, setShowEndWarningModal] = useState(false)
+  const endingSoon = useMemo(() => {
+    // group ending within 24 hours
+    return (group.end as Timestamp).seconds - Timestamp.now().seconds < 86400
+  }, [group])
+  const neverViewedWarningModal = useMemo(() => {
+    if (endingSoon) {
+      if (!localStorage.getItem(`ML__${groupId}__agreeWarning`) || localStorage.getItem(`ML__${groupId}__agreeWarning`) !== '1') {
+        return true
+      }
+    }
+    return false
+  }, [group, endingSoon, localStorage.getItem(`ML__${groupId}__agreeWarning`)])
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false)
 
@@ -64,6 +78,12 @@ export const Group = ({ group, groupId }) => {
     isCreateNewEntrySet(false)
     setShowInviteModal(false)
   }, [group])
+
+  useEffect(() => {
+    if (!localStorage.getItem(`ML__${groupId}__agreeWarning`) || localStorage.getItem(`ML__${groupId}__agreeWarning`) !== '1') {
+      setShowEndWarningModal(endingSoon)
+    }
+  }, [endingSoon])
 
   useEffect(() => {
     trackUserAction('view_group', {
@@ -152,6 +172,7 @@ export const Group = ({ group, groupId }) => {
               {group &&
                 <>{formatDate(group.start?.seconds, 'D MMM')} to {formatDate(group.end?.seconds, 'D MMM')}</>
               }
+              {endingSoon && <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />}
             </div>
           </div>
 
@@ -169,16 +190,21 @@ export const Group = ({ group, groupId }) => {
           </div>
 
           <div className="Group__header__right">
-            {!isReadOnly &&
-              <div
-                className="handler Group__header__item"
-                onClick={() => {
-                  setShowInviteModal(true)
-                }}
-              >
-                <IconText type={'plus'} fill={'white'} text="invite" />
-              </div>
-            }
+            {!isReadOnly && group?.members?.length < group?.max_participants && (
+              <>
+                <div
+                  className="handler Group__header__item"
+                  onClick={() => {
+                    setShowInviteModal(true)
+                  }}
+                >
+                  <IconText type={'plus'} fill={'white'} text="invite" />
+                </div>
+                <div className="Group__header__item">
+                  <small>({group?.max_participants - group.members?.length} spot{group?.max_participants - group.members?.length > 1 && 's'} left)</small>
+                </div>
+              </>
+            )}
           </div>
         </div>
         <div className="Group__body">
@@ -235,6 +261,27 @@ export const Group = ({ group, groupId }) => {
           <Modal.CancelButton text="Close" />
         </Modal.Actions>
       </Modal>
+      {endingSoon && (showEndWarningModal || neverViewedWarningModal) && (<Modal
+        isOpen={showEndWarningModal}
+        onClose={() => setShowEndWarningModal(false)}
+      >
+        <Modal.Header
+          title={'Warning'}
+        >
+          Warning
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            This moneylog group is ending soon!
+          </p>
+          <p>
+            All posts and comments will be <strong>read-only</strong> after <strong>{useUserTimezone((group.end as Timestamp).toDate(), loggedInUser?.timezone).format('ddd D MMM YYYY HH:mm')}</strong>
+          </p>
+        </Modal.Body>
+        <Modal.Actions>
+          <Modal.ConfirmButton onClick={() => { localStorage.setItem(`ML__${groupId}__agreeWarning`, '1') }} text="OK" />
+        </Modal.Actions>
+      </Modal>)}
     </>
   )
 }

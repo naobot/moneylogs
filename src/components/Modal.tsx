@@ -97,8 +97,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
 
   return (
     <div className={`Modal__header ${className}`}>
-      {title && <h2 className="Modal__title">{title}</h2>}
-      {children}
+      <h2 className="Modal__title">{title ?? children}</h2>
       {showCloseButton && onClose && (
         <button
           className="Modal__button--close"
