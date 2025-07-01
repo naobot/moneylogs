@@ -280,14 +280,14 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
         if (expensiveDays.length === 1) {
           return (
             <p>{children}{' '}
-              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount} ${currency})`)}</span>
+              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`)}</span>
             </p>
           )
         } else {
           return (
             <>
               <p>{children}...</p>
-              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount} ${currency})`}</li>)}</ul>
+              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`}</li>)}</ul>
             </>
           )
         }
@@ -296,7 +296,7 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
       {showPosts && (
         <>
           <p>
-            <span>Some posts from that day...</span>
+            <span>Some posts from then...</span>
           </p>
 
           <div className="LogsSummary__ScrollList">
