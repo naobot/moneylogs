@@ -232,7 +232,7 @@ const TotalText = ({ children }: { children: ReactNode }) => {
         <span className="LogsSummary__highlight">
           {[...totalSpent.entries()]
             .filter(([currency, value]) => value > 0)
-            .map(([currency, value]) => `${value} ${currency}`)
+            .map(([currency, value]) => `${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
             .join(', ')
           }
         </span>
@@ -253,14 +253,14 @@ const WeekText = ({ children }: { children: ReactNode }) => {
         if (expensiveWeeks.length === 1) {
           return (
             <p>{children}{' '}
-              <span className="LogsSummary__highlight">{expensiveWeeks.map(([currency, value]) => `${value.week} (${value.amount} ${currency})`)}</span>
+              <span className="LogsSummary__highlight">{expensiveWeeks.map(([currency, value]) => `${value.week} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`)}</span>
             </p>
           )
         } else {
           return (
             <>
               <p>{children}...</p>
-              <ul className="LogsSummary__List">{expensiveWeeks.map(([currency, value]) => <li key={`w-${currency}__${value.amount}`}>{`${value.week} (${value.amount} ${currency})`}</li>)}</ul>
+              <ul className="LogsSummary__List">{expensiveWeeks.map(([currency, value]) => <li key={`w-${currency}__${value.amount}`}>{`${value.week} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`}</li>)}</ul>
             </>
           )
         }
