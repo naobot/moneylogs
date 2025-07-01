@@ -371,6 +371,9 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
 
               return topExpensivePosts.map(post =>
                 <div key={`PreviewPost__${post.id}`} className="PostPreview" data-color-mode="light">
+                  <div className="PostPreview__header">
+                    <strong>{post.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {post.currency}</strong>
+                  </div>
                   <MDEditor.Markdown source={post.content} />
                   {showAuthors && <div className="PostPreview__footer"><Icon type={"user"} />{post.authorName}</div>}
                 </div>
