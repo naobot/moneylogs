@@ -248,10 +248,7 @@ html {
 
   &--warning {
     input {
-      &::after {
-        content: '!';
-        display: inline-block;
-      }
+      border: 2px solid var(--c-black);
     }
   }
 
@@ -260,7 +257,9 @@ html {
   }
 
   &__alert {
-    width: 21px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8em;
   }
 }
 

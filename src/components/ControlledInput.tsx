@@ -9,9 +9,11 @@ type ControlledInputProps = {
   isError?: boolean
   errorMessage?: string
   type?: 'text' | 'password' | 'number' | 'date'
+  max?: number
+  min?: number
 }
 
-const ControlledInput = ({ value, onChange, label, isError, errorMessage, type = 'text' }: ControlledInputProps) => {
+const ControlledInput = ({ value, onChange, label, isError, errorMessage, type = 'text', max, min }: ControlledInputProps) => {
 
   // useEffect(() => {
   //   if (isError) {
@@ -32,9 +34,12 @@ const ControlledInput = ({ value, onChange, label, isError, errorMessage, type =
         type={type}
         value={value ?? ''}
         onChange={onChange}
+        max={max}
+        min={min}
       />
       <div className='ControlledInput__alert'>
         {isError && <Icon type='warning' />}
+        {isError && errorMessage && <>{errorMessage}</>}
       </div>
     </div>
   )

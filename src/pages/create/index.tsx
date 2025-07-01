@@ -21,6 +21,14 @@ export const CreateNewLog = () => {
   const [numParticipants, setNumParticipants] = useState(10)
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(oneMonth)
+  const dateErrorMessage = useMemo(() => {
+    if (dayjs(endDate).isBefore(dayjs(startDate))) {
+      return 'Invalid date'
+    } else if (dayjs(endDate).subtract(31, 'day').isAfter(dayjs(startDate))) {
+      return 'Date must be within a month from now'
+    }
+    return
+  }, [endDate, startDate])
 
   const { user } = useCurrentUser()
   const { addNewLogGroup } = useLogGroupQuery()
@@ -76,6 +84,8 @@ export const CreateNewLog = () => {
         label="Max no. of participants"
         value={numParticipants}
         type="number"
+        max={30}
+        min={1}
       />
       {/*<ControlledInput
         onChange={(e: any) => setStartDate(e?.target?.value)}
@@ -88,7 +98,8 @@ export const CreateNewLog = () => {
         label="End date"
         value={endDate}
         type="date"
-        isError={dayjs(endDate).isBefore(dayjs(startDate))}
+        isError={!!dateErrorMessage}
+        errorMessage={dateErrorMessage}
       />
 
       {isError && (
