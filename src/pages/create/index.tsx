@@ -1,6 +1,7 @@
 import dayjs from "dayjs"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Timestamp } from "firebase/firestore"
 
 import { useCurrentUser } from "@/contexts"
 
@@ -20,6 +21,14 @@ export const CreateNewLog = () => {
   const [numParticipants, setNumParticipants] = useState(10)
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(oneMonth)
+  const dateErrorMessage = useMemo(() => {
+    if (dayjs(endDate).isBefore(dayjs(startDate))) {
+      return 'Invalid date'
+    } else if (dayjs(endDate).subtract(31, 'day').isAfter(dayjs(startDate))) {
+      return 'Date must be within a month from now'
+    }
+    return
+  }, [endDate, startDate])
 
   const { user } = useCurrentUser()
   const { addNewLogGroup } = useLogGroupQuery()
@@ -39,8 +48,9 @@ export const CreateNewLog = () => {
   const isSubmittable = useMemo(() => {
     return !!logGroupTitle &&
            !!user?.userId &&
-           numParticipants > 0 &&
-           !dayjs(endDate).isBefore(dayjs(startDate))
+           numParticipants <= 30 && numParticipants > 0 &&
+           logGroupTitle.length <= 20 &&
+           !dateErrorMessage
   }, [logGroupTitle, user?.userId, numParticipants, startDate, endDate])
 
   const handleCreateNewGroup = async () => {
@@ -50,7 +60,7 @@ export const CreateNewLog = () => {
       await createGroup({
         title: logGroupTitle,
         max_participants: numParticipants,
-        start: startDate,
+        start: dayjs(Timestamp.now().toDate()).format('YYYY-MM-DD HH:mm'),
         end: endDate,
         currentUserId: user.userId,
       })
@@ -69,25 +79,32 @@ export const CreateNewLog = () => {
         onChange={(e: any) => setLogGroupTitle(e?.target?.value)}
         label="Title"
         value={logGroupTitle}
+        isError={logGroupTitle.length > 20}
+        errorMessage="Title must be under 20 characters"
       />
       <ControlledInput
         onChange={(e: any) => setNumParticipants(Number(e?.target?.value))}
         label="Max no. of participants"
         value={numParticipants}
         type="number"
+        max={30}
+        min={1}
+        isError={numParticipants > 30 || numParticipants < 1}
+        errorMessage="Invalid number"
       />
-      <ControlledInput
+      {/*<ControlledInput
         onChange={(e: any) => setStartDate(e?.target?.value)}
         label="Start date"
         value={startDate}
         type="date"
-      />
+      />*/}
       <ControlledInput
         onChange={(e: any) => setEndDate(e?.target?.value)}
         label="End date"
         value={endDate}
         type="date"
-        isError={dayjs(endDate).isBefore(dayjs(startDate))}
+        isError={!!dateErrorMessage}
+        errorMessage={dateErrorMessage}
       />
 
       {isError && (

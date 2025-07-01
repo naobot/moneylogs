@@ -50,6 +50,31 @@ html {
   cursor: pointer;
 }
 
+.CopyTextArea {
+  display: flex;
+  flex-direction: column;
+
+  textarea {
+    flex: 1;
+    resize: none;
+    padding: 0.5em;
+    cursor: pointer;
+    text-align: center;
+    border: 2px solid var(--c-black);
+  }
+
+  &__block {
+    font-size: 0.8em;
+    padding: 0.4em;
+    transition: 0.3s ease-in-out;
+    opacity: 1;
+
+    &--hidden {
+      opacity: 0;
+    }
+  }
+}
+
 .Container {
   display: flex;
   flex-direction: column;
@@ -221,21 +246,30 @@ html {
   align-items: center;
   padding: 0.2em;
 
+  @media (max-width: constants.$breakpoint-sm) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   &--warning {
     input {
-      &::after {
-        content: '!';
-        display: inline-block;
-      }
+      border: 2px solid var(--c-black);
     }
   }
 
+  &__input {
+    display: inline-flex;
+    align-items: center;
+    grid-gap: 0.4em;
+  }
+
   label {
-    font-size: 0.8em;
+    font-size: 1em;
   }
 
   &__alert {
-    width: 21px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -305,6 +339,10 @@ html {
 
     @media (max-width: constants.$breakpoint-sm) {
       font-size: 0.7em;
+    }
+
+    &__left, &__center, &__right {
+      grid-gap: 1em;
     }
 
     &__left {
