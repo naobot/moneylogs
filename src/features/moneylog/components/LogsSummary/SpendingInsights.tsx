@@ -57,7 +57,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
 
       // Calculate total spent
       let prevTotal = totalSpent.get(currency) || 0
-      totalSpent.set(currency, prevTotal + log.amount)
+      totalSpent.set(currency, prevTotal + Number(log.amount))
 
       // Generate keys for grouping - Monday as day 0
       const dayOfWeek = postDate.day() === 0 ? 6 : postDate.day() - 1 // Convert Sunday=0 to Sunday=6, others shift down by 1
@@ -73,7 +73,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
         })
       }
       const weekData = weeklyTotals.get(weekKey)!
-      weekData.currencyMap.set(currency, (weekData.currencyMap.get(currency) || 0) + log.amount)
+      weekData.currencyMap.set(currency, (weekData.currencyMap.get(currency) || 0) + Number(log.amount))
 
       // Track daily totals
       if (!dailyTotals.has(dayKey)) {
@@ -84,7 +84,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
         })
       }
       const dayData = dailyTotals.get(dayKey)!
-      dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + log.amount)
+      dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + Number(log.amount))
       dayData.posts = [...dayData.posts, logPost]
 
       // New: Weekend vs weekday tracking
@@ -232,11 +232,11 @@ const TotalText = ({ children }: { children: ReactNode }) => {
         <span className="LogsSummary__highlight">
           {[...totalSpent.entries()]
             .filter(([currency, value]) => value > 0)
-            .map(([currency, value]) => `${value} ${currency}`)
+            .map(([currency, value]) => `${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
             .join(', ')
           }
         </span>
-        <span> in total over the period of {dayjs(group.start.seconds * 1000).format('ddd D MM YYYY')} to {dayjs(group.end.seconds * 1000).format('ddd D MM YYYY')}</span>
+        <span> in total over the period of {dayjs(group.start.seconds * 1000).format('ddd D MMM YYYY')} to {dayjs(group.end.seconds * 1000).format('ddd D MMM YYYY')}</span>
       </p>
     </div>
   )
@@ -253,14 +253,14 @@ const WeekText = ({ children }: { children: ReactNode }) => {
         if (expensiveWeeks.length === 1) {
           return (
             <p>{children}{' '}
-              <span className="LogsSummary__highlight">{expensiveWeeks.map(([currency, value]) => `${value.week} (${value.amount} ${currency})`)}</span>
+              <span className="LogsSummary__highlight">{expensiveWeeks.map(([currency, value]) => `${value.week} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`)}</span>
             </p>
           )
         } else {
           return (
             <>
               <p>{children}...</p>
-              <ul className="LogsSummary__List">{expensiveWeeks.map(([currency, value]) => <li key={`w-${currency}__${value.amount}`}>{`${value.week} (${value.amount} ${currency})`}</li>)}</ul>
+              <ul className="LogsSummary__List">{expensiveWeeks.map(([currency, value]) => <li key={`w-${currency}__${value.amount}`}>{`${value.week} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`}</li>)}</ul>
             </>
           )
         }
@@ -280,14 +280,14 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
         if (expensiveDays.length === 1) {
           return (
             <p>{children}{' '}
-              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount} ${currency})`)}</span>
+              <span className="LogsSummary__highlight">{expensiveDays.map(([currency, value]) => `${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`)}</span>
             </p>
           )
         } else {
           return (
             <>
               <p>{children}...</p>
-              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount} ${currency})`}</li>)}</ul>
+              <ul className="LogsSummary__List">{expensiveDays.map(([currency, value]) => <li key={`d-${currency}__${value.amount}`}>{`${value.day} (${value.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`}</li>)}</ul>
             </>
           )
         }
@@ -296,7 +296,7 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
       {showPosts && (
         <>
           <p>
-            <span>Some posts from that day...</span>
+            <span>Some posts from then...</span>
           </p>
 
           <div className="LogsSummary__ScrollList">
@@ -313,8 +313,67 @@ const DayText = ({ children, showPosts = true, showAuthors = false, showMultiple
 
               const someExpensivePosts = expensiveEntries.map(x => x[1].posts).flat().filter(x => x.amount > 0)
 
-              return (showMultipleDays ? someExpensivePosts : mostExpensiveEntry[1].posts).map(post =>
+              // Get posts to display (either from multiple days or single most expensive day)
+              const postsToShow = showMultipleDays ? someExpensivePosts : mostExpensiveEntry[1].posts
+
+              // Group posts by currency to handle comparison properly
+              const postsByCurrency = new Map<Currency, LogPost[]>()
+              postsToShow.forEach(post => {
+                if (!postsByCurrency.has(post.currency)) {
+                  postsByCurrency.set(post.currency, [])
+                }
+                postsByCurrency.get(post.currency)!.push(post)
+              })
+
+              // Get top posts per currency, then combine
+              const topPostsPerCurrency: LogPost[] = []
+              const postsPerCurrency = Math.max(1, Math.floor(10 / postsByCurrency.size)) // Distribute the 10 slots
+
+              postsByCurrency.forEach((currencyPosts, currency) => {
+                // Remove duplicates within this currency
+                const uniqueCurrencyPosts = currencyPosts.filter((post, index, array) =>
+                  array.findIndex(p => p.id === post.id) === index
+                )
+
+                // Sort by amount within currency and take top N for this currency
+                const topForCurrency = uniqueCurrencyPosts
+                  .sort((a, b) => b.amount - a.amount)
+                  .slice(0, postsPerCurrency)
+
+                topPostsPerCurrency.push(...topForCurrency)
+              })
+
+              // If we have leftover slots, fill them with the next highest from any currency
+              if (topPostsPerCurrency.length < 10) {
+                const remainingPosts = postsToShow
+                  .filter(post => !topPostsPerCurrency.some(tp => tp.id === post.id))
+                  .filter((post, index, array) => array.findIndex(p => p.id === post.id) === index) // dedupe
+
+                // Sort remaining posts by relative rank within their currency
+                const remainingWithRank = remainingPosts.map(post => {
+                  const currencyPosts = postsByCurrency.get(post.currency) || []
+                  const sortedCurrencyPosts = currencyPosts
+                    .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
+                    .sort((a, b) => b.amount - a.amount)
+                  const rank = sortedCurrencyPosts.findIndex(p => p.id === post.id)
+                  return { post, rank, percentile: rank / sortedCurrencyPosts.length }
+                })
+
+                const additionalPosts = remainingWithRank
+                  .sort((a, b) => a.percentile - b.percentile) // Best rank/percentile first
+                  .slice(0, 10 - topPostsPerCurrency.length)
+                  .map(x => x.post)
+
+                topPostsPerCurrency.push(...additionalPosts)
+              }
+
+              const topExpensivePosts = topPostsPerCurrency
+
+              return topExpensivePosts.map(post =>
                 <div key={`PreviewPost__${post.id}`} className="PostPreview" data-color-mode="light">
+                  <div className="PostPreview__header">
+                    <strong>{post.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {post.currency}</strong>
+                  </div>
                   <MDEditor.Markdown source={post.content} />
                   {showAuthors && <div className="PostPreview__footer"><Icon type={"user"} />{post.authorName}</div>}
                 </div>
@@ -340,7 +399,7 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
           <strong>Weekly averages:</strong>{' '}
           <span className="LogsSummary__highlight">
             {[...weeklyAverages.entries()]
-              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .map(([currency, avg]) => `${avg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
               .join(', ')
             }
           </span>
@@ -352,7 +411,7 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
           <strong>Daily averages:</strong>{' '}
           <span className="LogsSummary__highlight">
             {[...dailyAverages.entries()]
-              .map(([currency, avg]) => `${avg.toFixed(2)} ${currency}`)
+              .map(([currency, avg]) => `${avg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`)
               .join(', ')
             }
           </span>
@@ -374,13 +433,11 @@ const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
       {[...weekendVsWeekdayDiff.entries()].map(([currency, data]) => (
         <div key={`weekend-weekday-${currency}`}>
           <strong>{currency}:</strong>{' '}
-          <span className="LogsSummary__highlight">
-            On weekends you spent an average of {data.weekendAvg.toFixed(2)}, compared to weekdays where you averaged {data.weekdayAvg.toFixed(2)}
-          </span>
+            On weekends you spent an average of <span className="LogsSummary__highlight">{data.weekendAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>, compared to weekdays where you averaged <span className="LogsSummary__highlight">{data.weekdayAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
           {data.difference > 0 ? (
-            <span> (You spend {data.difference.toFixed(2)} more on weekends)</span>
+            <span> (You spend <span className="LogsSummary__highlight">{data.difference.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> more on weekends)</span>
           ) : data.difference < 0 ? (
-            <span> (You spend {Math.abs(data.difference).toFixed(2)} more on weekdays)</span>
+            <span> (You spend <span className="LogsSummary__highlight">{Math.abs(data.difference).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> more on weekdays)</span>
           ) : (
             <span> (You spend about the same regardless!)</span>
           )}
@@ -421,11 +478,6 @@ const LowSpenderAlert = ({ groupAnalytics, children }: { groupAnalytics?: GroupA
 const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
   const { noSpendDays, totalDaysInPeriod } = useSpendingData()
 
-  // Don't show if none
-  if (totalDaysInPeriod < 1) {
-    return null
-  }
-
   const noSpendPercentage = ((noSpendDays / totalDaysInPeriod) * 100).toFixed(1)
 
   return (
@@ -435,6 +487,7 @@ const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
         <span className="LogsSummary__highlight">
           {noSpendDays} out of {totalDaysInPeriod} days ({noSpendPercentage}%)
         </span>
+        {noSpendDays === 0 && <span> ... 😅</span>}
         {noSpendDays > 0 && (
           <span>
             {noSpendDays === 1 ? ' - great self-control!' : ' - excellent spending discipline!'}
