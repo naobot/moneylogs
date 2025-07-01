@@ -98,6 +98,7 @@ const HotPosts = ({ logPosts, groupMembers, groupId, onOpenComments, selectedPos
               isDigestMode={true} // Show in digest mode for better layout
               onOpenComments={onOpenComments}
               isReadOnly={true}
+              isSummaryView={true}
             />
           )
         })}

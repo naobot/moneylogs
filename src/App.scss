@@ -447,7 +447,9 @@ html {
 }
 
 .HotPostsWindow {
-  min-height: 80vh;
+  .LogPosts__posts {
+    overflow-y: initial !important;
+  }
 }
 
 .LogPosts {

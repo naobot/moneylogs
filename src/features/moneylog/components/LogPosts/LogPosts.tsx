@@ -44,6 +44,7 @@ type LogPostProps = {
   isDigestMode: boolean
   onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void
   isReadOnly: boolean
+  isSummaryView?: boolean
 }
 
 type DateBanner = {
@@ -72,7 +73,7 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
   return dayjs(date).tz(userTimezone || dayjs.tz.guess())
 }
 
-export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments, isReadOnly = false }: LogPostProps) => {
+export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments, isReadOnly = false, isSummaryView = false }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null)
   const { user: loggedInUser } = useCurrentUser()
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
@@ -183,7 +184,7 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
 
   useEffect(() => {
     if (selectedPostId === post.id) {
-      scrollPostToTop(postRef)
+      scrollPostToTop(postRef, isSummaryView ? '.LogsSummary' : '.LogPosts__posts')
     }
   }, [selectedPostId])
 
@@ -606,9 +607,9 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
 
 export default LogPosts
 
-export function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>) {
+export function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>, containerClass: string) {
     setTimeout(() => {
-        const logPostsContainer = document.querySelector('.LogPosts__posts')
+        const logPostsContainer = document.querySelector(containerClass)
         const postElement = postRef.current
 
         if (logPostsContainer && postElement) {
