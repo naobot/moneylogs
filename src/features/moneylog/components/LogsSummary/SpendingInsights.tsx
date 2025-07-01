@@ -50,6 +50,10 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
     let weekendTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
     let weekdayTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
 
+    const groupStartDate = dayjs(group.start.seconds * 1000)
+    const groupEndDate = dayjs(group.end.seconds * 1000)
+    const totalDaysInPeriod = groupEndDate.diff(groupStartDate, 'day') + 1 // +1 to include both start and end dates
+
     logPosts.forEach(log => {
       const currency = log.currency
       const postDate = dayjs(log.postDate.seconds * 1000) // Convert Firebase Timestamp
@@ -159,11 +163,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
     currencies.forEach(currency => {
       const total = totalSpent.get(currency) || 0
       const weekCount = new Set([...weeklyTotals.keys()]).size
-      const dayCount = dailyTotals.size > 0 ? new Set(
-        [...dailyTotals.entries()]
-          .filter(([_, dayData]) => dayData.currencyMap.has(currency))
-          .map(([dayKey, _]) => dayKey)
-      ).size : 0
+      const dayCount = dailyTotals.size > 0 ? totalDaysInPeriod : 0
 
       // Weekly average
       if (weekCount > 0) {
@@ -191,11 +191,6 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
         })
       }
     })
-
-    // New: Calculate no-spend days
-    const groupStartDate = dayjs(group.start.seconds * 1000)
-    const groupEndDate = dayjs(group.end.seconds * 1000)
-    const totalDaysInPeriod = groupEndDate.diff(groupStartDate, 'day') + 1 // +1 to include both start and end dates
 
     // Count days with spending (any currency, any amount > 0)
     const daysWithSpending = dailyTotals.size
