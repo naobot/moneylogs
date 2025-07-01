@@ -374,13 +374,11 @@ const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
       {[...weekendVsWeekdayDiff.entries()].map(([currency, data]) => (
         <div key={`weekend-weekday-${currency}`}>
           <strong>{currency}:</strong>{' '}
-          <span className="LogsSummary__highlight">
-            On weekends you spent an average of {data.weekendAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}, compared to weekdays where you averaged {data.weekdayAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-          </span>
+            On weekends you spent an average of <span className="LogsSummary__highlight">{data.weekendAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>, compared to weekdays where you averaged <span className="LogsSummary__highlight">{data.weekdayAvg.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
           {data.difference > 0 ? (
-            <span> (You spend {data.difference.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} more on weekends)</span>
+            <span> (You spend <span className="LogsSummary__highlight">{data.difference.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> more on weekends)</span>
           ) : data.difference < 0 ? (
-            <span> (You spend {Math.abs(data.difference).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} more on weekdays)</span>
+            <span> (You spend <span className="LogsSummary__highlight">{Math.abs(data.difference).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> more on weekdays)</span>
           ) : (
             <span> (You spend about the same regardless!)</span>
           )}
