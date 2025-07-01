@@ -288,7 +288,7 @@ async function backfillPostMetadata(logPosts: any[]) {
 
     backfilledPosts[post.id] = {
       authorDisplayName: userData?.displayName || post.authorName || 'Unknown User',
-      authorTimezone: userData?.timezone || 'UTC',
+      postTimezone: post?.timezone || userData?.timezone || 'UTC',
     }
   })
 

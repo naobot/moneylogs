@@ -59,7 +59,7 @@ export type GroupAnalytics = {
   posts: {
     [postId: string]: {
       authorDisplayName: string
-      authorTimezone: string
+      postTimezone: string
     }
   }
   processedAt: Timestamp
