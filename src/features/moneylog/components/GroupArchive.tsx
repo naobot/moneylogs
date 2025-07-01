@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { Fragment } from "react/jsx-runtime"
 
 import { Group } from "@/types/user"
+import dayjs from "dayjs"
 
 type GroupArchiveProps = {
   groups: Array<Group>
@@ -13,7 +14,7 @@ const GroupArchive = ({ groups }: GroupArchiveProps) => {
       <ul>
         {groups.map(group => (
           <li key={group.id}>
-            <Link to={`/g/${group.id}`}>{group.title}</Link>
+            <Link to={`/g/${group.id}`}>{group.title}</Link> <small>({dayjs(group.start.toDate()).format('ddd D MMM YYYY')} to {dayjs(group.end.toDate()).format('ddd D MMM YYYY')})</small>
           </li>
         ))}
       </ul>
