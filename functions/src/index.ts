@@ -78,7 +78,7 @@ export const updateCommentMetadata = onDocumentCreated(
 )
 
 export const processGroupAnalytics = onCall(async (request) => {
-  const { groupId } = request.data
+  const { groupId, groupEnd } = request.data
 
   if (!groupId) {
     throw new Error('Group ID is required')
@@ -98,7 +98,7 @@ export const processGroupAnalytics = onCall(async (request) => {
     const analytics = {
       isCalculated: true,
       processedAt: FieldValue.serverTimestamp(),
-      raw: calculateRawAnalytics(logPosts),
+      raw: calculateRawAnalytics(logPosts, groupEnd),
       posts: postsMetadata
     }
 
@@ -159,7 +159,13 @@ async function fetchGroupLogPosts(groupId: string) {
   }))
 }
 
-function calculateRawAnalytics(logPosts: any[]) {
+function calculateRawAnalytics(logPosts: any[], groupEnd: any) {
+  const groupEndDate = new Date(groupEnd.seconds * 1000)
+  const legitimatePosts = logPosts.filter(post => {
+    const postDate = new Date(post.postDate.seconds * 1000)
+    return postDate <= groupEndDate
+  })
+
   // Currency totals across all posts
   const totalSpentByCurrency = new Map<string, number>()
 
@@ -172,7 +178,7 @@ function calculateRawAnalytics(logPosts: any[]) {
   // Active hours tracking (UTC-based)
   const hourlyActivity = new Map<number, number>() // hour (0-23) -> post count
 
-  logPosts.forEach(post => {
+  legitimatePosts.forEach(post => {
     const currency = post.currency
     const amount = Number(post.amount)
     const authorId = post.author.id

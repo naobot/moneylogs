@@ -45,6 +45,15 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
     const hasCachedAnalytics = group.analytics?.isCalculated
     const postsMetadata = group.analytics?.posts
 
+    const groupStartDate = dayjs(group.start.seconds * 1000)
+    const groupEndDate = dayjs(group.end.seconds * 1000)
+    const totalDaysInPeriod = groupEndDate.diff(groupStartDate, 'day') + 1 // +1 to include both start and end dates
+
+    const legitimatePosts = logPosts.filter(log => {
+      const postDate = dayjs(log.postDate.seconds * 1000)
+      return !postDate.isAfter(groupEndDate, 'day')
+    })
+
     let totalSpent = new Map<Currency, number>()
     let weeklyTotals = new Map<string, { currencyMap: Map<Currency, number>, date: dayjs.Dayjs }>()
     let dailyTotals = new Map<string, { currencyMap: Map<Currency, number>, date: dayjs.Dayjs, posts: LogPost[] }>()
@@ -53,11 +62,7 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
     let weekendTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
     let weekdayTotals = new Map<Currency, { totalAmount: number, dayCount: number }>()
 
-    const groupStartDate = dayjs(group.start.seconds * 1000)
-    const groupEndDate = dayjs(group.end.seconds * 1000)
-    const totalDaysInPeriod = groupEndDate.diff(groupStartDate, 'day') + 1 // +1 to include both start and end dates
-
-    logPosts.forEach(log => {
+    legitimatePosts.forEach(log => {
       let postDate: dayjs.Dayjs
       if (hasCachedAnalytics && postsMetadata?.[log.id]?.postTimezone) {
         // Use the timezone from cached analytics
@@ -206,7 +211,6 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
 
     // Count days with spending (any currency, any amount > 0)
     const daysWithSpending = dailyTotals.size
-    console.log(dailyTotals)
     const noSpendDays = totalDaysInPeriod - daysWithSpending
 
     return {

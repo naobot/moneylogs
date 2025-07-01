@@ -104,7 +104,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
         })
 
         // Start the analytics processing
-        await processAnalytics({ groupId: group.id })
+        await processAnalytics({ groupId: group.id, groupEnd: group.end })
 
       } catch (error) {
         console.error('Failed to start analytics processing:', error)
