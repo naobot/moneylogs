@@ -42,6 +42,7 @@ export type User = {
 }
 
 export type Group = {
+  [x: string]: any
   id: string
   title: string
   max_participants: number
@@ -50,6 +51,43 @@ export type Group = {
   end: Timestamp
   createdAt: Timestamp
   logs: Array<Log>
+  analytics?: GroupAnalytics
+}
+
+export type GroupAnalytics = {
+  isCalculated: boolean
+  posts: {
+    [postId: string]: {
+      authorDisplayName: string
+      postTimezone: string
+    }
+  }
+  processedAt: Timestamp
+  raw: {
+    activeHours: {
+      [hour: number]: number  // 0-23 hours -> post count
+    }
+    currencyPercentiles: {
+      [currency: string]: {
+        p25: number
+        p50: number
+        p75: number
+      }
+    }
+    hotPosts: Array<{
+      postId: string
+      score: number
+    }>
+    memberRankings: Array<{
+      userId: string
+      totals: {
+        [currency: string]: number  // Currency -> total amount spent
+      }
+    }>
+    totalSpent: {
+      [currency: string]: number  // Currency -> total amount across all members
+    }
+  }
 }
 
 export type Log = {

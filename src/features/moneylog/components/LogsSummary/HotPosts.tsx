@@ -78,7 +78,7 @@ const HotPosts = ({ logPosts, groupMembers, groupId, onOpenComments, selectedPos
 
   return (
     <div className="HotPostsWindow Window" ref={hotPostsRef}>
-      <h3>🔥 Hot Posts</h3>
+      <h3>🔥 hot posts</h3>
       <p className="HotPosts__description">
         These posts got a lot of attention! ({hotPosts.length} post{hotPosts.length !== 1 ? 's' : ''} shown)
       </p>

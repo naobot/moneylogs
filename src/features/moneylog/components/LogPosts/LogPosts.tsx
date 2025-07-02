@@ -464,20 +464,18 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
   }, [selectedPost])
 
   useEffect(() => {
-    if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
+    if (!isReadOnly && loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
       trackUserAction('view_post', {
         post_id: selectedPost?.id,
         user_id: loggedInUser?.id,
       })
 
-      if (!isReadOnly) {
-        markCommentsAsViewedFn({
-          userId: loggedInUser.id,
-          logPostId: selectedPost.id
-        })
-      }
+      markCommentsAsViewedFn({
+        userId: loggedInUser.id,
+        logPostId: selectedPost.id
+      })
     }
-  }, [selectedPost?.id, loggedInUser?.userId, trackUserAction])
+  }, [selectedPost?.id, loggedInUser?.userId, trackUserAction, isReadOnly])
 
   return (
     <>
