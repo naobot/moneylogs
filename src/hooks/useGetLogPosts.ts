@@ -40,12 +40,12 @@ export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
     // Create the document reference inside the effect
     const groupDocRef = doc(db, "log_groups", groupId)
 
-    const recentCutoff = dayjs().subtract(4, 'weeks').toDate()
+    // const recentCutoff = dayjs().subtract(4, 'weeks').toDate()
 
     const postsQuery = query(
       collection(db, "log_posts"),
       where("group", "==", groupDocRef),
-      where("postDate", ">=", recentCutoff),
+      // where("postDate", ">=", recentCutoff),
       orderBy("postDate", "desc")
     )
 
