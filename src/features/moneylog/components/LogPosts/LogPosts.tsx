@@ -555,7 +555,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
                   amount={(item as LogPost).amount}
                   currency={(item as LogPost).currency}
                   date={(item as LogPost).postDate?.seconds * 1000}
-                  isPinned={currentlyEditingPostId === (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId].pinnedPost}
+                  isPinned={currentlyEditingPostId === (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId]?.pinnedPost}
                   timezone={(item as LogPost).timezone ?? undefined}
                 />
               }
