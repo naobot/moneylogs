@@ -341,6 +341,9 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
   const { trackUserAction } = useReadTracking()
 
   const calendarMarkedPosts = useMemo(() => {
+    // console.log('calendarMarkedPosts updating')
+    // console.log(user.pinnedPosts?.[groupId]?.pinnedPost)
+
     const displayRows: Array<LogPost | DateBanner> = []
     const now = dayjs().tz(user?.timezone || dayjs.tz.guess())
     let currentWeekStart: dayjs.Dayjs | null = null
@@ -350,63 +353,65 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
     let dailyTotals: { [key: string]: number } = {}
 
     logs?.forEach((post) => {
-      const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, (post?.timezone ?? user?.timezone))
-      const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
+      if (post.id != user.pinnedPosts?.[groupId]?.pinnedPost) {
+        const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, (post?.timezone ?? user?.timezone))
+        const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
 
-      if (!(post.currency in runningTotals)) {
-        runningTotals[post.currency] = 0
+        if (!(post.currency in runningTotals)) {
+          runningTotals[post.currency] = 0
+        }
+        runningTotals[post.currency] += Number(post.amount)
+
+        // Check if we've moved to a new week
+        if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
+          currentWeekStart = postWeekStart
+          currentDay = null // Reset day tracking for new week
+          weeklyTotals = {} // Reset current weekly totals
+
+          // Calculate weeks ago
+          const weeksAgo = now.startOf('week').diff(postWeekStart, 'week')
+          const weekText = weeksAgo === 0 ? 'This week' :
+                          weeksAgo === 1 ? '1 week ago' :
+                          weeksAgo < 0 ? 'Upcoming' :
+                          `${weeksAgo} weeks ago`
+
+          displayRows.push({
+            isFuture: weeksAgo < 0,
+            text: weekText,
+            type: 'week',
+            _isBanner: true,
+            runningTotal: runningTotals,
+            total: weeklyTotals,
+          })
+        }
+
+        // Accumulate weekly totals
+        if (!(post.currency in weeklyTotals)) {
+          weeklyTotals[post.currency] = 0
+        }
+        weeklyTotals[post.currency] += Number(post.amount)
+
+        // Check if we've moved to a new day within the week
+        if (logPostDate.day() !== currentDay) {
+          currentDay = logPostDate.day()
+          dailyTotals = {}
+
+          displayRows.push({
+            text: logPostDate.format('ddd D MMM YYYY'),
+            type: 'day',
+            _isBanner: true,
+            runningTotal: runningTotals,
+            total: dailyTotals,
+            isFuture: now.diff(logPostDate) < 0,
+          })
+        }
+
+        // Accumulate daily totals
+        if (!(post.currency in dailyTotals)) {
+          dailyTotals[post.currency] = 0
+        }
+        dailyTotals[post.currency] += Number(post.amount)
       }
-      runningTotals[post.currency] += Number(post.amount)
-
-      // Check if we've moved to a new week
-      if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
-        currentWeekStart = postWeekStart
-        currentDay = null // Reset day tracking for new week
-        weeklyTotals = {} // Reset current weekly totals
-
-        // Calculate weeks ago
-        const weeksAgo = now.startOf('week').diff(postWeekStart, 'week')
-        const weekText = weeksAgo === 0 ? 'This week' :
-                        weeksAgo === 1 ? '1 week ago' :
-                        weeksAgo < 0 ? 'Upcoming' :
-                        `${weeksAgo} weeks ago`
-
-        displayRows.push({
-          isFuture: weeksAgo < 0,
-          text: weekText,
-          type: 'week',
-          _isBanner: true,
-          runningTotal: runningTotals,
-          total: weeklyTotals,
-        })
-      }
-
-      // Accumulate weekly totals
-      if (!(post.currency in weeklyTotals)) {
-        weeklyTotals[post.currency] = 0
-      }
-      weeklyTotals[post.currency] += Number(post.amount)
-
-      // Check if we've moved to a new day within the week
-      if (logPostDate.day() !== currentDay) {
-        currentDay = logPostDate.day()
-        dailyTotals = {}
-
-        displayRows.push({
-          text: logPostDate.format('ddd D MMM YYYY'),
-          type: 'day',
-          _isBanner: true,
-          runningTotal: runningTotals,
-          total: dailyTotals,
-          isFuture: now.diff(logPostDate) < 0,
-        })
-      }
-
-      // Accumulate daily totals
-      if (!(post.currency in dailyTotals)) {
-        dailyTotals[post.currency] = 0
-      }
-      dailyTotals[post.currency] += Number(post.amount)
 
       displayRows.push(post)
     })
@@ -486,7 +491,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
           "LogPosts__posts--weekly": isWeeklyView,
           "disable-scroll": selectedPost,
         })}>
-          {false && calendarMarkedPosts?.length > 0 && <>
+          {/*{false && calendarMarkedPosts?.length > 0 && <>
             <div className="LogPosts__menu">
               <Button
                 className={"LogPosts__menu__button"}
@@ -505,7 +510,7 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
                 buttonStyle="primary-border"
               />
             </div>
-          </>}
+          </>}*/}
 
           {isCreateNewEntry && (
             <LogPostEditor
