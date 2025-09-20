@@ -592,7 +592,16 @@ html {
       border: 1px solid var(--c-black);
       background-color: #fff;
       transition: 0.3s ease-in-out;
-      max-height: 1200px; // explicitly declare so transition works
+      max-height: 2400px; // explicitly declare so transition works
+
+      &__content {
+        img {
+          max-height: 70vh;
+          border: 1px solid var(--c-black);
+          outline: 6px solid #fff;
+          outline-offset: -7px;
+        }
+      }
 
       @media (max-width: constants.$breakpoint-md) {
         // max-height: calc(100vh - 180px - 330px) !important;
