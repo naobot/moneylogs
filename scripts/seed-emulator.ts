@@ -39,11 +39,13 @@ const testUsers = [
 const testGroups = [
   {
     title: 'Roommates - Vancouver House',
-    members: ['alice.vancouver@test.com', 'bob.nyc@test.com', 'charlie.london@test.com', 'diana.berlin@test.com']
+    members: ['alice.vancouver@test.com', 'bob.nyc@test.com', 'charlie.london@test.com', 'diana.berlin@test.com'],
+    max_participants: 10,
   },
   {
     title: 'Asia Trip 2025',
-    members: ['charlie.london@test.com', 'diana.berlin@test.com', 'erik.tokyo@test.com', 'fiona.singapore@test.com']
+    members: ['charlie.london@test.com', 'diana.berlin@test.com', 'erik.tokyo@test.com', 'fiona.singapore@test.com'],
+    max_participants: 10,
   }
 ]
 
@@ -105,6 +107,7 @@ async function createLogGroup(groupInfo: typeof testGroups[0], createdUsers: any
   const groupData = {
     title: groupInfo.title,
     members: memberUids,
+    max_participants: groupInfo.max_participants,
     createdAt: Timestamp.now(),
     start: Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)), // 30 days ago
     end: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) // 30 days from now

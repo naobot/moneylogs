@@ -67,7 +67,7 @@ export const GroupPage = () => {
         <Modal
           isOpen={showInviteModal}
         >
-          <Modal.Header>{group.members.length < group.max_participants ? 'Welcome to {group.title}' : 'Group full'}</Modal.Header>
+          <Modal.Header>{group.members.length < group.max_participants ? `Welcome to ${group.title}` : 'Group full'}</Modal.Header>
           <Modal.Body>
             {group.members.length < group.max_participants ? <p>You've been invited to join this moneylog group!</p> : <><p>Sorry, this group is already full :(</p><p>Were you sent here by accident?</p></>}
           </Modal.Body>

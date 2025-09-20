@@ -1,18 +1,22 @@
-import { PropsWithChildren } from 'react'
+import { PropsWithChildren, useEffect } from 'react'
 import { BrowserRouter as Router, Route, Routes, NavigateProps, Navigate } from 'react-router-dom'
 import { useAuthState } from 'react-firebase-hooks/auth'
 // @ts-ignore
 import { auth } from './config/firebase-config'
 import Layout from './features/layout/Layout'
+import GlobalErrorHandler from './utils/errorHandler'
+import { useToast } from './hooks/useToast'
 
 import { Auth } from './pages/auth'
 import { Home } from './pages/home'
 import { UserSettings } from './pages/me'
 import { CreateNewLog } from './pages/create'
-
-import './App.scss'
 import { GroupPage } from './pages/group'
 import { About } from './pages/about'
+
+import { ToastContainer } from './components/ToastContainer'
+
+import './App.scss'
 
 export const CheckAuth = ({
   children,
@@ -35,6 +39,13 @@ export const CheckAuth = ({
 }
 
 const App = () => {
+  const { toasts, showToast, removeToast } = useToast()
+
+  useEffect(() => {
+    const errorHandler = GlobalErrorHandler.getInstance()
+    errorHandler.initialize(showToast)
+  }, [showToast])
+
   return (
     <>
       <Router>
@@ -48,6 +59,8 @@ const App = () => {
 
             <Route path='/g/:groupId' element={<CheckAuth><GroupPage /></CheckAuth>} />
           </Routes>
+
+          <ToastContainer toasts={toasts} onRemove={removeToast} />
         </Layout>
       </Router>
     </>
