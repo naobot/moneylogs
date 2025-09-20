@@ -597,8 +597,10 @@ html {
       &__content {
         img {
           max-height: 70vh;
+          box-sizing: border-box;
+          border: 1px solid var(--c-black);
           outline: 5px solid #fff;
-          outline-offset: -7px;
+          outline-offset: -6px;
         }
       }
 
