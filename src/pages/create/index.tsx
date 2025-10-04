@@ -1,5 +1,5 @@
 import dayjs from "dayjs"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Timestamp } from "firebase/firestore"
 
@@ -61,7 +61,7 @@ export const CreateNewLog = () => {
         title: logGroupTitle,
         max_participants: numParticipants,
         start: dayjs(Timestamp.now().toDate()).format('YYYY-MM-DD HH:mm'),
-        end: endDate,
+        end: `${endDate} 09:00`,
         currentUserId: user.userId,
       })
 
