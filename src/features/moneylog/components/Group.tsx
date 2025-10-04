@@ -33,6 +33,11 @@ export const Group = ({ group, groupId }) => {
   const [displaySummary, setDisplaySummary] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showEndWarningModal, setShowEndWarningModal] = useState(false)
+
+  const isFutureGroup = useMemo(() => {
+    return dayjs(group.start.toDate()).isAfter(dayjs())
+  }, [group.start])
+
   const endingSoon = useMemo(() => {
     // group ending within 24 hours
     return (group.end as Timestamp).seconds - Timestamp.now().seconds < 86400
@@ -170,14 +175,16 @@ export const Group = ({ group, groupId }) => {
           <div className="Group__header__left">
             <div className="GroupInterval Group__header__item">
               {group &&
-                <>{formatDate(group.start?.seconds, 'D MMM')} to {formatDate(group.end?.seconds, 'D MMM')}</>
+                <div className="Group__header__item__time">
+                  {formatDate(group.start?.seconds, 'D MMM')} <small>({dayjs(group.start.toDate()).format('H:mm')})</small> to {formatDate(group.end?.seconds, 'D MMM')} <small>({dayjs(group.end.toDate()).format('H:mm')})</small>
+                </div>
               }
               {!isReadOnly && endingSoon && <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />}
             </div>
           </div>
 
           <div className="Group__header__center">
-            {!isReadOnly && !displayAll && isActiveLogMyLog && (
+            {!isReadOnly && !displayAll && isActiveLogMyLog && !isFutureGroup && (
               <div
                 className="handler Group__header__item"
                 onClick={() => {
@@ -221,8 +228,13 @@ export const Group = ({ group, groupId }) => {
               groupId={groupId}
               isReadOnly={isReadOnly}
             />
-            {displaySummary && (<LogsSummary group={group} groupMembers={members} logPosts={logPostRes.posts} />)}
-            {!displaySummary && displayUser && (
+            {isFutureGroup && (
+              <div className="LogPosts">
+                <div className="LogPosts__error">This group log has not begun yet!</div>
+              </div>
+            )}
+            {!isFutureGroup && displaySummary && (<LogsSummary group={group} groupMembers={members} logPosts={logPostRes.posts} />)}
+            {!isFutureGroup && !displaySummary && displayUser && (
               <ActiveLog
                 group={group}
                 groupId={groupId}

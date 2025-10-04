@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
+import dayjs from "dayjs"
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups"
 import { Group } from "@/features/moneylog/components/Group"
@@ -38,10 +39,16 @@ export const Home = () => {
             You can also <Link to="/create">create one</Link> yourself.
           </p>
 
-          {allGroups.length > 0 && (
+          {isSuccess && allGroups.length > 0 && ( // TODO improve this area lol
             <div>
+              <h3>Upcoming groups</h3>
+              <GroupArchive groups={allGroups.filter((g) => {
+                return dayjs(g.start.toDate()).isAfter(dayjs())
+              })} />
               <h3>Past groups</h3>
-              <GroupArchive groups={allGroups} />
+              <GroupArchive groups={allGroups.filter((g) => {
+                return dayjs(g.end.toDate()).isBefore(dayjs())
+              })} />
             </div>
           )}
         </div>
