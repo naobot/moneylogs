@@ -25,7 +25,7 @@ export const CreateNewLog = () => {
     if (dayjs(endDate).isBefore(dayjs(startDate))) {
       return 'Invalid date'
     } else if (dayjs(endDate).subtract(31, 'day').isAfter(dayjs(startDate))) {
-      return 'Date must be within a month from now'
+      return 'Date must be within a month from start date'
     }
     return
   }, [endDate, startDate])
@@ -60,7 +60,7 @@ export const CreateNewLog = () => {
       await createGroup({
         title: logGroupTitle,
         max_participants: numParticipants,
-        start: dayjs(Timestamp.now().toDate()).format('YYYY-MM-DD HH:mm'),
+        start: `${startDate} 05:00`,
         end: `${endDate} 09:00`,
         currentUserId: user.userId,
       })
@@ -92,12 +92,12 @@ export const CreateNewLog = () => {
         isError={numParticipants > 30 || numParticipants < 1}
         errorMessage="Invalid number"
       />
-      {/*<ControlledInput
+      <ControlledInput
         onChange={(e: any) => setStartDate(e?.target?.value)}
         label="Start date"
         value={startDate}
         type="date"
-      />*/}
+      />
       <ControlledInput
         onChange={(e: any) => setEndDate(e?.target?.value)}
         label="End date"

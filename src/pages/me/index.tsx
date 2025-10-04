@@ -14,6 +14,7 @@ import ControlledInput from "@/components/ControlledInput"
 
 import "./me.scss";
 import GroupArchive from '@/features/moneylog/components/GroupArchive'
+import dayjs from 'dayjs'
 
 
 export const UserSettings = () => {
@@ -138,10 +139,16 @@ export const UserSettings = () => {
         />
       </div>
 
-      {isSuccess && allGroups.length > 0 && (
+      {isSuccess && allGroups.length > 0 && ( // TODO improve this area lol
         <div>
+          <h3>Upcoming groups</h3>
+          <GroupArchive groups={allGroups.filter((g) => {
+            return dayjs(g.start.toDate()).isAfter(dayjs())
+          })} />
           <h3>Past groups</h3>
-          <GroupArchive groups={allGroups} />
+          <GroupArchive groups={allGroups.filter((g) => {
+            return dayjs(g.end.toDate()).isBefore(dayjs())
+          })} />
         </div>
       )}
     </div>
