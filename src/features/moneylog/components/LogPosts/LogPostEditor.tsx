@@ -15,6 +15,8 @@ import Icon from "@/components/Icon"
 import { CURRENCIES } from "./LogPosts"
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
 
+const DRAFT_KEY = 'ML__logPostDraft'
+
 const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinned, isCreateNewEntrySet, setCurrentlyEditingPostId, content = '', amount = 0, timezone = null, currency = 'JPY' as Currency, date = Date.now() }: {
   type: 'edit' | 'new'
   postId?: string | null
@@ -31,7 +33,13 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
 }, ref) => {
   const { user } = useCurrentUser()
 
-  const [newEntryContent, newEntryContentSet] = useState<string|null>(content)
+  const [newEntryContent, newEntryContentSet] = useState<string|null>(() => {
+    if (type === 'new') {
+      const savedDraft = localStorage.getItem(DRAFT_KEY)
+      return savedDraft || ''
+    }
+    return content
+  })
   const [newEntryAmount, newEntryAmountSet] = useState<number>(amount)
   const [newEntryDate, newEntryDateSet] = useState<number>(date)
   const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency)
@@ -94,6 +102,8 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
       user_id: userId,
       post_id: postId,
     })
+
+      localStorage.removeItem(DRAFT_KEY)
 
       isCreateNewEntrySet(false)
       newEntryContentSet(null)
@@ -164,6 +174,17 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
       selectedCurrencySet(lastCurrency as Currency)
     }
   }, [])
+
+  useEffect(() => {
+    if (type === 'new' && newEntryContent !== null) {
+      if (newEntryContent.trim() === '') {
+        // Remove draft if content is empty
+        localStorage.removeItem(DRAFT_KEY)
+      } else {
+        localStorage.setItem(DRAFT_KEY, newEntryContent)
+      }
+    }
+  }, [newEntryContent, type])
 
   return (
     <div className={cx("LogPosts__posts__item LogPosts__posts__item--selected", { "LogPosts__posts__item--first": isPinned })} ref={ref}>
