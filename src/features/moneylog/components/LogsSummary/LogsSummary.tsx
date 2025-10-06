@@ -186,15 +186,17 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
         </div>
 
         {/* Fallback to original component structure */}
-        <div className="Window">
-          <h3>💰 {loggedInUser?.displayName}'s spending</h3>
-          <SpendingInsights logPosts={myLogs} group={group}>
-            <SpendingInsights.TotalText>
-              You spent a <strong>total of</strong>
-            </SpendingInsights.TotalText>
-            {/* Add other components as needed */}
-          </SpendingInsights>
-        </div>
+        {loggedInUser && (
+          <div className="Window">
+            <h3>💰 {loggedInUser?.displayName}'s spending</h3>
+            <SpendingInsights user={loggedInUser} logPosts={myLogs} group={group}>
+              <SpendingInsights.TotalText>
+                You spent a <strong>total of</strong>
+              </SpendingInsights.TotalText>
+              {/* Add other components as needed */}
+            </SpendingInsights>
+          </div>
+        )}
       </div>
     )
   }

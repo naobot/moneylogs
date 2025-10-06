@@ -35,7 +35,7 @@ const useSpendingData = () => {
 }
 
 interface SpendingInsightsProps {
-  user: FullUserData
+  user: Partial<FullUserData>
   logPosts: Array<LogPost>
   group: Group
   groupAnalytics?: GroupAnalytics // Optional for now, for low-spender detection
