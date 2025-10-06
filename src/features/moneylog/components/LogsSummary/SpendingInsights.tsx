@@ -216,8 +216,10 @@ const SpendingInsights = ({ user, logPosts, group, groupAnalytics, children }: S
     })
 
     // Count days with spending (any currency, any amount > 0)
-    const daysWithSpending = dailyTotals.size
     console.log(dailyTotals)
+    const daysWithSpending = Array.from(dailyTotals.values()).filter(day => {
+      return Array.from(day.currencyMap.values()).some(amount => amount > 0);
+    }).length
     const noSpendDays = totalDaysInPeriod - daysWithSpending
 
     return {
