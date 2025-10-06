@@ -67,7 +67,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        {children}
+        {children ?? placeholder}
       </div>
 
       {/* Dropdown Menu */}

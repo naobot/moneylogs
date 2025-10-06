@@ -7,7 +7,7 @@ import { useCurrentUser } from "@/contexts"
 import { Group, LogPost } from "@/types/user"
 
 import { useGetComments } from "@/hooks/useGetLogPostComments"
-import { FullUserData } from "@/hooks/useGetGroupUsers"
+import { FullUserData, useGetGroupUsers } from "@/hooks/useGetGroupUsers"
 import { useGroupAnalytics } from "./hooks/useGroupAnalytics"
 
 import Loader from "@/features/layout/components/Loader"
@@ -16,6 +16,8 @@ import HotPosts from "./HotPosts"
 import LogPostComments from "../LogPosts/LogPostComments"
 
 import './styles.scss'
+import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown"
+import Button from "@/components/Button"
 
 interface LogsSummaryProps {
   group: Group
@@ -38,6 +40,17 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
 
   const groupAnalytics = useGroupAnalytics(logPosts, group, groupMembers)
 
+  const { users: members } = useGetGroupUsers(group.id)
+  const memberIdToMembers = useMemo(() => {
+    const map = new Map<string, FullUserData>()
+    members.forEach((m) => {
+      map.set(m.id, m)
+    })
+    return map
+  }, [members])
+
+  const [otherLogs, setOtherLogs] = useState<LogPost[] | null>(null)
+
   // Firebase Functions setup
   const app = getApp()
   const functions = getFunctions(app)
@@ -52,6 +65,10 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   const myLogs = useMemo(() => {
     return logPosts.filter(logPost => logPost.author.id === loggedInUser?.id)
   }, [logPosts, loggedInUser?.id])
+
+  const handleSelectTestOtherLogs = (userId: string) => {
+    setOtherLogs(logPosts.filter(logPost => logPost.author.id === userId))
+  }
 
   const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
 
@@ -193,6 +210,60 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
             📈 Using cached analytics from {new Date(group.analytics.processedAt.seconds * 1000).toLocaleDateString()}
           </div>
         )}*/}
+
+        {loggedInUser?.email === 'cui.naomi@gmail.com' && (
+          <div>
+            <CustomDropdown
+              options={group.members.map(m => ({
+                value: m.id,
+                label: memberIdToMembers.get(m.id)?.displayName ?? m.id,
+              }))}
+              onSelect={(option: DropdownOption) => {
+                handleSelectTestOtherLogs(option.value)
+              }}
+            >
+              <Button
+                text="Select user"
+              />
+            </CustomDropdown>
+          </div>
+        )}
+
+        {loggedInUser?.email === 'cui.naomi@gmail.com' && otherLogs && otherLogs?.length > 0 && (
+          <div className="Window">
+            <h3>💰 {memberIdToMembers.get(otherLogs?.[0].author.id)?.displayName}'s spending</h3>
+
+            <SpendingInsights logPosts={otherLogs} group={group}>
+              <SpendingInsights.TotalText>
+                This user spent a <strong>total of</strong>
+              </SpendingInsights.TotalText>
+
+              <SpendingInsights.WeekText>
+                This user <strong>spent the most</strong> during the <strong>week(s) of</strong>
+              </SpendingInsights.WeekText>
+
+              <SpendingInsights.DayText showPosts={true}>
+                This user <strong>day you spent the most</strong> was
+              </SpendingInsights.DayText>
+
+              <SpendingInsights.AveragesText>
+                Here are this user's average <strong>spending patterns</strong>:
+              </SpendingInsights.AveragesText>
+
+              <SpendingInsights.WeekendWeekdayText>
+                {''}
+              </SpendingInsights.WeekendWeekdayText>
+
+              <SpendingInsights.NoSpendDaysText>
+                This user had <strong>no spending</strong> on
+              </SpendingInsights.NoSpendDaysText>
+
+              <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
+                💡 <strong>Good news!</strong>
+              </SpendingInsights.LowSpenderAlert>
+            </SpendingInsights>
+          </div>
+        )}
 
         <div className="Window">
           <h3>💰 {loggedInUser?.displayName}'s spending</h3>

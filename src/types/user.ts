@@ -46,7 +46,7 @@ export type Group = {
   id: string
   title: string
   max_participants: number
-  members: Array<string>
+  members: Array<DocumentReference>
   start: Timestamp
   end: Timestamp
   createdAt: Timestamp

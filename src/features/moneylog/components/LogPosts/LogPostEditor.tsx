@@ -173,6 +173,7 @@ const LogPostEditor = forwardRef(({ type, postId = null, groupId, userId, isPinn
     if (type == 'new' && lastCurrency && CURRENCIES.includes(lastCurrency)) {
       selectedCurrencySet(lastCurrency as Currency)
     }
+
   }, [])
 
   useEffect(() => {
