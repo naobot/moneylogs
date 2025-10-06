@@ -233,7 +233,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
           <div className="Window">
             <h3>💰 {memberIdToMembers.get(otherLogs?.[0].author.id)?.displayName}'s spending</h3>
 
-            <SpendingInsights logPosts={otherLogs} group={group}>
+            <SpendingInsights user={memberIdToMembers.get(otherLogs?.[0].author.id)} logPosts={otherLogs} group={group}>
               <SpendingInsights.TotalText>
                 This user spent a <strong>total of</strong>
               </SpendingInsights.TotalText>
@@ -265,38 +265,41 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
           </div>
         )}
 
-        <div className="Window">
-          <h3>💰 {loggedInUser?.displayName}'s spending</h3>
-          <SpendingInsights logPosts={myLogs} group={group}>
-            <SpendingInsights.TotalText>
-              You spent a <strong>total of</strong>
-            </SpendingInsights.TotalText>
 
-            <SpendingInsights.WeekText>
-              You <strong>spent the most</strong> during the <strong>week(s) of</strong>
-            </SpendingInsights.WeekText>
+        {loggedInUser && (
+          <div className="Window">
+            <h3>💰 {loggedInUser?.displayName}'s spending</h3>
+            <SpendingInsights user={memberIdToMembers.get(loggedInUser.id)} logPosts={myLogs} group={group}>
+              <SpendingInsights.TotalText>
+                You spent a <strong>total of</strong>
+              </SpendingInsights.TotalText>
 
-            <SpendingInsights.DayText showPosts={true}>
-              The <strong>day you spent the most</strong> was
-            </SpendingInsights.DayText>
+              <SpendingInsights.WeekText>
+                You <strong>spent the most</strong> during the <strong>week(s) of</strong>
+              </SpendingInsights.WeekText>
 
-            <SpendingInsights.AveragesText>
-              Here are your average <strong>spending patterns</strong>:
-            </SpendingInsights.AveragesText>
+              <SpendingInsights.DayText showPosts={true}>
+                The <strong>day you spent the most</strong> was
+              </SpendingInsights.DayText>
 
-            <SpendingInsights.WeekendWeekdayText>
-              {''}
-            </SpendingInsights.WeekendWeekdayText>
+              <SpendingInsights.AveragesText>
+                Here are your average <strong>spending patterns</strong>:
+              </SpendingInsights.AveragesText>
 
-            <SpendingInsights.NoSpendDaysText>
-              You had <strong>no spending</strong> on
-            </SpendingInsights.NoSpendDaysText>
+              <SpendingInsights.WeekendWeekdayText>
+                {''}
+              </SpendingInsights.WeekendWeekdayText>
 
-            <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
-              💡 <strong>Good news!</strong>
-            </SpendingInsights.LowSpenderAlert>
-          </SpendingInsights>
-        </div>
+              <SpendingInsights.NoSpendDaysText>
+                You had <strong>no spending</strong> on
+              </SpendingInsights.NoSpendDaysText>
+
+              <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
+                💡 <strong>Good news!</strong>
+              </SpendingInsights.LowSpenderAlert>
+            </SpendingInsights>
+          </div>
+        )}
 
         <div className="Window">
           <h3>💸 group spending</h3>

@@ -4,6 +4,7 @@ import MDEditor from "@uiw/react-md-editor"
 
 import { Currency, Group, LogPost } from "@/types/user"
 import Icon from "@/components/Icon"
+import { FullUserData } from "@/hooks/useGetGroupUsers"
 
 interface SpendingData {
   totalSpent: Map<Currency, number>
@@ -34,16 +35,19 @@ const useSpendingData = () => {
 }
 
 interface SpendingInsightsProps {
+  user: FullUserData
   logPosts: Array<LogPost>
   group: Group
   groupAnalytics?: GroupAnalytics // Optional for now, for low-spender detection
   children: ReactNode
 }
 
-const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: SpendingInsightsProps) => {
+const SpendingInsights = ({ user, logPosts, group, groupAnalytics, children }: SpendingInsightsProps) => {
   const spendingData = useMemo(() => {
     const hasCachedAnalytics = group.analytics?.isCalculated
     const postsMetadata = group.analytics?.posts
+
+    const pinnedPostId = user?.pinnedPosts?.[group.id]?.pinnedPost
 
     const groupStartDate = dayjs(group.start.seconds * 1000)
     const groupEndDate = dayjs(group.end.seconds * 1000)
@@ -51,7 +55,9 @@ const SpendingInsights = ({ logPosts, group, groupAnalytics, children }: Spendin
 
     const legitimatePosts = logPosts.filter(log => {
       const postDate = dayjs(log.postDate.seconds * 1000)
-      return !postDate.isAfter(groupEndDate, 'day')
+      const isNotPinnedPost = pinnedPostId ? log.id !== pinnedPostId : true
+
+      return !postDate.isAfter(groupEndDate, 'day') && !postDate.isBefore(groupStartDate, 'day') &&isNotPinnedPost
     })
 
     let totalSpent = new Map<Currency, number>()
