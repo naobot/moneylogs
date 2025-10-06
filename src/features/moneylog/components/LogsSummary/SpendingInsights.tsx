@@ -220,7 +220,10 @@ const SpendingInsights = ({ user, logPosts, group, groupAnalytics, children }: S
     const daysWithSpending = Array.from(dailyTotals.values()).filter(day => {
       return Array.from(day.currencyMap.values()).some(amount => amount > 0);
     }).length
-    const noSpendDays = totalDaysInPeriod - daysWithSpending
+    // const noSpendDays = totalDaysInPeriod - daysWithSpending
+    const noSpendDays = Array.from(dailyTotals.values()).filter(day => {
+      return Array.from(day.currencyMap.values()).every(amount => amount === 0);
+    }).length
 
     return {
       totalSpent,
@@ -229,6 +232,7 @@ const SpendingInsights = ({ user, logPosts, group, groupAnalytics, children }: S
       weeklyAverages,
       dailyAverages,
       weekendVsWeekdayDiff,
+      daysWithSpending,
       noSpendDays,
       totalDaysInPeriod,
       group
