@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Inline images uploaded directly from the editor (embedded as markdown URLs)
+    match /inline/{groupId}/{filename} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Raw uploads destined for Cloud Function optimization
+    match /uploads/{groupId}/{postId}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Cloud Function output: publicly readable, written by backend only
+    match /images/{groupId}/{postId}/{filename} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
