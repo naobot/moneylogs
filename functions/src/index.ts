@@ -1,232 +1,304 @@
-import { onDocumentCreated } from 'firebase-functions/v2/firestore'
-import { initializeApp } from 'firebase-admin/app'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { onCall } from 'firebase-functions/https'
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onObjectFinalized } from "firebase-functions/v2/storage";
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+import { onCall } from "firebase-functions/https";
+import sharp from "sharp";
 
-initializeApp()
-const db = getFirestore()
+initializeApp();
+const db = getFirestore();
+
+type FirestoreTimestamp = { seconds: number; nanoseconds: number };
+type RawLogPost = {
+  id: string;
+  author: { id: string };
+  currency: string;
+  amount: number;
+  postDate: FirestoreTimestamp;
+  timezone?: string;
+  authorName?: string;
+};
+type UserDoc = { displayName?: string; timezone?: string };
+type PostMetadata = { authorDisplayName: string; postTimezone?: string };
+type CurrencyPercentiles = { p25: number; p50: number; p75: number };
 
 // When a post is created, update both post metadata AND user tracking
-export const updatePostMetadata = onDocumentCreated(
-  'log_posts/{postId}',
-  async (event) => {
-    const postData = event.data?.data()
-    const { postId } = event.params
+export const updatePostMetadata = onDocumentCreated("log_posts/{postId}", async (event) => {
+  const postData = event.data?.data();
+  const { postId } = event.params;
 
-    if (!postData?.author || !postData?.group) return
+  if (!postData?.author || !postData?.group) return;
 
-    const timestamp = FieldValue.serverTimestamp()
+  const timestamp = FieldValue.serverTimestamp();
 
-    try {
-      // Batch these operations to use the same timestamp
-      const batch = db.batch()
+  try {
+    // Batch these operations to use the same timestamp
+    const batch = db.batch();
 
-      batch.update(db.collection('log_posts').doc(postId), {
-        createdAt: timestamp
-      })
+    batch.update(db.collection("log_posts").doc(postId), {
+      createdAt: timestamp,
+    });
 
-      // Update the user's lastUpdated field
-      batch.update(db.collection('users').doc(postData.author.id), {
-        [`lastUpdated.${postData.group.id}`]: timestamp
-      })
+    // Update the user's lastUpdated field
+    batch.update(db.collection("users").doc(postData.author.id), {
+      [`lastUpdated.${postData.group.id}`]: timestamp,
+    });
 
-      // Update the user's comment subscription (they're auto-subscribed to their own posts)
-      batch.update(db.collection('users').doc(postData.author.id), {
-        [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp
-      })
+    // Update the user's comment subscription (they're auto-subscribed to their own posts)
+    batch.update(db.collection("users").doc(postData.author.id), {
+      [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp,
+    });
 
-      await batch.commit()
+    await batch.commit();
 
-      console.log(`Updated user metadata for post ${postId}`)
-    } catch (error) {
-      console.error('Error updating post metadata:', error)
-    }
+    console.log(`Updated user metadata for post ${postId}`);
+  } catch (error) {
+    console.error("Error updating post metadata:", error);
   }
-)
+});
 
 // When a comment is created, update post's latestCommentAt
 export const updateCommentMetadata = onDocumentCreated(
-  'log_posts/{postId}/comments/{commentId}',
+  "log_posts/{postId}/comments/{commentId}",
   async (event) => {
-    const commentData = event.data?.data()
-    const { postId } = event.params
+    const commentData = event.data?.data();
+    const { postId } = event.params;
 
-    if (!commentData?.authorId) return
+    if (!commentData?.authorId) return;
 
-    const timestamp = FieldValue.serverTimestamp()
+    const timestamp = FieldValue.serverTimestamp();
 
     try {
-      const batch = db.batch()
+      const batch = db.batch();
 
       // Update post's latest comment timestamp
-      batch.update(db.collection('log_posts').doc(postId), {
-        latestCommentAt: timestamp
-      })
+      batch.update(db.collection("log_posts").doc(postId), {
+        latestCommentAt: timestamp,
+      });
 
       // Update the commenter's subscription tracking (they've now seen this comment)
-      batch.update(db.collection('users').doc(commentData.authorId.id), {
-        [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp
-      })
+      batch.update(db.collection("users").doc(commentData.authorId.id), {
+        [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp,
+      });
 
-      await batch.commit()
+      await batch.commit();
 
-      console.log(`Updated comment metadata for post ${postId}`)
+      console.log(`Updated comment metadata for post ${postId}`);
     } catch (error) {
-      console.error('Error updating comment metadata:', error)
+      console.error("Error updating comment metadata:", error);
+    }
+  },
+);
+
+export const processUploadedImage = onObjectFinalized(async (event) => {
+  const filePath = event.data.name;
+  const bucket = event.data.bucket;
+
+  if (!filePath?.startsWith("uploads/")) return;
+
+  const pathParts = filePath.split("/");
+  // Expected: uploads/{groupId}/{postId}/{filename}
+  if (pathParts.length < 4) return;
+
+  const [, groupId, postId, filename] = pathParts;
+  const contentType = event.data.contentType;
+
+  if (!groupId || !postId || !filename) return;
+  if (!contentType?.startsWith("image/")) return;
+
+  const adminStorage = getStorage();
+  const inputFile = adminStorage.bucket(bucket).file(filePath);
+
+  try {
+    const [inputBuffer] = await inputFile.download();
+
+    const outputBuffer = await sharp(inputBuffer)
+      .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    const filenameNoExt = filename.replace(/\.[^.]+$/, "");
+    const outputPath = `images/${groupId}/${postId}/${filenameNoExt}.webp`;
+    const outputFile = adminStorage.bucket(bucket).file(outputPath);
+
+    await outputFile.save(outputBuffer, {
+      metadata: { contentType: "image/webp" },
+    });
+    await outputFile.makePublic();
+
+    const downloadUrl = `https://storage.googleapis.com/${bucket}/${outputPath}`;
+
+    const postRef = db.collection("log_posts").doc(postId);
+    await postRef.update({
+      images: FieldValue.arrayUnion(downloadUrl),
+      pendingImageCount: FieldValue.increment(-1),
+    });
+
+    const postSnap = await postRef.get();
+    const remaining = postSnap.data()?.pendingImageCount ?? 0;
+    if (remaining <= 0) {
+      await postRef.update({ imagesProcessing: false });
+    }
+
+    await inputFile.delete();
+
+    console.log(`Processed image for post ${postId}: ${outputPath}`);
+  } catch (error) {
+    console.error(`Failed to process image ${filePath}:`, error);
+    // Flip imagesProcessing off so the UI doesn't hang indefinitely
+    try {
+      await db.collection("log_posts").doc(postId).update({ imagesProcessing: false });
+    } catch (updateError) {
+      console.error("Failed to clear imagesProcessing flag:", updateError);
     }
   }
-)
+});
 
 export const processGroupAnalytics = onCall(async (request) => {
-  const { groupId, groupEnd } = request.data
+  const { groupId, groupEnd } = request.data;
 
   if (!groupId) {
-    throw new Error('Group ID is required')
+    throw new Error("Group ID is required");
   }
 
   try {
     // Set up progress tracking
-    await updateProgress(groupId, "Gathering group data...", 10)
+    await updateProgress(groupId, "Gathering group data...", 10);
 
     // Fetch all log posts for this group
-    const logPosts = await fetchGroupLogPosts(groupId)
-    await updateProgress(groupId, "Processing spending data...", 40)
+    const logPosts = await fetchGroupLogPosts(groupId);
+    await updateProgress(groupId, "Processing spending data...", 40);
 
-    const postsMetadata = await backfillPostMetadata(logPosts)
+    const postsMetadata = await backfillPostMetadata(logPosts);
 
     // Calculate raw analytics
     const analytics = {
       isCalculated: true,
       processedAt: FieldValue.serverTimestamp(),
       raw: calculateRawAnalytics(logPosts, groupEnd),
-      posts: postsMetadata
-    }
+      posts: postsMetadata,
+    };
 
-    await updateProgress(groupId, "Saving results...", 80)
+    await updateProgress(groupId, "Saving results...", 80);
 
     // Update group document
-    await db.collection('log_groups').doc(groupId).update({ analytics })
+    await db.collection("log_groups").doc(groupId).update({ analytics });
 
-    await updateProgress(groupId, "Complete!", 100)
+    await updateProgress(groupId, "Complete!", 100);
 
     // Clean up the processing document after a short delay
     setTimeout(async () => {
       try {
-        await db.collection('processing').doc(groupId).delete()
-        console.log(`Cleaned up processing document for group ${groupId}`)
+        await db.collection("processing").doc(groupId).delete();
+        console.log(`Cleaned up processing document for group ${groupId}`);
       } catch (cleanupError) {
-        console.warn(`Failed to cleanup processing document for ${groupId}:`, cleanupError)
+        console.warn(`Failed to cleanup processing document for ${groupId}:`, cleanupError);
         // Don't throw here - the main operation succeeded
       }
-    }, 5000) // 5 second delay to ensure client sees "Complete!" status
+    }, 5000); // 5 second delay to ensure client sees "Complete!" status
 
-    return { success: true }
-
+    return { success: true };
   } catch (error) {
-    console.error('Analytics processing failed:', error)
+    console.error("Analytics processing failed:", error);
 
     // Also cleanup on failure
     try {
-      await db.collection('processing').doc(groupId).delete()
+      await db.collection("processing").doc(groupId).delete();
     } catch (cleanupError) {
-      console.warn(`Failed to cleanup processing document after error:`, cleanupError)
+      console.warn(`Failed to cleanup processing document after error:`, cleanupError);
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-    throw new Error(`Analytics processing failed: ${errorMessage}`)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    throw new Error(`Analytics processing failed: ${errorMessage}`);
   }
-})
+});
 
 // Helper functions
 async function updateProgress(groupId: string, step: string, percentage: number) {
-  await db.collection('processing').doc(groupId).set({
-    step,
-    percentage,
-    isComplete: percentage >= 100,
-    updatedAt: FieldValue.serverTimestamp()
-  })
+  await db
+    .collection("processing")
+    .doc(groupId)
+    .set({
+      step,
+      percentage,
+      isComplete: percentage >= 100,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
 }
 
-async function fetchGroupLogPosts(groupId: string) {
-  const groupRef = db.collection('log_groups').doc(groupId)
-  const snapshot = await db.collection('log_posts')
-    .where('group', '==', groupRef)
-    .get()
+async function fetchGroupLogPosts(groupId: string): Promise<RawLogPost[]> {
+  const groupRef = db.collection("log_groups").doc(groupId);
+  const snapshot = await db.collection("log_posts").where("group", "==", groupRef).get();
 
-  return snapshot.docs.map(doc => ({
+  return snapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data()
-  }))
+    ...doc.data(),
+  })) as RawLogPost[];
 }
 
-function calculateRawAnalytics(logPosts: any[], groupEnd: any) {
-  const groupEndDate = new Date(groupEnd.seconds * 1000)
-  const legitimatePosts = logPosts.filter(post => {
-    const postDate = new Date(post.postDate.seconds * 1000)
-    return postDate <= groupEndDate
-  })
+function calculateRawAnalytics(logPosts: RawLogPost[], groupEnd: FirestoreTimestamp) {
+  const groupEndDate = new Date(groupEnd.seconds * 1000);
+  const legitimatePosts = logPosts.filter((post) => {
+    const postDate = new Date(post.postDate.seconds * 1000);
+    return postDate <= groupEndDate;
+  });
 
   // Currency totals across all posts
-  const totalSpentByCurrency = new Map<string, number>()
+  const totalSpentByCurrency = new Map<string, number>();
 
   // Member spending tracking
-  const memberSpending = new Map<string, Map<string, number>>() // userId -> currency -> amount
+  const memberSpending = new Map<string, Map<string, number>>(); // userId -> currency -> amount
 
   // Hot posts calculation (most expensive + most commented)
-  const postScores = new Map<string, number>()
+  const postScores = new Map<string, number>();
 
   // Active hours tracking (UTC-based)
-  const hourlyActivity = new Map<number, number>() // hour (0-23) -> post count
+  const hourlyActivity = new Map<number, number>(); // hour (0-23) -> post count
 
-  legitimatePosts.forEach(post => {
-    const currency = post.currency
-    const amount = Number(post.amount)
-    const authorId = post.author.id
+  legitimatePosts.forEach((post) => {
+    const currency = post.currency;
+    const amount = Number(post.amount);
+    const authorId = post.author.id;
 
     // 1. Total spending by currency
-    totalSpentByCurrency.set(
-      currency,
-      (totalSpentByCurrency.get(currency) || 0) + amount
-    )
+    totalSpentByCurrency.set(currency, (totalSpentByCurrency.get(currency) || 0) + amount);
 
     // 2. Member spending tracking
     if (!memberSpending.has(authorId)) {
-      memberSpending.set(authorId, new Map())
+      memberSpending.set(authorId, new Map());
     }
-    const userCurrencyMap = memberSpending.get(authorId)!
-    userCurrencyMap.set(
-      currency,
-      (userCurrencyMap.get(currency) || 0) + amount
-    )
+    const userCurrencyMap = memberSpending.get(authorId)!;
+    userCurrencyMap.set(currency, (userCurrencyMap.get(currency) || 0) + amount);
 
     // 3. Hot posts scoring (amount + comment weight)
     // We'll need comment count - for now use a placeholder
-    const commentCount = 0 // TODO: We'll fetch this from subcollection
-    const expenseScore = amount / 100 // Normalize expense impact
-    const commentScore = commentCount * 2 // Comments worth 2 points each
-    postScores.set(post.id, expenseScore + commentScore)
+    const commentCount = 0; // TODO: We'll fetch this from subcollection
+    const expenseScore = amount / 100; // Normalize expense impact
+    const commentScore = commentCount * 2; // Comments worth 2 points each
+    postScores.set(post.id, expenseScore + commentScore);
 
     // 4. Active hours (UTC-based)
-    const postDate = new Date(post.postDate.seconds * 1000)
-    const hour = postDate.getUTCHours()
-    hourlyActivity.set(hour, (hourlyActivity.get(hour) || 0) + 1)
-  })
+    const postDate = new Date(post.postDate.seconds * 1000);
+    const hour = postDate.getUTCHours();
+    hourlyActivity.set(hour, (hourlyActivity.get(hour) || 0) + 1);
+  });
 
   // Calculate member percentiles for each currency
-  const currencyPercentiles = new Map<string, any>()
+  const currencyPercentiles = new Map<string, CurrencyPercentiles>();
 
   for (const currency of totalSpentByCurrency.keys()) {
     const amounts = Array.from(memberSpending.values())
-      .map(userMap => userMap.get(currency) || 0)
-      .filter(amount => amount > 0)
-      .sort((a, b) => a - b)
+      .map((userMap) => userMap.get(currency) || 0)
+      .filter((amount) => amount > 0)
+      .sort((a, b) => a - b);
 
     if (amounts.length > 0) {
       currencyPercentiles.set(currency, {
         p25: calculatePercentile(amounts, 25),
         p50: calculatePercentile(amounts, 50),
-        p75: calculatePercentile(amounts, 75)
-      })
+        p75: calculatePercentile(amounts, 75),
+      });
     }
   }
 
@@ -235,74 +307,74 @@ function calculateRawAnalytics(logPosts: any[], groupEnd: any) {
     totalSpent: Object.fromEntries(totalSpentByCurrency),
     memberRankings: Array.from(memberSpending.entries()).map(([userId, currencyMap]) => ({
       userId,
-      totals: Object.fromEntries(currencyMap)
+      totals: Object.fromEntries(currencyMap),
     })),
     hotPosts: Array.from(postScores.entries())
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 20)
       .map(([postId, score]) => ({ postId, score })),
     currencyPercentiles: Object.fromEntries(
       Array.from(currencyPercentiles.entries()).map(([currency, percentiles]) => [
         currency,
-        percentiles
-      ])
+        percentiles,
+      ]),
     ),
-    activeHours: Object.fromEntries(hourlyActivity)
-  }
+    activeHours: Object.fromEntries(hourlyActivity),
+  };
 }
 
 // Helper function for percentile calculation
 function calculatePercentile(sortedArray: number[], percentile: number): number {
-  const index = (percentile / 100) * (sortedArray.length - 1)
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
-  const weight = index % 1
+  const index = (percentile / 100) * (sortedArray.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  const weight = index % 1;
 
-  if (upper >= sortedArray.length) return sortedArray[sortedArray.length - 1]
+  if (upper >= sortedArray.length) return sortedArray[sortedArray.length - 1];
 
-  return sortedArray[lower] * (1 - weight) + sortedArray[upper] * weight
+  return sortedArray[lower] * (1 - weight) + sortedArray[upper] * weight;
 }
 
-async function backfillPostMetadata(logPosts: any[]) {
-  const backfilledPosts: { [postId: string]: any } = {}
+async function backfillPostMetadata(logPosts: RawLogPost[]) {
+  const backfilledPosts: { [postId: string]: PostMetadata } = {};
 
   // Get unique author IDs
-  const uniqueAuthorIds = [...new Set(logPosts.map(post => post.author.id))]
+  const uniqueAuthorIds = [...new Set(logPosts.map((post) => post.author.id))];
 
   // Batch fetch all user documents - fix the async handling
-  const userDataMap = new Map<string, any>()
+  const userDataMap = new Map<string, UserDoc>();
 
   // Use Promise.all to handle async operations properly
   const userFetchPromises = uniqueAuthorIds.map(async (authorId) => {
     try {
-      const userDoc = await db.collection('users').doc(authorId).get()
+      const userDoc = await db.collection("users").doc(authorId).get();
       if (userDoc.exists) {
-        userDataMap.set(authorId, userDoc.data())
+        userDataMap.set(authorId, userDoc.data() as UserDoc);
       }
     } catch (error) {
-      console.warn(`Failed to fetch user data for ${authorId}:`, error)
+      console.warn(`Failed to fetch user data for ${authorId}:`, error);
     }
-  })
+  });
 
   // Wait for all user data to be fetched
-  await Promise.all(userFetchPromises)
+  await Promise.all(userFetchPromises);
 
   // Process each post (this part stays the same)
-  logPosts.forEach(post => {
-    const authorId = post.author.id
-    const userData = userDataMap.get(authorId)
-    const timezone = post?.timezone || userData?.timezone
+  logPosts.forEach((post) => {
+    const authorId = post.author.id;
+    const userData = userDataMap.get(authorId);
+    const timezone = post?.timezone || userData?.timezone;
 
-    const postMetadata: any = {
-      authorDisplayName: userData?.displayName || post.authorName || 'Unknown User',
-    }
+    const postMetadata: PostMetadata = {
+      authorDisplayName: userData?.displayName || post.authorName || "Unknown User",
+    };
 
     if (timezone) {
-      postMetadata.postTimezone = timezone
+      postMetadata.postTimezone = timezone;
     }
 
-    backfilledPosts[post.id] = postMetadata
-  })
+    backfilledPosts[post.id] = postMetadata;
+  });
 
-  return backfilledPosts
+  return backfilledPosts;
 }

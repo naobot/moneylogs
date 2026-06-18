@@ -1,257 +1,276 @@
-import cx from "classnames"
-import { Dispatch, Fragment, memo, useEffect, useMemo, useRef, useState } from "react"
-import { allTimezones, useTimezoneSelect } from "react-timezone-select"
-import dayjs from "dayjs"
+import cx from "classnames";
+import { Dispatch, Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
+import { allTimezones, useTimezoneSelect } from "react-timezone-select";
+import dayjs from "dayjs";
 
-import MDEditor from "@uiw/react-md-editor"
+import MDEditor from "@uiw/react-md-editor";
 
-import { Currency, LogPost } from "@/types/user"
-import { useCurrentUser } from "@/contexts"
+import { Currency, LogPost } from "@/types/user";
+import { useCurrentUser } from "@/contexts";
 
-import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler"
-import { useLogPostQuery } from "@/hooks/useLogPostQuery"
-import { useDisableScroll } from "@/hooks/useDisableScroll"
-import { useUserQuery } from "@/hooks/useUserQuery"
-import { UserData } from "@/hooks/useGetUserInfo"
-import { useReadTracking } from "@/hooks/useReadTracking"
-import { useGetComments } from "@/hooks/useGetLogPostComments"
+import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler";
+import { useLogPostQuery } from "@/hooks/useLogPostQuery";
+import { useDisableScroll } from "@/hooks/useDisableScroll";
+import { useUserQuery } from "@/hooks/useUserQuery";
+import { UserData } from "@/hooks/useGetUserInfo";
+import { useReadTracking } from "@/hooks/useReadTracking";
+import { useGetComments } from "@/hooks/useGetLogPostComments";
 
-import Modal from "@/components/Modal"
-import Button from "@/components/Button"
-import Icon, { IconText } from "@/components/Icon"
-import LogPostEditor from "./LogPostEditor"
-import LogPostComments from "./LogPostComments"
+import Modal from "@/components/Modal";
+import Button from "@/components/Button";
+import Icon, { IconText } from "@/components/Icon";
+import LogPostEditor from "./LogPostEditor";
+import LogPostComments from "./LogPostComments";
 
 type LogPostsProps = {
-  user: UserData
-  groupId: string
-  userId: string
-  logs: LogPost[]
-  isCreateNewEntry: boolean
-  isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>
-  isMyLog: boolean
-  isReadOnly: boolean
-}
+  user: UserData;
+  groupId: string;
+  userId: string;
+  logs: LogPost[];
+  isCreateNewEntry: boolean;
+  isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
+  isMyLog: boolean;
+  isReadOnly: boolean;
+};
 
 type LogPostProps = {
-  user: UserData
-  groupId: string
-  post: LogPost
-  selectedPostId: string | null
-  setSelectedPost: Dispatch<React.SetStateAction<LogPost|null>>
-  setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string|null>>
-  isMyLog: boolean
-  isDigestMode: boolean
-  onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void
-  isReadOnly: boolean
-  isSummaryView?: boolean
-}
+  user: UserData;
+  groupId: string;
+  post: LogPost;
+  selectedPostId: string | null;
+  setSelectedPost: Dispatch<React.SetStateAction<LogPost | null>>;
+  setCurrentlyEditingPostId: Dispatch<React.SetStateAction<string | null>>;
+  isMyLog: boolean;
+  isDigestMode: boolean;
+  onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void;
+  isReadOnly: boolean;
+  isSummaryView?: boolean;
+};
 
 type DateBanner = {
-  isFuture: boolean
-  type: 'week' | 'day'
-  text: string
-  total: { [key: string]: number }
-  runningTotal: { [key: string]: number }
-  _isBanner: boolean
-}
+  isFuture: boolean;
+  type: "week" | "day";
+  text: string;
+  total: { [key: string]: number };
+  runningTotal: { [key: string]: number };
+  _isBanner: boolean;
+};
 
 export const CURRENCIES: Array<Currency> = [
-  'JPY',
-  'USD',
-  'CAD',
-  'KRW',
-  'CNY',
-  'EUR',
-  'GBP',
-  'NTD',
-  'AUD',
-  'MYR',
-]
+  "JPY",
+  "USD",
+  "CAD",
+  "KRW",
+  "CNY",
+  "EUR",
+  "GBP",
+  "NTD",
+  "AUD",
+  "MYR",
+];
 
 export const useUserTimezone = (date: string | Date | number, userTimezone?: string) => {
-  return dayjs(date).tz(userTimezone || dayjs.tz.guess())
-}
+  return dayjs(date).tz(userTimezone || dayjs.tz.guess());
+};
 
-export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPost, setCurrentlyEditingPostId, isMyLog = false, isDigestMode = false, onOpenComments, isReadOnly = false, isSummaryView = false }: LogPostProps) => {
-  const postRef = useRef<HTMLDivElement>(null)
-  const { user: loggedInUser } = useCurrentUser()
-  const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false)
-  const [showPinWarning, setShowPinWarning] = useState(false)
+// Local alias so usages inside callbacks/memos don't trigger rules-of-hooks
+const toTz = useUserTimezone;
 
-  const { parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+export const LogPostItem = ({
+  user,
+  groupId,
+  post,
+  selectedPostId,
+  setSelectedPost,
+  setCurrentlyEditingPostId,
+  isMyLog = false,
+  isDigestMode = false,
+  onOpenComments,
+  isReadOnly = false,
+  isSummaryView = false,
+}: LogPostProps) => {
+  const postRef = useRef<HTMLDivElement>(null);
+  const { user: loggedInUser } = useCurrentUser();
+  const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false);
+  const [showPinWarning, setShowPinWarning] = useState(false);
+
+  const { parseTimezone } = useTimezoneSelect({ labelStyle: "original", timezones: allTimezones });
 
   const isPinned = useMemo(() => {
-    return post.id === user?.pinnedPosts?.[groupId]?.pinnedPost
-  }, [user, post])
+    return post.id === user?.pinnedPosts?.[groupId]?.pinnedPost;
+  }, [user, post]);
 
   const hasUnreadComments = useMemo(() => {
-    if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false
+    if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false;
 
     // First check: Is the current user subscribed to this post's comments?
-    const isSubscribed = post.commentSubscribers.some(subscriber =>
-      subscriber.id === loggedInUser.id
-    )
+    const isSubscribed = post.commentSubscribers.some(
+      (subscriber) => subscriber.id === loggedInUser.id,
+    );
 
     // If not subscribed, no unread indicator
-    if (!isSubscribed) return false
+    if (!isSubscribed) return false;
 
     // If subscribed, check if there are unread comments
-    const userLastViewed = loggedInUser.commentSubscriptions?.[post.id]?.lastViewedAt
+    const userLastViewed = loggedInUser.commentSubscriptions?.[post.id]?.lastViewedAt;
 
     // If user has never viewed comments on this post, and there are comments, it's unread
-    if (!userLastViewed && post.commentCount && post.commentCount > 0) return true
+    if (!userLastViewed && post.commentCount && post.commentCount > 0) return true;
 
     // If user has viewed before, compare timestamps
     if (userLastViewed) {
-      return post.latestCommentAt.seconds > userLastViewed.seconds
+      return post.latestCommentAt.seconds > userLastViewed.seconds;
     }
 
-    return false
-  }, [post.latestCommentAt, post.commentCount, post.id, loggedInUser?.commentSubscriptions])
+    return false;
+  }, [post.latestCommentAt, post.commentCount, post.id, loggedInUser?.commentSubscriptions]);
 
   useEffect(() => {
     if (postRef.current) {
-      postRef.current.focus()
+      postRef.current.focus();
     }
-  }, [])
+  }, []);
 
-  useExternalLinkHandler(postRef, [post])
+  useExternalLinkHandler(postRef, [post]);
 
   const postTime = useMemo(() => {
     if (!isDigestMode) {
       if (post.timezone) {
-        return useUserTimezone(post.postDate?.seconds * 1000, post.timezone).format("HH:mm")
+        return toTz(post.postDate?.seconds * 1000, post.timezone).format("HH:mm");
       } else {
-        return useUserTimezone(post.postDate?.seconds * 1000, user?.timezone).format("HH:mm")
+        return toTz(post.postDate?.seconds * 1000, user?.timezone).format("HH:mm");
       }
-    } else { // use relative time 'X ago'
-      return dayjs().to(dayjs(post.postDate?.seconds * 1000))
+    } else {
+      // use relative time 'X ago'
+      return dayjs().to(dayjs(post.postDate?.seconds * 1000));
     }
-  }, [post])
+  }, [post]);
   const hoverTimeInfo = useMemo(() => {
     if (!isDigestMode) {
-      return `Posted on ${useUserTimezone(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`
+      return `Posted on ${toTz(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`;
     } else {
-      const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess()
+      const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess();
 
-      return `${useUserTimezone(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`
+      return `${toTz(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`;
     }
-  }, [post, user])
+  }, [post, user]);
 
-  const { deleteLogPost } = useLogPostQuery()
-  const { updatePinnedPost } = useUserQuery()
+  const { deleteLogPost } = useLogPostQuery();
+  const { updatePinnedPost } = useUserQuery();
 
   const handleDeletePost = async (postId: string) => {
     if (!postId) {
-      return
+      return;
     }
 
     try {
       await deleteLogPost.mutate({
         logPostId: postId,
-      })
+      });
 
       if (selectedPostId === postId) {
-        setSelectedPost(null)
+        setSelectedPost(null);
       }
     } catch (err) {
-      console.error('Failed to delete log post:', err)
+      console.error("Failed to delete log post:", err);
     }
-  }
+  };
 
   const handlePinPost = async (postId: string) => {
     if (!postId) {
-      return
+      return;
     }
 
     try {
       await updatePinnedPost.mutate({
         userId: user.id,
         logGroupId: groupId,
-        postId: isPinned ? 'none' : postId,
-      })
+        postId: isPinned ? "none" : postId,
+      });
 
-      setShowPinWarning(false)
+      setShowPinWarning(false);
     } catch (err) {
-      console.error('Failed to pin log post:', err)
+      console.error("Failed to pin log post:", err);
     }
-  }
+  };
 
   const handleOpenComments = () => {
-    onOpenComments(post, hasUnreadComments) // Use the passed handler
-  }
+    onOpenComments(post, hasUnreadComments); // Use the passed handler
+  };
 
   useEffect(() => {
     if (selectedPostId === post.id) {
-      scrollPostToTop(postRef, isSummaryView ? '.LogsSummary' : '.LogPosts__posts')
+      scrollPostToTop(postRef, isSummaryView ? ".LogsSummary" : ".LogPosts__posts");
     }
-  }, [selectedPostId])
+  }, [selectedPostId]);
 
   return (
     <>
       <div
         className={cx("LogPosts__posts__item", {
-          "LogPosts__posts__item--selected": selectedPostId===post.id,
+          "LogPosts__posts__item--selected": selectedPostId === post.id,
           "LogPosts__posts__item--pinned": isPinned && !isDigestMode,
         })}
         ref={postRef}
       >
-        {!isPinned && (<>
+        {!isPinned && (
+          <>
+            <div className="LogPosts__posts__item__header">
+              <div
+                className="LogPosts__posts__itemhandleOpenComments__header__left LogPosts__posts__item__date"
+                title={hoverTimeInfo}
+              >
+                <IconText type="clock" text={postTime} />
+              </div>
+              <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+                {post.amount?.toLocaleString()} {post.currency}
+              </div>
+              <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
+                <IconText
+                  type={hasUnreadComments ? "speech-filled" : "speech"}
+                  text={(post?.commentCount ?? 0).toLocaleString()}
+                  size={hasUnreadComments ? 16 : 18}
+                  className="handler"
+                  onClick={handleOpenComments}
+                />
+              </div>
+            </div>
+            {isDigestMode && user && (
+              <div className="LogPosts__posts__item__header">
+                <div className="LogPosts__posts__item__header__left">
+                  <Icon type={"user"} />
+                  {user.displayName} {user.displayLocation && <>({user.displayLocation})</>}
+                </div>
+              </div>
+            )}
+            {!isDigestMode && post.timezone && post.timezone !== user.timezone && (
+              <div className="LogPosts__posts__item__header">
+                <div className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter">
+                  {parseTimezone(post.timezone).label}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        <div className="LogPosts__posts__item__body">
           <div
-            className="LogPosts__posts__item__header"
+            className="LogPosts__posts__item__content"
+            data-color-mode={isPinned && !isDigestMode ? "dark" : "light"}
           >
-            <div
-              className="LogPosts__posts__itemhandleOpenComments__header__left LogPosts__posts__item__date"
-              title={hoverTimeInfo}
-            >
-              <IconText type='clock' text={postTime} />
-            </div>
-            <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-              {(post.amount)?.toLocaleString()} {post.currency}
-            </div>
-            <div
-              className="LogPosts__posts__item__header__right LogPosts__posts__item__comments"
-            >
-              <IconText
-                type={hasUnreadComments ? 'speech-filled' : 'speech'}
-                text={(post?.commentCount ?? 0).toLocaleString()}
-                size={hasUnreadComments ? 16 : 18}
-                className="handler"
-                onClick={handleOpenComments}
-              />
-            </div>
-          </div>
-          {isDigestMode && user && (
-            <div
-              className="LogPosts__posts__item__header"
-            >
-              <div
-                className="LogPosts__posts__item__header__left"
-              >
-                <Icon type={"user"} />
-                {user.displayName} {user.displayLocation && <>({user.displayLocation})</>}
-              </div>
-            </div>
-          )}
-          {!isDigestMode && post.timezone && (post.timezone !== user.timezone) && (
-            <div
-              className="LogPosts__posts__item__header"
-            >
-              <div
-                className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter"
-              >
-                {parseTimezone(post.timezone).label}
-              </div>
-            </div>
-          )}
-        </>)}
-        <div
-          className="LogPosts__posts__item__body"
-        >
-          <div className="LogPosts__posts__item__content" data-color-mode={(isPinned && !isDigestMode) ? "dark" : "light"}>
             <MDEditor.Markdown source={post.content} />
           </div>
+          {post.imagesProcessing && (
+            <div className="LogPost__images LogPost__images--processing">
+              <div className="LogPost__images__skeleton" />
+            </div>
+          )}
+          {!post.imagesProcessing && post.images && post.images.length > 0 && (
+            <div className="LogPost__images">
+              {post.images.map((url) => (
+                <img key={url} src={url} alt="" className="LogPost__images__img" />
+              ))}
+            </div>
+          )}
         </div>
         {!isReadOnly && isMyLog && (
           <>
@@ -259,21 +278,27 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
               <div className="LogPostMenu">
                 {!isDigestMode && (
                   <IconText
-                    className={cx("handler LogPostMenu__item", { 'LogPostMenu__item--active': (isPinned && !isDigestMode) })}
-                    type='pin'
+                    className={cx("handler LogPostMenu__item", {
+                      "LogPostMenu__item--active": isPinned && !isDigestMode,
+                    })}
+                    type="pin"
                     size={16}
-                    onClick={(isPinned && !isDigestMode) ? () => handlePinPost(post.id) : () => setShowPinWarning(true)}
+                    onClick={
+                      isPinned && !isDigestMode
+                        ? () => handlePinPost(post.id)
+                        : () => setShowPinWarning(true)
+                    }
                   />
                 )}
                 <IconText
                   className="handler LogPostMenu__item"
-                  type='pencil'
+                  type="pencil"
                   size={16}
                   onClick={() => setCurrentlyEditingPostId(post.id)}
                 />
                 <IconText
                   className="handler LogPostMenu__item"
-                  type='trash'
+                  type="trash"
                   onClick={() => setIsShowDeleteWarning(true)}
                 />
               </div>
@@ -281,15 +306,8 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
           </>
         )}
       </div>
-      <Modal
-        isOpen={isShowDeleteWarning}
-        onClose={() => setIsShowDeleteWarning(false)}
-      >
-        <Modal.Header
-          title={'Warning'}
-        >
-          Warning
-        </Modal.Header>
+      <Modal isOpen={isShowDeleteWarning} onClose={() => setIsShowDeleteWarning(false)}>
+        <Modal.Header title={"Warning"}>Warning</Modal.Header>
         <Modal.Body>
           <p>
             Are you sure you want to <strong>delete</strong> this post?
@@ -304,194 +322,207 @@ export const LogPostItem = ({ user, groupId, post, selectedPostId, setSelectedPo
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
-      <Modal
-        isOpen={showPinWarning}
-        onClose={() => setShowPinWarning(false)}
-      >
-        <Modal.Header
-          title={'Warning'}
-        >
-          Warning
-        </Modal.Header>
+      <Modal isOpen={showPinWarning} onClose={() => setShowPinWarning(false)}>
+        <Modal.Header title={"Warning"}>Warning</Modal.Header>
         <Modal.Body>
           <p>
             Are you sure you want to <strong>pin</strong> this post?
           </p>
-          <p>
-            Your currently pinned post will return to being a regular post.
-          </p>
+          <p>Your currently pinned post will return to being a regular post.</p>
         </Modal.Body>
         <Modal.Actions>
-          <Button
-            onClick={() => handlePinPost(post.id)}
-            text="Pin"
-            buttonStyle="primary-border"
-          />
+          <Button onClick={() => handlePinPost(post.id)} text="Pin" buttonStyle="primary-border" />
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, isCreateNewEntrySet, isMyLog = false, isReadOnly = false }: LogPostsProps) => {
-  const [isWeeklyView, isWeeklyViewSet] = useState(false)
-  const { markCommentsAsViewedFn } = useUserQuery()
-  const { user: loggedInUser } = useCurrentUser()
-  const { trackUserAction } = useReadTracking()
+const LogPosts = memo(
+  ({
+    groupId,
+    user,
+    userId,
+    logs,
+    isCreateNewEntry = false,
+    isCreateNewEntrySet,
+    isMyLog = false,
+    isReadOnly = false,
+  }: LogPostsProps) => {
+    const [isWeeklyView, _isWeeklyViewSet] = useState(false);
+    const { markCommentsAsViewedFn } = useUserQuery();
+    const { user: loggedInUser } = useCurrentUser();
+    const { trackUserAction } = useReadTracking();
 
-  const calendarMarkedPosts = useMemo(() => {
-    // console.log('calendarMarkedPosts updating')
-    // console.log(user.pinnedPosts?.[groupId]?.pinnedPost)
+    const calendarMarkedPosts = useMemo(() => {
+      // console.log('calendarMarkedPosts updating')
+      // console.log(user.pinnedPosts?.[groupId]?.pinnedPost)
 
-    const displayRows: Array<LogPost | DateBanner> = []
-    const now = dayjs().tz(user?.timezone || dayjs.tz.guess())
-    let currentWeekStart: dayjs.Dayjs | null = null
-    let currentDay: number | null = null
-    let runningTotals: { [key: string]: number } = {}
-    let weeklyTotals: { [key: string]: number } = {}
-    let dailyTotals: { [key: string]: number } = {}
+      const displayRows: Array<LogPost | DateBanner> = [];
+      const now = dayjs().tz(user?.timezone || dayjs.tz.guess());
+      let currentWeekStart: dayjs.Dayjs | null = null;
+      let currentDay: number | null = null;
+      const runningTotals: { [key: string]: number } = {};
+      let weeklyTotals: { [key: string]: number } = {};
+      let dailyTotals: { [key: string]: number } = {};
 
-    logs?.forEach((post) => {
-      if (post.id != user.pinnedPosts?.[groupId]?.pinnedPost) {
-        const logPostDate = useUserTimezone(post?.postDate?.seconds * 1000, (post?.timezone ?? user?.timezone))
-        const postWeekStart = logPostDate.startOf('week') // Gets Monday of that week
+      logs?.forEach((post) => {
+        if (post.id != user.pinnedPosts?.[groupId]?.pinnedPost) {
+          const logPostDate = toTz(
+            post?.postDate?.seconds * 1000,
+            post?.timezone ?? user?.timezone,
+          );
+          const postWeekStart = logPostDate.startOf("week"); // Gets Monday of that week
 
-        if (!(post.currency in runningTotals)) {
-          runningTotals[post.currency] = 0
+          if (!(post.currency in runningTotals)) {
+            runningTotals[post.currency] = 0;
+          }
+          runningTotals[post.currency] += Number(post.amount);
+
+          // Check if we've moved to a new week
+          if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
+            currentWeekStart = postWeekStart;
+            currentDay = null; // Reset day tracking for new week
+            weeklyTotals = {}; // Reset current weekly totals
+
+            // Calculate weeks ago
+            const weeksAgo = now.startOf("week").diff(postWeekStart, "week");
+            const weekText =
+              weeksAgo === 0
+                ? "This week"
+                : weeksAgo === 1
+                  ? "1 week ago"
+                  : weeksAgo < 0
+                    ? "Upcoming"
+                    : `${weeksAgo} weeks ago`;
+
+            displayRows.push({
+              isFuture: weeksAgo < 0,
+              text: weekText,
+              type: "week",
+              _isBanner: true,
+              runningTotal: runningTotals,
+              total: weeklyTotals,
+            });
+          }
+
+          // Accumulate weekly totals
+          if (!(post.currency in weeklyTotals)) {
+            weeklyTotals[post.currency] = 0;
+          }
+          weeklyTotals[post.currency] += Number(post.amount);
+
+          // Check if we've moved to a new day within the week
+          if (logPostDate.day() !== currentDay) {
+            currentDay = logPostDate.day();
+            dailyTotals = {};
+
+            displayRows.push({
+              text: logPostDate.format("ddd D MMM YYYY"),
+              type: "day",
+              _isBanner: true,
+              runningTotal: runningTotals,
+              total: dailyTotals,
+              isFuture: now.diff(logPostDate) < 0,
+            });
+          }
+
+          // Accumulate daily totals
+          if (!(post.currency in dailyTotals)) {
+            dailyTotals[post.currency] = 0;
+          }
+          dailyTotals[post.currency] += Number(post.amount);
         }
-        runningTotals[post.currency] += Number(post.amount)
 
-        // Check if we've moved to a new week
-        if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
-          currentWeekStart = postWeekStart
-          currentDay = null // Reset day tracking for new week
-          weeklyTotals = {} // Reset current weekly totals
+        displayRows.push(post);
+      });
 
-          // Calculate weeks ago
-          const weeksAgo = now.startOf('week').diff(postWeekStart, 'week')
-          const weekText = weeksAgo === 0 ? 'This week' :
-                          weeksAgo === 1 ? '1 week ago' :
-                          weeksAgo < 0 ? 'Upcoming' :
-                          `${weeksAgo} weeks ago`
+      return displayRows;
+    }, [logs]);
 
-          displayRows.push({
-            isFuture: weeksAgo < 0,
-            text: weekText,
-            type: 'week',
-            _isBanner: true,
-            runningTotal: runningTotals,
-            total: weeklyTotals,
-          })
-        }
+    const [selectedPost, setSelectedPost] = useState<LogPost | null>(null);
+    const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null);
+    const [shouldForceFresh, setShouldForceFresh] = useState(false);
 
-        // Accumulate weekly totals
-        if (!(post.currency in weeklyTotals)) {
-          weeklyTotals[post.currency] = 0
-        }
-        weeklyTotals[post.currency] += Number(post.amount)
+    useDisableScroll(!!selectedPost);
 
-        // Check if we've moved to a new day within the week
-        if (logPostDate.day() !== currentDay) {
-          currentDay = logPostDate.day()
-          dailyTotals = {}
+    const {
+      data: comments,
+      isLoading: isLoadingComments,
+      isSuccess: isSuccessComments,
+      refreshComments,
+    } = useGetComments({
+      logPostId: selectedPost?.id ?? null,
+      forceFresh: shouldForceFresh,
+    });
 
-          displayRows.push({
-            text: logPostDate.format('ddd D MMM YYYY'),
-            type: 'day',
-            _isBanner: true,
-            runningTotal: runningTotals,
-            total: dailyTotals,
-            isFuture: now.diff(logPostDate) < 0,
-          })
-        }
+    const postEditorRef = useRef<HTMLDivElement>(null);
 
-        // Accumulate daily totals
-        if (!(post.currency in dailyTotals)) {
-          dailyTotals[post.currency] = 0
-        }
-        dailyTotals[post.currency] += Number(post.amount)
+    const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
+      // Always set shouldForceFresh based on whether we're opening a different post
+      // or if the same post has unread comments
+      const isNewPost = selectedPost?.id !== post.id;
+      const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
+
+      setShouldForceFresh(shouldRefresh);
+      setSelectedPost(post);
+    };
+
+    useEffect(() => {
+      isCreateNewEntrySet(false);
+    }, []);
+
+    useEffect(() => {
+      if (isCreateNewEntry) {
+        postEditorRef.current?.scrollIntoView({ behavior: "smooth" });
       }
+    }, [isCreateNewEntry, postEditorRef]);
 
-      displayRows.push(post)
-    })
+    useEffect(() => {
+      setSelectedPost(null);
+      setShouldForceFresh(false);
+    }, [userId]);
 
-    return displayRows
-  }, [logs])
+    useEffect(() => {
+      if (!selectedPost) {
+        setShouldForceFresh(false);
+      }
+    }, [selectedPost]);
 
-  const [selectedPost, setSelectedPost] = useState<LogPost | null>(null)
-  const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null)
-  const [shouldForceFresh, setShouldForceFresh] = useState(false)
+    useEffect(() => {
+      if (
+        !isReadOnly &&
+        loggedInUser &&
+        selectedPost?.commentCount &&
+        selectedPost.commentCount > 0
+      ) {
+        trackUserAction("view_post", {
+          post_id: selectedPost?.id,
+          user_id: loggedInUser?.id,
+        });
 
-  useDisableScroll(!!selectedPost)
+        markCommentsAsViewedFn({
+          userId: loggedInUser.id,
+          logPostId: selectedPost.id,
+        });
+      }
+    }, [selectedPost?.id, loggedInUser?.userId, trackUserAction, isReadOnly]);
 
-  const {
-    data: comments,
-    isLoading: isLoadingComments,
-    isSuccess: isSuccessComments,
-    refreshComments
-  } = useGetComments({
-    logPostId: selectedPost?.id ?? null,
-    forceFresh: shouldForceFresh,
-  })
-
-  const postEditorRef = useRef<HTMLDivElement>(null)
-
-  const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
-    // Always set shouldForceFresh based on whether we're opening a different post
-    // or if the same post has unread comments
-    const isNewPost = selectedPost?.id !== post.id
-    const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly
-
-    setShouldForceFresh(shouldRefresh)
-    setSelectedPost(post)
-  }
-
-  useEffect(() => {
-    isCreateNewEntrySet(false)
-  }, [])
-
-  useEffect(() => {
-    if (isCreateNewEntry) {
-      postEditorRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [isCreateNewEntry, postEditorRef])
-
-  useEffect(() => {
-    setSelectedPost(null)
-    setShouldForceFresh(false)
-  }, [userId])
-
-  useEffect(() => {
-    if (!selectedPost) {
-      setShouldForceFresh(false)
-    }
-  }, [selectedPost])
-
-  useEffect(() => {
-    if (!isReadOnly && loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
-      trackUserAction('view_post', {
-        post_id: selectedPost?.id,
-        user_id: loggedInUser?.id,
-      })
-
-      markCommentsAsViewedFn({
-        userId: loggedInUser.id,
-        logPostId: selectedPost.id
-      })
-    }
-  }, [selectedPost?.id, loggedInUser?.userId, trackUserAction, isReadOnly])
-
-  return (
-    <>
-      <div className={cx("LogPosts", {
-        "LogPosts--weekly": isWeeklyView,
-      })}>
-        <div className={cx("LogPosts__posts", {
-          "LogPosts__posts--weekly": isWeeklyView,
-          "disable-scroll": selectedPost,
-        })}>
-          {/*{false && calendarMarkedPosts?.length > 0 && <>
+    return (
+      <>
+        <div
+          className={cx("LogPosts", {
+            "LogPosts--weekly": isWeeklyView,
+          })}
+        >
+          <div
+            className={cx("LogPosts__posts", {
+              "LogPosts__posts--weekly": isWeeklyView,
+              "disable-scroll": selectedPost,
+            })}
+          >
+            {/*{false && calendarMarkedPosts?.length > 0 && <>
             <div className="LogPosts__menu">
               <Button
                 className={"LogPosts__menu__button"}
@@ -512,120 +543,139 @@ const LogPosts = memo(({ groupId, user, userId, logs, isCreateNewEntry = false, 
             </div>
           </>}*/}
 
-          {isCreateNewEntry && (
-            <LogPostEditor
-              ref={postEditorRef}
-              type="new"
-              groupId={groupId}
-              userId={userId}
-              isCreateNewEntrySet={isCreateNewEntrySet}
-              setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+            {isCreateNewEntry && (
+              <LogPostEditor
+                ref={postEditorRef}
+                type="new"
+                groupId={groupId}
+                userId={userId}
+                isCreateNewEntrySet={isCreateNewEntrySet}
+                setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+              />
+            )}
+
+            {calendarMarkedPosts?.length > 0 &&
+              calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
+                if ("_isBanner" in item && item._isBanner) {
+                  const currencyKeys = Object.keys(item?.total);
+                  const formattedTotals = currencyKeys.map(
+                    (x) => `${item?.total[x]?.toLocaleString()} ${x}`,
+                  );
+
+                  if (item.isFuture) return;
+
+                  return (
+                    <div
+                      className={cx("LogPosts__posts__banner LogPosts__posts__item__header", {
+                        "LogPosts__posts__banner--weekly-view": isWeeklyView,
+                        "LogPosts__posts__banner--week": item.type == "week",
+                      })}
+                      key={`banner-${i}`}
+                    >
+                      <div className="LogPosts__posts__banner__left">{item?.text}</div>
+                      <div className="LogPosts__posts__banner__center">
+                        {formattedTotals?.map((x) => (
+                          <span key={`${i}-${x}`}>{x}</span>
+                        ))}
+                      </div>
+                      <div></div>
+                    </div>
+                  );
+                } else {
+                  if (currentlyEditingPostId === (item as LogPost).id) {
+                    return (
+                      <LogPostEditor
+                        key={(item as LogPost).id}
+                        type={"edit"}
+                        postId={(item as LogPost).id}
+                        groupId={groupId}
+                        userId={userId}
+                        isCreateNewEntrySet={isCreateNewEntrySet}
+                        setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                        content={(item as LogPost).content}
+                        amount={(item as LogPost).amount}
+                        currency={(item as LogPost).currency}
+                        date={(item as LogPost).postDate?.seconds * 1000}
+                        isPinned={
+                          currentlyEditingPostId ===
+                          (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId]?.pinnedPost
+                        }
+                        timezone={(item as LogPost).timezone ?? undefined}
+                      />
+                    );
+                  }
+
+                  return (
+                    <Fragment key={(item as LogPost).id}>
+                      <LogPostItem
+                        user={(isMyLog ? loggedInUser : undefined) ?? user}
+                        groupId={groupId}
+                        post={item as LogPost}
+                        isMyLog={isMyLog}
+                        isReadOnly={isReadOnly}
+                        isDigestMode={false}
+                        selectedPostId={selectedPost?.id ?? null}
+                        setSelectedPost={setSelectedPost}
+                        setCurrentlyEditingPostId={setCurrentlyEditingPostId}
+                        onOpenComments={handleOpenComments}
+                      />
+                      {i == calendarMarkedPosts?.length - 1 && (
+                        <div
+                          className={cx("LogPosts__posts__filler", {
+                            "LogPosts__posts__filler--active": selectedPost?.id,
+                          })}
+                        ></div>
+                      )}
+                    </Fragment>
+                  );
+                }
+              })}
+            {calendarMarkedPosts?.length == 0 && (
+              <div className="LogPosts__error">No log entries to display!</div>
+            )}
+          </div>
+        </div>
+        <div className="LogPostComments">
+          {selectedPost && (
+            <LogPostComments
+              currentLogAuthorId={selectedPost.author.id}
+              postId={selectedPost.id}
+              comments={comments}
+              isLoadingComments={isLoadingComments}
+              isSuccessComments={isSuccessComments}
+              refreshComments={refreshComments}
+              isReadOnly={isReadOnly}
             />
           )}
-
-          {calendarMarkedPosts?.length > 0 && calendarMarkedPosts?.map((item: LogPost | DateBanner, i) => {
-            if ('_isBanner' in item && item._isBanner) {
-              const currencyKeys = Object.keys(item?.total)
-              const formattedTotals = currencyKeys.map(x => `${item?.total[x]?.toLocaleString()} ${x}`)
-
-              if (item.isFuture) return
-
-              return (
-              <div
-                className={cx("LogPosts__posts__banner LogPosts__posts__item__header", {
-                  "LogPosts__posts__banner--weekly-view": isWeeklyView,
-                  "LogPosts__posts__banner--week": item.type == 'week',
-                })}
-                key={`banner-${i}`}
-              >
-                <div className="LogPosts__posts__banner__left">{item?.text}</div>
-                <div className="LogPosts__posts__banner__center">
-                  {formattedTotals?.map(x => <span key={`${i}-${x}`}>{x}</span>)}
-                </div>
-                <div></div>
-              </div>
-              )
-            }
-            else {
-              if (currentlyEditingPostId === (item as LogPost).id) {
-                return <LogPostEditor
-                  key={(item as LogPost).id}
-                  type={'edit'}
-                  postId={(item as LogPost).id}
-                  groupId={groupId}
-                  userId={userId}
-                  isCreateNewEntrySet={isCreateNewEntrySet}
-                  setCurrentlyEditingPostId={setCurrentlyEditingPostId}
-                  content={(item as LogPost).content}
-                  amount={(item as LogPost).amount}
-                  currency={(item as LogPost).currency}
-                  date={(item as LogPost).postDate?.seconds * 1000}
-                  isPinned={currentlyEditingPostId === (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId]?.pinnedPost}
-                  timezone={(item as LogPost).timezone ?? undefined}
-                />
-              }
-
-              return (
-                <Fragment key={(item as LogPost).id}>
-                  <LogPostItem
-                    user={isMyLog ? loggedInUser : user}
-                    groupId={groupId}
-                    post={(item as LogPost)}
-                    isMyLog={isMyLog}
-                    isReadOnly={isReadOnly}
-                    selectedPostId={selectedPost?.id ?? null}
-                    setSelectedPost={setSelectedPost}
-                    setCurrentlyEditingPostId={setCurrentlyEditingPostId}
-                    onOpenComments={handleOpenComments}
-                  />
-                  {i == calendarMarkedPosts?.length - 1 && (
-                    <div className={cx("LogPosts__posts__filler", {
-                      "LogPosts__posts__filler--active" : selectedPost?.id
-                    })}></div>
-                  )}
-                </Fragment>
-              )
-            }
-          })}
-          {calendarMarkedPosts?.length == 0 && <div className="LogPosts__error">No log entries to display!</div>}
         </div>
-      </div>
-      <div className="LogPostComments">
         {selectedPost && (
-          <LogPostComments
-            currentLogAuthorId={selectedPost.author.id}
-            postId={selectedPost.id}
-            comments={comments}
-            isLoadingComments={isLoadingComments}
-            isSuccessComments={isSuccessComments}
-            refreshComments={refreshComments}
-            isReadOnly={isReadOnly}
-          />
-          )}
-      </div>
-      {selectedPost && <div className="LogPostComments__handler handler" onClick={() => setSelectedPost(null)}></div>}
-    </>
-  )
-})
+          <div
+            className="LogPostComments__handler handler"
+            onClick={() => setSelectedPost(null)}
+          ></div>
+        )}
+      </>
+    );
+  },
+);
 
-export default LogPosts
+export default LogPosts;
 
-export function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>, containerClass: string) {
-    setTimeout(() => {
-        const logPostsContainer = document.querySelector(containerClass)
-        const postElement = postRef.current
+function scrollPostToTop(postRef: React.RefObject<HTMLDivElement>, containerClass: string) {
+  setTimeout(() => {
+    const logPostsContainer = document.querySelector(containerClass);
+    const postElement = postRef.current;
 
-        if (logPostsContainer && postElement) {
-            const containerRect = logPostsContainer.getBoundingClientRect()
-            const postRect = postElement.getBoundingClientRect()
+    if (logPostsContainer && postElement) {
+      const containerRect = logPostsContainer.getBoundingClientRect();
+      const postRect = postElement.getBoundingClientRect();
 
-            const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top)
+      const scrollTop = logPostsContainer.scrollTop + (postRect.top - containerRect.top);
 
-            logPostsContainer.scrollTo({
-                top: scrollTop,
-                behavior: 'smooth'
-            })
-        }
-    }, 100)
+      logPostsContainer.scrollTo({
+        top: scrollTop,
+        behavior: "smooth",
+      });
+    }
+  }, 100);
 }
-
