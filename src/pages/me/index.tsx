@@ -1,70 +1,73 @@
-import cx from 'classnames'
-import { useEffect, useMemo, useState } from "react"
-import { useTimezoneSelect, allTimezones } from "react-timezone-select"
+import cx from "classnames";
+import { useEffect, useMemo, useState } from "react";
+import { useTimezoneSelect, allTimezones } from "react-timezone-select";
 
-import { useCurrentUser } from '@/contexts'
+import { useCurrentUser } from "@/contexts";
 
-import { useGetCurrentGroups } from '@/hooks/useGetCurrentGroups'
-import { useMutation } from '@/hooks/useFirebase'
-import { useUserQuery } from '@/hooks/useUserQuery'
-import { useReadTracking } from '@/hooks/useReadTracking'
+import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
+import { useMutation } from "@/hooks/useFirebase";
+import { useUserQuery } from "@/hooks/useUserQuery";
+import { useReadTracking } from "@/hooks/useReadTracking";
 
-import Button from "@/components/Button"
-import ControlledInput from "@/components/ControlledInput"
+import Button from "@/components/Button";
+import ControlledInput from "@/components/ControlledInput";
 
 import "./me.scss";
-import GroupArchive from '@/features/moneylog/components/GroupArchive'
-import dayjs from 'dayjs'
-
+import GroupArchive from "@/features/moneylog/components/GroupArchive";
+import dayjs from "dayjs";
+import * as Sentry from "@sentry/react";
 
 export const UserSettings = () => {
-  const { allGroups, isSuccess, isLoading, isError } = useGetCurrentGroups()
+  const { allGroups, isSuccess } = useGetCurrentGroups();
 
-  const { trackUserAction } = useReadTracking()
-  const { user } = useCurrentUser()
-  const { options, parseTimezone } = useTimezoneSelect({ labelStyle: 'original', timezones: allTimezones })
+  const { trackUserAction } = useReadTracking();
+  const { user } = useCurrentUser();
+  const { options, parseTimezone } = useTimezoneSelect({
+    labelStyle: "original",
+    timezones: allTimezones,
+  });
 
-  const [newDisplayName, setNewDisplayName] = useState('')
-  const [newDisplayLocation, setNewDisplayLocation] = useState('')
-  const [newTimezone, setNewTimezone] = useState<string>()
+  const [newDisplayName, setNewDisplayName] = useState("");
+  const [newDisplayLocation, setNewDisplayLocation] = useState("");
+  const [newTimezone, setNewTimezone] = useState<string>();
 
   const isSubmittable = useMemo(() => {
-    return !!user?.userId && !!newTimezone
-  }, [user?.userId, newTimezone])
+    return !!user?.userId && !!newTimezone;
+  }, [user?.userId, newTimezone]);
 
-  const { updateUserProfile } = useUserQuery()
+  const { updateUserProfile } = useUserQuery();
 
   const { mutate: updateUserInfo, isLoading: createPending } = useMutation(
     async (userData: {
-      userId: string
-      displayName: string
-      displayLocation?: string
-      timezone: string
+      userId: string;
+      displayName: string;
+      displayLocation?: string;
+      timezone: string;
     }) => {
-      await updateUserProfile.mutate(userData)
+      await updateUserProfile.mutate(userData);
 
-      trackUserAction('update_user_profile', {
+      trackUserAction("update_user_profile", {
         user_id: user?.id,
-      })
+      });
 
-      return
-    }
-  )
+      return;
+    },
+  );
 
   useEffect(() => {
     if (user?.displayName) {
-      setNewDisplayName(user?.displayName)
+      setNewDisplayName(user?.displayName);
     }
     if (user?.displayLocation) {
-      setNewDisplayLocation(user?.displayLocation)
+      setNewDisplayLocation(user?.displayLocation);
     }
     if (user?.timezone) {
-      setNewTimezone(user?.timezone)
+      setNewTimezone(user?.timezone);
     }
-  }, [user])
+  }, [user]);
 
   const handleUpdateUserInfo = async () => {
-    if (!user?.userId || !newTimezone) return
+    if (!user?.userId || !newTimezone) return;
 
     try {
       await updateUserInfo({
@@ -72,57 +75,58 @@ export const UserSettings = () => {
         displayName: newDisplayName,
         displayLocation: newDisplayLocation ?? undefined,
         timezone: newTimezone,
-      })
+      });
 
-      console.log('Successfully updated user info')
+      console.log("Successfully updated user info");
     } catch (err) {
-      console.error('Failed to update user info:', err)
+      console.error("Failed to update user info:", err);
       // Error state is handled by useMutation
     }
-  }
+  };
 
   return (
     <div className="Window UserSettings">
-      <div className="Window__heading">
-        {user?.displayName && <h2>hi {user?.displayName}</h2>}
-      </div>
+      <div className="Window__heading">{user?.displayName && <h2>hi {user?.displayName}</h2>}</div>
 
       <div className="UserSettings__form">
         <ControlledInput
-          onChange={(e: any) => setNewDisplayName(e?.target?.value)}
+          onChange={(e) => setNewDisplayName((e.target as HTMLInputElement).value)}
           label="Display name"
           value={newDisplayName}
         />
 
         <ControlledInput
-          onChange={(e: any) => setNewDisplayLocation(e?.target?.value)}
+          onChange={(e) => setNewDisplayLocation((e.target as HTMLInputElement).value)}
           label="Display location"
           value={newDisplayLocation}
         />
 
         {newDisplayName.length > 0 && (
           <p>
-            Your name will display as <strong>{newDisplayName} {newDisplayLocation.length > 0 && <>({newDisplayLocation})</>}</strong>
+            Your name will display as{" "}
+            <strong>
+              {newDisplayName} {newDisplayLocation.length > 0 && <>({newDisplayLocation})</>}
+            </strong>
           </p>
         )}
 
         <div
           className={cx("ControlledInput", {
-            "ControlledInput--warning": !newTimezone
+            "ControlledInput--warning": !newTimezone,
           })}
         >
-          <label>
-            My timezone is
-          </label>
+          <label>My timezone is</label>
           <select
             onChange={(e) => {
-              parseTimezone(e.currentTarget.value)
-              setNewTimezone(e.currentTarget.value)
+              parseTimezone(e.currentTarget.value);
+              setNewTimezone(e.currentTarget.value);
             }}
             value={newTimezone}
           >
             {options.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
           </select>
         </div>
@@ -139,18 +143,34 @@ export const UserSettings = () => {
         />
       </div>
 
-      {isSuccess && allGroups.length > 0 && ( // TODO improve this area lol
-        <div>
-          <h3>Upcoming groups</h3>
-          <GroupArchive groups={allGroups.filter((g) => {
-            return dayjs(g.start.toDate()).isAfter(dayjs())
-          })} />
-          <h3>Past groups</h3>
-          <GroupArchive groups={allGroups.filter((g) => {
-            return dayjs(g.end.toDate()).isBefore(dayjs())
-          })} />
-        </div>
-      )}
+      {isSuccess &&
+        allGroups.length > 0 && ( // TODO improve this area lol
+          <div>
+            <h3>Upcoming groups</h3>
+            <GroupArchive
+              groups={allGroups.filter((g) => {
+                return dayjs(g.start.toDate()).isAfter(dayjs());
+              })}
+            />
+            <h3>Past groups</h3>
+            <GroupArchive
+              groups={allGroups.filter((g) => {
+                return dayjs(g.end.toDate()).isBefore(dayjs());
+              })}
+            />
+          </div>
+        )}
+      <button
+        onClick={() => {
+          // Send a log before throwing the error
+          Sentry.logger.info("User triggered test error", {
+            action: "test_error_button_click",
+          });
+          throw new Error("This is your first error!");
+        }}
+      >
+        Break the world
+      </button>
     </div>
-  )
-}
+  );
+};

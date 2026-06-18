@@ -1,0 +1,52 @@
+@keyframes snackbar-enter {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.Snackbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  pointer-events: none;
+
+  &__item {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+    width: 100%;
+    padding: 0.5em 1em;
+    background-color: var(--c-black);
+    color: #fff;
+    animation: snackbar-enter 0.2s ease-out;
+  }
+
+  &__message {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+}
