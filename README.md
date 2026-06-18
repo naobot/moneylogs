@@ -8,7 +8,7 @@ Please message me for local `.env` variables.
 
 ## Installation
 
-Installation requires [Node.js](https://nodejs.org/en/) v20+.
+Installation requires [Node.js](https://nodejs.org/en/) v24+.
 
 Make sure to run `npm install` first on initial install.
 
