@@ -1,33 +1,28 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from "react";
 
 interface Toast {
-  id: string
-  message: string
-  timestamp: Date
+  id: string;
+  message: string;
+  timestamp: Date;
 }
+
+const DISMISS_MS = 4000;
 
 export const useToast = () => {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string) => {
-    const id = Date.now().toString()
-    const newToast: Toast = {
-      id,
-      message,
-      timestamp: new Date()
-    }
+  const showToast = useCallback((message: string = "An error has occurred") => {
+    const id = Date.now().toString();
+    setToasts([{ id, message, timestamp: new Date() }]);
 
-    setToasts(prev => [...prev, newToast])
-
-    // Auto-remove after 5 seconds
     setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== id))
-    }, 5000)
-  }, [])
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, DISMISS_MS);
+  }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
-  }, [])
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
-  return { toasts, showToast, removeToast }
-}
+  return { toasts, showToast, removeToast };
+};
