@@ -31,6 +31,7 @@ type LogPostsProps = {
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isMyLog: boolean;
   isReadOnly: boolean;
+  isSpectator?: boolean;
 };
 
 type LogPostProps = {
@@ -349,6 +350,7 @@ const LogPosts = memo(
     isCreateNewEntrySet,
     isMyLog = false,
     isReadOnly = false,
+    isSpectator = false,
   }: LogPostsProps) => {
     const [isWeeklyView, _isWeeklyViewSet] = useState(false);
     const { markCommentsAsViewedFn } = useUserQuery();
@@ -493,6 +495,7 @@ const LogPosts = memo(
     useEffect(() => {
       if (
         !isReadOnly &&
+        !isSpectator &&
         loggedInUser &&
         selectedPost?.commentCount &&
         selectedPost.commentCount > 0
@@ -543,7 +546,7 @@ const LogPosts = memo(
             </div>
           </>}*/}
 
-            {isCreateNewEntry && (
+            {isCreateNewEntry && !isSpectator && (
               <LogPostEditor
                 ref={postEditorRef}
                 type="new"
@@ -644,7 +647,7 @@ const LogPosts = memo(
               isLoadingComments={isLoadingComments}
               isSuccessComments={isSuccessComments}
               refreshComments={refreshComments}
-              isReadOnly={isReadOnly}
+              isReadOnly={isReadOnly || isSpectator}
             />
           )}
         </div>
