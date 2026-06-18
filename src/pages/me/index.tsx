@@ -15,7 +15,6 @@ import ControlledInput from "@/components/ControlledInput";
 import "./me.scss";
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
 import dayjs from "dayjs";
-import * as Sentry from "@sentry/react";
 
 export const UserSettings = () => {
   const { allGroups, isSuccess } = useGetCurrentGroups();
@@ -160,17 +159,6 @@ export const UserSettings = () => {
             />
           </div>
         )}
-      <button
-        onClick={() => {
-          // Send a log before throwing the error
-          Sentry.logger.info("User triggered test error", {
-            action: "test_error_button_click",
-          });
-          throw new Error("This is your first error!");
-        }}
-      >
-        Break the world
-      </button>
     </div>
   );
 };
