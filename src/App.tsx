@@ -12,6 +12,7 @@ import { Home } from "./pages/home";
 import { UserSettings } from "./pages/me";
 import { CreateNewLog } from "./pages/create";
 import { GroupPage } from "./pages/group";
+import { InvitePage } from "./pages/group/invite";
 import { About } from "./pages/about";
 
 import "./App.scss";
@@ -67,11 +68,12 @@ const App = () => {
                 </CheckAuth>
               }
             />
+            <Route path="/g/:groupId" element={<GroupPage />} />
             <Route
-              path="/g/:groupId"
+              path="/g/:groupId/invite"
               element={
                 <CheckAuth>
-                  <GroupPage />
+                  <InvitePage />
                 </CheckAuth>
               }
             />
