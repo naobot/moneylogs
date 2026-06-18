@@ -1,6 +1,6 @@
 # moneylogs
 
-This is a personal finance microblogging app built in React with Vite. It is currently in closed beta at https://moneylogs-89ebf.web.app/
+This is a personal finance microblogging app built in React with [Vite+](https://voidzero.dev/posts/announcing-voidzero-inc). It is currently in closed beta at https://moneylogs-89ebf.web.app/
 
 ## Environment variables
 
@@ -38,17 +38,21 @@ firebase emulators:start
 npm run dev
 ```
 
-or
+The app will run locally on port **5173**.
+
+## Linting
+
+Linting is handled by Vite+ (oxc + TypeScript + React rules) and runs automatically on staged files before each commit.
+
+To lint manually:
 
 ```bash
-npx vite
+npm run lint
 ```
-
-The app will run locally on port **5173**.
 
 ## Dummy data
 
-Because they are locally run, development data is completely tied to your current development session and wiped each time. 
+Because they are locally run, development data is completely tied to your current development session and wiped each time.
 
 To have some dummy data to work with, execute the seed script:
 
