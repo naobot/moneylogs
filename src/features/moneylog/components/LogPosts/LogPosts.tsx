@@ -495,6 +495,7 @@ const LogPosts = memo(
     useEffect(() => {
       if (
         !isReadOnly &&
+        !isSpectator &&
         loggedInUser &&
         selectedPost?.commentCount &&
         selectedPost.commentCount > 0

@@ -91,7 +91,12 @@ const AllLogsDigest = ({
   }, [selectedPost]);
 
   useEffect(() => {
-    if (loggedInUser && selectedPost?.commentCount && selectedPost.commentCount > 0) {
+    if (
+      loggedInUser &&
+      !isSpectator &&
+      selectedPost?.commentCount &&
+      selectedPost.commentCount > 0
+    ) {
       trackUserAction("view_post", {
         post_id: selectedPost?.id,
         user_id: loggedInUser?.id,

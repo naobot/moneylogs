@@ -124,6 +124,7 @@ export const Group = ({
 
   useEffect(() => {
     const updateViewTracking = async () => {
+      if (isSpectator) return;
       // Only track if we have all required data and user is viewing someone else's logs
       if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return;
       if (
@@ -161,9 +162,9 @@ export const Group = ({
     updateViewTracking();
   }, [displayUser?.userId, loggedInUser?.userId, groupId]);
 
-  const handleUserChange = (newUser: UserData | null) => {
+  const handleUserChange = (newUser?: unknown) => {
     if (newUser) {
-      setDisplayUser(newUser);
+      setDisplayUser(newUser as UserData);
       setDisplayAll(false);
       setDisplaySummary(false);
     } else {
