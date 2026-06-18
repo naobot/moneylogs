@@ -12,6 +12,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
+    "@sentry/react": "^10.58.0",
     "@uiw/react-md-editor": "^4.0.7",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
@@ -21,7 +22,8 @@
     "react-dom": "^18.3.1",
     "react-firebase-hooks": "^5.1.1",
     "react-router-dom": "^7.0.2",
-    "react-timezone-select": "^3.2.8"
+    "react-timezone-select": "^3.2.8",
+    "sentry": "^0.37.0"
   },
   "devDependencies": {
     "@types/firebase": "^2.4.32",
