@@ -27,7 +27,10 @@
   z-index: 1000;
 }
 
-ul, ol, .wmde-markdown ul, .wmde-markdown ol {
+ul,
+ol,
+.wmde-markdown ul,
+.wmde-markdown ol {
   padding-left: 0;
   list-style-position: inside;
 }
@@ -341,7 +344,8 @@ html {
   }
 }
 
-.CreateNewLog, .UserSettings {
+.CreateNewLog,
+.UserSettings {
   display: flex;
   flex-direction: column;
   grid-gap: 1em;
@@ -370,7 +374,9 @@ html {
       font-size: 0.7em;
     }
 
-    &__left, &__center, &__right {
+    &__left,
+    &__center,
+    &__right {
       grid-gap: 1em;
     }
 
@@ -480,7 +486,8 @@ html {
       order: -1;
     }
 
-    &--active, &:hover {
+    &--active,
+    &:hover {
       background-color: var(--c-black);
       color: var(--c-white);
     }
@@ -557,6 +564,7 @@ html {
     &__filler {
       height: 1000px;
       max-height: 0;
+      flex-shrink: 0;
       will-change: max-height;
       /*transition: max-height 0.25s ease-in-out;*/
 
@@ -731,7 +739,7 @@ html {
     height: 100vh;
     top: 0;
     left: 0;
-    background-color: rgba(0,0,0,0.2);
+    background-color: rgba(0, 0, 0, 0.2);
     z-index: 49;
   }
 
@@ -807,30 +815,30 @@ html {
 
       @media (min-width: constants.$breakpoint-md) {
         &::after {
-            content: '';
-            position: absolute;
-            display: block;
-            width: 0;
-            z-index: 1;
-            border-style: solid;
-            border-width: 0 12px 12px 0;
-            border-color: transparent var(--c-black) transparent transparent !important;
-            top: 22%;
-            left: -10px;
-            margin-top: -10px;
+          content: "";
+          position: absolute;
+          display: block;
+          width: 0;
+          z-index: 1;
+          border-style: solid;
+          border-width: 0 12px 12px 0;
+          border-color: transparent var(--c-black) transparent transparent !important;
+          top: 22%;
+          left: -10px;
+          margin-top: -10px;
         }
         &::before {
-            content: '';
-            position: absolute;
-            width: 0;
-            z-index: 0;
-            border-style: solid;
-            border-width: 0 13px 13px 0;
-            border-color: transparent var(--c-black) transparent transparent !important;
-            top: 22%;
-            left: -12px;
-            margin-top: -11px;
-            display: block;
+          content: "";
+          position: absolute;
+          width: 0;
+          z-index: 0;
+          border-style: solid;
+          border-width: 0 13px 13px 0;
+          border-color: transparent var(--c-black) transparent transparent !important;
+          top: 22%;
+          left: -12px;
+          margin-top: -11px;
+          display: block;
         }
       }
 
@@ -842,30 +850,30 @@ html {
 
     @media (min-width: constants.$breakpoint-md) {
       &::after {
-          content: '';
-          position: absolute;
-          display: block;
-          width: 0;
-          z-index: 1;
-          border-style: solid;
-          border-width: 0 12px 12px 0;
-          border-color: transparent var(--c-white) transparent transparent;
-          top: 22%;
-          left: -10px;
-          margin-top: -10px;
+        content: "";
+        position: absolute;
+        display: block;
+        width: 0;
+        z-index: 1;
+        border-style: solid;
+        border-width: 0 12px 12px 0;
+        border-color: transparent var(--c-white) transparent transparent;
+        top: 22%;
+        left: -10px;
+        margin-top: -10px;
       }
       &::before {
-          content: '';
-          position: absolute;
-          width: 0;
-          z-index: 0;
-          border-style: solid;
-          border-width: 0 13px 13px 0;
-          border-color: transparent var(--c-black) transparent transparent;
-          top: 22%;
-          left: -12px;
-          margin-top: -11px;
-          display: block;
+        content: "";
+        position: absolute;
+        width: 0;
+        z-index: 0;
+        border-style: solid;
+        border-width: 0 13px 13px 0;
+        border-color: transparent var(--c-black) transparent transparent;
+        top: 22%;
+        left: -12px;
+        margin-top: -11px;
+        display: block;
       }
     }
 
@@ -925,7 +933,7 @@ html {
     z-index: 50;
     display: flex;
     cursor: pointer;
-    background-color: rgba(0,0,0,0.2);
+    background-color: rgba(0, 0, 0, 0.2);
     align-items: center;
     justify-content: center;
   }
@@ -974,7 +982,7 @@ html {
 
   &__body {
     padding: 1em;
-    text-align: center;;
+    text-align: center;
   }
 
   &__footer {
