@@ -15,7 +15,7 @@ import { useGroupAnalytics } from "./hooks/useGroupAnalytics";
 import Loader from "@/features/layout/components/Loader";
 import SpendingInsights from "./SpendingInsights";
 import HotPosts from "./HotPosts";
-import LogPostComments from "../LogPosts/LogPostComments";
+import LogPostComments from "@/features/moneylog/components/LogPosts/LogPostComments";
 
 import "./styles.scss";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";

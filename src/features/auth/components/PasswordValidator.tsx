@@ -1,22 +1,22 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import ControlledInput from "@/components/ControlledInput"
-import useValidatePassword from "../hooks/useValidatePassword"
+import ControlledInput from "@/components/ControlledInput";
+import useValidatePassword from "@/features/auth/hooks/useValidatePassword";
 
 const PasswordValidator = () => {
-  const [password, setPassword] = useState('')
-  const { isValid } = useValidatePassword(password)
+  const [password, setPassword] = useState("");
+  const { isValid } = useValidatePassword(password);
 
   return (
     <ControlledInput
-      type='password'
+      type="password"
       value={password}
-      onChange={(e: any) => setPassword(e?.target?.value)}
-      label='Password'
+      onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+      label="Password"
       isError={!!password && !isValid}
-      errorMessage={'password problem'}
+      errorMessage={"password problem"}
     />
-  )
-}
+  );
+};
 
-export default PasswordValidator
+export default PasswordValidator;

@@ -2,10 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import "./index.css";
-import App from "./App";
-import "./utils/configuredDayjs";
-import { CurrentUserProvider } from "./contexts/CurrentUserContext";
-import { ToastProvider } from "./contexts/ToastContext";
+import App from "@/App";
+import "@/utils/configuredDayjs";
+import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 Sentry.init({
   dsn: "https://0e984f575ce18cc4c1dc79cfa56e845e@o4511585490239488.ingest.us.sentry.io/4511585495744512",

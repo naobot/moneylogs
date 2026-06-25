@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { ErrorInfo } from "../types/error";
+import { ErrorInfo } from "@/types/error";
 
 class GlobalErrorHandler {
   private static instance: GlobalErrorHandler;

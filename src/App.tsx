@@ -1,19 +1,19 @@
 import { PropsWithChildren, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, NavigateProps, Navigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "./config/firebase-config";
-import Layout from "./features/layout/Layout";
-import GlobalErrorHandler from "./utils/errorHandler";
-import { useToastContext } from "./hooks/useToastContext";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { auth } from "@/config/firebase-config";
+import Layout from "@/features/layout/Layout";
+import GlobalErrorHandler from "@/utils/errorHandler";
+import { useToastContext } from "@/hooks/useToastContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-import { Auth } from "./pages/auth";
-import { Home } from "./pages/home";
-import { UserSettings } from "./pages/me";
-import { CreateNewLog } from "./pages/create";
-import { GroupPage } from "./pages/group";
-import { InvitePage } from "./pages/group/invite";
-import { About } from "./pages/about";
+import { Auth } from "@/pages/auth";
+import { Home } from "@/pages/home";
+import { UserSettings } from "@/pages/me";
+import { CreateNewLog } from "@/pages/create";
+import { GroupPage } from "@/pages/group";
+import { InvitePage } from "@/pages/group/invite";
+import { About } from "@/pages/about";
 
 import "./App.scss";
 
