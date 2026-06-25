@@ -14,7 +14,11 @@ export const About = () => {
       <div>
         <p>
           <strong>moneylogs</strong> is a private social media platform where microblogging meets
-          transparency in personal finances created and maintained by Naomi Cui.
+          transparency in personal finances created and maintained by{" "}
+          <a href="https://nnao.world" target="_blank">
+            Naomi Cui
+          </a>
+          .
         </p>
       </div>
 
