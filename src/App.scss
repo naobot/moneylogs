@@ -249,6 +249,14 @@ html {
     }
   }
 
+  &--past {
+    border-style: dotted !important;
+
+    &:hover {
+      border-style: dotted !important;
+    }
+  }
+
   &--size-sm {
     font-size: 0.8em;
   }
