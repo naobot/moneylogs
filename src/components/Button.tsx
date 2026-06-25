@@ -43,19 +43,19 @@ const Button = forwardRef(
       [className]: className,
     });
 
-    const handleClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      onClick();
-    };
-
     if (to) {
       return (
-        <Link to={to} onClick={handleClick} className={sharedClassName} title={title} {...props}>
+        <Link to={to} onClick={onClick} className={sharedClassName} title={title} {...props}>
           {icon && <Icon type={icon} />}
           <strong>{text}</strong>
         </Link>
       );
     }
+
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      onClick();
+    };
 
     return (
       <button
