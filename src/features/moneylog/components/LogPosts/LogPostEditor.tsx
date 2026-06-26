@@ -19,6 +19,8 @@ import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToastContext } from "@/hooks/useToastContext";
+import TutorialTooltip from "@/components/TutorialTooltip";
+import { useTutorial } from "@/contexts/TutorialContext";
 
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
@@ -87,6 +89,7 @@ const LogPostEditor = forwardRef(
     const { trackUserAction } = useReadTracking();
     const { uploadInlineImage, isUploading } = useImageUpload();
     const { showToast } = useToastContext();
+    const { editorTipsActive, isTipDismissed, dismissTip, completeTutorial } = useTutorial();
 
     const regexMatcher = useMemo(() => {
       switch (selectedCurrency) {
@@ -170,6 +173,7 @@ const LogPostEditor = forwardRef(
         });
 
         localStorage.removeItem(DRAFT_KEY);
+        completeTutorial();
 
         isCreateNewEntrySet(false);
         newEntryContentSet(null);
@@ -282,20 +286,48 @@ const LogPostEditor = forwardRef(
         />
         <div className="LogPosts__posts__item__header">
           <div className="LogPosts__posts__item__header__left">
-            <CustomDropdown options={options} onSelect={handleClickLocation}>
-              <Icon type={"location"} />
-            </CustomDropdown>
-            <input
-              type="datetime-local"
-              id="meeting-time"
-              name="meeting-time"
-              value={dayjs(newEntryDate).format("YYYY-MM-DDTHH:mm")}
-              onChange={(e) =>
-                newEntryDateSet(dayjs(e?.target?.value, "YYYY-MM-DDTHH:mm").unix() * 1000)
-              }
-            />
+            <div style={{ position: "relative" }}>
+              {editorTipsActive && !isTipDismissed("timezone") && (
+                <TutorialTooltip
+                  text="Travelling? You can set a timezone specific to this post if it's different from the one set in your profile"
+                  onDismiss={() => dismissTip("timezone")}
+                  position="bottom"
+                />
+              )}
+              <CustomDropdown options={options} onSelect={handleClickLocation}>
+                <Icon type={"location"} />
+              </CustomDropdown>
+            </div>
+            <div style={{ position: "relative" }}>
+              {editorTipsActive && !isTipDismissed("date") && (
+                <TutorialTooltip
+                  text="You can set the backdate and time of this log or leave it at the current time as default"
+                  onDismiss={() => dismissTip("date")}
+                  position="bottom"
+                />
+              )}
+              <input
+                type="datetime-local"
+                id="meeting-time"
+                name="meeting-time"
+                value={dayjs(newEntryDate).format("YYYY-MM-DDTHH:mm")}
+                onChange={(e) =>
+                  newEntryDateSet(dayjs(e?.target?.value, "YYYY-MM-DDTHH:mm").unix() * 1000)
+                }
+              />
+            </div>
           </div>
-          <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+          <div
+            className="LogPosts__posts__item__header__center LogPosts__posts__item__amount"
+            style={{ position: "relative" }}
+          >
+            {editorTipsActive && !isTipDismissed("currency") && (
+              <TutorialTooltip
+                text="Enter your total amount spent in this entry here. You can adjust the currency. Hint: If you've consistently formatted expense amounts in your entry, the calculator icon may sum it up for you automatically!"
+                onDismiss={() => dismissTip("currency")}
+                position="bottom"
+              />
+            )}
             <input
               type="number"
               onChange={(e) => newEntryAmountSet(Number(e?.target?.value))}
@@ -338,7 +370,14 @@ const LogPostEditor = forwardRef(
             </div>
           </div>
         )}
-        <div className="LogPosts__posts__item__body">
+        <div className="LogPosts__posts__item__body" style={{ position: "relative" }}>
+          {editorTipsActive && !isTipDismissed("body") && (
+            <TutorialTooltip
+              text="Enter your first log here! Some people like to post short logs throughout their day, others like to do a long post at the end of the day. It's up to you!"
+              onDismiss={() => dismissTip("body")}
+              position="bottom"
+            />
+          )}
           <div className="LogPosts__posts__item__content container" data-color-mode="light">
             <div className="LogPosts__posts__item__content__editor">
               <MDEditor
@@ -370,7 +409,14 @@ const LogPostEditor = forwardRef(
             </div>
           </div>
         </div>
-        <div className="LogPosts__posts__item__footer">
+        <div className="LogPosts__posts__item__footer" style={{ position: "relative" }}>
+          {editorTipsActive && !isTipDismissed("submit") && (
+            <TutorialTooltip
+              text="Submit your first log entry!"
+              onDismiss={() => dismissTip("submit")}
+              position="top"
+            />
+          )}
           <Button
             buttonStyle="primary-border"
             size="sm"

@@ -783,6 +783,60 @@ html {
   opacity: 0.5;
 }
 
+.TutorialTooltip {
+  position: absolute;
+  z-index: 300;
+  background-color: #f5c842;
+  color: var(--c-black);
+  padding: 0.5em 0.8em;
+  border-radius: 4px;
+  font-size: 0.72em;
+  font-weight: 500;
+  width: max-content;
+  max-width: min(240px, 80vw);
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  left: 50%;
+  transform: translateX(-50%);
+
+  small {
+    font-size: 0.78em;
+    opacity: 0.65;
+    font-weight: 400;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+  }
+
+  &--bottom {
+    top: calc(100% + 8px);
+
+    &::after {
+      bottom: 100%;
+      border-bottom-color: #f5c842;
+    }
+  }
+
+  &--top {
+    bottom: calc(100% + 8px);
+
+    &::after {
+      top: 100%;
+      border-top-color: #f5c842;
+    }
+  }
+}
+
 .TimezoneSetter {
   font-size: 0.6rem;
   font-weight: 500;

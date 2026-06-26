@@ -17,6 +17,8 @@ import { useUserQuery } from "@/hooks/useUserQuery";
 import Icon, { IconText } from "@/components/Icon";
 import LogsSummary from "./LogsSummary/LogsSummary";
 import Modal from "@/components/Modal";
+import TutorialTooltip from "@/components/TutorialTooltip";
+import { useTutorial } from "@/contexts/TutorialContext";
 
 export const Group = ({
   group,
@@ -31,6 +33,7 @@ export const Group = ({
   // const { pathname } = useLocation()
   const { updateViewTrackingFn } = useUserQuery();
   const { trackUserAction } = useReadTracking();
+  const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
 
   const logPostRes = useGetLogPosts({ groupId });
 
@@ -235,10 +238,19 @@ export const Group = ({
               !isSpectator && (
                 <div
                   className="handler Group__header__item"
+                  style={{ position: "relative" }}
                   onClick={() => {
                     isCreateNewEntrySet(true);
+                    onNewEntryClicked();
                   }}
                 >
+                  {showNewEntryTip && (
+                    <TutorialTooltip
+                      text="Click here to create your first log post"
+                      onDismiss={dismissNewEntryTip}
+                      position="bottom"
+                    />
+                  )}
                   <IconText type={"document"} fill={"white"} text="new entry" />
                 </div>
               )}

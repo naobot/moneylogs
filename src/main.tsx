@@ -6,6 +6,7 @@ import App from "@/App";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { TutorialProvider } from "@/contexts/TutorialContext";
 
 Sentry.init({
   dsn: "https://0e984f575ce18cc4c1dc79cfa56e845e@o4511585490239488.ingest.us.sentry.io/4511585495744512",
@@ -27,7 +28,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <CurrentUserProvider>
       <ToastProvider>
-        <App />
+        <TutorialProvider>
+          <App />
+        </TutorialProvider>
       </ToastProvider>
     </CurrentUserProvider>
   </StrictMode>,

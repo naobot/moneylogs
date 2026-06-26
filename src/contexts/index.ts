@@ -1,1 +1,2 @@
-export { CurrentUserProvider, useCurrentUser } from './CurrentUserContext'
+export { CurrentUserProvider, useCurrentUser } from "./CurrentUserContext";
+export { TutorialProvider, useTutorial } from "./TutorialContext";
