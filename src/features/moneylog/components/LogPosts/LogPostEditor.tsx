@@ -18,6 +18,7 @@ import { Currency } from "@/types/user";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useToastContext } from "@/hooks/useToastContext";
 
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
@@ -85,6 +86,7 @@ const LogPostEditor = forwardRef(
 
     const { trackUserAction } = useReadTracking();
     const { uploadInlineImage, isUploading } = useImageUpload();
+    const { showToast } = useToastContext();
 
     const regexMatcher = useMemo(() => {
       switch (selectedCurrency) {
@@ -135,6 +137,7 @@ const LogPostEditor = forwardRef(
         api.replaceSelection(`![image](${url})`);
       } catch (err) {
         console.error("Failed to upload image:", err);
+        showToast("Image upload failed. Please try again.");
       }
     };
 
