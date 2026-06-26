@@ -1,89 +1,96 @@
-import dayjs from "dayjs"
-import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Timestamp } from "firebase/firestore"
+import dayjs from "dayjs";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useCurrentUser } from "@/contexts"
+import { useCurrentUser } from "@/contexts";
 
-import { useLogGroupQuery } from "@/hooks/useLogGroupQuery"
-import { useMutation } from "@/hooks/useFirebase"
+import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
+import { useMutation } from "@/hooks/useFirebase";
 
-import ControlledInput from "@/components/ControlledInput"
-import Button from "@/components/Button"
-
+import ControlledInput from "@/components/ControlledInput";
+import Button from "@/components/Button";
 
 export const CreateNewLog = () => {
-  const navigate = useNavigate()
-  const today = dayjs().format('YYYY-MM-DD')
-  const oneMonth = dayjs().add(1, 'month').format('YYYY-MM-DD')
+  const navigate = useNavigate();
+  const today = dayjs().format("YYYY-MM-DD");
+  const oneMonth = dayjs().add(1, "month").format("YYYY-MM-DD");
 
-  const [logGroupTitle, setLogGroupTitle] = useState('')
-  const [numParticipants, setNumParticipants] = useState(10)
-  const [startDate, setStartDate] = useState(today)
-  const [endDate, setEndDate] = useState(oneMonth)
+  const [logGroupTitle, setLogGroupTitle] = useState("");
+  const [numParticipants, setNumParticipants] = useState(10);
+  const [startDate, setStartDate] = useState(today);
+  const [startTime, setStartTime] = useState("00:00");
+  const [endDate, setEndDate] = useState(oneMonth);
+  const [endTime, setEndTime] = useState("23:59");
   const dateErrorMessage = useMemo(() => {
     if (dayjs(endDate).isBefore(dayjs(startDate))) {
-      return 'Invalid date'
-    } else if (dayjs(endDate).subtract(31, 'day').isAfter(dayjs(startDate))) {
-      return 'Date must be within a month from start date'
+      return "Invalid date";
+    } else if (dayjs(endDate).subtract(31, "day").isAfter(dayjs(startDate))) {
+      return "Date must be within a month from start date";
     }
-    return
-  }, [endDate, startDate])
+    return;
+  }, [endDate, startDate]);
 
-  const { user } = useCurrentUser()
-  const { addNewLogGroup } = useLogGroupQuery()
+  const { user } = useCurrentUser();
+  const { addNewLogGroup } = useLogGroupQuery();
 
-  const { mutate: createGroup, isLoading: createPending, isError, error } = useMutation(
+  const {
+    mutate: createGroup,
+    isLoading: createPending,
+    isError,
+  } = useMutation(
     async (groupData: {
-      title: string
-      max_participants: number
-      start: string
-      end: string
-      currentUserId: string
+      title: string;
+      max_participants: number;
+      startWallClock: string;
+      endWallClock: string;
+      currentUserId: string;
     }) => {
-      return await addNewLogGroup.mutate(groupData)
-    }
-  )
+      return await addNewLogGroup.mutate(groupData);
+    },
+  );
 
   const isSubmittable = useMemo(() => {
-    return !!logGroupTitle &&
-           !!user?.userId &&
-           numParticipants <= 30 && numParticipants > 0 &&
-           logGroupTitle.length <= 20 &&
-           !dateErrorMessage
-  }, [logGroupTitle, user?.userId, numParticipants, startDate, endDate])
+    return (
+      !!logGroupTitle &&
+      !!user?.userId &&
+      numParticipants <= 30 &&
+      numParticipants > 0 &&
+      logGroupTitle.length <= 20 &&
+      !dateErrorMessage
+    );
+  }, [logGroupTitle, user?.userId, numParticipants, dateErrorMessage]);
 
   const handleCreateNewGroup = async () => {
-    if (!user?.userId) return
+    if (!user?.userId) return;
 
     try {
       await createGroup({
         title: logGroupTitle,
         max_participants: numParticipants,
-        start: `${startDate} 05:00`,
-        end: `${endDate} 09:00`,
+        startWallClock: `${startDate}T${startTime}`,
+        endWallClock: `${endDate}T${endTime}`,
         currentUserId: user.userId,
-      })
+      });
 
-      console.log('Successfully created new log group')
-      navigate('/')
+      console.log("Successfully created new log group");
+      navigate("/");
     } catch (err) {
-      console.error('Failed to create log group:', err)
+      console.error("Failed to create log group:", err);
       // Error state is handled by useMutation
     }
-  }
+  };
 
   return (
     <div className="Window CreateNewLog">
       <ControlledInput
-        onChange={(e: any) => setLogGroupTitle(e?.target?.value)}
+        onChange={(e) => setLogGroupTitle(e.target.value)}
         label="Title"
         value={logGroupTitle}
         isError={logGroupTitle.length > 20}
         errorMessage="Title must be under 20 characters"
       />
       <ControlledInput
-        onChange={(e: any) => setNumParticipants(Number(e?.target?.value))}
+        onChange={(e) => setNumParticipants(Number(e.target.value))}
         label="Max no. of participants"
         value={numParticipants}
         type="number"
@@ -93,24 +100,34 @@ export const CreateNewLog = () => {
         errorMessage="Invalid number"
       />
       <ControlledInput
-        onChange={(e: any) => setStartDate(e?.target?.value)}
+        onChange={(e) => setStartDate(e.target.value)}
         label="Start date"
         value={startDate}
         type="date"
       />
       <ControlledInput
-        onChange={(e: any) => setEndDate(e?.target?.value)}
+        onChange={(e) => setStartTime(e.target.value)}
+        label="Start time (your local time)"
+        value={startTime}
+        type="time"
+      />
+      <ControlledInput
+        onChange={(e) => setEndDate(e.target.value)}
         label="End date"
         value={endDate}
         type="date"
         isError={!!dateErrorMessage}
         errorMessage={dateErrorMessage}
       />
+      <ControlledInput
+        onChange={(e) => setEndTime(e.target.value)}
+        label="End time (your local time)"
+        value={endTime}
+        type="time"
+      />
 
       {isError && (
-        <div className="error-message">
-          Failed to create log group. Please try again.
-        </div>
+        <div className="error-message">Failed to create log group. Please try again.</div>
       )}
 
       <div className="Menu">
@@ -124,5 +141,5 @@ export const CreateNewLog = () => {
         />
       </div>
     </div>
-  )
-}
+  );
+};

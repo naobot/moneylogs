@@ -18,6 +18,7 @@ type ActiveLogProps = {
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isMyLog: boolean;
   isReadOnly: boolean;
+  isPostingClosed?: boolean;
   isSpectator?: boolean;
 };
 
@@ -32,6 +33,7 @@ export const ActiveLog = ({
   isCreateNewEntrySet,
   isMyLog = false,
   isReadOnly = false,
+  isPostingClosed = false,
   isSpectator = false,
 }: ActiveLogProps) => {
   const recentLogs = useMemo(() => {
@@ -60,6 +62,7 @@ export const ActiveLog = ({
           isCreateNewEntry={isCreateNewEntry}
           isCreateNewEntrySet={isCreateNewEntrySet}
           isReadOnly={isReadOnly}
+          isPostingClosed={isPostingClosed}
           isSpectator={isSpectator}
         />
       )}
@@ -69,6 +72,7 @@ export const ActiveLog = ({
           logs={recentLogs}
           isCreateNewEntrySet={isCreateNewEntrySet}
           isReadOnly={isReadOnly}
+          isPostingClosed={isPostingClosed}
           isSpectator={isSpectator}
         />
       )}

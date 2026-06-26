@@ -31,6 +31,7 @@ type LogPostsProps = {
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isMyLog: boolean;
   isReadOnly: boolean;
+  isPostingClosed?: boolean;
   isSpectator?: boolean;
 };
 
@@ -45,6 +46,7 @@ type LogPostProps = {
   isDigestMode: boolean;
   onOpenComments: (post: LogPost, hasUnreadComments: boolean) => void;
   isReadOnly: boolean;
+  isPostingClosed?: boolean;
   isSummaryView?: boolean;
 };
 
@@ -88,6 +90,7 @@ export const LogPostItem = ({
   isDigestMode = false,
   onOpenComments,
   isReadOnly = false,
+  isPostingClosed = false,
   isSummaryView = false,
 }: LogPostProps) => {
   const postRef = useRef<HTMLDivElement>(null);
@@ -273,7 +276,7 @@ export const LogPostItem = ({
             </div>
           )}
         </div>
-        {!isReadOnly && isMyLog && (
+        {!isPostingClosed && !isReadOnly && isMyLog && (
           <>
             <div className="LogPosts__posts__item__footer">
               <div className="LogPostMenu">
@@ -350,6 +353,7 @@ const LogPosts = memo(
     isCreateNewEntrySet,
     isMyLog = false,
     isReadOnly = false,
+    isPostingClosed = false,
     isSpectator = false,
   }: LogPostsProps) => {
     const [isWeeklyView, _isWeeklyViewSet] = useState(false);
@@ -616,6 +620,7 @@ const LogPosts = memo(
                         post={item as LogPost}
                         isMyLog={isMyLog}
                         isReadOnly={isReadOnly}
+                        isPostingClosed={isPostingClosed}
                         isDigestMode={false}
                         selectedPostId={selectedPost?.id ?? null}
                         setSelectedPost={setSelectedPost}
