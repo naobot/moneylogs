@@ -2,14 +2,16 @@ import { createContext, useContext, PropsWithChildren, useState } from "react";
 
 const STORAGE_KEY = "ML__tutorial_complete";
 
+export const EDITOR_TIP_KEYS = ["date", "timezone", "body", "currency", "submit"] as const;
+
 type TutorialContextValue = {
   isTutorialActive: boolean;
   showNewEntryTip: boolean;
   editorTipsActive: boolean;
-  isTipDismissed: (key: string) => boolean;
+  activeEditorTip: string | null;
   onNewEntryClicked: () => void;
   dismissNewEntryTip: () => void;
-  dismissTip: (key: string) => void;
+  dismissTip: () => void;
   completeTutorial: () => void;
 };
 
@@ -19,19 +21,24 @@ export const TutorialProvider = ({ children }: PropsWithChildren) => {
   const [complete, setComplete] = useState(() => !!localStorage.getItem(STORAGE_KEY));
   const [newEntryTipDismissed, setNewEntryTipDismissed] = useState(false);
   const [editorTipsActive, setEditorTipsActive] = useState(false);
-  const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
+  const [editorStep, setEditorStep] = useState(0);
 
   const isTutorialActive = !complete;
   const showNewEntryTip = isTutorialActive && !newEntryTipDismissed;
+  const activeEditorTip =
+    editorTipsActive && editorStep < EDITOR_TIP_KEYS.length ? EDITOR_TIP_KEYS[editorStep] : null;
 
   const dismissNewEntryTip = () => setNewEntryTipDismissed(true);
 
   const onNewEntryClicked = () => {
     setNewEntryTipDismissed(true);
-    if (!complete) setEditorTipsActive(true);
+    if (!complete) {
+      setEditorStep(0);
+      setEditorTipsActive(true);
+    }
   };
 
-  const dismissTip = (key: string) => setDismissedTips((prev) => new Set([...prev, key]));
+  const dismissTip = () => setEditorStep((prev) => prev + 1);
 
   const completeTutorial = () => {
     localStorage.setItem(STORAGE_KEY, "1");
@@ -39,15 +46,13 @@ export const TutorialProvider = ({ children }: PropsWithChildren) => {
     setEditorTipsActive(false);
   };
 
-  const isTipDismissed = (key: string) => dismissedTips.has(key);
-
   return (
     <TutorialContext.Provider
       value={{
         isTutorialActive,
         showNewEntryTip,
         editorTipsActive,
-        isTipDismissed,
+        activeEditorTip,
         onNewEntryClicked,
         dismissNewEntryTip,
         dismissTip,
