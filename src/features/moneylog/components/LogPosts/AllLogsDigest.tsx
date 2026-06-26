@@ -20,12 +20,14 @@ const AllLogsDigest = ({
   logs,
   isCreateNewEntrySet,
   isReadOnly = false,
+  isPostingClosed = false,
   isSpectator = false,
 }: {
   groupId: string;
   logs: LogPost[];
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isReadOnly: boolean;
+  isPostingClosed?: boolean;
   isSpectator?: boolean;
 }) => {
   const { markCommentsAsViewedFn } = useUserQuery();
@@ -165,6 +167,7 @@ const AllLogsDigest = ({
                   isDigestMode={true}
                   isMyLog={isMyPost}
                   isReadOnly={isReadOnly}
+                  isPostingClosed={isPostingClosed}
                   selectedPostId={selectedPost?.id ?? null}
                   setSelectedPost={setSelectedPost}
                   setCurrentlyEditingPostId={setCurrentlyEditingPostId}

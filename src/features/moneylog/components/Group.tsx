@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import dayjs from "dayjs";
-import { Timestamp } from "firebase/firestore";
+import dayjs from "@/utils/configuredDayjs";
+import { personalStart, personalEnd, absoluteEnd } from "@/utils/groupBoundaries";
 
 import { useCurrentUser } from "@/contexts";
 
@@ -17,10 +17,6 @@ import { useUserQuery } from "@/hooks/useUserQuery";
 import Icon, { IconText } from "@/components/Icon";
 import LogsSummary from "./LogsSummary/LogsSummary";
 import Modal from "@/components/Modal";
-import { useUserTimezone } from "./LogPosts/LogPosts";
-
-// Local alias so the call inside conditional JSX doesn't trigger rules-of-hooks
-const toTz = useUserTimezone;
 
 export const Group = ({
   group,
@@ -47,13 +43,13 @@ export const Group = ({
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
 
   const isFutureGroup = useMemo(() => {
-    return dayjs(group.start.toDate()).isAfter(dayjs());
-  }, [group.start]);
+    return personalStart(group, loggedInUser?.timezone).isAfter(dayjs());
+  }, [group, loggedInUser?.timezone]);
 
   const endingSoon = useMemo(() => {
-    // group ending within 24 hours
-    return (group.end as Timestamp).seconds - Timestamp.now().seconds < 86400;
-  }, [group]);
+    const end = personalEnd(group, loggedInUser?.timezone);
+    return end.isAfter(dayjs()) && end.diff(dayjs(), "second") < 86400;
+  }, [group, loggedInUser?.timezone]);
   const neverViewedWarningModal = useMemo(() => {
     if (endingSoon) {
       if (
@@ -74,8 +70,14 @@ export const Group = ({
     userIdToDocRefMap,
   } = useGetGroupUsers(groupId);
 
+  // Personal end: this user's posting window has closed
+  const isPostingClosed = useMemo(() => {
+    return personalEnd(group, loggedInUser?.timezone).isBefore(dayjs());
+  }, [group, loggedInUser?.timezone]);
+
+  // Absolute end: the group is fully closed for all users in all timezones
   const isReadOnly = useMemo(() => {
-    return group.end.toDate() < Timestamp.now().toDate();
+    return absoluteEnd(group).isBefore(dayjs());
   }, [group]);
 
   const memberIds = useMemo(() => {
@@ -87,9 +89,16 @@ export const Group = ({
     return loggedInUser?.id === displayUser?.id;
   }, [loggedInUser, displayUser]);
 
-  const formatDate = (secondsDate: number, formatString: string) => {
-    return dayjs(secondsDate * 1000)?.format(formatString);
-  };
+  const userTz = loggedInUser?.timezone || dayjs.tz.guess();
+  const displayStart = useMemo(
+    () =>
+      group.startWallClock ? dayjs.tz(group.startWallClock, userTz) : dayjs(group.start.toDate()),
+    [group, userTz],
+  );
+  const displayEnd = useMemo(
+    () => (group.endWallClock ? dayjs.tz(group.endWallClock, userTz) : dayjs(group.end.toDate())),
+    [group, userTz],
+  );
 
   useEffect(() => {
     if (isSpectator) {
@@ -208,50 +217,54 @@ export const Group = ({
             <div className="GroupInterval Group__header__item">
               {group && (
                 <div className="Group__header__item__time">
-                  {formatDate(group.start?.seconds, "D MMM")}{" "}
-                  <small>({dayjs(group.start.toDate()).format("H:mm")})</small> to{" "}
-                  {formatDate(group.end?.seconds, "D MMM")}{" "}
-                  <small>({dayjs(group.end.toDate()).format("H:mm")})</small>
+                  {displayStart.format("D MMM")} <small>({displayStart.format("H:mm")})</small> to{" "}
+                  {displayEnd.format("D MMM")} <small>({displayEnd.format("H:mm")})</small>
                 </div>
               )}
-              {!isReadOnly && endingSoon && (
+              {!isPostingClosed && endingSoon && (
                 <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />
               )}
             </div>
           </div>
 
           <div className="Group__header__center">
-            {!isReadOnly && !displayAll && isActiveLogMyLog && !isFutureGroup && !isSpectator && (
-              <div
-                className="handler Group__header__item"
-                onClick={() => {
-                  isCreateNewEntrySet(true);
-                }}
-              >
-                <IconText type={"document"} fill={"white"} text="new entry" />
-              </div>
-            )}
-          </div>
-
-          <div className="Group__header__right">
-            {!isReadOnly && !isSpectator && group?.members?.length < group?.max_participants && (
-              <>
+            {!isPostingClosed &&
+              !displayAll &&
+              isActiveLogMyLog &&
+              !isFutureGroup &&
+              !isSpectator && (
                 <div
                   className="handler Group__header__item"
                   onClick={() => {
-                    setShowInviteModal(true);
+                    isCreateNewEntrySet(true);
                   }}
                 >
-                  <IconText type={"plus"} fill={"white"} text="invite" />
+                  <IconText type={"document"} fill={"white"} text="new entry" />
                 </div>
-                <div className="Group__header__item">
-                  <small>
-                    ({group?.max_participants - group.members?.length} spot
-                    {group?.max_participants - group.members?.length > 1 && "s"} left)
-                  </small>
-                </div>
-              </>
-            )}
+              )}
+          </div>
+
+          <div className="Group__header__right">
+            {!isPostingClosed &&
+              !isSpectator &&
+              group?.members?.length < group?.max_participants && (
+                <>
+                  <div
+                    className="handler Group__header__item"
+                    onClick={() => {
+                      setShowInviteModal(true);
+                    }}
+                  >
+                    <IconText type={"plus"} fill={"white"} text="invite" />
+                  </div>
+                  <div className="Group__header__item">
+                    <small>
+                      ({group?.max_participants - group.members?.length} spot
+                      {group?.max_participants - group.members?.length > 1 && "s"} left)
+                    </small>
+                  </div>
+                </>
+              )}
           </div>
         </div>
         <div className="Group__body">
@@ -293,6 +306,7 @@ export const Group = ({
                   isCreateNewEntrySet={isCreateNewEntrySet}
                   isMyLog={isActiveLogMyLog}
                   isReadOnly={isReadOnly}
+                  isPostingClosed={isPostingClosed}
                   isSpectator={isSpectator}
                 />
               )}
@@ -313,19 +327,16 @@ export const Group = ({
           <Modal.CancelButton text="Close" />
         </Modal.Actions>
       </Modal>
-      {!isReadOnly && endingSoon && (showEndWarningModal || neverViewedWarningModal) && (
+      {!isPostingClosed && endingSoon && (showEndWarningModal || neverViewedWarningModal) && (
         <Modal isOpen={showEndWarningModal} onClose={() => setShowEndWarningModal(false)}>
           <Modal.Header title={"Warning"}>Warning</Modal.Header>
           <Modal.Body>
             <p>This moneylog group is ending soon!</p>
             <p>
-              All posts and comments will be <strong>read-only</strong> after{" "}
-              <strong>
-                {toTz((group.end as Timestamp).toDate(), loggedInUser?.timezone).format(
-                  "ddd D MMM YYYY HH:mm",
-                )}
-              </strong>
+              Your posting window closes at{" "}
+              <strong>{displayEnd.format("ddd D MMM YYYY HH:mm")}</strong>.
             </p>
+            <p>You can still read and comment for a period after that.</p>
           </Modal.Body>
           <Modal.Actions>
             <Modal.ConfirmButton

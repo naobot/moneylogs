@@ -48,6 +48,8 @@ export type Group = {
   members: Array<DocumentReference>;
   start: Timestamp;
   end: Timestamp;
+  startWallClock?: string; // "YYYY-MM-DDTHH:mm" — timezone-agnostic wall-clock time
+  endWallClock?: string; // "YYYY-MM-DDTHH:mm" — timezone-agnostic wall-clock time
   createdAt: Timestamp;
   logs: Array<Log>;
   analytics?: GroupAnalytics;
