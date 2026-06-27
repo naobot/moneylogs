@@ -8,11 +8,13 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useMutation } from "@/hooks/useFirebase";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
+import { useGetAchievements, ACHIEVEMENT_META } from "@/hooks/useAchievements";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
 
 import "./me.scss";
+import "@/features/moneylog/components/LogsSummary/styles.scss";
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
 import dayjs from "dayjs";
 import { absoluteStart, absoluteEnd } from "@/utils/groupBoundaries";
@@ -22,6 +24,7 @@ export const UserSettings = () => {
 
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
+  const { achievements } = useGetAchievements(user?.id);
   const { options, parseTimezone } = useTimezoneSelect({
     labelStyle: "original",
     timezones: allTimezones,
@@ -142,6 +145,34 @@ export const UserSettings = () => {
           onClick={handleUpdateUserInfo}
         />
       </div>
+
+      {achievements.length > 0 && (
+        <div>
+          <h3>Achievements</h3>
+          <div className="AchievementsList">
+            {achievements.map((achievement) => {
+              const meta = ACHIEVEMENT_META[achievement.type];
+              return (
+                <div key={achievement.id} className="AchievementsList__item">
+                  <span
+                    className="AchievementsList__item__emoji"
+                    role="img"
+                    aria-label={meta.title}
+                  >
+                    {meta.emoji}
+                  </span>
+                  <div className="AchievementsList__item__text">
+                    <strong>
+                      {meta.title} · {achievement.currency}
+                    </strong>
+                    <span>{achievement.groupTitle}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isSuccess &&
         allGroups.length > 0 && ( // TODO improve this area lol

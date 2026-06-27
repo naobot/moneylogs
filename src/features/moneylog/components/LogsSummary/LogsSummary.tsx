@@ -10,10 +10,12 @@ import { useGetComments } from "@/hooks/useGetLogPostComments";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { useGroupAnalytics } from "./hooks/useGroupAnalytics";
+import { Achievement, awardGroupAchievements } from "@/hooks/useAchievements";
 
 import Loader from "@/features/layout/components/Loader";
 import SpendingInsights from "./SpendingInsights";
 import HotPosts from "./HotPosts";
+import AchievementsBanner from "./AchievementsBanner";
 import LogPostComments from "@/features/moneylog/components/LogPosts/LogPostComments";
 
 import "./styles.scss";
@@ -38,6 +40,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   const [processingState, setProcessingState] = useState<ProcessingState | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [hasStartedProcessing, setHasStartedProcessing] = useState<boolean>(false);
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
 
   const groupAnalytics = useGroupAnalytics(logPosts, group, groupMembers);
 
@@ -140,6 +143,28 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
     }
   }, [hasAnalytics, hasStartedProcessing]);
 
+  // Award achievements once when viewing a completed group's summary.
+  // Uses deterministic doc IDs so repeat visits are no-ops.
+  useEffect(() => {
+    if (!isArchivedGroup || !loggedInUser?.id || logPosts.length === 0) return;
+
+    let cancelled = false;
+    awardGroupAchievements({
+      userId: loggedInUser.id,
+      groupId: group.id,
+      groupTitle: group.title,
+      logPosts,
+    })
+      .then((unlocked) => {
+        if (!cancelled && unlocked.length > 0) setNewAchievements(unlocked);
+      })
+      .catch((err) => console.error("Failed to award achievements:", err));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isArchivedGroup, loggedInUser?.id, group.id, group.title, logPosts]);
+
   const handleOpenComments = (post: LogPost, _hasUnreadComments: boolean) => {
     setSelectedPost(post);
   };
@@ -195,6 +220,8 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
     <>
       <div className={cx("LogsSummary", { "disable-scroll": !!selectedPost })}>
         <h2>Insights for {group.title}</h2>
+
+        <AchievementsBanner achievements={newAchievements} />
 
         {/*{hasAnalytics && (
           <div className="LogsSummary__badge">
