@@ -34,16 +34,14 @@ export type UserData = {
   };
   viewTracking?: {
     [key: string]: {
-      // group ID
       [key: string]: {
-        // log author ID
         lastViewedAt: Timestamp;
       };
     };
   };
 };
 
-interface CacheableUserData {
+export interface CacheableUserData {
   id: string;
   createdAt: {
     seconds: number;
@@ -62,16 +60,18 @@ interface CacheableUserData {
   };
 }
 
-// Cache utilities - longer cache for current user since it's accessed constantly
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour for current user profile
+const CACHE_DURATION = 60 * 60 * 1000;
 const getCacheKey = (userId: string) => `currentUser_${userId}`;
 
-const getCachedUser = (userId: string): CacheableUserData | null => {
+export const getCachedUser = (userId: string): CacheableUserData | null => {
   try {
     const cached = localStorage.getItem(getCacheKey(userId));
     if (!cached) return null;
 
-    const { data, timestamp } = JSON.parse(cached);
+    const { data, timestamp } = JSON.parse(cached) as {
+      data: CacheableUserData;
+      timestamp: number;
+    };
     const isExpired = Date.now() - timestamp > CACHE_DURATION;
 
     if (isExpired) {
@@ -86,7 +86,7 @@ const getCachedUser = (userId: string): CacheableUserData | null => {
   }
 };
 
-const setCachedUser = (userId: string, user: CacheableUserData) => {
+export const setCachedUser = (userId: string, user: CacheableUserData) => {
   try {
     const cacheData = {
       data: user,
@@ -112,15 +112,12 @@ export const useGetUserInfo = (userId: string) => {
       return;
     }
 
-    // Try to get cached user data first
     const cachedUser = getCachedUser(userId);
     if (cachedUser) {
-      // Use cached data immediately for instant display
       setUser(cachedUser as unknown as UserData);
       setIsLoading(false);
     }
 
-    // Set up real-time listener (always runs, even with cache)
     console.log("🔄 setting up real-time listener for current user");
 
     const userQuery = query(collection(db, "users"), where("userId", "==", userId));
@@ -137,12 +134,10 @@ export const useGetUserInfo = (userId: string) => {
 
           console.log("📡 received current user data from real-time listener");
 
-          // Update state with fresh data
           setUser(userData);
           setIsLoading(false);
           setError(null);
 
-          // Cache only the stable profile fields
           const cacheableData: CacheableUserData = {
             id: userData.id,
             createdAt: userData.createdAt,
@@ -153,10 +148,8 @@ export const useGetUserInfo = (userId: string) => {
             currentLogId: userData.currentLogId,
             timezone: userData.timezone,
             pinnedPosts: userData.pinnedPosts,
-            // Exclude: commentSubscriptions, hasUnreadComments, viewTracking
           };
 
-          // Update cache with fresh stable data
           setCachedUser(userId, cacheableData);
         } else {
           setUser(undefined);
@@ -173,7 +166,6 @@ export const useGetUserInfo = (userId: string) => {
 
     unsubscribeRef.current = unsubscribe;
 
-    // Cleanup function
     return () => {
       if (unsubscribeRef.current) {
         console.log("🔌 cleaning up current user real-time listener");

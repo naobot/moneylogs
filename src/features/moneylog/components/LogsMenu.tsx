@@ -21,6 +21,7 @@ import { useCurrentUser } from "@/contexts";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 
+import { applyMemberOrder } from "@/utils/memberOrder";
 import Icon from "@/components/Icon";
 
 import cx from "classnames";
@@ -96,22 +97,10 @@ const LogsMenu = ({
     });
   }, [isSpectator, user?.viewTracking, logMembers, groupId, user?.id]);
 
-  const orderedMembers = useMemo(() => {
-    if (orderedIds.length) {
-      const idToMember = new Map(serializedMembers.map((m) => [m.id, m]));
-      const ordered = orderedIds.flatMap((id) => {
-        const m = idToMember.get(id);
-        return m ? [m] : [];
-      });
-      const orderedSet = new Set(orderedIds);
-      const newMembers = serializedMembers.filter((m) => !orderedSet.has(m.id));
-      return [...ordered, ...newMembers];
-    }
-    // Default: logged-in user's own entry first
-    const myMember = serializedMembers.find((m) => m.id === user?.id);
-    const others = serializedMembers.filter((m) => m.id !== user?.id);
-    return myMember ? [myMember, ...others] : serializedMembers;
-  }, [serializedMembers, orderedIds, user?.id]);
+  const orderedMembers = useMemo(
+    () => applyMemberOrder(serializedMembers, orderedIds, user?.id),
+    [serializedMembers, orderedIds, user?.id],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

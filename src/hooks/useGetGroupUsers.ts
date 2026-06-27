@@ -14,7 +14,7 @@ import { db } from "@/config/firebase-config";
 //   userIds: string[] // Array of user document IDs
 // }
 
-interface CacheableUserData {
+export interface CacheableUserData {
   id: string;
   userId: string;
   displayName: string;
@@ -39,7 +39,7 @@ export interface FullUserData extends CacheableUserData, RealtimeUserData {}
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 const getCacheKey = (groupId: string) => `groupUsers_${groupId}`;
 
-const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
+export const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
   try {
     const cached = localStorage.getItem(getCacheKey(groupId));
     if (!cached) return null;
@@ -59,7 +59,7 @@ const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
   }
 };
 
-const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
+export const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
   try {
     const cacheData = {
       data: users,

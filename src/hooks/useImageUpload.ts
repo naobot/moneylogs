@@ -4,7 +4,7 @@ import { storage } from "@/config/firebase-config";
 
 const UPLOAD_TIMEOUT_MS = 15_000;
 
-const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+export const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Upload timed out")), ms),
   );
