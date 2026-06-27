@@ -786,8 +786,9 @@ html {
 .TutorialTooltip {
   position: absolute;
   z-index: 300;
-  background-color: #f5c842;
+  background-color: var(--c-white);
   color: var(--c-black);
+  border: 1px solid var(--c-black);
   padding: 0.5em 0.8em;
   border-radius: 4px;
   font-size: 0.72em;
@@ -796,7 +797,6 @@ html {
   max-width: min(240px, 80vw);
   text-align: center;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
   line-height: 1.4;
   display: flex;
   flex-direction: column;
@@ -823,7 +823,7 @@ html {
 
     &::after {
       bottom: 100%;
-      border-bottom-color: #f5c842;
+      border-bottom-color: var(--c-black);
     }
   }
 
@@ -832,7 +832,7 @@ html {
 
     &::after {
       top: 100%;
-      border-top-color: #f5c842;
+      border-top-color: var(--c-black);
     }
   }
 }
