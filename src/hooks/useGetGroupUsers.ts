@@ -149,7 +149,7 @@ export const useGetGroupUsers = (groupId: string) => {
 
             // Cache only stable user profile data (not real-time fields)
             if (chunksReceived === chunks.length) {
-              const cacheableData: CacheableUserData[] = chunkUsers.map((user) => ({
+              const cacheableData: CacheableUserData[] = allUsers.map((user) => ({
                 id: user.id,
                 userId: user.userId,
                 displayName: user.displayName,

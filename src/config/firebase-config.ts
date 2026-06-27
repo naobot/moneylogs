@@ -3,6 +3,7 @@ import { getAnalytics, setDefaultEventParameters } from "firebase/analytics";
 import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,6 +20,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 declare const __APP_VERSION__: string;
 
@@ -44,6 +46,7 @@ if (isDevelopment && typeof window !== "undefined") {
     connectFirestoreEmulator(db, "localhost", 8888);
     connectAuthEmulator(auth, "http://localhost:9099");
     connectStorageEmulator(storage, "localhost", 9199);
+    connectFunctionsEmulator(functions, "localhost", 5001);
   } catch {
     // Emulators already connected or not running
     console.log("Emulators may already be connected or not running");

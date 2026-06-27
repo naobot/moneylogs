@@ -1,14 +1,13 @@
 import {
-  addDoc,
   arrayUnion,
   collection,
   deleteDoc,
   doc,
-  getDoc,
   increment,
   serverTimestamp,
   Timestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase";
@@ -40,16 +39,15 @@ type DeleteCommentArgs = {
 };
 
 export const useLogPostQuery = () => {
-  const logPostsCollectionRef = collection(db, "log_posts");
-
-  // Core mutation functions
   const addNewLogPostFn = async ({
     groupId,
     userId,
     logData,
   }: AddNewLogPostArgs): Promise<string> => {
-    const { userDocRef, userName } = await getUserDocRef(userId);
-    const { groupDocRef, groupName } = await getGroupDocRef(groupId);
+    const [{ userDocRef, userName }, { groupDocRef, groupName }] = await Promise.all([
+      getUserDocRef(userId),
+      getGroupDocRef(groupId),
+    ]);
 
     const postData: Partial<{
       timezone: string;
@@ -57,8 +55,9 @@ export const useLogPostQuery = () => {
 
     if (logData.timezone !== undefined) postData.timezone = logData.timezone;
 
-    console.log("✍️ executing write on log_posts collection");
-    const res = await addDoc(logPostsCollectionRef, {
+    const batch = writeBatch(db);
+    const postRef = doc(collection(db, "log_posts"));
+    batch.set(postRef, {
       amount: logData?.amount,
       currency: logData?.currency,
       content: logData?.content,
@@ -71,11 +70,10 @@ export const useLogPostQuery = () => {
       ...postData,
     });
 
-    if (!res?.id) {
-      throw new Error("Failed to create log post");
-    }
+    console.log("✍️ executing write on log_posts collection");
+    await batch.commit();
 
-    return res.id;
+    return postRef.id;
   };
 
   const editLogPostFn = async ({
@@ -112,45 +110,36 @@ export const useLogPostQuery = () => {
   const addCommentFn = async ({ logPostId, userId, content }: AddCommentArgs): Promise<string> => {
     const { userDocRef, userName } = await getUserDocRef(userId);
 
-    const updateTime = serverTimestamp();
+    const commentRef = doc(collection(db, "log_posts", logPostId, "comments"));
+    const postRef = doc(db, "log_posts", logPostId);
 
-    console.log("✍️ executing write on log_posts collection");
-    // Add the comment to the subcollection
-    const commentRes = await addDoc(collection(db, "log_posts", logPostId, "comments"), {
+    const batch = writeBatch(db);
+    batch.set(commentRef, {
       authorId: userDocRef,
       authorName: userName,
       content,
-      createdAt: updateTime,
+      createdAt: serverTimestamp(),
     });
-
-    console.log("✍️ executing write on log_posts collection");
-    // Increment the counter on the parent log post
-    await updateDoc(doc(db, "log_posts", logPostId), {
+    batch.update(postRef, {
       commentCount: increment(1),
       commentSubscribers: arrayUnion(userDocRef),
     });
 
-    console.log("⬇️ executing read on log_posts collection");
-    const logPostDoc = await getDoc(doc(db, "log_posts", logPostId));
-    if (!logPostDoc.exists()) {
-      throw new Error("Log post not found");
-    }
+    console.log("✍️ executing batched write on log_posts collection (comment + counter)");
+    await batch.commit();
 
-    if (!commentRes?.id) {
-      throw new Error("Failed to create comment");
-    }
-    return commentRes.id;
+    return commentRef.id;
   };
 
   const deleteCommentFn = async ({ logPostId, commentId }: DeleteCommentArgs): Promise<void> => {
-    console.log("🗑️ executing delete on log_posts collection");
-    await deleteDoc(doc(db, "log_posts", logPostId, "comments", commentId));
-
-    console.log("✍️ executing write on log_posts collection");
-    // Decrement the counter
-    await updateDoc(doc(db, "log_posts", logPostId), {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "log_posts", logPostId, "comments", commentId));
+    batch.update(doc(db, "log_posts", logPostId), {
       commentCount: increment(-1),
     });
+
+    console.log("🗑️ executing batched delete on log_posts collection (comment + counter)");
+    await batch.commit();
   };
 
   // Mutations
