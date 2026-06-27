@@ -4,7 +4,6 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
   increment,
   serverTimestamp,
   Timestamp,
@@ -48,8 +47,10 @@ export const useLogPostQuery = () => {
     userId,
     logData,
   }: AddNewLogPostArgs): Promise<string> => {
-    const { userDocRef, userName } = await getUserDocRef(userId);
-    const { groupDocRef, groupName } = await getGroupDocRef(groupId);
+    const [{ userDocRef, userName }, { groupDocRef, groupName }] = await Promise.all([
+      getUserDocRef(userId),
+      getGroupDocRef(groupId),
+    ]);
 
     const postData: Partial<{
       timezone: string;
@@ -129,12 +130,6 @@ export const useLogPostQuery = () => {
       commentCount: increment(1),
       commentSubscribers: arrayUnion(userDocRef),
     });
-
-    console.log("⬇️ executing read on log_posts collection");
-    const logPostDoc = await getDoc(doc(db, "log_posts", logPostId));
-    if (!logPostDoc.exists()) {
-      throw new Error("Log post not found");
-    }
 
     if (!commentRes?.id) {
       throw new Error("Failed to create comment");

@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import cx from "classnames";
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
-import { getApp } from "firebase/app";
+import { httpsCallable } from "firebase/functions";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "@/config/firebase-config";
+import { db, functions } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import { Group, LogPost } from "@/types/user";
 
 import { useGetComments } from "@/hooks/useGetLogPostComments";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
-import { FullUserData, useGetGroupUsers } from "@/hooks/useGetGroupUsers";
+import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { useGroupAnalytics } from "./hooks/useGroupAnalytics";
 
 import Loader from "@/features/layout/components/Loader";
@@ -42,27 +41,17 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
 
   const groupAnalytics = useGroupAnalytics(logPosts, group, groupMembers);
 
-  const { users: members } = useGetGroupUsers(group.id);
   const memberIdToMembers = useMemo(() => {
     const map = new Map<string, FullUserData>();
-    members.forEach((m) => {
+    groupMembers.forEach((m) => {
       map.set(m.id, m);
     });
     return map;
-  }, [members]);
+  }, [groupMembers]);
 
   const [otherLogs, setOtherLogs] = useState<LogPost[] | null>(null);
 
-  // Firebase Functions setup
-  const app = getApp();
-  const functions = getFunctions(app);
-
-  // Connect to emulator if in development
-  if (window.location.hostname === "localhost") {
-    connectFunctionsEmulator(functions, "localhost", 5001);
-  }
-
-  const processAnalytics = httpsCallable(functions, "processGroupAnalytics");
+  const processAnalytics = useMemo(() => httpsCallable(functions, "processGroupAnalytics"), []);
 
   const myLogs = useMemo(() => {
     return logPosts.filter((logPost) => logPost.author.id === loggedInUser?.id);
