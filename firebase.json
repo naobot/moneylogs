@@ -6,6 +6,7 @@
     "indexes": "firestore.indexes.json"
   },
   "storage": {
+    "bucket": "moneylogs-89ebf.firebasestorage.app",
     "rules": "storage.rules"
   },
   "hosting": {
