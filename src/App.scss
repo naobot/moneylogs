@@ -849,6 +849,16 @@ html {
       border-top-color: var(--c-black);
     }
   }
+
+  &--center {
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    &::after {
+      display: none;
+    }
+  }
 }
 
 .TimezoneSetter {

@@ -3,7 +3,7 @@ import { MouseEvent } from "react";
 type Props = {
   text: string;
   onDismiss: () => void;
-  position?: "top" | "bottom";
+  position?: "top" | "bottom" | "center";
 };
 
 const TutorialTooltip = ({ text, onDismiss, position = "bottom" }: Props) => {

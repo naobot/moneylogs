@@ -375,7 +375,7 @@ const LogPostEditor = forwardRef(
             <TutorialTooltip
               text="Enter your first log here! Some people like to post short logs throughout their day, others like to do a long post at the end of the day. It's up to you!"
               onDismiss={dismissTip}
-              position="bottom"
+              position="center"
             />
           )}
           <div className="LogPosts__posts__item__content container" data-color-mode="light">
