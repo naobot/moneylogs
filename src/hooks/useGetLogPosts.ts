@@ -1,119 +1,142 @@
-import { useEffect, useState, useRef } from "react"
-import dayjs from "dayjs"
-import { collection, query, where, orderBy, onSnapshot, doc, Unsubscribe } from "firebase/firestore"
-// @ts-ignore
-import { db } from '@/config/firebase-config'
-import { LogPost } from "@/types/user"
-import { invalidateCommentCache } from './useGetLogPostComments'
+import { useEffect, useState, useRef } from "react";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  getDocs,
+  limit,
+  doc,
+  Unsubscribe,
+} from "firebase/firestore";
+import { db } from "@/config/firebase-config";
+import { LogPost } from "@/types/user";
+import { invalidateCommentCache } from "./useGetLogPostComments";
+
+const ACTIVE_GROUP_POST_LIMIT = 200;
 
 type UseGetLogPostsParams = {
-  groupId?: string
-  userId?: string // keeping for compatibility, not used in the query
-}
+  groupId?: string;
+  isArchived?: boolean;
+};
 
-export const useGetLogPosts = ({ groupId, userId }: UseGetLogPostsParams) => {
-  const [state, setState] = useState({
-    posts: [] as LogPost[],
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: undefined as any,
-  })
+type LogPostsState = {
+  posts: LogPost[];
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: unknown;
+};
 
-  // Keep track of previous latestCommentAt values to detect changes
-  const previousCommentTimestamps = useRef<Map<string, any>>(new Map())
+const initialState: LogPostsState = {
+  posts: [],
+  isLoading: false,
+  isSuccess: false,
+  isError: false,
+  error: undefined,
+};
+
+export const useGetLogPosts = ({ groupId, isArchived = false }: UseGetLogPostsParams) => {
+  const [state, setState] = useState<LogPostsState>(initialState);
+  const previousCommentTimestamps = useRef<Map<string, unknown>>(new Map());
 
   useEffect(() => {
-    if (!groupId || typeof groupId !== 'string') {
-      setState({
-        posts: [],
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-        error: undefined
-      })
-      return
+    if (!groupId || typeof groupId !== "string") {
+      setState(initialState);
+      return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true }))
+    setState((prev) => ({ ...prev, isLoading: true }));
 
-    // Create the document reference inside the effect
-    const groupDocRef = doc(db, "log_groups", groupId)
+    const groupDocRef = doc(db, "log_groups", groupId);
 
-    // const recentCutoff = dayjs().subtract(4, 'weeks').toDate()
+    if (isArchived) {
+      // Archived groups: one-time read, no listener. Data is immutable once archived
+      // so a live WebSocket connection serves no purpose.
+      let cancelled = false;
 
+      const postsQuery = query(
+        collection(db, "log_posts"),
+        where("group", "==", groupDocRef),
+        orderBy("postDate", "desc"),
+      );
+
+      console.log("⬇️ fetching archived log posts (one-time read)");
+      getDocs(postsQuery)
+        .then((snapshot) => {
+          if (cancelled) return;
+          console.log(`📄 fetched ${snapshot.size} archived log posts`);
+          const posts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as LogPost[];
+          setState({ posts, isLoading: false, isSuccess: true, isError: false, error: undefined });
+        })
+        .catch((error: unknown) => {
+          if (cancelled) return;
+          console.error("❌ error fetching archived log posts:", error);
+          setState({ posts: [], isLoading: false, isSuccess: false, isError: true, error });
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Active groups: real-time listener capped at ACTIVE_GROUP_POST_LIMIT.
+    // The cap prevents unbounded reads for long-running sessions while preserving
+    // real-time updates and comment notification tracking for all visible posts.
     const postsQuery = query(
       collection(db, "log_posts"),
       where("group", "==", groupDocRef),
-      // where("postDate", ">=", recentCutoff),
-      orderBy("postDate", "desc")
-    )
+      orderBy("postDate", "desc"),
+      limit(ACTIVE_GROUP_POST_LIMIT),
+    );
 
-    console.log('🔄 setting up real-time listener on log_posts collection')
+    console.log("🔄 setting up real-time listener on log_posts collection");
 
-    // Set up the real-time listener
     const unsubscribe: Unsubscribe = onSnapshot(
       postsQuery,
       (querySnapshot) => {
-        console.log(`📡 received ${querySnapshot.size} log posts from real-time listener`)
+        console.log(`📡 received ${querySnapshot.size} log posts from real-time listener`);
 
-        const posts = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as LogPost[]
+        const posts = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as LogPost[];
 
-        // Check for comment timestamp changes and invalidate cache accordingly
-        posts.forEach(post => {
-          const postId = post.id
-          const currentLatestCommentAt = post.latestCommentAt
-          const previousLatestCommentAt = previousCommentTimestamps.current.get(postId)
+        // Detect latestCommentAt changes to invalidate comment cache and push notifications.
+        // This runs on every snapshot so comment updates on any visible post are caught.
+        posts.forEach((post) => {
+          const currentLatestCommentAt = post.latestCommentAt;
+          const previousLatestCommentAt = previousCommentTimestamps.current.get(post.id);
 
-          // If latestCommentAt has changed (Cloud Function updated it), invalidate the comment cache for this post
           if (previousLatestCommentAt && currentLatestCommentAt) {
-            const currentTime = currentLatestCommentAt?.toMillis() || 0
-            const previousTime = previousLatestCommentAt?.toMillis() || 0
+            const currentTime =
+              (currentLatestCommentAt as { toMillis?: () => number })?.toMillis?.() ?? 0;
+            const previousTime =
+              (previousLatestCommentAt as { toMillis?: () => number })?.toMillis?.() ?? 0;
 
             if (currentTime !== previousTime) {
-              console.log(`🔄 detected latestCommentAt update for post ${postId}, invalidating cache and notifying listeners`)
-              // This now both deletes the cache AND emits events to active listeners
-              invalidateCommentCache(postId)
+              console.log(
+                `🔄 latestCommentAt changed for post ${post.id}, invalidating comment cache`,
+              );
+              invalidateCommentCache(post.id);
             }
           }
 
-          // Update the tracking map
-          previousCommentTimestamps.current.set(postId, currentLatestCommentAt)
-        })
+          previousCommentTimestamps.current.set(post.id, currentLatestCommentAt);
+        });
 
-        setState({
-          posts,
-          isLoading: false,
-          isSuccess: true,
-          isError: false,
-          error: undefined
-        })
+        setState({ posts, isLoading: false, isSuccess: true, isError: false, error: undefined });
       },
       (error) => {
-        console.error('❌ real-time listener error:', error)
-        setState({
-          posts: [],
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error
-        })
-      }
-    )
+        console.error("❌ real-time listener error:", error);
+        setState({ posts: [], isLoading: false, isSuccess: false, isError: true, error });
+      },
+    );
 
-    // Cleanup function - this is crucial!
     return () => {
-      console.log('🔌 cleaning up real-time listener on log_posts collection')
-      // Clear the tracking map when the component unmounts or groupId changes
-      previousCommentTimestamps.current.clear()
-      unsubscribe()
-    }
-  }, [groupId])
+      console.log("🔌 cleaning up real-time listener on log_posts collection");
+      previousCommentTimestamps.current.clear();
+      unsubscribe();
+    };
+  }, [groupId, isArchived]);
 
-  return {
-    ...state
-  }
-}
+  return state;
+};

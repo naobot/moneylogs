@@ -35,8 +35,6 @@ export const Group = ({
   const { trackUserAction } = useReadTracking();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
 
-  const logPostRes = useGetLogPosts({ groupId });
-
   const [displayAll, setDisplayAll] = useState(isSpectator);
   const [displayUser, setDisplayUser] = useState<UserData | null>(
     isSpectator ? null : (loggedInUser ?? null),
@@ -82,6 +80,8 @@ export const Group = ({
   const isReadOnly = useMemo(() => {
     return absoluteEnd(group).isBefore(dayjs());
   }, [group]);
+
+  const logPostRes = useGetLogPosts({ groupId, isArchived: isReadOnly });
 
   const memberIds = useMemo(() => {
     if (!members) return [];
