@@ -60,12 +60,12 @@
     },
     "runtime": {
       "name": "node",
-      "version": ">=24.16.0",
+      "version": ">=24.18.0",
       "onFail": "error"
     }
   },
   "engines": {
-    "node": ">=24.17.0",
+    "node": ">=24.18.0",
     "npm": ">=11"
   }
 }
