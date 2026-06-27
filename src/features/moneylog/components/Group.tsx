@@ -137,6 +137,7 @@ export const Group = ({
 
   useEffect(() => {
     const updateViewTracking = async () => {
+      if (isReadOnly) return;
       if (isSpectator) return;
       // Only track if we have all required data and user is viewing someone else's logs
       if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return;
