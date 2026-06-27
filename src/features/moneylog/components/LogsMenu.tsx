@@ -1,4 +1,20 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { LogPost } from "@/types/user";
 import { useCurrentUser } from "@/contexts";
@@ -27,6 +43,8 @@ interface LogsMenuProps {
   isReadOnly: boolean;
 }
 
+const MEMBER_ORDER_KEY = (groupId: string) => `ML__${groupId}__memberOrder`;
+
 const LogsMenu = ({
   displaySummary = false,
   displayAll = false,
@@ -39,6 +57,17 @@ const LogsMenu = ({
   isReadOnly = false,
 }: LogsMenuProps) => {
   const { user } = useCurrentUser();
+
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MEMBER_ORDER_KEY(groupId)) ?? "null");
+      setOrderedIds(Array.isArray(saved) ? saved : []);
+    } catch {
+      setOrderedIds([]);
+    }
+  }, [groupId]);
 
   const isSpectator = useMemo(() => {
     if (!user?.id) return true;
@@ -67,6 +96,38 @@ const LogsMenu = ({
     });
   }, [isSpectator, user?.viewTracking, logMembers, groupId, user?.id]);
 
+  const orderedMembers = useMemo(() => {
+    if (orderedIds.length) {
+      const idToMember = new Map(serializedMembers.map((m) => [m.id, m]));
+      const ordered = orderedIds.flatMap((id) => {
+        const m = idToMember.get(id);
+        return m ? [m] : [];
+      });
+      const orderedSet = new Set(orderedIds);
+      const newMembers = serializedMembers.filter((m) => !orderedSet.has(m.id));
+      return [...ordered, ...newMembers];
+    }
+    // Default: logged-in user's own entry first
+    const myMember = serializedMembers.find((m) => m.id === user?.id);
+    const others = serializedMembers.filter((m) => m.id !== user?.id);
+    return myMember ? [myMember, ...others] : serializedMembers;
+  }, [serializedMembers, orderedIds, user?.id]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+  );
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedMembers.findIndex((m) => m.id === active.id);
+    const newIndex = orderedMembers.findIndex((m) => m.id === over.id);
+    const reordered = arrayMove(orderedMembers, oldIndex, newIndex);
+    const newIds = reordered.map((m) => m.id);
+    setOrderedIds(newIds);
+    localStorage.setItem(MEMBER_ORDER_KEY(groupId), JSON.stringify(newIds));
+  };
+
   return (
     <>
       <div className="LogsMenu">
@@ -94,24 +155,47 @@ const LogsMenu = ({
             </div>
           </div>
         )}
-        {serializedMembers?.map((member) => {
-          return (
-            <LogsMenuItemWithComments
-              displayAll={displayAll}
-              displaySummary={displaySummary}
-              key={member.id}
-              logPosts={logPosts.filter((post) => post.author.id == member.id)}
-              member={member}
-              displayUser={displayUser}
-              user={user}
-              groupId={groupId}
-              onChangeUser={onChangeUser}
-              isSpectator={isSpectator}
-            />
-          );
-        })}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext
+            items={orderedMembers.map((m) => m.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {orderedMembers.map((member) => (
+              <SortableMemberItem key={member.id} id={member.id}>
+                <LogsMenuItemWithComments
+                  displayAll={displayAll}
+                  displaySummary={displaySummary}
+                  logPosts={logPosts.filter((post) => post.author.id == member.id)}
+                  member={member}
+                  displayUser={displayUser}
+                  user={user}
+                  groupId={groupId}
+                  onChangeUser={onChangeUser}
+                  isSpectator={isSpectator}
+                />
+              </SortableMemberItem>
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
     </>
+  );
+};
+
+const SortableMemberItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cx("LogsMenu__sortable-item", { "LogsMenu__sortable-item--dragging": isDragging })}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
   );
 };
 

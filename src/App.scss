@@ -509,6 +509,20 @@ html {
   }
 }
 
+.LogsMenu__sortable-item {
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--dragging {
+    opacity: 0.5;
+    z-index: 10;
+  }
+}
+
 .LogPostMenu {
   display: inline-flex;
   align-items: center;
