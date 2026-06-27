@@ -111,6 +111,7 @@ export const Group = ({
       setDisplayUser(loggedInUser);
       setDisplayAll(false);
     }
+    setDisplaySummary(false);
   }, [loggedInUser?.id, groupId, isSpectator]);
 
   useEffect(() => {
