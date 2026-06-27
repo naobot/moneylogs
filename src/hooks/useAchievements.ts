@@ -3,20 +3,20 @@ import { collection, doc, getDocs, setDoc, serverTimestamp } from "firebase/fire
 import { db } from "@/config/firebase-config";
 import { Currency, LogPost } from "@/types/user";
 
-export type AchievementType = "top_spender" | "lowest_spender";
+export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
 
 export type Achievement = {
   id: string;
   type: AchievementType;
   groupId: string;
   groupTitle: string;
-  currency: Currency;
+  currency?: Currency; // undefined for non-currency achievements (e.g. time_traveller)
   unlockedAt: { seconds: number; toDate: () => Date };
 };
 
 export const ACHIEVEMENT_META: Record<
   AchievementType,
-  { emoji: string; title: string; description: (currency: string) => string }
+  { emoji: string; title: string; description: (currency?: string) => string }
 > = {
   top_spender: {
     emoji: "🏆",
@@ -28,12 +28,17 @@ export const ACHIEVEMENT_META: Record<
     title: "Lowest Spender",
     description: (currency) => `Lowest total ${currency} spending in the group`,
   },
+  time_traveller: {
+    emoji: "🌍",
+    title: "Time Traveller",
+    description: () => "Logged entries from multiple timezones in one session",
+  },
 };
 
 const achievementsCollection = (userId: string) => collection(db, "users", userId, "achievements");
 
-const achievementDocId = (groupId: string, type: AchievementType, currency: string) =>
-  `${groupId}__${type}__${currency}`;
+const achievementDocId = (groupId: string, type: AchievementType, currency?: string) =>
+  currency ? `${groupId}__${type}__${currency}` : `${groupId}__${type}`;
 
 export const useGetAchievements = (userId?: string) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -79,6 +84,8 @@ export const awardGroupAchievements = async ({
   groupTitle: string;
   logPosts: LogPost[];
 }): Promise<Achievement[]> => {
+  if (logPosts.length === 0) return [];
+
   // Build per-user totals by currency (only users who have posted in that currency)
   const totalsByUserCurrency = new Map<string, Map<Currency, number>>();
   logPosts.forEach((post) => {
@@ -99,7 +106,12 @@ export const awardGroupAchievements = async ({
     return participantCount >= 3;
   });
 
-  if (eligibleCurrencies.length === 0) return [];
+  // Time Traveller: current user posted from 2+ distinct timezones
+  const userPosts = logPosts.filter((post) => post.author.id === userId);
+  const userTimezones = new Set(userPosts.filter((p) => p.timezone).map((p) => p.timezone!));
+  const isTimeTraveller = userTimezones.size >= 2;
+
+  if (eligibleCurrencies.length === 0 && !isTimeTraveller) return [];
 
   // Fetch existing achievements to avoid duplicate writes
   const existingSnapshot = await getDocs(achievementsCollection(userId));
@@ -107,6 +119,7 @@ export const awardGroupAchievements = async ({
 
   const newlyUnlocked: Achievement[] = [];
 
+  // Currency-based achievements (Top / Lowest Spender)
   for (const currency of eligibleCurrencies) {
     const ranked = [...totalsByUserCurrency.entries()]
       .filter(([, m]) => m.has(currency))
@@ -138,6 +151,27 @@ export const awardGroupAchievements = async ({
         groupId,
         groupTitle,
         currency,
+        unlockedAt: { seconds: Date.now() / 1000, toDate: () => new Date() },
+      });
+    }
+  }
+
+  // Time Traveller achievement (no currency)
+  if (isTimeTraveller) {
+    const docId = achievementDocId(groupId, "time_traveller");
+    if (!existingIds.has(docId)) {
+      await setDoc(doc(db, "users", userId, "achievements", docId), {
+        type: "time_traveller",
+        groupId,
+        groupTitle,
+        unlockedAt: serverTimestamp(),
+      });
+
+      newlyUnlocked.push({
+        id: docId,
+        type: "time_traveller",
+        groupId,
+        groupTitle,
         unlockedAt: { seconds: Date.now() / 1000, toDate: () => new Date() },
       });
     }

@@ -139,6 +139,94 @@ describe("awardGroupAchievements — duplicate prevention", () => {
   });
 });
 
+describe("awardGroupAchievements — time traveller", () => {
+  it("awards time_traveller when user has posts in 2+ distinct timezones", async () => {
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      { ...makePost("user1", 80), timezone: "Asia/Tokyo" },
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe("time_traveller");
+    expect(result[0].currency).toBeUndefined();
+  });
+
+  it("writes the achievement with no currency in the document ID", async () => {
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      { ...makePost("user1", 80), timezone: "Asia/Tokyo" },
+    ];
+    await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    const [[ref]] = vi.mocked(setDoc).mock.calls;
+    expect((ref as { id: string }).id).toBe("group1__time_traveller");
+  });
+
+  it("does not award when all posts share the same timezone", async () => {
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      { ...makePost("user1", 80), timezone: "America/Toronto" },
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("ignores posts with no timezone field when counting distinct timezones", async () => {
+    // Only 1 post has a timezone — not enough for time_traveller
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      makePost("user1", 80), // no timezone
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("does not re-award if the user already holds the achievement", async () => {
+    vi.mocked(getDocs).mockResolvedValue(existingAchievement("group1__time_traveller") as never);
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      { ...makePost("user1", 80), timezone: "Asia/Tokyo" },
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    expect(result).toHaveLength(0);
+    expect(vi.mocked(setDoc)).not.toHaveBeenCalled();
+  });
+
+  it("only checks the current user's own posts, not other users' timezones", async () => {
+    // user2 posts from 2 timezones, but we're checking user1 who only posted from 1
+    const posts = [
+      { ...makePost("user1", 100), timezone: "America/Toronto" },
+      { ...makePost("user2", 80), timezone: "America/Toronto" },
+      { ...makePost("user2", 60), timezone: "Asia/Tokyo" },
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: posts as never,
+    });
+    expect(result).toHaveLength(0);
+  });
+});
+
 describe("awardGroupAchievements — multi-currency", () => {
   it("tracks each currency's 3+ participant threshold independently", async () => {
     // user3 only posts in CAD, so USD has only 2 participants → no USD awards

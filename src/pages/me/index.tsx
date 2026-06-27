@@ -163,7 +163,8 @@ export const UserSettings = () => {
                   </span>
                   <div className="AchievementsList__item__text">
                     <strong>
-                      {meta.title} · {achievement.currency}
+                      {meta.title}
+                      {achievement.currency ? ` · ${achievement.currency}` : ""}
                     </strong>
                     <span>{achievement.groupTitle}</span>
                   </div>
