@@ -140,7 +140,7 @@ const LogPostEditor = forwardRef(
         api.replaceSelection(`![image](${url})`);
       } catch (err) {
         console.error("Failed to upload image:", err);
-        showToast("Image upload failed. Please try again.");
+        showToast(err instanceof Error ? err.message : "Image upload failed. Please try again.");
       }
     };
 
