@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  getDoc,
-  doc,
-  DocumentSnapshot,
-} from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, DocumentSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 
 // type UseGetGroupUsersParams = {
@@ -103,21 +95,51 @@ export const useGetGroupUsers = (groupId: string) => {
       setIsLoading(false);
     }
 
-    // Set up real-time listener (always runs, even with cache)
+    // Listen to the group document live (rather than reading it once) so the member
+    // set stays current: a stale or partial initial read — or a membership change —
+    // self-corrects within this mount instead of only after a remount (which is why
+    // a missing own-log used to reappear only after navigating away and back).
     console.log("🔄 setting up real-time listeners for users");
 
-    const setupUserListeners = async () => {
-      try {
-        // Get group members list first
-        const groupDoc = await getDoc(doc(db, "log_groups", groupId));
+    let memberUnsubs: (() => void)[] = [];
+    let currentMemberKey: string | null = null;
+
+    const teardownMemberListeners = () => {
+      memberUnsubs.forEach((fn) => fn());
+      memberUnsubs = [];
+    };
+
+    const groupUnsub = onSnapshot(
+      doc(db, "log_groups", groupId),
+      (groupDoc) => {
         const memberRefs = groupDoc.data()?.members || [];
+
+        // Only rebuild the member listeners when the set of members actually
+        // changes, so unrelated group-doc updates don't churn subscriptions.
+        const memberKey = memberRefs
+          .map((ref: { id?: string; path?: string }) => ref?.id ?? ref?.path ?? "")
+          .join("|");
+        if (memberKey === currentMemberKey) return;
+        currentMemberKey = memberKey;
+
+        teardownMemberListeners();
 
         // Chunk members into groups of 10 (Firestore 'in' query limit)
         const chunks = chunkArray(memberRefs, 10);
-        const unsubscribeFns: (() => void)[] = [];
 
-        const allUsers: FullUserData[] = [];
-        let chunksReceived = 0;
+        if (chunks.length === 0) {
+          setUsers([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Hold each chunk's latest results in its own slot. Merging by flattening
+        // these slots is independent of snapshot arrival order and of how many docs
+        // each chunk actually returns — unlike a shared array spliced by index,
+        // which drops members when a later chunk's snapshot lands before an earlier
+        // one's (and can poison the cache with a partial list).
+        const chunkResults: FullUserData[][] = chunks.map(() => []);
+        const receivedChunks = new Set<number>();
 
         chunks.forEach((chunk, chunkIndex) => {
           const chunkQuery = query(collection(db, "users"), where("__name__", "in", chunk));
@@ -137,18 +159,18 @@ export const useGetGroupUsers = (groupId: string) => {
 
             console.log(`📡 received ${chunkUsers.length} users from query ${chunkIndex + 1}`);
 
-            // Update the specific chunk in allUsers array
-            const startIndex = chunkIndex * 10;
-            allUsers.splice(startIndex, 10, ...chunkUsers);
+            chunkResults[chunkIndex] = chunkUsers;
+            receivedChunks.add(chunkIndex);
 
-            chunksReceived++;
+            const allUsers = chunkResults.flat();
 
             // Update state with current users
-            setUsers([...allUsers]);
+            setUsers(allUsers);
             setIsLoading(false);
 
-            // Cache only stable user profile data (not real-time fields)
-            if (chunksReceived === chunks.length) {
+            // Only cache once every chunk has reported at least once, so we never
+            // persist a partial member list.
+            if (receivedChunks.size === chunks.length) {
               const cacheableData: CacheableUserData[] = allUsers.map((user) => ({
                 id: user.id,
                 userId: user.userId,
@@ -164,30 +186,19 @@ export const useGetGroupUsers = (groupId: string) => {
             }
           });
 
-          unsubscribeFns.push(unsubscribe);
+          memberUnsubs.push(unsubscribe);
         });
-
-        // Return cleanup function which will be cleanUpFn
-        return () => {
-          console.log("🔌 cleaning up real-time listeners on users collection");
-          unsubscribeFns.forEach((fn) => fn());
-        };
-      } catch (err) {
+      },
+      (err) => {
         setError(err instanceof Error ? err.message : "Failed to fetch users");
         setIsLoading(false);
-      }
-    };
-
-    let cleanup: (() => void) | undefined;
-
-    void setupUserListeners().then((cleanUpFn) => {
-      cleanup = cleanUpFn;
-    });
+      },
+    );
 
     return () => {
-      if (cleanup) {
-        cleanup();
-      }
+      console.log("🔌 cleaning up real-time listeners on users + group");
+      groupUnsub();
+      teardownMemberListeners();
     };
   }, [groupId]);
 
