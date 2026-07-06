@@ -28,6 +28,20 @@
     background-color: var(--c-black);
     color: #fff;
     animation: snackbar-enter 0.2s ease-out;
+
+    &--success {
+      background-color: var(--c-white);
+      color: var(--c-black);
+      border-bottom: 1px solid var(--c-black);
+
+      .Snackbar__close {
+        color: var(--c-border);
+
+        &:hover {
+          color: var(--c-black);
+        }
+      }
+    }
   }
 
   &__message {

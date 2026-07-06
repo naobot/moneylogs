@@ -1,8 +1,11 @@
+import cx from "classnames";
+
 import "./Snackbar.scss";
 
 interface Toast {
   id: string;
   message: string;
+  variant: "error" | "success";
   timestamp: Date;
 }
 
@@ -17,7 +20,12 @@ export const Snackbar = ({ toasts, onRemove }: SnackbarProps) => {
 
   return (
     <div className="Snackbar">
-      <div key={toast.id} className="Snackbar__item">
+      <div
+        key={toast.id}
+        className={cx("Snackbar__item", {
+          "Snackbar__item--success": toast.variant === "success",
+        })}
+      >
         <span className="Snackbar__message">{toast.message}</span>
         <button className="Snackbar__close" onClick={() => onRemove(toast.id)} aria-label="Dismiss">
           ✕
