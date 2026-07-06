@@ -35,11 +35,13 @@ export const Group = ({
   const { trackUserAction } = useReadTracking();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
 
-  const [displayAll, setDisplayAll] = useState(isSpectator);
+  // Default view: Daily Digest while the group is active, Log Group Summary once
+  // it has fully ended (see the reset effect below, which is the source of truth)
+  const [displayAll, setDisplayAll] = useState(() => absoluteEnd(group).isAfter(dayjs()));
   const [displayUser, setDisplayUser] = useState<UserData | null>(
     isSpectator ? null : (loggedInUser ?? null),
   );
-  const [displaySummary, setDisplaySummary] = useState(false);
+  const [displaySummary, setDisplaySummary] = useState(() => absoluteEnd(group).isBefore(dayjs()));
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
 
@@ -104,15 +106,23 @@ export const Group = ({
   );
 
   useEffect(() => {
+    if (isReadOnly) {
+      // Completed logs open on the group summary
+      setDisplayUser(null);
+      setDisplayAll(false);
+      setDisplaySummary(true);
+      return;
+    }
+    // Active logs open on the Daily Digest
     if (isSpectator) {
       setDisplayAll(true);
       setDisplayUser(null);
     } else if (loggedInUser) {
       setDisplayUser(loggedInUser);
-      setDisplayAll(false);
+      setDisplayAll(true);
     }
     setDisplaySummary(false);
-  }, [loggedInUser?.id, groupId, isSpectator]);
+  }, [loggedInUser?.id, groupId, isSpectator, isReadOnly]);
 
   useEffect(() => {
     isCreateNewEntrySet(false);
