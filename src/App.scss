@@ -481,6 +481,10 @@ html {
       &:active {
         cursor: grabbing;
       }
+
+      @media (max-width: constants.$breakpoint-sm) {
+        display: none;
+      }
     }
 
     &__subtitle {
