@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
-import { parseReferenceArray } from "@/utils/helpers";
+import { needsProfileSetup, parseReferenceArray } from "@/utils/helpers";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useGetGroup } from "@/hooks/useGetGroup";
 import { Group } from "@/features/moneylog/components/Group";
@@ -42,7 +42,7 @@ export const InvitePage = () => {
         addGroupToMember.mutate({ currentUserId: loggedInUser.userId, groupId }),
         addMemberToGroup.mutate({ currentUserId: loggedInUser.userId, groupId }),
       ]);
-      if (!loggedInUser.timezone) {
+      if (needsProfileSetup(loggedInUser)) {
         setShowInviteModal(false);
         setShowJoinedModal(true);
       } else {

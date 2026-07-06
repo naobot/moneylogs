@@ -3,17 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import LoginHandler from "@/features/auth/components/LoginHandler";
 import RegistrationHandler from "@/features/auth/components/RegistrationHandler";
 import Button from "@/components/Button";
+import { AuthLocationState, initialAuthView, sanitizeRedirect } from "@/features/auth/authRedirect";
 
 export const Auth = () => {
   const location = useLocation();
-  const { view, from } = (location.state as { view?: string; from?: string }) ?? {};
+  const state = location.state as AuthLocationState | null;
 
-  // Only allow internal paths as a post-auth destination
-  const redirectTo = from?.startsWith("/") ? from : undefined;
-
-  const [currentView, setCurrentView] = useState(
-    view ?? (redirectTo?.includes("/invite") ? "register" : "login"),
-  );
+  const redirectTo = sanitizeRedirect(state?.from);
+  const [currentView, setCurrentView] = useState(initialAuthView(state));
 
   return (
     <div className="LoginPage Window">
