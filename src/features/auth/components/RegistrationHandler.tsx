@@ -11,7 +11,7 @@ import { useRegisterNewUser } from "@/hooks/useRegisterNewUser";
 import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
 
-const RegistrationHandler = () => {
+const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,7 +39,7 @@ const RegistrationHandler = () => {
       setRegistrationPending(false);
 
       if (loggedInUser.user) {
-        window.location.href = "/me";
+        window.location.href = redirectTo ?? "/me";
       }
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };

@@ -18,6 +18,7 @@ export const InvitePage = () => {
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showJoinedModal, setShowJoinedModal] = useState(false);
 
   const isProcessingJoin = useMemo(
     () => addGroupToMember.isLoading || addMemberToGroup.isLoading,
@@ -41,23 +42,28 @@ export const InvitePage = () => {
         addGroupToMember.mutate({ currentUserId: loggedInUser.userId, groupId }),
         addMemberToGroup.mutate({ currentUserId: loggedInUser.userId, groupId }),
       ]);
-      navigate("/");
+      if (!loggedInUser.timezone) {
+        setShowInviteModal(false);
+        setShowJoinedModal(true);
+      } else {
+        void navigate("/");
+      }
     } catch (error) {
       console.error("Failed to join group:", error);
     }
   };
 
   useEffect(() => {
-    if (currentUserIsMember && groupId) {
-      navigate(`/g/${groupId}`, { replace: true });
+    if (currentUserIsMember && groupId && !showJoinedModal) {
+      void navigate(`/g/${groupId}`, { replace: true });
     }
-  }, [currentUserIsMember, groupId, navigate]);
+  }, [currentUserIsMember, groupId, navigate, showJoinedModal]);
 
   useEffect(() => {
     if (isSuccessGroup && group?.members && !currentUserIsMember) {
       setShowInviteModal(true);
     }
-  }, [currentUserIsMember, isSuccessGroup]);
+  }, [currentUserIsMember, isSuccessGroup, group?.members]);
 
   return (
     <>
@@ -93,6 +99,21 @@ export const InvitePage = () => {
             {group.members.length >= group.max_participants && (
               <Button onClick={() => navigate("/")} buttonStyle="primary-border" text="Back" />
             )}
+          </Modal.Actions>
+        </Modal>
+      )}
+      {group && (
+        <Modal isOpen={showJoinedModal} onClose={() => setShowJoinedModal(false)}>
+          <Modal.Header>You have joined {group.title}!</Modal.Header>
+          <Modal.Body>
+            <p>Please set up your user profile.</p>
+          </Modal.Body>
+          <Modal.Actions>
+            <Button
+              onClick={() => navigate("/me")}
+              buttonStyle="primary-border"
+              text="Set up my profile"
+            />
           </Modal.Actions>
         </Modal>
       )}

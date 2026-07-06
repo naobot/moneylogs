@@ -6,8 +6,13 @@ import Button from "@/components/Button";
 
 export const Auth = () => {
   const location = useLocation();
+  const { view, from } = (location.state as { view?: string; from?: string }) ?? {};
+
+  // Only allow internal paths as a post-auth destination
+  const redirectTo = from?.startsWith("/") ? from : undefined;
+
   const [currentView, setCurrentView] = useState(
-    (location.state as { view?: string })?.view ?? "login",
+    view ?? (redirectTo?.includes("/invite") ? "register" : "login"),
   );
 
   return (
@@ -32,8 +37,8 @@ export const Auth = () => {
           text="I have an account"
         />
       </div>
-      {currentView === "login" && <LoginHandler />}
-      {currentView === "register" && <RegistrationHandler />}
+      {currentView === "login" && <LoginHandler redirectTo={redirectTo} />}
+      {currentView === "register" && <RegistrationHandler redirectTo={redirectTo} />}
     </div>
   );
 };
