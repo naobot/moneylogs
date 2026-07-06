@@ -258,6 +258,9 @@ const LogsMenuItemWithComments = ({
           <div className="LogsMenu__item__subtitle">({member?.displayLocation})</div>
         )}
       </div>
+      <span className="LogsMenu__item__dragHandle" aria-hidden="true">
+        ⣿
+      </span>
     </div>
   );
 };

@@ -461,12 +461,27 @@ html {
   }
 
   &__item {
-    display: grid;
-    grid-template-columns: 1fr auto;
+    display: flex;
     align-items: center;
+    gap: 0.4em;
     padding: 0.8em 1em;
     border: 2px solid var(--c-black);
     text-align: right;
+
+    &__content {
+      flex: 1;
+    }
+
+    &__dragHandle {
+      cursor: grab;
+      opacity: 0.3;
+      font-size: 0.9em;
+      user-select: none;
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
 
     &__subtitle {
       font-size: 0.7em;
@@ -520,6 +535,12 @@ html {
   &--dragging {
     opacity: 0.5;
     z-index: 10;
+
+    // Override the item's pointer cursor while a drag is in progress
+    .LogsMenu__item,
+    .LogsMenu__item:hover {
+      cursor: grabbing;
+    }
   }
 }
 
