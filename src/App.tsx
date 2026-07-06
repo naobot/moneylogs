@@ -1,5 +1,12 @@
 import { PropsWithChildren, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes, NavigateProps, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  NavigateProps,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/config/firebase-config";
 import Layout from "@/features/layout/Layout";
@@ -27,11 +34,19 @@ export const CheckAuth = ({
   }
 >) => {
   const [user, loading] = useAuthState(auth);
+  const location = useLocation();
 
   if (loading) return <div>Loading...</div>;
 
   if (!user && requireAuth) {
-    return <Navigate to={"/login"} replace {...props} />;
+    return (
+      <Navigate
+        to={"/login"}
+        replace
+        state={{ from: location.pathname + location.search }}
+        {...props}
+      />
+    );
   }
 
   return <>{children}</>;

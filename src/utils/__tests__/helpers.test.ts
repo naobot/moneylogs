@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { parseDocumentReference, parseReferenceArray } from "@/utils/helpers";
+import { needsProfileSetup, parseDocumentReference, parseReferenceArray } from "@/utils/helpers";
 
 const makeRef = (segments: string[], offset = 0, len = 2) => ({
   _key: { path: { segments, offset, len } },
@@ -73,5 +73,22 @@ describe("parseReferenceArray", () => {
 
   it("returns an empty array when all entries fail to parse", () => {
     expect(parseReferenceArray([null, {}, { _key: {} }])).toEqual([]);
+  });
+});
+
+describe("needsProfileSetup", () => {
+  it("is true for a logged-in user with no timezone", () => {
+    expect(needsProfileSetup({ timezone: undefined })).toBe(true);
+    expect(needsProfileSetup({ timezone: null })).toBe(true);
+    expect(needsProfileSetup({})).toBe(true);
+  });
+
+  it("is false once a timezone has been set", () => {
+    expect(needsProfileSetup({ timezone: "America/Toronto" })).toBe(false);
+  });
+
+  it("is false when there is no user to set up", () => {
+    expect(needsProfileSetup(null)).toBe(false);
+    expect(needsProfileSetup(undefined)).toBe(false);
   });
 });

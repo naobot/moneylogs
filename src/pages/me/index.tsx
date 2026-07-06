@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTimezoneSelect, allTimezones } from "react-timezone-select";
 
 import { useCurrentUser } from "@/contexts";
+import { useToastContext } from "@/hooks/useToastContext";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useMutation } from "@/hooks/useFirebase";
@@ -22,6 +23,7 @@ import { absoluteStart, absoluteEnd } from "@/utils/groupBoundaries";
 export const UserSettings = () => {
   const { allGroups, isSuccess } = useGetCurrentGroups();
 
+  const { showToast } = useToastContext();
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
   const { achievements } = useGetAchievements(user?.id);
@@ -80,10 +82,10 @@ export const UserSettings = () => {
         timezone: newTimezone,
       });
 
-      console.log("Successfully updated user info");
+      showToast("Profile updated", "success");
     } catch (err) {
       console.error("Failed to update user info:", err);
-      // Error state is handled by useMutation
+      showToast("Failed to update profile. Please try again.");
     }
   };
 
