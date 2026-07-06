@@ -140,6 +140,9 @@ export const useGetGroupUsers = (groupId: string) => {
         // one's (and can poison the cache with a partial list).
         const chunkResults: FullUserData[][] = chunks.map(() => []);
         const receivedChunks = new Set<number>();
+        // Signature of the last member list we actually applied, so we can ignore
+        // snapshots that only touched churny, nav-irrelevant fields (see below).
+        let appliedSignature: string | null = null;
 
         chunks.forEach((chunk, chunkIndex) => {
           const chunkQuery = query(collection(db, "users"), where("__name__", "in", chunk));
@@ -163,6 +166,17 @@ export const useGetGroupUsers = (groupId: string) => {
             receivedChunks.add(chunkIndex);
 
             const allUsers = chunkResults.flat();
+
+            // A member's user doc changes constantly as they view logs, subscribe to
+            // comments, or are seen — but the nav reads those fields only from the
+            // current user (via context), never from other members. Skip all state
+            // updates (which is why this returns before touching them) when only such
+            // fields changed, so an active group doesn't re-render every viewer's nav
+            // on every view. Firestore still bills the snapshot read; cutting that
+            // would need the churny fields moved off the user document.
+            const signature = stableMemberSignature(allUsers);
+            if (signature === appliedSignature) return;
+            appliedSignature = signature;
 
             // Update state with current users
             setUsers(allUsers);
@@ -209,6 +223,26 @@ export const useGetGroupUsers = (groupId: string) => {
     error,
   };
 };
+
+// Real-time fields that change frequently but that the nav never reads off other
+// members (only off the current user, via context). Excluding them from the change
+// signature lets us ignore snapshots that only touched them.
+const CHURN_ONLY_FIELDS: Array<keyof RealtimeUserData> = [
+  "viewTracking",
+  "commentSubscriptions",
+  "lastSeen",
+];
+
+// A stable string over every member field except the churn-only ones, so two
+// snapshots that differ only in those fields compare equal and are skipped.
+const stableMemberSignature = (users: FullUserData[]): string =>
+  JSON.stringify(
+    users.map((user) => {
+      const stable: Record<string, unknown> = { ...user };
+      for (const field of CHURN_ONLY_FIELDS) delete stable[field];
+      return stable;
+    }),
+  );
 
 const chunkArray = <T>(array: T[], size: number): T[][] => {
   const chunks: T[][] = [];

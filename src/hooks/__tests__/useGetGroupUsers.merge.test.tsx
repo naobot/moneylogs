@@ -24,7 +24,7 @@ const MEMBER_IDS = Array.from({ length: 12 }, (_, i) => `m${i}`);
 
 type ChunkListener = { chunk: string[]; cb: (snapshot: unknown) => void };
 
-const makeSnapshot = (chunk: string[]) => ({
+const makeSnapshot = (chunk: string[], extra?: (id: string) => Record<string, unknown>) => ({
   forEach: (fn: (doc: { id: string; data: () => unknown }) => void) => {
     chunk.forEach((id) =>
       fn({
@@ -34,6 +34,7 @@ const makeSnapshot = (chunk: string[]) => ({
           displayName: id,
           email: `${id}@example.com`,
           groups: [GROUP_ID],
+          ...(extra ? extra(id) : {}),
         }),
       }),
     );
@@ -43,9 +44,11 @@ const makeSnapshot = (chunk: string[]) => ({
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let latestUsers: FullUserData[] = [];
+let renderCount = 0;
 const Probe = ({ groupId }: { groupId: string }) => {
   const { users } = useGetGroupUsers(groupId);
   latestUsers = users;
+  renderCount += 1;
   return null;
 };
 
@@ -58,6 +61,7 @@ describe("useGetGroupUsers chunk merge", () => {
   beforeEach(() => {
     localStorage.clear();
     latestUsers = [];
+    renderCount = 0;
     chunkListeners = [];
     groupListener = null;
 
@@ -150,5 +154,33 @@ describe("useGetGroupUsers chunk merge", () => {
     fireChunks(chunkListeners);
     expect(latestUsers.some((u) => u.id === "m0")).toBe(true);
     expect(latestUsers.map((u) => u.id).sort()).toEqual([...MEMBER_IDS].sort());
+  });
+
+  it("ignores snapshots that only change churny fields, but reflects real changes", () => {
+    mount();
+    deliverMembers(["m0", "m1"]);
+    const chunk = chunkListeners[0];
+
+    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ viewTracking: { g: 1 } }))));
+    const usersAfterFirst = latestUsers;
+    const rendersAfterFirst = renderCount;
+
+    // Same profile data, only viewTracking differs — no re-render, same array
+    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ viewTracking: { g: 2 } }))));
+    expect(latestUsers).toBe(usersAfterFirst);
+    expect(renderCount).toBe(rendersAfterFirst);
+
+    // A real profile change (displayName) must still propagate
+    act(() =>
+      chunk.cb(
+        makeSnapshot(["m0", "m1"], (id) => ({
+          viewTracking: { g: 2 },
+          displayName: id === "m0" ? "Renamed" : id,
+        })),
+      ),
+    );
+    expect(latestUsers).not.toBe(usersAfterFirst);
+    expect(latestUsers.find((u) => u.id === "m0")!.displayName).toBe("Renamed");
+    expect(renderCount).toBeGreaterThan(rendersAfterFirst);
   });
 });
