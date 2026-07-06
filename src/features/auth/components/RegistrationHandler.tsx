@@ -10,17 +10,21 @@ import useValidatePassword from "@/features/auth/hooks/useValidatePassword";
 import { useRegisterNewUser } from "@/hooks/useRegisterNewUser";
 import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
+import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
+import { getRegistrationErrorMessage } from "@/features/auth/registrationErrors";
 
 const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [registrationPending, setRegistrationPending] = useState(false);
+  const [registrationError, setRegistrationError] = useState("");
   const { isValid } = useValidatePassword(password);
   const { addNewUser } = useRegisterNewUser();
 
   const handleRegister = async () => {
     setRegistrationPending(true);
+    setRegistrationError("");
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -44,6 +48,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       setRegistrationPending(false);
+      setRegistrationError(getRegistrationErrorMessage(err.code));
       console.log(`${err.code}: ${err.message}`);
     }
   };
@@ -69,6 +74,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
           isError={!!password && !isValid}
           errorMessage={"password problem"}
         />
+        <AuthErrorMessage message={registrationError} />
         <Button
           onClick={() => handleRegister()}
           text="Register"

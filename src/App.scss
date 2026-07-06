@@ -352,6 +352,15 @@ html {
   }
 }
 
+.AuthError {
+  display: inline-flex;
+  align-items: center;
+  grid-gap: 0.4em;
+  font-size: 0.9em;
+  max-width: 300px;
+  text-align: center;
+}
+
 .CreateNewLog,
 .UserSettings {
   display: flex;
