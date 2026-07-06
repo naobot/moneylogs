@@ -532,6 +532,16 @@ html {
   cursor: grab;
   touch-action: none;
 
+  // In the horizontal nav the wrapper is what stretches to row height;
+  // pass that stretch down so member items match the other items' height
+  @media (max-width: constants.$breakpoint-md) {
+    display: flex;
+
+    > .LogsMenu__item {
+      flex: 1;
+    }
+  }
+
   &:active {
     cursor: grabbing;
   }
