@@ -559,6 +559,29 @@ html {
   }
 }
 
+.DigestNav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+
+  &__arrow {
+    background: none;
+    border: none;
+    color: var(--c-black);
+    font: inherit;
+    cursor: pointer;
+    padding: 0 0.2em;
+    line-height: 1;
+
+    &:disabled {
+      opacity: 0.2;
+      cursor: default;
+    }
+  }
+}
+
 .LogPostMenu {
   display: inline-flex;
   align-items: center;

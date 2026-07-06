@@ -1,5 +1,4 @@
-import { Dispatch, useEffect, useMemo } from "react";
-import dayjs from "dayjs";
+import { Dispatch, useEffect } from "react";
 
 import { Group, LogPost } from "@/types/user";
 import { UserData } from "@/hooks/useGetUserInfo";
@@ -36,16 +35,6 @@ export const ActiveLog = ({
   isPostingClosed = false,
   isSpectator = false,
 }: ActiveLogProps) => {
-  const recentLogs = useMemo(() => {
-    const now = dayjs();
-    const twentyFourHoursAgo = dayjs().subtract(24, "hours");
-
-    return logPosts.filter((post) => {
-      const postDateTime = dayjs(post.postDate.toDate());
-      return postDateTime.isAfter(twentyFourHoursAgo) && postDateTime.isBefore(now);
-    });
-  }, [logPosts]);
-
   useEffect(() => {
     isCreateNewEntrySet(false);
   }, [userId, groupId]);
@@ -69,7 +58,7 @@ export const ActiveLog = ({
       {displayAll && (
         <AllLogsDigest
           groupId={groupId}
-          logs={recentLogs}
+          logs={logPosts}
           isCreateNewEntrySet={isCreateNewEntrySet}
           isReadOnly={isReadOnly}
           isPostingClosed={isPostingClosed}
