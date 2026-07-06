@@ -482,7 +482,8 @@ html {
         cursor: grabbing;
       }
 
-      @media (max-width: constants.$breakpoint-sm) {
+      // The nav is horizontal below this breakpoint — no drag handle there
+      @media (max-width: constants.$breakpoint-md) {
         display: none;
       }
     }

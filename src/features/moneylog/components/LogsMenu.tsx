@@ -244,6 +244,9 @@ const LogsMenuItemWithComments = ({
       })}
       onClick={() => onChangeUser(member)}
     >
+      <span className="LogsMenu__item__dragHandle" aria-hidden="true">
+        ⣿
+      </span>
       {!isSpectator &&
         member?.id !== user?.id &&
         displayUser?.id !== member?.id &&
@@ -258,9 +261,6 @@ const LogsMenuItemWithComments = ({
           <div className="LogsMenu__item__subtitle">({member?.displayLocation})</div>
         )}
       </div>
-      <span className="LogsMenu__item__dragHandle" aria-hidden="true">
-        ⣿
-      </span>
     </div>
   );
 };
