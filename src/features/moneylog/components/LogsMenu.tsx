@@ -22,6 +22,7 @@ import { UserData } from "@/hooks/useGetUserInfo";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 
 import { applyMemberOrder } from "@/utils/memberOrder";
+import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
 import Icon from "@/components/Icon";
 
 import cx from "classnames";
@@ -58,6 +59,8 @@ const LogsMenu = ({
   isReadOnly = false,
 }: LogsMenuProps) => {
   const { user } = useCurrentUser();
+
+  const dragEnabled = useDragReorderEnabled();
 
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
 
@@ -150,7 +153,7 @@ const LogsMenu = ({
             strategy={verticalListSortingStrategy}
           >
             {orderedMembers.map((member) => (
-              <SortableMemberItem key={member.id} id={member.id}>
+              <SortableMemberItem key={member.id} id={member.id} disabled={!dragEnabled}>
                 <LogsMenuItemWithComments
                   displayAll={displayAll}
                   displaySummary={displaySummary}
@@ -161,6 +164,7 @@ const LogsMenu = ({
                   groupId={groupId}
                   onChangeUser={onChangeUser}
                   isSpectator={isSpectator}
+                  showDragHandle={dragEnabled}
                 />
               </SortableMemberItem>
             ))}
@@ -171,14 +175,26 @@ const LogsMenu = ({
   );
 };
 
-const SortableMemberItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+const SortableMemberItem = ({
+  id,
+  disabled,
+  children,
+}: {
+  id: string;
+  disabled: boolean;
+  children: React.ReactNode;
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
+    disabled,
   });
   return (
     <div
       ref={setNodeRef}
-      className={cx("LogsMenu__sortable-item", { "LogsMenu__sortable-item--dragging": isDragging })}
+      className={cx("LogsMenu__sortable-item", {
+        "LogsMenu__sortable-item--dragging": isDragging,
+        "LogsMenu__sortable-item--static": disabled,
+      })}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       {...attributes}
       {...listeners}
@@ -198,6 +214,7 @@ type LogsMenuItemProps = {
   groupId: string;
   onChangeUser: (user?: unknown) => void;
   isSpectator: boolean;
+  showDragHandle: boolean;
 };
 
 // Separate component to handle individual member's comment checking
@@ -211,6 +228,7 @@ const LogsMenuItemWithComments = ({
   groupId: _groupId,
   onChangeUser,
   isSpectator,
+  showDragHandle,
 }: LogsMenuItemProps) => {
   const hasUnreadComments = useMemo(() => {
     if (isSpectator) return false;
@@ -244,9 +262,11 @@ const LogsMenuItemWithComments = ({
       })}
       onClick={() => onChangeUser(member)}
     >
-      <span className="LogsMenu__item__dragHandle" aria-hidden="true">
-        ⣿
-      </span>
+      {showDragHandle && (
+        <span className="LogsMenu__item__dragHandle" aria-hidden="true">
+          ⣿
+        </span>
+      )}
       {!isSpectator &&
         member?.id !== user?.id &&
         displayUser?.id !== member?.id &&

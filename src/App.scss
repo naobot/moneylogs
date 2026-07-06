@@ -490,11 +490,6 @@ html {
       &:active {
         cursor: grabbing;
       }
-
-      // The nav is horizontal below this breakpoint — no drag handle there
-      @media (max-width: constants.$breakpoint-md) {
-        display: none;
-      }
     }
 
     &__subtitle {
@@ -554,6 +549,17 @@ html {
 
   &:active {
     cursor: grabbing;
+  }
+
+  // When drag-to-reorder is disabled (horizontal nav or any touchscreen) the item
+  // behaves like a plain nav entry: normal cursor and unblocked touch scrolling.
+  &--static {
+    cursor: pointer;
+    touch-action: auto;
+
+    &:active {
+      cursor: pointer;
+    }
   }
 
   &--dragging {
