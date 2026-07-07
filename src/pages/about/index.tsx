@@ -1,6 +1,7 @@
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Link } from "react-router-dom";
 import { auth } from "@/config/firebase-config";
+import { EXTERNAL_LINKS } from "@/config/links";
 import Button from "@/components/Button";
 
 export const About = () => {
@@ -15,7 +16,7 @@ export const About = () => {
         <p>
           <strong>moneylogs</strong> is a private social media platform where microblogging meets
           transparency in personal finances created and maintained by{" "}
-          <a href="https://nnao.world" target="_blank">
+          <a href={EXTERNAL_LINKS.website} target="_blank" rel="noopener noreferrer">
             Naomi Cui
           </a>
           .
@@ -28,8 +29,18 @@ export const About = () => {
             [Register]
           </Link>
         ) : (
-          <Button onClick={() => {}} text="[Get started]" />
+          <Button to="/create" text="[Get started]" />
         )}
+      </div>
+
+      <div>
+        <p>
+          moneylogs is free. If you'd like to support it, consider{" "}
+          <a href={EXTERNAL_LINKS.tipJar} target="_blank" rel="noopener noreferrer">
+            leaving a tip
+          </a>
+          .
+        </p>
       </div>
     </div>
   );

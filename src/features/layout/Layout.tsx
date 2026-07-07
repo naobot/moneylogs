@@ -1,14 +1,15 @@
-import MainNav from "./components/MainNav"
+import { ReactNode } from "react";
+import MainNav from "./components/MainNav";
+import Footer from "./components/Footer";
 
-const Layout = ({ children }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="Container">
       <MainNav />
-      <div className="Content">
-        {children}
-      </div>
+      <div className="Content">{children}</div>
+      <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;
