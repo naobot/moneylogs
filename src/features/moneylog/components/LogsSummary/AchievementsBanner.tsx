@@ -1,4 +1,5 @@
 import { Achievement, ACHIEVEMENT_META } from "@/hooks/useAchievements";
+import Icon from "@/components/Icon";
 
 const AchievementsBanner = ({ achievements }: { achievements: Achievement[] }) => {
   if (achievements.length === 0) return null;
@@ -11,8 +12,8 @@ const AchievementsBanner = ({ achievements }: { achievements: Achievement[] }) =
           const meta = ACHIEVEMENT_META[achievement.type];
           return (
             <div key={achievement.id} className="AchievementsBanner__card">
-              <span className="AchievementsBanner__card__emoji" role="img" aria-label={meta.title}>
-                {meta.emoji}
+              <span className="AchievementsBanner__card__icon" aria-hidden="true">
+                <Icon type={meta.icon} />
               </span>
               <div className="AchievementsBanner__card__text">
                 <strong>{meta.title}</strong>

@@ -13,7 +13,7 @@ import { useGroupAnalytics } from "./hooks/useGroupAnalytics";
 import { Achievement, awardGroupAchievements } from "@/hooks/useAchievements";
 
 import Loader from "@/features/layout/components/Loader";
-import SpendingInsights from "./SpendingInsights";
+import SpendingPanel from "./SpendingPanel";
 import HotPosts from "./HotPosts";
 import AchievementsBanner from "./AchievementsBanner";
 import LogPostComments from "@/features/moneylog/components/LogPosts/LogPostComments";
@@ -21,6 +21,7 @@ import LogPostComments from "@/features/moneylog/components/LogPosts/LogPostComm
 import "./styles.scss";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import Button from "@/components/Button";
+import Tabs, { TabItem } from "@/components/Tabs";
 
 interface LogsSummaryProps {
   group: Group;
@@ -53,6 +54,9 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   }, [groupMembers]);
 
   const [otherLogs, setOtherLogs] = useState<LogPost[] | null>(null);
+  const [spendingTab, setSpendingTab] = useState<"mine" | "group" | "other">("mine");
+
+  const isAdmin = loggedInUser?.email === "cui.naomi@gmail.com";
 
   const processAnalytics = useMemo(() => httpsCallable(functions, "processGroupAnalytics"), []);
 
@@ -62,7 +66,10 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
 
   const handleSelectTestOtherLogs = (userId: string) => {
     setOtherLogs(logPosts.filter((logPost) => logPost.author.id === userId));
+    setSpendingTab("other");
   };
+
+  const otherUser = otherLogs?.[0] ? memberIdToMembers.get(otherLogs[0].author.id) : undefined;
 
   const [selectedPost, setSelectedPost] = useState<LogPost | null>(null);
   useDisableScroll(!!selectedPost);
@@ -175,7 +182,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
       <div className="LogsSummary">
         <h2>Preparing insights for {group.title}</h2>
         <div className="Window">
-          <h3>📊 Processing analytics...</h3>
+          <h3>Processing analytics...</h3>
           <div style={{ padding: "2rem", textAlign: "center" }}>
             <p style={{ marginBottom: "1rem", fontSize: "1.1em" }}>{processingState.step}</p>
             <Loader progress={processingState.percentage} />
@@ -194,21 +201,21 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
       <div className="LogsSummary">
         <h2>Insights for {group.title}</h2>
         <div className="Window">
-          <h3>⚠️ Processing Error</h3>
+          <h3>Processing error</h3>
           <p>Failed to process analytics: {analyticsError}</p>
           <p>Falling back to real-time analysis...</p>
         </div>
 
-        {/* Fallback to original component structure */}
+        {/* Fallback to real-time spending panel */}
         {loggedInUser && (
           <div className="Window">
-            <h3>💰 {loggedInUser?.displayName}'s spending</h3>
-            <SpendingInsights user={loggedInUser} logPosts={myLogs} group={group}>
-              <SpendingInsights.TotalText>
-                You spent a <strong>total of</strong>
-              </SpendingInsights.TotalText>
-              {/* Add other components as needed */}
-            </SpendingInsights>
+            <SpendingPanel
+              scope="mine"
+              user={memberIdToMembers.get(loggedInUser.id) ?? {}}
+              logPosts={myLogs}
+              group={group}
+              groupAnalytics={groupAnalytics}
+            />
           </div>
         )}
       </div>
@@ -219,17 +226,9 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   return (
     <>
       <div className={cx("LogsSummary", { "disable-scroll": !!selectedPost })}>
-        <h2>Insights for {group.title}</h2>
-
         <AchievementsBanner achievements={newAchievements} />
 
-        {/*{hasAnalytics && (
-          <div className="LogsSummary__badge">
-            📈 Using cached analytics from {new Date(group.analytics.processedAt.seconds * 1000).toLocaleDateString()}
-          </div>
-        )}*/}
-
-        {loggedInUser?.email === "cui.naomi@gmail.com" && (
+        {isAdmin && (
           <div>
             <CustomDropdown
               options={group.members.map((m) => ({
@@ -245,96 +244,53 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
           </div>
         )}
 
-        {loggedInUser?.email === "cui.naomi@gmail.com" && otherLogs && otherLogs?.length > 0 && (
-          <div className="Window">
-            <h3>💰 {memberIdToMembers.get(otherLogs?.[0].author.id)?.displayName}'s spending</h3>
+        <div className="LogsSummary__spending">
+          <Tabs
+            ariaLabel="Spending view"
+            activeId={spendingTab}
+            onChange={(id) => setSpendingTab(id as "mine" | "group" | "other")}
+            tabs={
+              [
+                { id: "mine", label: "My spending" },
+                { id: "group", label: "Group spending" },
+                ...(isAdmin && otherUser ? [{ id: "other", label: otherUser.displayName }] : []),
+              ] as TabItem[]
+            }
+          />
 
-            <SpendingInsights
-              user={memberIdToMembers.get(otherLogs?.[0].author.id) ?? {}}
-              logPosts={otherLogs}
-              group={group}
-            >
-              <SpendingInsights.TotalText>
-                This user spent a <strong>total of</strong>
-              </SpendingInsights.TotalText>
+          <div className="Window LogsSummary__spending__body">
+            {spendingTab === "mine" && loggedInUser && (
+              <SpendingPanel
+                key="mine"
+                scope="mine"
+                user={memberIdToMembers.get(loggedInUser.id) ?? {}}
+                logPosts={myLogs}
+                group={group}
+                groupAnalytics={groupAnalytics}
+              />
+            )}
 
-              <SpendingInsights.WeekText>
-                This user <strong>spent the most</strong> during the <strong>week(s) of</strong>
-              </SpendingInsights.WeekText>
+            {spendingTab === "group" && (
+              <SpendingPanel
+                key="group"
+                scope="group"
+                user={{}}
+                logPosts={logPosts}
+                group={group}
+              />
+            )}
 
-              <SpendingInsights.DayText showPosts={true}>
-                This user <strong>day you spent the most</strong> was
-              </SpendingInsights.DayText>
-
-              <SpendingInsights.AveragesText>
-                Here are this user's average <strong>spending patterns</strong>:
-              </SpendingInsights.AveragesText>
-
-              <SpendingInsights.WeekendWeekdayText>{""}</SpendingInsights.WeekendWeekdayText>
-
-              <SpendingInsights.NoSpendDaysText>
-                This user had <strong>no spending</strong> on
-              </SpendingInsights.NoSpendDaysText>
-
-              <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
-                💡 <strong>Good news!</strong>
-              </SpendingInsights.LowSpenderAlert>
-            </SpendingInsights>
+            {spendingTab === "other" && otherLogs && otherUser && (
+              <SpendingPanel
+                key={`other-${otherUser.id}`}
+                scope="other"
+                user={otherUser}
+                logPosts={otherLogs}
+                group={group}
+                groupAnalytics={groupAnalytics}
+              />
+            )}
           </div>
-        )}
-
-        {loggedInUser && (
-          <div className="Window">
-            <h3>💰 {loggedInUser?.displayName}'s spending</h3>
-            <SpendingInsights
-              user={memberIdToMembers.get(loggedInUser.id) ?? {}}
-              logPosts={myLogs}
-              group={group}
-            >
-              <SpendingInsights.TotalText>
-                You spent a <strong>total of</strong>
-              </SpendingInsights.TotalText>
-
-              <SpendingInsights.WeekText>
-                You <strong>spent the most</strong> during the <strong>week(s) of</strong>
-              </SpendingInsights.WeekText>
-
-              <SpendingInsights.DayText showPosts={true}>
-                The <strong>day you spent the most</strong> was
-              </SpendingInsights.DayText>
-
-              <SpendingInsights.AveragesText>
-                Here are your average <strong>spending patterns</strong>:
-              </SpendingInsights.AveragesText>
-
-              <SpendingInsights.WeekendWeekdayText>{""}</SpendingInsights.WeekendWeekdayText>
-
-              <SpendingInsights.NoSpendDaysText>
-                You logged <strong>no spending</strong> on
-              </SpendingInsights.NoSpendDaysText>
-
-              <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
-                💡 <strong>Good news!</strong>
-              </SpendingInsights.LowSpenderAlert>
-            </SpendingInsights>
-          </div>
-        )}
-
-        <div className="Window">
-          <h3>💸 group spending</h3>
-          <SpendingInsights user={{}} logPosts={logPosts} group={group}>
-            <SpendingInsights.TotalText>
-              The group spent a <strong>total of</strong>
-            </SpendingInsights.TotalText>
-
-            <SpendingInsights.WeekText>
-              The group <strong>spent the most</strong> during the <strong>weeks of</strong>
-            </SpendingInsights.WeekText>
-
-            <SpendingInsights.DayText showPosts={true} showAuthors={true} showMultipleDays={true}>
-              The <strong>days the group spent the most</strong> were
-            </SpendingInsights.DayText>
-          </SpendingInsights>
         </div>
 
         <HotPosts

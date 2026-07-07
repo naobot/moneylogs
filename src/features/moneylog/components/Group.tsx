@@ -262,6 +262,11 @@ export const Group = ({
           </div>
 
           <div className="Group__header__center">
+            {displaySummary && (
+              <div className="Group__header__item Group__header__title">
+                Insights for {group.title}
+              </div>
+            )}
             {!isPostingClosed &&
               !displayAll &&
               isActiveLogMyLog &&
