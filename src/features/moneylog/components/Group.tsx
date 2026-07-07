@@ -338,14 +338,14 @@ export const Group = ({
               {!isFutureGroup && displaySummary && (
                 <LogsSummary group={group} groupMembers={members} logPosts={logPostRes.posts} />
               )}
-              {!isFutureGroup && !displaySummary && displayUser && (
+              {!isFutureGroup && !displaySummary && (displayAll || displayUser) && (
                 <ActiveLog
                   group={group}
                   groupId={groupId}
                   logPosts={
                     displayAll
                       ? logPostRes.posts
-                      : logPostRes.posts.filter((post) => post.author.id == displayUser.id)
+                      : logPostRes.posts.filter((post) => post.author.id == displayUser?.id)
                   }
                   displayAll={displayAll}
                   displayUser={displayUser}

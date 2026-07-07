@@ -8,11 +8,12 @@ import AllLogsDigest from "./LogPosts/AllLogsDigest";
 
 type ActiveLogProps = {
   displayAll: boolean;
-  displayUser: UserData;
+  // Not required for the Daily Digest (displayAll) view, which shows everyone.
+  displayUser?: UserData | null;
   logPosts: Array<LogPost>;
   group: Group;
   groupId: string;
-  userId: string;
+  userId?: string;
   isCreateNewEntry: boolean;
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isMyLog: boolean;
@@ -45,7 +46,7 @@ export const ActiveLog = ({
         <LogPosts
           groupId={groupId}
           user={displayUser}
-          userId={userId}
+          userId={userId ?? displayUser.userId}
           isMyLog={isMyLog}
           logs={logPosts}
           isCreateNewEntry={isCreateNewEntry}
