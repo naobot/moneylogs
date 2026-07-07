@@ -470,9 +470,19 @@ html {
   grid-gap: 0.4em;
   overflow-y: auto;
   max-height: 100%;
+  // Fill the space left over next to the content column (widens/shrinks with the
+  // window)...
   flex: 1;
   transition: 0.3s ease-in-out;
   margin-bottom: 1em;
+
+  // ...but when there is no content column beside it, fall back to the sidebar
+  // width instead of stretching across the whole row.
+  @media (min-width: constants.$breakpoint-md) {
+    &:only-child {
+      flex: 0 1 var(--sidebar-width);
+    }
+  }
 
   @media (max-width: constants.$breakpoint-sm) {
     min-height: none;
