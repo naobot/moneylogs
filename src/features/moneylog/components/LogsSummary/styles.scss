@@ -8,6 +8,9 @@
   width: 60vw;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  box-sizing: border-box;
 
   @media (max-width: constants.$breakpoint-md) {
     display: flex;
@@ -36,11 +39,73 @@
   }
 
   &__ScrollList {
-    display: inline-flex;
+    display: flex;
     flex-wrap: nowrap;
-    overflow-y: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     gap: 0.8em;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 0.4em;
+  }
+
+  // Filing-folder tabbed spending section.
+  &__spending {
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+
+    &__body {
+      min-width: 0;
+    }
+  }
+}
+
+// Filing-folder tabs that peek up out of the top border of the .Window below them.
+.Tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  padding-left: 1em;
+  margin-bottom: -2px; // overlap the box's 2px top border so the active tab merges in
+  position: relative;
+  z-index: 1;
+
+  &__tab {
+    font: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+    padding: 0.35em 1.1em;
+    border: 2px solid var(--c-black);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: var(--c-black);
+    color: var(--c-white);
+    position: relative;
+    top: 2px; // inactive tabs sit slightly lower / behind
+
+    &--active {
+      background: var(--c-white);
+      color: var(--c-black);
+      top: 0;
+      z-index: 2;
+    }
+  }
+}
+
+// Insight cards laid out in a responsive grid (the posts insight stays full-width).
+.SpendingInsights__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8em;
+  margin: 1em 0;
+
+  .LogsSummary__bubble {
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
   }
 }
 
@@ -60,6 +125,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+  min-width: 0;
 
   &__controls {
     display: flex;
@@ -88,7 +154,7 @@
     width: 100%;
     height: auto;
     display: block;
-    overflow: visible;
+    overflow: hidden;
   }
 
   &__bar {

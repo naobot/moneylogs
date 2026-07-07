@@ -437,6 +437,14 @@ html {
       align-items: center;
       width: fit-content;
     }
+
+    &__title {
+      font-weight: 700;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   &__body {

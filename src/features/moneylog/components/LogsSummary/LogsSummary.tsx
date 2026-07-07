@@ -21,6 +21,7 @@ import LogPostComments from "@/features/moneylog/components/LogPosts/LogPostComm
 import "./styles.scss";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import Button from "@/components/Button";
+import Tabs, { TabItem } from "@/components/Tabs";
 
 interface LogsSummaryProps {
   group: Group;
@@ -225,8 +226,6 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
   return (
     <>
       <div className={cx("LogsSummary", { "disable-scroll": !!selectedPost })}>
-        <h2>Insights for {group.title}</h2>
-
         <AchievementsBanner achievements={newAchievements} />
 
         {isAdmin && (
@@ -245,58 +244,53 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
           </div>
         )}
 
-        <div className="Window LogsSummary__spending">
-          <div className="Segmented Segmented--tabs" role="tablist" aria-label="Spending view">
-            <Button
-              text="My spending"
-              size="sm"
-              buttonStyle="primary-border"
-              isSelected={spendingTab === "mine"}
-              onClick={() => setSpendingTab("mine")}
-            />
-            <Button
-              text="Group spending"
-              size="sm"
-              buttonStyle="primary-border"
-              isSelected={spendingTab === "group"}
-              onClick={() => setSpendingTab("group")}
-            />
-            {isAdmin && otherUser && (
-              <Button
-                text={otherUser.displayName}
-                size="sm"
-                buttonStyle="primary-border"
-                isSelected={spendingTab === "other"}
-                onClick={() => setSpendingTab("other")}
+        <div className="LogsSummary__spending">
+          <Tabs
+            ariaLabel="Spending view"
+            activeId={spendingTab}
+            onChange={(id) => setSpendingTab(id as "mine" | "group" | "other")}
+            tabs={
+              [
+                { id: "mine", label: "My spending" },
+                { id: "group", label: "Group spending" },
+                ...(isAdmin && otherUser ? [{ id: "other", label: otherUser.displayName }] : []),
+              ] as TabItem[]
+            }
+          />
+
+          <div className="Window LogsSummary__spending__body">
+            {spendingTab === "mine" && loggedInUser && (
+              <SpendingPanel
+                key="mine"
+                scope="mine"
+                user={memberIdToMembers.get(loggedInUser.id) ?? {}}
+                logPosts={myLogs}
+                group={group}
+                groupAnalytics={groupAnalytics}
+              />
+            )}
+
+            {spendingTab === "group" && (
+              <SpendingPanel
+                key="group"
+                scope="group"
+                user={{}}
+                logPosts={logPosts}
+                group={group}
+              />
+            )}
+
+            {spendingTab === "other" && otherLogs && otherUser && (
+              <SpendingPanel
+                key={`other-${otherUser.id}`}
+                scope="other"
+                user={otherUser}
+                logPosts={otherLogs}
+                group={group}
+                groupAnalytics={groupAnalytics}
               />
             )}
           </div>
-
-          {spendingTab === "mine" && loggedInUser && (
-            <SpendingPanel
-              key="mine"
-              scope="mine"
-              user={memberIdToMembers.get(loggedInUser.id) ?? {}}
-              logPosts={myLogs}
-              group={group}
-              groupAnalytics={groupAnalytics}
-            />
-          )}
-
-          {spendingTab === "group" && (
-            <SpendingPanel key="group" scope="group" user={{}} logPosts={logPosts} group={group} />
-          )}
-
-          {spendingTab === "other" && otherLogs && otherUser && (
-            <SpendingPanel
-              key={`other-${otherUser.id}`}
-              scope="other"
-              user={otherUser}
-              logPosts={otherLogs}
-              group={group}
-              groupAnalytics={groupAnalytics}
-            />
-          )}
         </div>
 
         <HotPosts
