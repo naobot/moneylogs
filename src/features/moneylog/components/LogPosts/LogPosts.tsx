@@ -15,6 +15,7 @@ import { useUserQuery } from "@/hooks/useUserQuery";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { useReadTracking } from "@/hooks/useReadTracking";
 import { useGetComments } from "@/hooks/useGetLogPostComments";
+import { commentsAreUnseen, postHasUnreadComments } from "@/utils/unread";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -104,30 +105,10 @@ export const LogPostItem = ({
     return post.id === user?.pinnedPosts?.[groupId]?.pinnedPost;
   }, [user, post]);
 
-  const hasUnreadComments = useMemo(() => {
-    if (!post.latestCommentAt || !loggedInUser?.userId || !post.commentSubscribers) return false;
-
-    // First check: Is the current user subscribed to this post's comments?
-    const isSubscribed = post.commentSubscribers.some(
-      (subscriber) => subscriber.id === loggedInUser.id,
-    );
-
-    // If not subscribed, no unread indicator
-    if (!isSubscribed) return false;
-
-    // If subscribed, check if there are unread comments
-    const userLastViewed = loggedInUser.commentSubscriptions?.[post.id]?.lastViewedAt;
-
-    // If user has never viewed comments on this post, and there are comments, it's unread
-    if (!userLastViewed && post.commentCount && post.commentCount > 0) return true;
-
-    // If user has viewed before, compare timestamps
-    if (userLastViewed) {
-      return post.latestCommentAt.seconds > userLastViewed.seconds;
-    }
-
-    return false;
-  }, [post.latestCommentAt, post.commentCount, post.id, loggedInUser?.commentSubscriptions]);
+  const hasUnreadComments = useMemo(
+    () => postHasUnreadComments(post, loggedInUser),
+    [post, loggedInUser],
+  );
 
   useEffect(() => {
     if (postRef.current) {
@@ -509,10 +490,13 @@ const LogPosts = memo(
           user_id: loggedInUser?.id,
         });
 
-        markCommentsAsViewedFn({
-          userId: loggedInUser.id,
-          logPostId: selectedPost.id,
-        });
+        // Only write when there are actually new comments to mark as read.
+        if (commentsAreUnseen(selectedPost, loggedInUser.commentSubscriptions)) {
+          markCommentsAsViewedFn({
+            userId: loggedInUser.id,
+            logPostId: selectedPost.id,
+          });
+        }
       }
     }, [selectedPost?.id, loggedInUser?.userId, trackUserAction, isReadOnly]);
 

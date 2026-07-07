@@ -22,6 +22,7 @@ import { UserData } from "@/hooks/useGetUserInfo";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 
 import { applyMemberOrder } from "@/utils/memberOrder";
+import { memberHasUnreadPosts, postHasUnreadComments } from "@/utils/unread";
 import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
 import Icon from "@/components/Icon";
 
@@ -85,16 +86,11 @@ const LogsMenu = ({
       if (isSpectator || !user?.id || user?.viewTracking === undefined) {
         return { ...member, hasUnreadPosts: false };
       }
-      const memberLastUpdated = member.lastUpdated?.[groupId];
-      const userLastViewed = user?.viewTracking?.[groupId]?.[member.id]?.lastViewedAt;
-
-      if (!memberLastUpdated) {
-        return { ...member, hasUnreadPosts: false };
-      }
-      if (!userLastViewed) {
-        return { ...member, hasUnreadPosts: true };
-      }
-      const hasUnreadPosts = memberLastUpdated.seconds > userLastViewed.seconds;
+      const hasUnreadPosts = memberHasUnreadPosts({
+        member,
+        viewTracking: user.viewTracking,
+        groupId,
+      });
 
       return { ...member, hasUnreadPosts };
     });
@@ -232,26 +228,12 @@ const LogsMenuItemWithComments = ({
 }: LogsMenuItemProps) => {
   const hasUnreadComments = useMemo(() => {
     if (isSpectator) return false;
-    // Skip checking own posts for comments
-    if (member.id === user?.id) return false;
 
+    // Includes your own log: the author is auto-subscribed to their posts, so new
+    // comments on your posts surface here too (the post bell, handled separately,
+    // still never shows for your own log).
     const memberPosts = logPosts || [];
-    return memberPosts.some((post) => {
-      if (!post.commentSubscribers || !user?.id) return false;
-
-      // First check: Is the current user subscribed to this post's comments?
-      const isSubscribed = post.commentSubscribers.some((subscriber) => subscriber.id === user.id);
-
-      // If not subscribed, no unread indicator
-      if (!isSubscribed) return false;
-
-      // If subscribed, check if there are unread comments
-      const userLastViewed = user?.commentSubscriptions?.[post.id]?.lastViewedAt;
-      return (
-        post.latestCommentAt &&
-        (!userLastViewed || post.latestCommentAt.seconds > userLastViewed.seconds)
-      );
-    });
+    return memberPosts.some((post) => postHasUnreadComments(post, user));
   }, [isSpectator, logPosts, user, member.id]);
 
   return (

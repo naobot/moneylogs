@@ -14,6 +14,7 @@ import LogPostComments from "./LogPostComments";
 import dayjs from "@/utils/configuredDayjs";
 import { FullUserData, useGetGroupUsers } from "@/hooks/useGetGroupUsers";
 import { UserData } from "@/hooks/useGetUserInfo";
+import { commentsAreUnseen } from "@/utils/unread";
 
 const AllLogsDigest = ({
   groupId,
@@ -159,10 +160,13 @@ const AllLogsDigest = ({
         user_id: loggedInUser?.id,
       });
 
-      markCommentsAsViewedFn({
-        userId: loggedInUser.id,
-        logPostId: selectedPost.id,
-      });
+      // Only write when there are actually new comments to mark as read.
+      if (commentsAreUnseen(selectedPost, loggedInUser.commentSubscriptions)) {
+        markCommentsAsViewedFn({
+          userId: loggedInUser.id,
+          logPostId: selectedPost.id,
+        });
+      }
     }
   }, [selectedPost?.id, loggedInUser?.userId, trackUserAction]);
 

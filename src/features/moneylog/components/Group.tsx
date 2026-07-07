@@ -13,6 +13,7 @@ import { Group as GroupType } from "@/types/user";
 import { useReadTracking } from "@/hooks/useReadTracking";
 import { useGetLogPosts } from "@/hooks/useGetLogPosts";
 import { useUserQuery } from "@/hooks/useUserQuery";
+import { memberHasUnreadPosts } from "@/utils/unread";
 
 import Icon, { IconText } from "@/components/Icon";
 import LogsSummary from "./LogsSummary/LogsSummary";
@@ -164,6 +165,22 @@ export const Group = ({
 
       if (!viewingUserDocRefId || !viewedUserDocRefId) {
         console.error("User not found in map", { viewingUserDocRefId, viewedUserDocRefId });
+        return;
+      }
+
+      // Your own log never shows a post bell, so tracking your own views is pointless.
+      if (viewedUserDocRefId === viewingUserDocRefId) return;
+
+      // Only write when there's genuinely a new post to mark as read; idly clicking
+      // back to a member you're caught up on shouldn't touch the database.
+      const viewedMember = members.find((m) => m.id === viewedUserDocRefId);
+      if (
+        !memberHasUnreadPosts({
+          member: viewedMember,
+          viewTracking: loggedInUser.viewTracking,
+          groupId,
+        })
+      ) {
         return;
       }
 
