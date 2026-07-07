@@ -26,8 +26,8 @@ const fmt = (value: number, currency: Currency) =>
   `${value.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${currency}`;
 
 const insightsChildren = (scope: Scope, groupAnalytics?: GroupAnalytics): ReactNode => {
-  const subject = scope === "mine" ? "You" : "This user";
-  const possessive = scope === "mine" ? "your" : "this user's";
+  const subject = scope === "mine" ? "You" : scope === "group" ? "The group" : "This user";
+  const possessive = scope === "mine" ? "your" : scope === "group" ? "the group's" : "this user's";
   return (
     <>
       <div className="SpendingInsights__grid">
@@ -136,6 +136,7 @@ const SpendingPanel = ({ user, logPosts, group, scope, groupAnalytics }: Spendin
             logPosts={logPosts}
             group={group}
             groupAnalytics={groupAnalytics}
+            currency={activeCurrency}
           >
             {insightsChildren(scope, groupAnalytics)}
           </SpendingInsights>

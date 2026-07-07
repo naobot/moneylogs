@@ -19,6 +19,8 @@ interface SpendingData {
   noSpendDays: number;
   totalDaysInPeriod: number;
   group: Group;
+  // When set, currency-specific cards show only this currency (the toggled one).
+  activeCurrency: Currency | null;
 }
 
 // New interface for group-wide analytics (passed from parent)
@@ -41,10 +43,11 @@ interface SpendingInsightsProps {
   logPosts: Array<LogPost>;
   group: Group;
   groupAnalytics?: GroupAnalytics; // Optional for now, for low-spender detection
+  currency?: Currency | null; // when set, cards show only this currency
   children: ReactNode;
 }
 
-const SpendingInsights = ({ user, logPosts, group, children }: SpendingInsightsProps) => {
+const SpendingInsights = ({ user, logPosts, group, currency, children }: SpendingInsightsProps) => {
   const spendingData = useMemo(() => {
     const hasCachedAnalytics = group.analytics?.isCalculated;
     const postsMetadata = group.analytics?.posts;
@@ -260,8 +263,21 @@ const SpendingInsights = ({ user, logPosts, group, children }: SpendingInsightsP
     };
   }, [logPosts, group]);
 
-  return <SpendingContext.Provider value={spendingData}>{children}</SpendingContext.Provider>;
+  // Merge the toggled currency in outside the heavy memo so switching currency
+  // doesn't recompute the aggregation.
+  const contextValue = useMemo(
+    () => ({ ...spendingData, activeCurrency: currency ?? null }),
+    [spendingData, currency],
+  );
+
+  return <SpendingContext.Provider value={contextValue}>{children}</SpendingContext.Provider>;
 };
+
+// Keeps only entries for the toggled currency; shows all when none is set.
+const currencyFilter =
+  (activeCurrency: Currency | null) =>
+  <T,>([currency]: [Currency, T]) =>
+    !activeCurrency || currency === activeCurrency;
 
 // Existing components (unchanged)
 const TotalText = ({ children }: { children: ReactNode }) => {
@@ -474,17 +490,20 @@ const DayText = ({
 
 // New components for the additional analytics
 const AveragesText = ({ children }: { children: ReactNode }) => {
-  const { weeklyAverages, dailyAverages } = useSpendingData();
+  const { weeklyAverages, dailyAverages, activeCurrency } = useSpendingData();
+
+  const weekly = [...weeklyAverages.entries()].filter(currencyFilter(activeCurrency));
+  const daily = [...dailyAverages.entries()].filter(currencyFilter(activeCurrency));
 
   return (
     <div className="LogsSummary__bubble">
       <div>{children}</div>
 
-      {weeklyAverages.size > 0 && (
+      {weekly.length > 0 && (
         <div>
           <strong>Weekly averages:</strong>{" "}
           <span className="LogsSummary__highlight">
-            {[...weeklyAverages.entries()]
+            {weekly
               .map(
                 ([currency, avg]) =>
                   `${avg.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
@@ -494,11 +513,11 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
         </div>
       )}
 
-      {dailyAverages.size > 0 && (
+      {daily.length > 0 && (
         <div>
           <strong>Daily averages:</strong>{" "}
           <span className="LogsSummary__highlight">
-            {[...dailyAverages.entries()]
+            {daily
               .map(
                 ([currency, avg]) =>
                   `${avg.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
@@ -512,56 +531,39 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
 };
 
 const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
-  const { weekendVsWeekdayDiff } = useSpendingData();
+  const { weekendVsWeekdayDiff, activeCurrency } = useSpendingData();
 
-  if (weekendVsWeekdayDiff.size === 0) return;
+  const entries = [...weekendVsWeekdayDiff.entries()].filter(currencyFilter(activeCurrency));
+  if (entries.length === 0) return null;
+
+  const num = (v: number) =>
+    v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   return (
     <div className="LogsSummary__bubble">
       <div>{children}</div>
 
-      {[...weekendVsWeekdayDiff.entries()].map(([currency, data]) => (
+      {entries.map(([currency, data]) => (
         <div key={`weekend-weekday-${currency}`}>
-          <strong>{currency}:</strong> On weekends you spent an average of{" "}
-          <span className="LogsSummary__highlight">
-            {data.weekendAvg.toLocaleString("en-US", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-          , compared to weekdays where you averaged{" "}
-          <span className="LogsSummary__highlight">
-            {data.weekdayAvg.toLocaleString("en-US", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 2,
-            })}
-          </span>
+          <strong>{currency}:</strong> weekend avg{" "}
+          <span className="LogsSummary__highlight">{num(data.weekendAvg)}</span>, weekday avg{" "}
+          <span className="LogsSummary__highlight">{num(data.weekdayAvg)}</span>
           {data.difference > 0 ? (
             <span>
               {" "}
-              (You spend{" "}
-              <span className="LogsSummary__highlight">
-                {data.difference.toLocaleString("en-US", {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                })}
-              </span>{" "}
-              more on weekends)
+              — <span className="LogsSummary__highlight">{num(data.difference)}</span> more on
+              weekends
             </span>
           ) : data.difference < 0 ? (
             <span>
               {" "}
-              (You spend{" "}
-              <span className="LogsSummary__highlight">
-                {Math.abs(data.difference).toLocaleString("en-US", {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                })}
+              — <span className="LogsSummary__highlight">
+                {num(Math.abs(data.difference))}
               </span>{" "}
-              more on weekdays)
+              more on weekdays
             </span>
           ) : (
-            <span> (You spend about the same regardless!)</span>
+            <span> — about the same</span>
           )}
         </div>
       ))}
@@ -576,13 +578,14 @@ const LowSpenderAlert = ({
   groupAnalytics?: GroupAnalytics;
   children: ReactNode;
 }) => {
-  const { dailyAverages } = useSpendingData();
+  const { dailyAverages, activeCurrency } = useSpendingData();
 
   if (!groupAnalytics) {
     return null; // Can't determine low spender status without group data
   }
 
   const lowSpenderCurrencies = [...dailyAverages.entries()]
+    .filter(currencyFilter(activeCurrency))
     .filter(([currency, userAvg]) => {
       const percentiles = groupAnalytics.currencyPercentiles.get(currency);
       return percentiles && userAvg <= percentiles.p25;
