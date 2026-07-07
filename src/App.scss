@@ -183,6 +183,7 @@ html {
   padding: 0.6em 1em;
   font-size: 0.75em;
   border-top: 2px solid var(--c-black);
+  box-sizing: border-box;
 
   a {
     color: var(--c-black);
