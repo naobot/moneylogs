@@ -79,7 +79,6 @@
     cursor: pointer;
     padding: 0.35em 1.1em;
     border: 2px solid var(--c-black);
-    border-bottom: none;
     border-radius: 6px 6px 0 0;
     background: var(--c-white);
     color: var(--c-black);
@@ -88,6 +87,7 @@
     &--active {
       background: var(--c-white);
       color: var(--c-black);
+      border-bottom: none;
       top: 0;
       z-index: 2;
     }
