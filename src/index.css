@@ -13,7 +13,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-div, nav, section {
+div,
+nav,
+section {
   box-sizing: border-box;
 }
 
@@ -25,15 +27,6 @@ a {
 a:hover {
   /*color: #fff;*/
   /*animation: chroab 400ms ease-in-out both;*/
-}
-
-@keyframes chroab {
-  0% {
-    text-shadow: 0 0 #d00031, 0 0 #2b8dfd, 0 6px 0 transparent, 8px 0 0 transparent
-  }
-  100% {
-    text-shadow: 0.06ex 0 #d00031, -0.06ex 0 #2b8dfd, 0 0.14ex 0 rgba(0,0,0,.8), 0.12ex 0 0 rgba(0,0,0,.8)
-  }
 }
 
 body {
@@ -59,23 +52,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
