@@ -269,7 +269,7 @@ const TotalText = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="LogsSummary__bubble">
-      <p>
+      <div>
         {children}{" "}
         <span className="LogsSummary__highlight">
           {[...totalSpent.entries()]
@@ -287,7 +287,7 @@ const TotalText = ({ children }: { children: ReactNode }) => {
           )}{" "}
           to {dayjs(group.end.seconds * 1000).format("ddd D MMM YYYY")}
         </span>
-      </p>
+      </div>
     </div>
   );
 };
@@ -302,7 +302,7 @@ const WeekText = ({ children }: { children: ReactNode }) => {
 
         if (expensiveWeeks.length === 1) {
           return (
-            <p>
+            <div>
               {children}{" "}
               <span className="LogsSummary__highlight">
                 {expensiveWeeks.map(
@@ -310,12 +310,12 @@ const WeekText = ({ children }: { children: ReactNode }) => {
                     `${value.week} (${value.amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`,
                 )}
               </span>
-            </p>
+            </div>
           );
         } else {
           return (
             <>
-              <p>{children}...</p>
+              <div>{children}...</div>
               <ul className="LogsSummary__List">
                 {expensiveWeeks.map(([currency, value]) => (
                   <li
@@ -351,7 +351,7 @@ const DayText = ({
 
         if (expensiveDays.length === 1) {
           return (
-            <p>
+            <div>
               {children}{" "}
               <span className="LogsSummary__highlight">
                 {expensiveDays.map(
@@ -359,12 +359,12 @@ const DayText = ({
                     `${value.day} (${value.amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency})`,
                 )}
               </span>
-            </p>
+            </div>
           );
         } else {
           return (
             <>
-              <p>{children}...</p>
+              <div>{children}...</div>
               <ul className="LogsSummary__List">
                 {expensiveDays.map(([currency, value]) => (
                   <li
@@ -379,9 +379,9 @@ const DayText = ({
 
       {showPosts && (
         <>
-          <p>
+          <div>
             <span>Some posts from then...</span>
-          </p>
+          </div>
 
           <div className="LogsSummary__ScrollList">
             {(() => {
@@ -478,7 +478,7 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="LogsSummary__bubble">
-      <p>{children}</p>
+      <div>{children}</div>
 
       {weeklyAverages.size > 0 && (
         <div>
@@ -518,7 +518,7 @@ const WeekendWeekdayText = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="LogsSummary__bubble">
-      <p>{children}</p>
+      <div>{children}</div>
 
       {[...weekendVsWeekdayDiff.entries()].map(([currency, data]) => (
         <div key={`weekend-weekday-${currency}`}>
@@ -595,11 +595,11 @@ const LowSpenderAlert = ({
 
   return (
     <div className="LogsSummary__bubble LogsSummary__bubble--alert">
-      <p>{children}</p>
-      <p>
+      <div>{children}</div>
+      <div>
         You're amongst the <span className="LogsSummary__highlight">lowest spenders</span> in:{" "}
         <span className="LogsSummary__highlight">{lowSpenderCurrencies.join(", ")}</span>
-      </p>
+      </div>
     </div>
   );
 };
@@ -611,7 +611,7 @@ const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="LogsSummary__bubble">
-      <p>
+      <div>
         {children}{" "}
         <span className="LogsSummary__highlight">
           {noSpendDays} out of {totalDaysInPeriod} days ({noSpendPercentage}%)
@@ -621,7 +621,7 @@ const NoSpendDaysText = ({ children }: { children: ReactNode }) => {
             {noSpendDays === 1 ? " - great self-control!" : " - excellent spending discipline!"}
           </span>
         )}
-      </p>
+      </div>
     </div>
   );
 };
