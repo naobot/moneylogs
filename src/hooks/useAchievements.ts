@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, doc, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { Currency, LogPost } from "@/types/user";
+import { IconType } from "@/components/Icon";
 
 export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
 
@@ -16,20 +17,20 @@ export type Achievement = {
 
 export const ACHIEVEMENT_META: Record<
   AchievementType,
-  { emoji: string; title: string; description: (currency?: string) => string }
+  { icon: IconType; title: string; description: (currency?: string) => string }
 > = {
   top_spender: {
-    emoji: "🏆",
+    icon: "dollar",
     title: "Top Spender",
     description: (currency) => `Highest total ${currency} spending in the group`,
   },
   lowest_spender: {
-    emoji: "💡",
+    icon: "dollar",
     title: "Lowest Spender",
     description: (currency) => `Lowest total ${currency} spending in the group`,
   },
   time_traveller: {
-    emoji: "🌍",
+    icon: "location",
     title: "Time Traveller",
     description: () => "Logged entries from multiple timezones in one session",
   },

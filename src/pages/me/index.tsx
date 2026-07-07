@@ -13,6 +13,7 @@ import { useGetAchievements, ACHIEVEMENT_META } from "@/hooks/useAchievements";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
+import Icon from "@/components/Icon";
 
 import "./me.scss";
 import "@/features/moneylog/components/LogsSummary/styles.scss";
@@ -156,12 +157,8 @@ export const UserSettings = () => {
               const meta = ACHIEVEMENT_META[achievement.type];
               return (
                 <div key={achievement.id} className="AchievementsList__item">
-                  <span
-                    className="AchievementsList__item__emoji"
-                    role="img"
-                    aria-label={meta.title}
-                  >
-                    {meta.emoji}
+                  <span className="AchievementsList__item__icon" aria-hidden="true">
+                    <Icon type={meta.icon} />
                   </span>
                   <div className="AchievementsList__item__text">
                     <strong>
