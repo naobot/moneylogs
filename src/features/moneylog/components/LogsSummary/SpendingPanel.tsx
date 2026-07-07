@@ -26,35 +26,11 @@ const fmt = (value: number, currency: Currency) =>
   `${value.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${currency}`;
 
 const insightsChildren = (scope: Scope, groupAnalytics?: GroupAnalytics): ReactNode => {
-  if (scope === "group") {
-    return (
-      <>
-        <div className="SpendingInsights__grid">
-          <SpendingInsights.TotalText>
-            The group spent a <strong>total of</strong>
-          </SpendingInsights.TotalText>
-          <SpendingInsights.WeekText>
-            The group <strong>spent the most</strong> during the <strong>weeks of</strong>
-          </SpendingInsights.WeekText>
-        </div>
-        <SpendingInsights.DayText showPosts={true} showAuthors={true} showMultipleDays={true}>
-          The <strong>days the group spent the most</strong> were
-        </SpendingInsights.DayText>
-      </>
-    );
-  }
-
   const subject = scope === "mine" ? "You" : "This user";
   const possessive = scope === "mine" ? "your" : "this user's";
   return (
     <>
       <div className="SpendingInsights__grid">
-        <SpendingInsights.TotalText>
-          {subject} spent a <strong>total of</strong>
-        </SpendingInsights.TotalText>
-        <SpendingInsights.WeekText>
-          {subject} <strong>spent the most</strong> during the <strong>week(s) of</strong>
-        </SpendingInsights.WeekText>
         <SpendingInsights.AveragesText>
           Here are {possessive} average <strong>spending patterns</strong>:
         </SpendingInsights.AveragesText>
@@ -66,10 +42,6 @@ const insightsChildren = (scope: Scope, groupAnalytics?: GroupAnalytics): ReactN
           <strong>Good news!</strong>
         </SpendingInsights.LowSpenderAlert>
       </div>
-      <SpendingInsights.DayText showPosts={true} showAuthors={scope === "other"}>
-        The <strong>{scope === "mine" ? "day you spent the most" : "most expensive day"}</strong>{" "}
-        was
-      </SpendingInsights.DayText>
     </>
   );
 };
