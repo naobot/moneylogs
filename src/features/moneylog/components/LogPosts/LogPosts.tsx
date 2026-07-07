@@ -478,8 +478,10 @@ const LogPosts = memo(
     }, [selectedPost]);
 
     useEffect(() => {
+      // Not gated on isReadOnly: opening a post on a completed group must still be
+      // able to clear a stuck comment notification. The commentsAreUnseen guard makes
+      // this a one-time write (and reads nothing beyond already-loaded post data).
       if (
-        !isReadOnly &&
         !isSpectator &&
         loggedInUser &&
         selectedPost?.commentCount &&
@@ -498,7 +500,7 @@ const LogPosts = memo(
           });
         }
       }
-    }, [selectedPost?.id, loggedInUser?.userId, trackUserAction, isReadOnly]);
+    }, [selectedPost?.id, loggedInUser?.userId, trackUserAction]);
 
     return (
       <>
