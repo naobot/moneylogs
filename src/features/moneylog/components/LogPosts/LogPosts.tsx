@@ -638,7 +638,8 @@ const LogPosts = memo(
               isLoadingComments={isLoadingComments}
               isSuccessComments={isSuccessComments}
               refreshComments={refreshComments}
-              isReadOnly={isReadOnly || isSpectator}
+              isReadOnly={isReadOnly}
+              isSpectator={isSpectator}
             />
           )}
         </div>

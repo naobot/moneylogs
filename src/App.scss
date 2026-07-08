@@ -1079,6 +1079,26 @@ html {
       opacity: 0 !important;
     }
 
+    &--notice {
+      background: var(--c-black);
+      color: var(--c-white);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+
+      .LogPostComments__item__body {
+        color: var(--c-white);
+        text-align: center;
+      }
+
+      @media (min-width: constants.$breakpoint-md) {
+        &::after,
+        &::before {
+          display: none;
+        }
+      }
+    }
+
     @media (max-width: constants.$breakpoint-md) {
       &--grow {
         width: fit-content;
