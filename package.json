@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev",
-    "build": "vp build",
+    "build": "vp build && node scripts/write-version.mjs",
     "lint": "vp lint .",
     "preview": "vp preview",
     "seed-emulator": "npx tsx scripts/seed-emulator.ts",
