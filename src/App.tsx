@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -12,7 +12,9 @@ import { auth } from "@/config/firebase-config";
 import Layout from "@/features/layout/Layout";
 import GlobalErrorHandler from "@/utils/errorHandler";
 import { useToastContext } from "@/hooks/useToastContext";
+import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import UpdateBanner from "@/components/UpdateBanner";
 
 import { Auth } from "@/pages/auth";
 import { Home } from "@/pages/home";
@@ -54,6 +56,8 @@ export const CheckAuth = ({
 
 const App = () => {
   const { showToast } = useToastContext();
+  const { updateAvailable, refresh } = useAppVersionRefresh();
+  const [updateDismissed, setUpdateDismissed] = useState(false);
 
   useEffect(() => {
     GlobalErrorHandler.getInstance().initialize(showToast);
@@ -61,6 +65,9 @@ const App = () => {
 
   return (
     <Router>
+      {updateAvailable && !updateDismissed && (
+        <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
+      )}
       <Layout>
         <ErrorBoundary>
           <Routes>
