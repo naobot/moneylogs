@@ -23,6 +23,7 @@ import { FullUserData } from "@/hooks/useGetGroupUsers";
 
 import { applyMemberOrder } from "@/utils/memberOrder";
 import { memberHasUnreadPosts, postHasUnreadComments } from "@/utils/unread";
+import { shouldShowCommentBadge, shouldShowPostBell } from "./navBadges";
 import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
 import Icon from "@/components/Icon";
 
@@ -236,11 +237,25 @@ const LogsMenuItemWithComments = ({
     return memberPosts.some((post) => postHasUnreadComments(post, user));
   }, [isSpectator, logPosts, user, member.id]);
 
+  const isOwnItem = member?.id === user?.id;
+  // You're actively viewing this member's single log (not the digest or summary), so
+  // suppress its nav badges since you're already looking at it. In digest/summary mode
+  // displayUser may still point at you, so those must not count as "viewing" — otherwise
+  // your own item never shows its speech badge on the default Daily Digest view.
+  const isViewingThisMember = !displaySummary && !displayAll && displayUser?.id === member?.id;
+
+  const badgeInput = {
+    isSpectator,
+    isOwnItem,
+    isViewingThisMember,
+    memberHasUnreadPosts: member.hasUnreadPosts,
+  };
+
   return (
     <div
       className={cx("LogsMenu__item", {
-        "LogsMenu__item--active": !displaySummary && !displayAll && displayUser?.id === member?.id,
-        "LogsMenu__item--first": member?.id === user?.id,
+        "LogsMenu__item--active": isViewingThisMember,
+        "LogsMenu__item--first": isOwnItem,
       })}
       onClick={() => onChangeUser(member)}
     >
@@ -249,14 +264,10 @@ const LogsMenuItemWithComments = ({
           ⣿
         </span>
       )}
-      {!isSpectator &&
-        member?.id !== user?.id &&
-        displayUser?.id !== member?.id &&
-        member.hasUnreadPosts && <Icon type="notification" />}
-      {!isSpectator &&
-        displayUser?.id !== member?.id &&
-        (!member.hasUnreadPosts || member?.id === user?.id) &&
-        hasUnreadComments && <Icon type={"speech"} size={18} />}
+      {shouldShowPostBell(badgeInput) && <Icon type="notification" />}
+      {shouldShowCommentBadge({ ...badgeInput, hasUnreadComments }) && (
+        <Icon type={"speech"} size={18} />
+      )}
       <div className="LogsMenu__item__content">
         <div className="LogsMenu__item__title">{member?.displayName}</div>
         {member?.displayLocation && (
