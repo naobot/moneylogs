@@ -4,9 +4,20 @@
 
 type TimestampLike = { seconds: number };
 
-type ViewTracking = Record<string, Record<string, { lastViewedAt?: TimestampLike } | undefined>>;
+// Firestore resolves a serverTimestamp() to `null` in local snapshots until the server
+// acks the write (SnapshotOptions.serverTimestamps defaults to 'none'). So a pending
+// mark-as-viewed reads back as `{ lastViewedAt: null }` for as long as the write is in
+// flight — long enough to see on a slow mobile connection, indefinitely while offline.
+type ViewEntry = { lastViewedAt?: TimestampLike | null } | undefined;
 
-type CommentSubscriptions = Record<string, { lastViewedAt?: TimestampLike } | undefined>;
+type ViewTracking = Record<string, Record<string, ViewEntry>>;
+
+type CommentSubscriptions = Record<string, ViewEntry>;
+
+// An in-flight mark-as-viewed write. The entry exists, so we have already decided this
+// was read; only the timestamp hasn't landed. Treating it as unviewed makes the badge
+// reappear the moment the item stops being suppressed.
+const isPendingWrite = (entry: ViewEntry): boolean => !!entry && entry.lastViewedAt === null;
 
 type UnreadMember = { id: string; lastUpdated?: Record<string, TimestampLike | undefined> };
 
@@ -31,7 +42,9 @@ export const memberHasUnreadPosts = ({
   if (!member) return false;
   const memberLastUpdated = member.lastUpdated?.[groupId];
   if (!memberLastUpdated) return false;
-  const lastViewedAt = viewTracking?.[groupId]?.[member.id]?.lastViewedAt;
+  const entry = viewTracking?.[groupId]?.[member.id];
+  if (isPendingWrite(entry)) return false;
+  const lastViewedAt = entry?.lastViewedAt;
   if (!lastViewedAt) return true;
   return memberLastUpdated.seconds > lastViewedAt.seconds;
 };
@@ -44,7 +57,9 @@ export const commentsAreUnseen = (
   commentSubscriptions: CommentSubscriptions | undefined,
 ): boolean => {
   if (!post?.latestCommentAt) return false;
-  const lastViewedAt = commentSubscriptions?.[post.id]?.lastViewedAt;
+  const entry = commentSubscriptions?.[post.id];
+  if (isPendingWrite(entry)) return false;
+  const lastViewedAt = entry?.lastViewedAt;
   if (!lastViewedAt) return true;
   return post.latestCommentAt.seconds > lastViewedAt.seconds;
 };

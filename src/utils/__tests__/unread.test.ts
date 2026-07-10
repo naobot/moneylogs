@@ -52,6 +52,38 @@ describe("memberHasUnreadPosts", () => {
       }),
     ).toBe(false);
   });
+
+  // Firestore reads back a not-yet-acked serverTimestamp() as null. The entry existing
+  // means we already marked this viewed, so the bell must not flash back on while the
+  // write is in flight — the window is long enough to see on mobile.
+  it("is false while our mark-as-viewed write is still pending", () => {
+    expect(
+      memberHasUnreadPosts({
+        ...base,
+        viewTracking: { [GROUP]: { m1: { lastViewedAt: null } } },
+      }),
+    ).toBe(false);
+  });
+
+  it("distinguishes a pending write from never having viewed the member", () => {
+    expect(
+      memberHasUnreadPosts({ ...base, viewTracking: { [GROUP]: { m1: { lastViewedAt: null } } } }),
+    ).toBe(false);
+    // No entry at all for m1: genuinely never viewed, so the bell belongs on.
+    expect(memberHasUnreadPosts({ ...base, viewTracking: { [GROUP]: {} } })).toBe(true);
+  });
+
+  it("shows the bell again once a pending write resolves and a newer post arrives", () => {
+    // Write acked at t=100, then the member posts at t=150.
+    const member = { id: "m1", lastUpdated: { [GROUP]: ts(150) } };
+    expect(
+      memberHasUnreadPosts({
+        member,
+        groupId: GROUP,
+        viewTracking: { [GROUP]: { m1: { lastViewedAt: ts(100) } } },
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("commentsAreUnseen", () => {
@@ -74,6 +106,12 @@ describe("commentsAreUnseen", () => {
   it("is false when the last view is at or after the latest comment", () => {
     expect(commentsAreUnseen(post, { p1: { lastViewedAt: ts(100) } })).toBe(false);
     expect(commentsAreUnseen(post, { p1: { lastViewedAt: ts(150) } })).toBe(false);
+  });
+
+  it("is false while our mark-as-viewed write is still pending", () => {
+    expect(commentsAreUnseen(post, { p1: { lastViewedAt: null } })).toBe(false);
+    // Distinct from having no subscription entry at all, which is genuinely unseen.
+    expect(commentsAreUnseen(post, {})).toBe(true);
   });
 });
 
@@ -115,6 +153,11 @@ describe("postHasUnreadComments", () => {
 
   it("is false when subscribed but already caught up", () => {
     const user = { id: "u1", commentSubscriptions: { p1: { lastViewedAt: ts(100) } } };
+    expect(postHasUnreadComments(subscribedPost, user)).toBe(false);
+  });
+
+  it("is false while the mark-as-viewed write for that post is pending", () => {
+    const user = { id: "u1", commentSubscriptions: { p1: { lastViewedAt: null } } };
     expect(postHasUnreadComments(subscribedPost, user)).toBe(false);
   });
 
