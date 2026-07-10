@@ -174,7 +174,9 @@ export const Group = ({
       if (viewedUserDocRefId === viewingUserDocRefId) return;
 
       // Only write when there's genuinely a new post to mark as read; idly clicking
-      // back to a member you're caught up on shouldn't touch the database.
+      // back to a member you're caught up on shouldn't touch the database. This also
+      // reads false while our own write is still in flight, so the re-runs triggered by
+      // `members` landing can't queue a duplicate write.
       const viewedMember = members.find((m) => m.id === viewedUserDocRefId);
       if (
         !memberHasUnreadPosts({
@@ -203,7 +205,12 @@ export const Group = ({
     };
 
     updateViewTracking();
-  }, [displayUser?.userId, loggedInUser?.userId, groupId]);
+    // `members` and `userIdToDocRefMap` belong here, not just the ids: useGetGroupUsers
+    // paints from a localStorage cache that omits `lastUpdated`, so an early run sees
+    // every member as "nothing new" and skips the write. Without these deps the effect
+    // never retries once the real snapshot lands, and the bell stays lit for a log the
+    // user already read. Both are identity-stable unless the member set really changed.
+  }, [displayUser?.userId, loggedInUser?.userId, groupId, members, userIdToDocRefMap]);
 
   const handleUserChange = (newUser?: unknown) => {
     if (newUser) {
