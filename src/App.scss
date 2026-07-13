@@ -597,10 +597,46 @@ html {
     &--new {
     }
 
+    // Placeholder rows for member profiles still streaming in. Non-interactive,
+    // so no hover/pointer treatment.
+    &--skeleton {
+      pointer-events: none;
+    }
+
     &:hover {
       cursor: pointer;
     }
   }
+
+  &__skeleton-bar {
+    width: 100%;
+    height: 1em;
+    background-color: var(--c-black);
+    opacity: 0.15;
+    animation: LogsMenu__memberPulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes LogsMenu__memberPulse {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .LogsMenu__sortable-item {

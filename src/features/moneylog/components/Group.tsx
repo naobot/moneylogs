@@ -336,6 +336,7 @@ export const Group = ({
                 onViewSummary={handleViewSummary}
                 groupId={groupId}
                 isReadOnly={isReadOnly}
+                loadingMemberCount={Math.max(0, (group.members?.length ?? 0) - members.length)}
               />
               {isFutureGroup && (
                 <div className="LogPosts">

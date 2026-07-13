@@ -45,9 +45,16 @@ interface LogsMenuProps {
   onViewSummary: () => void;
   groupId: string;
   isReadOnly: boolean;
+  // How many member profiles are still streaming in (group member count minus the
+  // profiles loaded so far). On a slow connection the list can render with just the
+  // current user — this renders skeleton rows so it's clearly still loading.
+  loadingMemberCount?: number;
 }
 
 const MEMBER_ORDER_KEY = (groupId: string) => `ML__${groupId}__memberOrder`;
+
+// Cap skeleton rows so a transiently large count can't blow out the layout.
+const MAX_MEMBER_SKELETONS = 8;
 
 const LogsMenu = ({
   displaySummary = false,
@@ -59,6 +66,7 @@ const LogsMenu = ({
   onViewSummary,
   groupId,
   isReadOnly = false,
+  loadingMemberCount = 0,
 }: LogsMenuProps) => {
   const { user } = useCurrentUser();
 
@@ -117,9 +125,11 @@ const LogsMenu = ({
     localStorage.setItem(MEMBER_ORDER_KEY(groupId), JSON.stringify(newIds));
   };
 
+  const skeletonCount = Math.min(Math.max(0, loadingMemberCount), MAX_MEMBER_SKELETONS);
+
   return (
     <>
-      <div className="LogsMenu">
+      <div className="LogsMenu" aria-busy={skeletonCount > 0}>
         {isReadOnly && (
           <div
             className={cx("LogsMenu__item LogsMenu__item--zeroeth", {
@@ -167,6 +177,24 @@ const LogsMenu = ({
             ))}
           </SortableContext>
         </DndContext>
+        {skeletonCount > 0 && (
+          <>
+            {Array.from({ length: skeletonCount }).map((_, i) => (
+              <div
+                key={`member-skeleton-${i}`}
+                className="LogsMenu__item LogsMenu__item--skeleton"
+                aria-hidden="true"
+              >
+                <div className="LogsMenu__item__content">
+                  <div className="LogsMenu__skeleton-bar" />
+                </div>
+              </div>
+            ))}
+            <span className="sr-only" role="status">
+              Loading members…
+            </span>
+          </>
+        )}
       </div>
     </>
   );
