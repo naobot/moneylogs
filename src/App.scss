@@ -806,10 +806,15 @@ html {
       &--selected {
         border: 2px solid var(--c-black);
         z-index: 51;
-        max-height: calc(100vh - 180px);
+        // Use dvh so the editor tracks the *visible* viewport as the mobile
+        // URL bar / on-screen keyboard show and hide. Plain vh resolves to the
+        // large (URL-bar-retracted) viewport and doesn't update, which left the
+        // editor body squeezed to near-zero at unpredictable moments — the
+        // "textbox disappears until you refresh a few times" bug.
+        max-height: calc(100dvh - 180px);
 
         @media (max-width: constants.$breakpoint-md) {
-          max-height: calc(100vh - 180px - 330px) !important;
+          max-height: calc(100dvh - 180px - 330px) !important;
         }
       }
 
@@ -931,6 +936,30 @@ html {
 .LogPostEditor {
   &__file-input {
     display: none;
+  }
+
+  // On the smallest screens the date/time, amount and currency inputs cannot
+  // shrink further while staying legible, so stack the editor header into two
+  // rows instead of overflowing off-screen: date/time + close on top, the
+  // amount + currency + calculator spanning the full width below.
+  @media (max-width: constants.$breakpoint-sm) {
+    .LogPosts__posts__item__header {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "left right"
+        "center center";
+      row-gap: 0.4em;
+    }
+
+    .LogPosts__posts__item__header__left {
+      grid-area: left;
+    }
+    .LogPosts__posts__item__header__center {
+      grid-area: center;
+    }
+    .LogPosts__posts__item__header__right {
+      grid-area: right;
+    }
   }
 }
 

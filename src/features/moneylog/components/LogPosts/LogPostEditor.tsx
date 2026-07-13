@@ -271,7 +271,7 @@ const LogPostEditor = forwardRef(
 
     return (
       <div
-        className={cx("LogPosts__posts__item LogPosts__posts__item--selected", {
+        className={cx("LogPostEditor LogPosts__posts__item LogPosts__posts__item--selected", {
           "LogPosts__posts__item--first": isPinned,
           "LogPostEditor--uploading": isUploading,
         })}
