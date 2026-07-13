@@ -58,6 +58,14 @@ describe("SpendingPanel", () => {
     expect(container.textContent).toContain("No spending was logged");
   });
 
+  it("shows a loading state instead of the empty message while posts are loading", () => {
+    act(() =>
+      root.render(<SpendingPanel scope="mine" user={{}} logPosts={[]} group={group} isLoading />),
+    );
+    expect(container.querySelector(".SpendingPanel__loading")).not.toBeNull();
+    expect(container.textContent).not.toContain("No spending was logged");
+  });
+
   it("phrases group insights as 'the group', not 'this user'", () => {
     act(() =>
       root.render(

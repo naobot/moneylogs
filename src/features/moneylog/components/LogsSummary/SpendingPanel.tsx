@@ -20,6 +20,9 @@ interface SpendingPanelProps {
   group: Group;
   scope: Scope;
   groupAnalytics?: GroupAnalytics;
+  // Posts are still being fetched: distinguishes "loading" from "genuinely no spending"
+  // so we don't flash the empty message on slow connections.
+  isLoading?: boolean;
 }
 
 const fmt = (value: number, currency: Currency) =>
@@ -46,7 +49,14 @@ const insightsChildren = (scope: Scope, groupAnalytics?: GroupAnalytics): ReactN
   );
 };
 
-const SpendingPanel = ({ user, logPosts, group, scope, groupAnalytics }: SpendingPanelProps) => {
+const SpendingPanel = ({
+  user,
+  logPosts,
+  group,
+  scope,
+  groupAnalytics,
+  isLoading = false,
+}: SpendingPanelProps) => {
   const granularity = useMemo(() => autoGranularity(group), [group]);
   const spending = useMemo(
     () => buildSpendingSeries(logPosts, group, { user, granularity }),
@@ -66,7 +76,9 @@ const SpendingPanel = ({ user, logPosts, group, scope, groupAnalytics }: Spendin
 
   return (
     <div className="SpendingPanel">
-      {currencies.length === 0 || !activeCurrency ? (
+      {isLoading ? (
+        <p className="SpendingPanel__empty SpendingPanel__loading">...</p>
+      ) : currencies.length === 0 || !activeCurrency ? (
         <p className="SpendingPanel__empty">No spending was logged in this period.</p>
       ) : (
         <>

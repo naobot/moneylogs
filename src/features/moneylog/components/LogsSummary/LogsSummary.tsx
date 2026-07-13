@@ -27,6 +27,9 @@ interface LogsSummaryProps {
   group: Group;
   logPosts: Array<LogPost>;
   groupMembers: FullUserData[];
+  // True while log posts are still being fetched (e.g. switching groups on a slow
+  // connection), so spending panels show a loading state instead of an empty one.
+  isLoading?: boolean;
 }
 
 interface ProcessingState {
@@ -35,7 +38,7 @@ interface ProcessingState {
   isComplete: boolean;
 }
 
-const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
+const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsSummaryProps) => {
   const { user: loggedInUser } = useCurrentUser();
 
   const [processingState, setProcessingState] = useState<ProcessingState | null>(null);
@@ -215,6 +218,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
               logPosts={myLogs}
               group={group}
               groupAnalytics={groupAnalytics}
+              isLoading={isLoading}
             />
           </div>
         )}
@@ -267,6 +271,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
                 logPosts={myLogs}
                 group={group}
                 groupAnalytics={groupAnalytics}
+                isLoading={isLoading}
               />
             )}
 
@@ -277,6 +282,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
                 user={{}}
                 logPosts={logPosts}
                 group={group}
+                isLoading={isLoading}
               />
             )}
 
@@ -288,6 +294,7 @@ const LogsSummary = ({ group, groupMembers, logPosts }: LogsSummaryProps) => {
                 logPosts={otherLogs}
                 group={group}
                 groupAnalytics={groupAnalytics}
+                isLoading={isLoading}
               />
             )}
           </div>

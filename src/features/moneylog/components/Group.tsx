@@ -343,7 +343,12 @@ export const Group = ({
                 </div>
               )}
               {!isFutureGroup && displaySummary && (
-                <LogsSummary group={group} groupMembers={members} logPosts={logPostRes.posts} />
+                <LogsSummary
+                  group={group}
+                  groupMembers={members}
+                  logPosts={logPostRes.posts}
+                  isLoading={logPostRes.isLoading}
+                />
               )}
               {!isFutureGroup && !displaySummary && (displayAll || displayUser) && (
                 <ActiveLog

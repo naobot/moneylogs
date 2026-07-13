@@ -139,6 +139,17 @@
     padding: 1.5em 0;
   }
 
+  // Terminal-style blinking ellipsis while posts are still loading.
+  &__loading {
+    animation: SpendingPanel__blink 1s steps(1, end) infinite;
+  }
+
+  @keyframes SpendingPanel__blink {
+    50% {
+      opacity: 0.15;
+    }
+  }
+
   &__daydetail {
     text-align: left;
     font-size: 0.9em;
