@@ -12,13 +12,14 @@ import LogPostEditor from "./LogPostEditor";
 import { LogPostItem } from "./LogPosts";
 import LogPostComments from "./LogPostComments";
 import dayjs from "@/utils/configuredDayjs";
-import { FullUserData, useGetGroupUsers } from "@/hooks/useGetGroupUsers";
+import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { commentsAreUnseen } from "@/utils/unread";
 
 const AllLogsDigest = ({
   groupId,
   logs,
+  members,
   isCreateNewEntrySet,
   isReadOnly = false,
   isPostingClosed = false,
@@ -26,6 +27,11 @@ const AllLogsDigest = ({
 }: {
   groupId: string;
   logs: LogPost[];
+  // Passed down already-loaded from Group so the digest never renders with an
+  // empty member map. Fetching members here instead caused a flash: on the first
+  // render the map was empty, so pinned posts weren't filtered out and posts were
+  // bucketed by the viewer's timezone rather than each author's.
+  members: FullUserData[];
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
   isReadOnly: boolean;
   isPostingClosed?: boolean;
@@ -34,7 +40,6 @@ const AllLogsDigest = ({
   const { markCommentsAsViewedFn } = useUserQuery();
   const { user: loggedInUser } = useCurrentUser();
   const { trackUserAction } = useReadTracking();
-  const { users: members } = useGetGroupUsers(groupId);
 
   const memberMap = useMemo(() => {
     const result = new Map<string, FullUserData>();

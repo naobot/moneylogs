@@ -2,6 +2,7 @@ import { Dispatch, useEffect } from "react";
 
 import { Group, LogPost } from "@/types/user";
 import { UserData } from "@/hooks/useGetUserInfo";
+import { FullUserData } from "@/hooks/useGetGroupUsers";
 
 import LogPosts from "./LogPosts/LogPosts";
 import AllLogsDigest from "./LogPosts/AllLogsDigest";
@@ -13,6 +14,7 @@ type ActiveLogProps = {
   logPosts: Array<LogPost>;
   group: Group;
   groupId: string;
+  groupMembers: FullUserData[];
   userId?: string;
   isCreateNewEntry: boolean;
   isCreateNewEntrySet: Dispatch<React.SetStateAction<boolean>>;
@@ -28,6 +30,7 @@ export const ActiveLog = ({
   logPosts,
   group: _group,
   groupId,
+  groupMembers,
   userId,
   isCreateNewEntry,
   isCreateNewEntrySet,
@@ -60,6 +63,7 @@ export const ActiveLog = ({
         <AllLogsDigest
           groupId={groupId}
           logs={logPosts}
+          members={groupMembers}
           isCreateNewEntrySet={isCreateNewEntrySet}
           isReadOnly={isReadOnly}
           isPostingClosed={isPostingClosed}

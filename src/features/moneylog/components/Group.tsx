@@ -354,6 +354,7 @@ export const Group = ({
                 <ActiveLog
                   group={group}
                   groupId={groupId}
+                  groupMembers={members}
                   logPosts={
                     displayAll
                       ? logPostRes.posts
