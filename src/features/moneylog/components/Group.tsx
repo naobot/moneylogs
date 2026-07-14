@@ -370,6 +370,9 @@ export const Group = ({
                   isReadOnly={isReadOnly}
                   isPostingClosed={isPostingClosed}
                   isSpectator={isSpectator}
+                  hasMorePosts={logPostRes.hasMore}
+                  isLoadingMorePosts={logPostRes.isLoadingMore}
+                  onLoadMorePosts={logPostRes.loadMore}
                 />
               )}
             </>

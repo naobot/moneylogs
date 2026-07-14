@@ -22,6 +22,10 @@ type ActiveLogProps = {
   isReadOnly: boolean;
   isPostingClosed?: boolean;
   isSpectator?: boolean;
+  // Lazy-loading of older posts, only relevant to the scroll-through single-member view.
+  hasMorePosts?: boolean;
+  isLoadingMorePosts?: boolean;
+  onLoadMorePosts?: () => void;
 };
 
 export const ActiveLog = ({
@@ -38,6 +42,9 @@ export const ActiveLog = ({
   isReadOnly = false,
   isPostingClosed = false,
   isSpectator = false,
+  hasMorePosts = false,
+  isLoadingMorePosts = false,
+  onLoadMorePosts,
 }: ActiveLogProps) => {
   useEffect(() => {
     isCreateNewEntrySet(false);
@@ -57,6 +64,9 @@ export const ActiveLog = ({
           isReadOnly={isReadOnly}
           isPostingClosed={isPostingClosed}
           isSpectator={isSpectator}
+          hasMore={hasMorePosts}
+          isLoadingMore={isLoadingMorePosts}
+          onLoadMore={onLoadMorePosts}
         />
       )}
       {displayAll && (

@@ -754,6 +754,19 @@ html {
     padding: 1em;
   }
 
+  &__loadMore {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em 0;
+    flex-shrink: 0;
+
+    &__status {
+      font-size: 0.85em;
+      opacity: 0.7;
+    }
+  }
+
   &__posts {
     display: flex;
     flex-direction: column;

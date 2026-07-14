@@ -34,6 +34,11 @@ type LogPostsProps = {
   isReadOnly: boolean;
   isPostingClosed?: boolean;
   isSpectator?: boolean;
+  // Older-post lazy loading: whether more history exists beyond the loaded window,
+  // whether an expansion is currently in flight, and how to request the next page.
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 };
 
 type LogPostProps = {
@@ -336,6 +341,9 @@ const LogPosts = memo(
     isReadOnly = false,
     isPostingClosed = false,
     isSpectator = false,
+    hasMore = false,
+    isLoadingMore = false,
+    onLoadMore,
   }: LogPostsProps) => {
     const [isWeeklyView, _isWeeklyViewSet] = useState(false);
     const { markCommentsAsViewedFn } = useUserQuery();
@@ -445,6 +453,45 @@ const LogPosts = memo(
     });
 
     const postEditorRef = useRef<HTMLDivElement>(null);
+    const postsContainerRef = useRef<HTMLDivElement>(null);
+    const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+
+    // Latest paging inputs, read by the (deliberately stable) observer below so it
+    // never has to re-attach mid-scroll.
+    const loadMoreRef = useRef(onLoadMore);
+    const hasMoreRef = useRef(hasMore);
+    const isLoadingMoreRef = useRef(isLoadingMore);
+    loadMoreRef.current = onLoadMore;
+    hasMoreRef.current = hasMore;
+    isLoadingMoreRef.current = isLoadingMore;
+
+    const showLoadMore = hasMore || isLoadingMore;
+
+    // Auto-load the next page of older posts once the bottom sentinel scrolls into
+    // view. The observer stays attached for the life of the sentinel and fires only on
+    // intersection *changes*, so a page that adds no posts for this member (sentinel
+    // never leaves view) won't retrigger — the visible "load older posts" button lets
+    // the user continue in that case, keeping reads bounded to one page per action.
+    useEffect(() => {
+      const sentinel = loadMoreSentinelRef.current;
+      if (!sentinel) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (
+            entries.some((entry) => entry.isIntersecting) &&
+            hasMoreRef.current &&
+            !isLoadingMoreRef.current
+          ) {
+            loadMoreRef.current?.();
+          }
+        },
+        { root: postsContainerRef.current, rootMargin: "200px" },
+      );
+
+      observer.observe(sentinel);
+      return () => observer.disconnect();
+    }, [showLoadMore]);
 
     const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
       // Always set shouldForceFresh based on whether we're opening a different post
@@ -510,6 +557,7 @@ const LogPosts = memo(
           })}
         >
           <div
+            ref={postsContainerRef}
             className={cx("LogPosts__posts", {
               "LogPosts__posts--weekly": isWeeklyView,
               "disable-scroll": selectedPost,
@@ -626,6 +674,22 @@ const LogPosts = memo(
               })}
             {calendarMarkedPosts?.length == 0 && (
               <div className="LogPosts__error">No log entries to display!</div>
+            )}
+            {showLoadMore && (
+              <div className="LogPosts__loadMore" ref={loadMoreSentinelRef}>
+                {isLoadingMore ? (
+                  <span className="LogPosts__loadMore__status" role="status">
+                    Loading older posts…
+                  </span>
+                ) : (
+                  <Button
+                    text="Load older posts"
+                    size="md"
+                    buttonStyle="primary-border"
+                    onClick={() => onLoadMore?.()}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
