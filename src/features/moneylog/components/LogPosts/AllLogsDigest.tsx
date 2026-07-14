@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { Dispatch, Fragment, useEffect, useMemo, useState } from "react";
+import { Dispatch, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useCurrentUser } from "@/contexts";
 import { LogPost } from "@/types/user";
@@ -108,6 +108,11 @@ const AllLogsDigest = ({
   const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null);
   const [shouldForceFresh, setShouldForceFresh] = useState(false);
 
+  // Mirror the current selection so the memoized handler below stays reference-stable
+  // across selection changes, letting memoized LogPostItems skip re-rendering.
+  const selectedPostRef = useRef(selectedPost);
+  selectedPostRef.current = selectedPost;
+
   useDisableScroll(!!selectedPost);
 
   // Single instance of the comment hook
@@ -128,19 +133,22 @@ const AllLogsDigest = ({
     setSelectedPost(null);
   };
 
-  const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
-    // Always set shouldForceFresh based on whether we're opening a different post
-    // or if the same post has unread comments
-    const isNewPost = selectedPost?.id !== post.id;
-    const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
+  const handleOpenComments = useCallback(
+    (post: LogPost, hasUnreadComments: boolean) => {
+      // Always set shouldForceFresh based on whether we're opening a different post
+      // or if the same post has unread comments
+      const isNewPost = selectedPostRef.current?.id !== post.id;
+      const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
 
-    console.log(
-      `👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`,
-    );
+      console.log(
+        `👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`,
+      );
 
-    setShouldForceFresh(shouldRefresh);
-    setSelectedPost(post);
-  };
+      setShouldForceFresh(shouldRefresh);
+      setSelectedPost(post);
+    },
+    [isReadOnly],
+  );
 
   useEffect(() => {
     setSelectedPost(null);

@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { Dispatch, Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { allTimezones, useTimezoneSelect } from "react-timezone-select";
 import dayjs from "dayjs";
 
@@ -85,7 +85,7 @@ export const useUserTimezone = (date: string | Date | number, userTimezone?: str
 // Local alias so usages inside callbacks/memos don't trigger rules-of-hooks
 const toTz = useUserTimezone;
 
-export const LogPostItem = ({
+const LogPostItemComponent = ({
   user,
   groupId,
   post,
@@ -257,7 +257,14 @@ export const LogPostItem = ({
           {!post.imagesProcessing && post.images && post.images.length > 0 && (
             <div className="LogPost__images">
               {post.images.map((url) => (
-                <img key={url} src={url} alt="" className="LogPost__images__img" />
+                <img
+                  key={url}
+                  src={url}
+                  alt=""
+                  className="LogPost__images__img"
+                  loading="lazy"
+                  decoding="async"
+                />
               ))}
             </div>
           )}
@@ -328,6 +335,31 @@ export const LogPostItem = ({
     </>
   );
 };
+
+// Each item renders a markdown body via MDEditor, which is comparatively expensive to
+// re-parse. Without memoization, any list-level state change (selecting a post, opening
+// comments, editing) re-renders every item. The comparator below skips a re-render when
+// nothing this item displays has changed — crucially, it collapses the shared
+// `selectedPostId` scalar to a per-item "am I selected?" boolean, so a selection change
+// only re-renders the two items whose selected-state actually flips, not the whole list.
+// Callbacks are compared by reference (callers pass stable, ref-backed handlers) so a
+// skipped item can never retain a stale closure. Any new render-affecting prop must be
+// added here too.
+export const arePostItemPropsEqual = (prev: LogPostProps, next: LogPostProps): boolean =>
+  prev.post === next.post &&
+  prev.user === next.user &&
+  prev.groupId === next.groupId &&
+  prev.setSelectedPost === next.setSelectedPost &&
+  prev.setCurrentlyEditingPostId === next.setCurrentlyEditingPostId &&
+  prev.onOpenComments === next.onOpenComments &&
+  prev.isMyLog === next.isMyLog &&
+  prev.isDigestMode === next.isDigestMode &&
+  prev.isReadOnly === next.isReadOnly &&
+  prev.isPostingClosed === next.isPostingClosed &&
+  prev.isSummaryView === next.isSummaryView &&
+  (prev.selectedPostId === prev.post.id) === (next.selectedPostId === next.post.id);
+
+export const LogPostItem = memo(LogPostItemComponent, arePostItemPropsEqual);
 
 const LogPosts = memo(
   ({
@@ -440,6 +472,12 @@ const LogPosts = memo(
     const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null);
     const [shouldForceFresh, setShouldForceFresh] = useState(false);
 
+    // Mirror the current selection so the memoized handler below can read it without
+    // closing over it — keeping the handler reference-stable across selection changes,
+    // which is what lets memoized LogPostItems skip re-rendering.
+    const selectedPostRef = useRef(selectedPost);
+    selectedPostRef.current = selectedPost;
+
     useDisableScroll(!!selectedPost);
 
     const {
@@ -493,15 +531,18 @@ const LogPosts = memo(
       return () => observer.disconnect();
     }, [showLoadMore]);
 
-    const handleOpenComments = (post: LogPost, hasUnreadComments: boolean) => {
-      // Always set shouldForceFresh based on whether we're opening a different post
-      // or if the same post has unread comments
-      const isNewPost = selectedPost?.id !== post.id;
-      const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
+    const handleOpenComments = useCallback(
+      (post: LogPost, hasUnreadComments: boolean) => {
+        // Always set shouldForceFresh based on whether we're opening a different post
+        // or if the same post has unread comments
+        const isNewPost = selectedPostRef.current?.id !== post.id;
+        const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
 
-      setShouldForceFresh(shouldRefresh);
-      setSelectedPost(post);
-    };
+        setShouldForceFresh(shouldRefresh);
+        setSelectedPost(post);
+      },
+      [isReadOnly],
+    );
 
     useEffect(() => {
       isCreateNewEntrySet(false);
