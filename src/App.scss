@@ -861,9 +861,17 @@ html {
         // editor body squeezed to near-zero at unpredictable moments — the
         // "textbox disappears until you refresh a few times" bug.
         max-height: calc(100dvh - 180px);
+        // Floor the editor so it can never collapse below a usable size. This
+        // wins over max-height when the visible viewport is tiny; the mobile
+        // container (.LogPosts) scrolls, so overflow is fine.
+        min-height: 280px;
 
         @media (max-width: constants.$breakpoint-md) {
-          max-height: calc(100dvh - 180px - 330px) !important;
+          // dvh already contracts with the on-screen keyboard, so DON'T subtract
+          // an extra keyboard fudge here. The old `- 330px` double-counted the
+          // keyboard and drove the height negative on the smallest screens,
+          // clamping max-height to 0 and collapsing the textbox entirely.
+          max-height: calc(100dvh - 180px) !important;
         }
       }
 
