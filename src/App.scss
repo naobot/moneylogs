@@ -162,6 +162,10 @@ html {
   width: 100%;
   flex: 1;
   overflow-y: hidden;
+  // Without min-height: 0 this flex item can't shrink below its content, so tall
+  // pages push the footer off-screen and overflow-y: hidden clips them unreachably.
+  // Keeping it bounded lets each page scroll its own content instead.
+  min-height: 0;
 
   @media (max-width: constants.$breakpoint-sm) {
     padding: 0.5em 0.5em 0 0.5em;
@@ -171,6 +175,8 @@ html {
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 
@@ -388,12 +394,16 @@ html {
 .AboutPage {
   width: 100%;
   max-width: 500px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .LoginPage {
   display: flex;
   flex-direction: column;
   grid-gap: 2em;
+  min-height: 0;
+  overflow-y: auto;
 
   h1 {
     text-align: center;
@@ -418,6 +428,10 @@ html {
   display: flex;
   flex-direction: column;
   grid-gap: 1em;
+  // Direct children of .Content with no scroll pane of their own: stretch to the
+  // bounded .Content height and scroll internally, so the Window border stays put.
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .Group {
