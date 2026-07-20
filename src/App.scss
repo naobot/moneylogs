@@ -489,6 +489,14 @@ html {
       width: fit-content;
     }
 
+    // Longer than the "new entry" label it replaces, so let it wrap centred inside
+    // the grid cell instead of pushing the header wider on narrow screens.
+    &__pending {
+      text-align: center;
+      line-height: 1.2;
+      min-width: 0;
+    }
+
     &__title {
       font-weight: 700;
       max-width: 100%;

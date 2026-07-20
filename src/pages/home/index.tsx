@@ -6,7 +6,7 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { Group } from "@/features/moneylog/components/Group";
 
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
-import { absoluteStart, absoluteEnd } from "@/utils/groupBoundaries";
+import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";
 
 export const Home = () => {
   const { currentGroups, allGroups, isSuccess, isLoading } = useGetCurrentGroups();
@@ -36,6 +36,7 @@ export const Home = () => {
                 <GroupArchive
                   groups={allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()))}
                   emptyMessage="You have no upcoming log groups."
+                  sort={bySoonestStarting}
                 />
                 <h3>Past groups</h3>
                 <GroupArchive groups={allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()))} />

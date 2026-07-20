@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { collection, doc, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
-import { Currency, LogPost } from "@/types/user";
+import { Currency, Group, LogPost } from "@/types/user";
+import { absoluteEnd } from "@/utils/groupBoundaries";
 import { IconType } from "@/components/Icon";
 
 export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
@@ -40,6 +41,36 @@ const achievementsCollection = (userId: string) => collection(db, "users", userI
 
 const achievementDocId = (groupId: string, type: AchievementType, currency?: string) =>
   currency ? `${groupId}__${type}__${currency}` : `${groupId}__${type}`;
+
+/**
+ * Order achievements to match the Past groups list — by when their group ended,
+ * most recent first.
+ *
+ * Deliberately not keyed on unlockedAt: that records when the user first opened the
+ * completed group's summary, which can be long after the group itself ended, so a
+ * recently-viewed old group would otherwise jump above a newer one.
+ *
+ * Achievements whose group isn't in `groups` fall back to unlockedAt so they still
+ * land somewhere deterministic, and ties (several achievements from one group) break
+ * on doc id to keep the order stable between renders.
+ */
+export const sortAchievementsByGroupEnd = (
+  achievements: Achievement[],
+  groups: Group[],
+): Achievement[] => {
+  const groupsById = new Map(groups.map((g) => [g.id, g]));
+
+  const endedAt = (achievement: Achievement): number => {
+    const group = groupsById.get(achievement.groupId);
+    if (group) return absoluteEnd(group).valueOf();
+    return (achievement.unlockedAt?.seconds ?? 0) * 1000;
+  };
+
+  return [...achievements].sort((a, b) => {
+    const diff = endedAt(b) - endedAt(a);
+    return diff !== 0 ? diff : a.id.localeCompare(b.id);
+  });
+};
 
 export const useGetAchievements = (userId?: string) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);

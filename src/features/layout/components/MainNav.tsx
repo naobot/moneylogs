@@ -5,7 +5,7 @@ import { signOut } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
-import { absoluteEnd } from "@/utils/groupBoundaries";
+import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
 
 import Button from "@/components/Button";
 
@@ -23,7 +23,7 @@ const MainNav = () => {
 
   const pastGroups = allGroups
     .filter((group) => absoluteEnd(group).isBefore(new Date()))
-    .sort((a, b) => absoluteEnd(b).unix() - absoluteEnd(a).unix())
+    .sort(byMostRecentlyEnded)
     .slice(0, 3);
 
   const highlightedGroupId = useMemo(() => {

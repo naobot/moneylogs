@@ -36,3 +36,25 @@ export const absoluteEnd = (group: Group): Dayjs => {
   }
   return dayjs(group.end.toDate());
 };
+
+/**
+ * Comparators for listing groups. The underlying Firestore query has no orderBy, so
+ * anything rendering a list of groups must sort — these keep every surface agreeing.
+ * Compared in milliseconds so groups ending in the same second don't tie arbitrarily.
+ */
+export const byMostRecentlyEnded = (a: Group, b: Group): number =>
+  absoluteEnd(b).valueOf() - absoluteEnd(a).valueOf();
+
+export const bySoonestStarting = (a: Group, b: Group): number =>
+  absoluteStart(a).valueOf() - absoluteStart(b).valueOf();
+
+/**
+ * How long until the group closes for everyone, phrased as a suffix — e.g. "in 5 hours".
+ * Shown to users whose own posting window has ended while later timezones are still
+ * logging, so the gap between personalEnd and absoluteEnd is at most ~26 hours.
+ */
+export const timeUntilReadOnly = (group: Group, now: Dayjs = dayjs()): string => {
+  const hours = absoluteEnd(group).diff(now, "hour");
+  if (hours < 1) return "soon";
+  return `in ${hours} hour${hours === 1 ? "" : "s"}`;
+};

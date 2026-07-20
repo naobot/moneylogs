@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vite-plus/test";
-import { personalStart, personalEnd, absoluteStart, absoluteEnd } from "@/utils/groupBoundaries";
+import {
+  personalStart,
+  personalEnd,
+  absoluteStart,
+  absoluteEnd,
+  timeUntilReadOnly,
+  byMostRecentlyEnded,
+  bySoonestStarting,
+} from "@/utils/groupBoundaries";
+import dayjs from "@/utils/configuredDayjs";
 import type { Group } from "@/types/user";
 
 // Minimal timestamp mock — groupBoundaries only needs toDate() and (for analytics) .seconds
@@ -91,5 +100,75 @@ describe("absoluteEnd", () => {
     const personal = personalEnd(wallClockGroup, "America/Toronto"); // UTC-5 → 03:00Z next day
     const absolute = absoluteEnd(wallClockGroup); // UTC-12 → 10:00Z next day
     expect(absolute.isAfter(personal)).toBe(true);
+  });
+});
+
+describe("timeUntilReadOnly", () => {
+  // wallClockGroup closes for everyone at 2024-02-16T10:00:00Z (22:00 in UTC-12)
+  const at = (iso: string) => dayjs(iso);
+
+  it("reports whole hours remaining until the absolute end", () => {
+    expect(timeUntilReadOnly(wallClockGroup, at("2024-02-16T05:00:00.000Z"))).toBe("in 5 hours");
+  });
+
+  it("uses the singular form for exactly one hour", () => {
+    expect(timeUntilReadOnly(wallClockGroup, at("2024-02-16T09:00:00.000Z"))).toBe("in 1 hour");
+  });
+
+  it("rounds down rather than up", () => {
+    // 1h59m remaining should read as 1 hour, not 2
+    expect(timeUntilReadOnly(wallClockGroup, at("2024-02-16T08:01:00.000Z"))).toBe("in 1 hour");
+  });
+
+  it("says 'soon' under an hour rather than 'in 0 hours'", () => {
+    expect(timeUntilReadOnly(wallClockGroup, at("2024-02-16T09:30:00.000Z"))).toBe("soon");
+  });
+
+  it("says 'soon' once the absolute end has passed", () => {
+    expect(timeUntilReadOnly(wallClockGroup, at("2024-02-16T11:00:00.000Z"))).toBe("soon");
+  });
+
+  it("spans the full 26-hour timezone spread for a user who finished first", () => {
+    // A UTC+14 user hits their personal end 26h before the group closes for everyone
+    const personal = personalEnd(wallClockGroup, "Pacific/Kiritimati");
+    expect(timeUntilReadOnly(wallClockGroup, personal)).toBe("in 26 hours");
+  });
+});
+
+describe("group comparators", () => {
+  const group = (id: string, startWallClock: string, endWallClock: string) =>
+    ({
+      id,
+      start: ts("2024-01-15T00:00:00.000Z"),
+      end: ts("2024-02-15T00:00:00.000Z"),
+      startWallClock,
+      endWallClock,
+    }) as unknown as Group;
+
+  const early = group("early", "2024-01-01T09:00:00", "2024-01-05T22:00:00");
+  const middle = group("middle", "2024-03-01T09:00:00", "2024-03-05T22:00:00");
+  const late = group("late", "2024-06-01T09:00:00", "2024-06-05T22:00:00");
+
+  it("byMostRecentlyEnded puts the latest end first", () => {
+    const sorted = [middle, early, late].sort(byMostRecentlyEnded).map((g) => g.id);
+    expect(sorted).toEqual(["late", "middle", "early"]);
+  });
+
+  it("bySoonestStarting puts the earliest start first", () => {
+    const sorted = [middle, late, early].sort(bySoonestStarting).map((g) => g.id);
+    expect(sorted).toEqual(["early", "middle", "late"]);
+  });
+
+  it("orders independently of the input order", () => {
+    const a = [early, middle, late].sort(byMostRecentlyEnded).map((g) => g.id);
+    const b = [late, early, middle].sort(byMostRecentlyEnded).map((g) => g.id);
+    expect(a).toEqual(b);
+  });
+
+  it("distinguishes groups ending within the same second", () => {
+    // .unix() truncates to seconds, so sub-second differences would tie
+    const a = group("a", "2024-01-01T09:00:00", "2024-01-05T22:00:00.100");
+    const b = group("b", "2024-01-01T09:00:00", "2024-01-05T22:00:00.900");
+    expect([a, b].sort(byMostRecentlyEnded).map((g) => g.id)).toEqual(["b", "a"]);
   });
 });

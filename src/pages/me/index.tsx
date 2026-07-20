@@ -10,7 +10,11 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useMutation } from "@/hooks/useFirebase";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
-import { useGetAchievements, ACHIEVEMENT_META } from "@/hooks/useAchievements";
+import {
+  useGetAchievements,
+  sortAchievementsByGroupEnd,
+  ACHIEVEMENT_META,
+} from "@/hooks/useAchievements";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
@@ -20,7 +24,7 @@ import "./me.scss";
 import "@/features/moneylog/components/LogsSummary/styles.scss";
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
 import dayjs from "dayjs";
-import { absoluteStart, absoluteEnd } from "@/utils/groupBoundaries";
+import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";
 
 export const UserSettings = () => {
   const { allGroups, isSuccess } = useGetCurrentGroups();
@@ -29,6 +33,11 @@ export const UserSettings = () => {
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
   const { achievements } = useGetAchievements(user?.id);
+  // Same ordering as the Past groups list below — most recently ended group first.
+  const orderedAchievements = useMemo(
+    () => sortAchievementsByGroupEnd(achievements, allGroups),
+    [achievements, allGroups],
+  );
   const { options, parseTimezone } = useTimezoneSelect({
     labelStyle: "original",
     timezones: allTimezones,
@@ -150,11 +159,11 @@ export const UserSettings = () => {
         />
       </div>
 
-      {achievements.length > 0 && (
+      {orderedAchievements.length > 0 && (
         <div>
           <h3>Achievements</h3>
           <div className="AchievementsList">
-            {achievements.map((achievement) => {
+            {orderedAchievements.map((achievement) => {
               const meta = ACHIEVEMENT_META[achievement.type];
               return (
                 <Link
@@ -187,6 +196,7 @@ export const UserSettings = () => {
             <GroupArchive
               groups={allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()))}
               emptyMessage="You have no upcoming log groups."
+              sort={bySoonestStarting}
             />
             <h3>Past groups</h3>
             <GroupArchive groups={allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()))} />

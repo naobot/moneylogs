@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 import { getDocs, setDoc } from "firebase/firestore";
-import { awardGroupAchievements } from "@/hooks/useAchievements";
-import type { LogPost } from "@/types/user";
+import { awardGroupAchievements, sortAchievementsByGroupEnd } from "@/hooks/useAchievements";
+import type { Achievement } from "@/hooks/useAchievements";
+import type { Group, LogPost } from "@/types/user";
 
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
 vi.mock("firebase/firestore", () => ({
@@ -322,5 +323,74 @@ describe("awardGroupAchievements — multi-currency", () => {
     expect(result).toHaveLength(2);
     const types = result.map((a) => a.type).sort();
     expect(types).toEqual(["lowest_spender", "top_spender"]);
+  });
+});
+
+describe("sortAchievementsByGroupEnd", () => {
+  const group = (id: string, endWallClock: string) =>
+    ({
+      id,
+      start: { toDate: () => new Date("2024-01-01T00:00:00.000Z"), seconds: 1704067200 },
+      end: { toDate: () => new Date(endWallClock), seconds: 0 },
+      startWallClock: "2024-01-01T09:00:00",
+      endWallClock,
+    }) as unknown as Group;
+
+  const achievement = (id: string, groupId: string, unlockedSeconds: number) =>
+    ({
+      id,
+      type: "top_spender",
+      groupId,
+      groupTitle: groupId,
+      unlockedAt: { seconds: unlockedSeconds, toDate: () => new Date(unlockedSeconds * 1000) },
+    }) as unknown as Achievement;
+
+  const janGroup = group("jan", "2024-01-05T22:00:00");
+  const marGroup = group("mar", "2024-03-05T22:00:00");
+  const junGroup = group("jun", "2024-06-05T22:00:00");
+  const groups = [janGroup, marGroup, junGroup];
+
+  it("orders by group end, most recent first", () => {
+    const sorted = sortAchievementsByGroupEnd(
+      [achievement("a", "mar", 100), achievement("b", "jun", 100), achievement("c", "jan", 100)],
+      groups,
+    );
+    expect(sorted.map((a) => a.groupId)).toEqual(["jun", "mar", "jan"]);
+  });
+
+  it("ignores unlockedAt when the group is known", () => {
+    // The January group was opened most recently, but it still sorts last
+    const sorted = sortAchievementsByGroupEnd(
+      [
+        achievement("a", "jan", 9_999_999),
+        achievement("b", "jun", 1),
+        achievement("c", "mar", 500),
+      ],
+      groups,
+    );
+    expect(sorted.map((a) => a.groupId)).toEqual(["jun", "mar", "jan"]);
+  });
+
+  it("breaks ties on doc id so one group's achievements keep a stable order", () => {
+    const sorted = sortAchievementsByGroupEnd(
+      [achievement("z", "mar", 100), achievement("a", "mar", 100)],
+      groups,
+    );
+    expect(sorted.map((a) => a.id)).toEqual(["a", "z"]);
+  });
+
+  it("falls back to unlockedAt for achievements whose group is unknown", () => {
+    const sorted = sortAchievementsByGroupEnd(
+      [achievement("a", "missing-old", 1), achievement("b", "missing-new", 9_999_999_999)],
+      [],
+    );
+    expect(sorted.map((a) => a.id)).toEqual(["b", "a"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const input = [achievement("a", "jan", 100), achievement("b", "jun", 100)];
+    const before = input.map((a) => a.id);
+    sortAchievementsByGroupEnd(input, groups);
+    expect(input.map((a) => a.id)).toEqual(before);
   });
 });

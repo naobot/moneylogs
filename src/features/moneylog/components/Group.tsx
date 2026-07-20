@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "@/utils/configuredDayjs";
-import { personalStart, personalEnd, absoluteEnd } from "@/utils/groupBoundaries";
+import {
+  personalStart,
+  personalEnd,
+  absoluteEnd,
+  timeUntilReadOnly,
+} from "@/utils/groupBoundaries";
 
 import { useCurrentUser } from "@/contexts";
 
@@ -13,6 +18,7 @@ import { Group as GroupType } from "@/types/user";
 import { useReadTracking } from "@/hooks/useReadTracking";
 import { useGetLogPosts } from "@/hooks/useGetLogPosts";
 import { useUserQuery } from "@/hooks/useUserQuery";
+import { useNow } from "@/hooks/useNow";
 import { memberHasUnreadPosts } from "@/utils/unread";
 
 import Icon, { IconText } from "@/components/Icon";
@@ -36,6 +42,10 @@ export const Group = ({
   const { trackUserAction } = useReadTracking();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
 
+  // Ticking clock, so the boundary crossings below re-evaluate on their own rather
+  // than freezing at whatever they were when the page first rendered.
+  const now = useNow();
+
   // Default view: Daily Digest while the group is active, Log Group Summary once
   // it has fully ended (see the reset effect below, which is the source of truth)
   const [displayAll, setDisplayAll] = useState(() => absoluteEnd(group).isAfter(dayjs()));
@@ -47,13 +57,13 @@ export const Group = ({
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
 
   const isFutureGroup = useMemo(() => {
-    return personalStart(group, loggedInUser?.timezone).isAfter(dayjs());
-  }, [group, loggedInUser?.timezone]);
+    return personalStart(group, loggedInUser?.timezone).isAfter(now);
+  }, [group, loggedInUser?.timezone, now]);
 
   const endingSoon = useMemo(() => {
     const end = personalEnd(group, loggedInUser?.timezone);
-    return end.isAfter(dayjs()) && end.diff(dayjs(), "second") < 86400;
-  }, [group, loggedInUser?.timezone]);
+    return end.isAfter(now) && end.diff(now, "second") < 86400;
+  }, [group, loggedInUser?.timezone, now]);
   const neverViewedWarningModal = useMemo(() => {
     if (endingSoon) {
       if (
@@ -76,13 +86,13 @@ export const Group = ({
 
   // Personal end: this user's posting window has closed
   const isPostingClosed = useMemo(() => {
-    return personalEnd(group, loggedInUser?.timezone).isBefore(dayjs());
-  }, [group, loggedInUser?.timezone]);
+    return personalEnd(group, loggedInUser?.timezone).isBefore(now);
+  }, [group, loggedInUser?.timezone, now]);
 
   // Absolute end: the group is fully closed for all users in all timezones
   const isReadOnly = useMemo(() => {
-    return absoluteEnd(group).isBefore(dayjs());
-  }, [group]);
+    return absoluteEnd(group).isBefore(now);
+  }, [group, now]);
 
   const logPostRes = useGetLogPosts({ groupId, isArchived: isReadOnly });
 
@@ -297,6 +307,13 @@ export const Group = ({
                   <IconText type={"document"} fill={"white"} text="new entry" />
                 </div>
               )}
+            {/* This user is done posting, but later timezones are still logging, so
+                the summary can't be final yet. Takes the "new entry" slot. */}
+            {isPostingClosed && !isReadOnly && !isSpectator && !displaySummary && (
+              <div className="Group__header__item Group__header__pending">
+                Log Summary ready {timeUntilReadOnly(group, now)}
+              </div>
+            )}
           </div>
 
           <div className="Group__header__right">
