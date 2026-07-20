@@ -127,3 +127,58 @@ describe("calculateGroupAnalytics — percentiles", () => {
     expect(p.p75).toBe(100);
   });
 });
+
+describe("calculateGroupAnalytics — per-person averages", () => {
+  it("averages individual daily averages, not the combined total divided by headcount", () => {
+    // Alice: 150 CAD over 2 days -> daily avg 75. Bob: 200 CAD over 1 day -> daily avg 200.
+    // Per-person = mean(75, 200) = 137.5 — distinct from groupTotal(350)/days or /headcount.
+    const posts = [
+      makePost("user1", 100, JAN_16),
+      makePost("user1", 50, JAN_17),
+      makePost("user2", 200, JAN_16),
+    ];
+    const { perPersonDailyAverages, groupTotals } = calculateGroupAnalytics(posts, mockGroup, [
+      alice,
+      bob,
+    ]);
+    expect(perPersonDailyAverages.get("CAD")).toBeCloseTo(137.5);
+    expect(groupTotals.get("CAD")).toBe(350);
+  });
+
+  it("averages individual weekly averages", () => {
+    // Alice: 100+200 across 2 weeks -> weekly avg 150. Bob: 60 in one week -> weekly avg 60.
+    // Per-person = mean(150, 60) = 105
+    const posts = [
+      makePost("user1", 100, JAN_16),
+      makePost("user1", 200, JAN_23),
+      makePost("user2", 60, JAN_16),
+    ];
+    const { perPersonWeeklyAverages } = calculateGroupAnalytics(posts, mockGroup, [alice, bob]);
+    expect(perPersonWeeklyAverages.get("CAD")).toBeCloseTo(105);
+  });
+
+  it("excludes members who never posted in that currency from the average", () => {
+    // Only Alice spent CAD; Bob is a group member but posted nothing. Per-person should
+    // reflect Alice alone (100), not be diluted toward zero by Bob's absence.
+    const posts = [makePost("user1", 100, JAN_16)];
+    const { perPersonDailyAverages } = calculateGroupAnalytics(posts, mockGroup, [alice, bob]);
+    expect(perPersonDailyAverages.get("CAD")).toBe(100);
+  });
+
+  it("returns an empty map when there are no posts", () => {
+    const { perPersonDailyAverages, perPersonWeeklyAverages } = calculateGroupAnalytics(
+      [],
+      mockGroup,
+      [alice, bob],
+    );
+    expect(perPersonDailyAverages.size).toBe(0);
+    expect(perPersonWeeklyAverages.size).toBe(0);
+  });
+
+  it("tracks per-person averages independently per currency", () => {
+    const posts = [makePost("user1", 100, JAN_16, "CAD"), makePost("user2", 80, JAN_16, "USD")];
+    const { perPersonDailyAverages } = calculateGroupAnalytics(posts, mockGroup, [alice, bob]);
+    expect(perPersonDailyAverages.get("CAD")).toBe(100);
+    expect(perPersonDailyAverages.get("USD")).toBe(80);
+  });
+});

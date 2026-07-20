@@ -488,12 +488,39 @@ const DayText = ({
   );
 };
 
+const formatAveragesList = (entries: [Currency, number][]) =>
+  entries
+    .map(
+      ([currency, avg]) =>
+        `${avg.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
+    )
+    .join(", ");
+
 // New components for the additional analytics
-const AveragesText = ({ children }: { children: ReactNode }) => {
+const AveragesText = ({
+  children,
+  perPersonDailyAverages,
+  perPersonWeeklyAverages,
+}: {
+  children: ReactNode;
+  // Only meaningful (and only passed) for the group's own combined view: without
+  // these, "average" there means the whole group's combined spend per day/week,
+  // which reads as a per-person figure unless labelled and paired with one.
+  perPersonDailyAverages?: Map<Currency, number>;
+  perPersonWeeklyAverages?: Map<Currency, number>;
+}) => {
   const { weeklyAverages, dailyAverages, activeCurrency } = useSpendingData();
 
   const weekly = [...weeklyAverages.entries()].filter(currencyFilter(activeCurrency));
   const daily = [...dailyAverages.entries()].filter(currencyFilter(activeCurrency));
+
+  const showPerPerson = !!(perPersonDailyAverages || perPersonWeeklyAverages);
+  const perPersonWeekly = [...(perPersonWeeklyAverages ?? new Map()).entries()].filter(
+    currencyFilter(activeCurrency),
+  );
+  const perPersonDaily = [...(perPersonDailyAverages ?? new Map()).entries()].filter(
+    currencyFilter(activeCurrency),
+  );
 
   return (
     <div className="LogsSummary__bubble">
@@ -501,29 +528,29 @@ const AveragesText = ({ children }: { children: ReactNode }) => {
 
       {weekly.length > 0 && (
         <div>
-          <strong>Weekly averages:</strong>{" "}
-          <span className="LogsSummary__highlight">
-            {weekly
-              .map(
-                ([currency, avg]) =>
-                  `${avg.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
-              )
-              .join(", ")}
-          </span>
+          <strong>{showPerPerson ? "Group total — weekly averages:" : "Weekly averages:"}</strong>{" "}
+          <span className="LogsSummary__highlight">{formatAveragesList(weekly)}</span>
         </div>
       )}
 
       {daily.length > 0 && (
         <div>
-          <strong>Daily averages:</strong>{" "}
-          <span className="LogsSummary__highlight">
-            {daily
-              .map(
-                ([currency, avg]) =>
-                  `${avg.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
-              )
-              .join(", ")}
-          </span>
+          <strong>{showPerPerson ? "Group total — daily averages:" : "Daily averages:"}</strong>{" "}
+          <span className="LogsSummary__highlight">{formatAveragesList(daily)}</span>
+        </div>
+      )}
+
+      {perPersonWeekly.length > 0 && (
+        <div>
+          <strong>Per person — weekly averages:</strong>{" "}
+          <span className="LogsSummary__highlight">{formatAveragesList(perPersonWeekly)}</span>
+        </div>
+      )}
+
+      {perPersonDaily.length > 0 && (
+        <div>
+          <strong>Per person — daily averages:</strong>{" "}
+          <span className="LogsSummary__highlight">{formatAveragesList(perPersonDaily)}</span>
         </div>
       )}
     </div>

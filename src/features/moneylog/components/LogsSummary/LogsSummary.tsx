@@ -298,6 +298,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
                 user={{}}
                 logPosts={logPosts}
                 group={group}
+                groupAnalytics={groupAnalytics}
                 isLoading={isLoading}
               />
             )}

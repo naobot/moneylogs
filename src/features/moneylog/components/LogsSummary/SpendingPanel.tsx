@@ -12,6 +12,8 @@ type ChartMode = "bars" | "cumulative";
 
 interface GroupAnalytics {
   currencyPercentiles: Map<Currency, { p25: number; p50: number; p75: number }>;
+  perPersonDailyAverages: Map<Currency, number>;
+  perPersonWeeklyAverages: Map<Currency, number>;
 }
 
 interface SpendingPanelProps {
@@ -31,19 +33,29 @@ const fmt = (value: number, currency: Currency) =>
 const insightsChildren = (scope: Scope, groupAnalytics?: GroupAnalytics): ReactNode => {
   const subject = scope === "mine" ? "You" : scope === "group" ? "The group" : "This user";
   const possessive = scope === "mine" ? "your" : scope === "group" ? "the group's" : "this user's";
+  const isGroupScope = scope === "group";
   return (
     <>
       <div className="SpendingInsights__grid">
-        <SpendingInsights.AveragesText>
+        <SpendingInsights.AveragesText
+          perPersonDailyAverages={isGroupScope ? groupAnalytics?.perPersonDailyAverages : undefined}
+          perPersonWeeklyAverages={
+            isGroupScope ? groupAnalytics?.perPersonWeeklyAverages : undefined
+          }
+        >
           Here are {possessive} average <strong>spending patterns</strong>:
         </SpendingInsights.AveragesText>
         <SpendingInsights.WeekendWeekdayText>{""}</SpendingInsights.WeekendWeekdayText>
         <SpendingInsights.NoSpendDaysText>
           {subject} logged <strong>no spending</strong> on
         </SpendingInsights.NoSpendDaysText>
-        <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
-          <strong>Good news!</strong>
-        </SpendingInsights.LowSpenderAlert>
+        {/* Comparing an individual's average against the group's own percentile
+            distribution is meaningless for the group's own combined total. */}
+        {!isGroupScope && (
+          <SpendingInsights.LowSpenderAlert groupAnalytics={groupAnalytics}>
+            <strong>Good news!</strong>
+          </SpendingInsights.LowSpenderAlert>
+        )}
       </div>
     </>
   );

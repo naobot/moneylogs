@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import "@/utils/configuredDayjs";
 import SpendingPanel from "@/features/moneylog/components/LogsSummary/SpendingPanel";
-import type { Group, LogPost } from "@/types/user";
+import type { Currency, Group, LogPost } from "@/types/user";
 
 // Noon-UTC timestamps so day bucketing is stable regardless of the runner's tz.
 const JAN = (day: number) => 1705320000 + (day - 15) * 86400; // Jan 15 12:00 UTC
@@ -113,6 +113,66 @@ describe("SpendingPanel", () => {
     clickButton("USD");
     expect(gridText()).toContain("USD");
     expect(gridText()).not.toContain("CAD");
+  });
+
+  it("labels group averages as combined and adds a per-person breakdown when given groupAnalytics", () => {
+    const groupAnalytics = {
+      currencyPercentiles: new Map(),
+      perPersonDailyAverages: new Map<Currency, number>([["CAD", 42]]),
+      perPersonWeeklyAverages: new Map<Currency, number>([["CAD", 294]]),
+    };
+    act(() =>
+      root.render(
+        <SpendingPanel
+          scope="group"
+          user={{}}
+          logPosts={[makePost(100, 16)]}
+          group={group}
+          groupAnalytics={groupAnalytics}
+        />,
+      ),
+    );
+    const text = gridText();
+    expect(text).toContain("Group total — daily averages:");
+    expect(text).toContain("Per person — daily averages:");
+    expect(text).toContain("42 CAD");
+  });
+
+  it("labels group averages plainly (no 'Group total' / 'Per person' split) without groupAnalytics", () => {
+    act(() =>
+      root.render(
+        <SpendingPanel scope="group" user={{}} logPosts={[makePost(100, 16)]} group={group} />,
+      ),
+    );
+    const text = gridText();
+    expect(text).toContain("Daily averages:");
+    expect(text).not.toContain("Group total —");
+    expect(text).not.toContain("Per person —");
+  });
+
+  it("does not show the low-spender alert on the group's own combined view", () => {
+    // p25 well above the combined daily average (100) would trip the alert for
+    // "mine"/"other" — proves the group tab suppresses it structurally, not because
+    // the comparison happens to fail.
+    const groupAnalytics = {
+      currencyPercentiles: new Map<Currency, { p25: number; p50: number; p75: number }>([
+        ["CAD", { p25: 1000, p50: 1000, p75: 1000 }],
+      ]),
+      perPersonDailyAverages: new Map(),
+      perPersonWeeklyAverages: new Map(),
+    };
+    act(() =>
+      root.render(
+        <SpendingPanel
+          scope="group"
+          user={{}}
+          logPosts={[makePost(100, 16)]}
+          group={group}
+          groupAnalytics={groupAnalytics}
+        />,
+      ),
+    );
+    expect(gridText()).not.toContain("lowest spenders");
   });
 
   it("omits the currency selector when there is a single currency", () => {
