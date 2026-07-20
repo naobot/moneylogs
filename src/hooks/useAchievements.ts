@@ -43,6 +43,28 @@ const achievementDocId = (groupId: string, type: AchievementType, currency?: str
   currency ? `${groupId}__${type}__${currency}` : `${groupId}__${type}`;
 
 /**
+ * Every achievement a user holds for one group: what is already stored, plus anything
+ * just unlocked, deduped by doc id and stably ordered.
+ *
+ * Neither source is complete on its own — awardGroupAchievements returns only the docs
+ * it just wrote (deterministic ids mean repeat visits return nothing), while the stored
+ * fetch can resolve before that write lands.
+ */
+export const mergeGroupAchievements = (
+  held: Achievement[],
+  newlyUnlocked: Achievement[],
+  groupId: string,
+): Achievement[] => {
+  const byId = new Map<string, Achievement>();
+  [...held, ...newlyUnlocked]
+    .filter((achievement) => achievement.groupId === groupId)
+    .forEach((achievement) => byId.set(achievement.id, achievement));
+
+  // Firestore returns the subcollection unordered, so impose one.
+  return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
+};
+
+/**
  * Order achievements to match the Past groups list — by when their group ended,
  * most recent first.
  *

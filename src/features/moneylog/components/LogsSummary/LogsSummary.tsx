@@ -10,7 +10,12 @@ import { useGetComments } from "@/hooks/useGetLogPostComments";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { useGroupAnalytics } from "./hooks/useGroupAnalytics";
-import { Achievement, awardGroupAchievements } from "@/hooks/useAchievements";
+import {
+  Achievement,
+  awardGroupAchievements,
+  mergeGroupAchievements,
+  useGetAchievements,
+} from "@/hooks/useAchievements";
 
 import Loader from "@/features/layout/components/Loader";
 import SpendingPanel from "./SpendingPanel";
@@ -45,6 +50,14 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [hasStartedProcessing, setHasStartedProcessing] = useState<boolean>(false);
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+  const { achievements: heldAchievements } = useGetAchievements(loggedInUser?.id);
+
+  // The banner persists across visits, so show everything this user holds for this
+  // group rather than only what was unlocked on this particular view.
+  const groupAchievements = useMemo(
+    () => mergeGroupAchievements(heldAchievements, newAchievements, group.id),
+    [heldAchievements, newAchievements, group.id],
+  );
 
   const groupAnalytics = useGroupAnalytics(logPosts, group, groupMembers);
 
@@ -230,7 +243,10 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
   return (
     <>
       <div className={cx("LogsSummary", { "disable-scroll": !!selectedPost })}>
-        <AchievementsBanner achievements={newAchievements} />
+        <AchievementsBanner
+          achievements={groupAchievements}
+          hasNewlyUnlocked={newAchievements.length > 0}
+        />
 
         {isAdmin && (
           <div>

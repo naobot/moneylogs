@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 import { getDocs, setDoc } from "firebase/firestore";
-import { awardGroupAchievements, sortAchievementsByGroupEnd } from "@/hooks/useAchievements";
+import {
+  awardGroupAchievements,
+  sortAchievementsByGroupEnd,
+  mergeGroupAchievements,
+} from "@/hooks/useAchievements";
 import type { Achievement } from "@/hooks/useAchievements";
 import type { Group, LogPost } from "@/types/user";
 
@@ -392,5 +396,52 @@ describe("sortAchievementsByGroupEnd", () => {
     const before = input.map((a) => a.id);
     sortAchievementsByGroupEnd(input, groups);
     expect(input.map((a) => a.id)).toEqual(before);
+  });
+});
+
+describe("mergeGroupAchievements", () => {
+  const ach = (id: string, groupId: string) =>
+    ({ id, type: "top_spender", groupId, groupTitle: groupId }) as unknown as Achievement;
+
+  it("keeps stored achievements when nothing was newly unlocked", () => {
+    const held = [ach("g1__top_spender__CAD", "g1")];
+    expect(mergeGroupAchievements(held, [], "g1").map((a) => a.id)).toEqual([
+      "g1__top_spender__CAD",
+    ]);
+  });
+
+  it("includes newly unlocked achievements the stored fetch missed", () => {
+    const merged = mergeGroupAchievements([], [ach("g1__time_traveller", "g1")], "g1");
+    expect(merged.map((a) => a.id)).toEqual(["g1__time_traveller"]);
+  });
+
+  it("does not double-count an achievement present in both sources", () => {
+    const same = ach("g1__top_spender__CAD", "g1");
+    expect(mergeGroupAchievements([same], [same], "g1")).toHaveLength(1);
+  });
+
+  it("excludes achievements from other groups", () => {
+    const merged = mergeGroupAchievements(
+      [ach("g1__top_spender__CAD", "g1"), ach("g2__top_spender__CAD", "g2")],
+      [],
+      "g1",
+    );
+    expect(merged.map((a) => a.groupId)).toEqual(["g1"]);
+  });
+
+  it("orders by doc id regardless of input order", () => {
+    const a = ach("g1__a", "g1");
+    const b = ach("g1__b", "g1");
+    expect(mergeGroupAchievements([b, a], [], "g1").map((x) => x.id)).toEqual(["g1__a", "g1__b"]);
+    expect(mergeGroupAchievements([a, b], [], "g1").map((x) => x.id)).toEqual(["g1__a", "g1__b"]);
+  });
+
+  it("orders newly unlocked achievements alongside stored ones, not appended", () => {
+    const merged = mergeGroupAchievements([ach("g1__z", "g1")], [ach("g1__a", "g1")], "g1");
+    expect(merged.map((x) => x.id)).toEqual(["g1__a", "g1__z"]);
+  });
+
+  it("returns an empty array when the user holds nothing for the group", () => {
+    expect(mergeGroupAchievements([ach("g2__top_spender__CAD", "g2")], [], "g1")).toEqual([]);
   });
 });

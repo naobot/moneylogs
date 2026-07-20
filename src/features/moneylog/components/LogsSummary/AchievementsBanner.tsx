@@ -1,12 +1,21 @@
 import { Achievement, ACHIEVEMENT_META } from "@/hooks/useAchievements";
 import Icon from "@/components/Icon";
 
-const AchievementsBanner = ({ achievements }: { achievements: Achievement[] }) => {
+type AchievementsBannerProps = {
+  achievements: Achievement[];
+  // True only on the visit that actually earned something, so the celebratory
+  // heading doesn't persist on every later view of the same summary.
+  hasNewlyUnlocked?: boolean;
+};
+
+const AchievementsBanner = ({ achievements, hasNewlyUnlocked }: AchievementsBannerProps) => {
   if (achievements.length === 0) return null;
 
   return (
     <div className="AchievementsBanner Window">
-      <h3 className="AchievementsBanner__heading">Achievement unlocked!</h3>
+      <h3 className="AchievementsBanner__heading">
+        {hasNewlyUnlocked ? "Achievement unlocked!" : "Achievements"}
+      </h3>
       <div className="AchievementsBanner__cards">
         {achievements.map((achievement) => {
           const meta = ACHIEVEMENT_META[achievement.type];
