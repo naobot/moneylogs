@@ -63,16 +63,41 @@ describe("buildSpendingSeries — dense day buckets", () => {
 });
 
 describe("buildSpendingSeries — currencies", () => {
-  it("keeps currencies separate and sorts them by total descending", () => {
+  it("keeps currencies separate and sorts them by post count descending", () => {
     const series = buildSpendingSeries(
       [makePost(100, 16, "CAD"), makePost(50, 17, "CAD"), makePost(500, 16, "USD")],
       shortGroup,
     );
-    expect(series.currencies).toEqual(["USD", "CAD"]); // USD total 500 > CAD 150
+    // CAD has 2 posts vs USD's 1, so it leads despite the smaller total
+    expect(series.currencies).toEqual(["CAD", "USD"]);
+    expect(series.counts.get("CAD")).toBe(2);
+    expect(series.counts.get("USD")).toBe(1);
     expect(series.totals.get("CAD")).toBe(150);
     expect(series.totals.get("USD")).toBe(500);
     expect(at("USD", 16, series).amount).toBe(500);
     expect(at("CAD", 16, series).amount).toBe(100);
+  });
+
+  it("falls back to total descending when post counts tie", () => {
+    const series = buildSpendingSeries(
+      [makePost(10, 16, "CAD"), makePost(500, 16, "USD")],
+      shortGroup,
+    );
+    expect(series.currencies).toEqual(["USD", "CAD"]);
+  });
+
+  it("counts posts rather than summing amounts when ordering", () => {
+    // One huge JPY post vs three small CAD posts: CAD wins on data available
+    const series = buildSpendingSeries(
+      [
+        makePost(90000, 16, "JPY"),
+        makePost(5, 16, "CAD"),
+        makePost(5, 17, "CAD"),
+        makePost(5, 18, "CAD"),
+      ],
+      shortGroup,
+    );
+    expect(series.currencies).toEqual(["CAD", "JPY"]);
   });
 
   it("returns empty currencies/series when there are no posts", () => {

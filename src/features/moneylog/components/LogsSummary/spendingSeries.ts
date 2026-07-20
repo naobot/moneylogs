@@ -15,8 +15,9 @@ export type SpendingPoint = {
 
 export type SpendingSeries = {
   granularity: Granularity;
-  currencies: Currency[]; // present currencies, highest total first
+  currencies: Currency[]; // present currencies, most posts first
   totals: Map<Currency, number>;
+  counts: Map<Currency, number>; // number of contributing posts per currency
   series: Map<Currency, SpendingPoint[]>; // dense (zero-filled) per currency
 };
 
@@ -81,6 +82,7 @@ export const buildSpendingSeries = (
   type Bucket = { date: dayjs.Dayjs; amount: number; posts: LogPost[] };
   const perCurrency = new Map<Currency, Map<string, Bucket>>();
   const totals = new Map<Currency, number>();
+  const counts = new Map<Currency, number>();
 
   legitimatePosts.forEach((log) => {
     const tz =
@@ -102,12 +104,19 @@ export const buildSpendingSeries = (
     bucket.posts.push(log);
 
     totals.set(currency, (totals.get(currency) ?? 0) + amount);
+    counts.set(currency, (counts.get(currency) ?? 0) + 1);
   });
 
-  const currencies = [...totals.keys()].sort((a, b) => (totals.get(b) ?? 0) - (totals.get(a) ?? 0));
+  // Most-logged currency first, so the graph opens on the currency with the richest
+  // data. Totals are not comparable across currencies (¥50,000 vs $20), so post count
+  // is the meaningful signal; total is only a tie-break for a stable order.
+  const currencies = [...counts.keys()].sort((a, b) => {
+    const byCount = (counts.get(b) ?? 0) - (counts.get(a) ?? 0);
+    return byCount !== 0 ? byCount : (totals.get(b) ?? 0) - (totals.get(a) ?? 0);
+  });
 
   if (currencies.length === 0) {
-    return { granularity, currencies, totals, series: new Map() };
+    return { granularity, currencies, totals, counts, series: new Map() };
   }
 
   // Continuous axis spanning the group period and every populated bucket.
@@ -146,5 +155,5 @@ export const buildSpendingSeries = (
     series.set(currency, points);
   });
 
-  return { granularity, currencies, totals, series };
+  return { granularity, currencies, totals, counts, series };
 };
