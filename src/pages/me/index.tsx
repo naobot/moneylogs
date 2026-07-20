@@ -184,7 +184,10 @@ export const UserSettings = () => {
         allGroups.length > 0 && ( // TODO improve this area lol
           <div>
             <h3>Upcoming groups</h3>
-            <GroupArchive groups={allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()))} />
+            <GroupArchive
+              groups={allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()))}
+              emptyMessage="You have no upcoming log groups."
+            />
             <h3>Past groups</h3>
             <GroupArchive groups={allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()))} />
           </div>
