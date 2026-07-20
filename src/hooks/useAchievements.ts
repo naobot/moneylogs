@@ -127,9 +127,24 @@ export const awardGroupAchievements = async ({
       .map(([uid, m]) => ({ uid, total: m.get(currency)! }))
       .sort((a, b) => b.total - a.total); // highest first
 
+    // A shared extreme is not a distinction: when the highest (or lowest) total is
+    // tied, nobody takes it rather than it falling to whoever happened to sort first.
+    // ranked.length >= 3 here, so the neighbour indices always exist.
+    const last = ranked.length - 1;
+    // Totals are sums of decimal amounts, so compare with a tolerance — 300.1 + 200.2
+    // and 500.3 are the same spend but not === equal in floating point.
+    const isTied = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+
     const toCheck: { type: AchievementType; qualifies: boolean }[] = [
-      { type: "top_spender", qualifies: ranked[0].uid === userId },
-      { type: "lowest_spender", qualifies: ranked[ranked.length - 1].uid === userId },
+      {
+        type: "top_spender",
+        qualifies: ranked[0].uid === userId && !isTied(ranked[0].total, ranked[1].total),
+      },
+      {
+        type: "lowest_spender",
+        qualifies:
+          ranked[last].uid === userId && !isTied(ranked[last].total, ranked[last - 1].total),
+      },
     ];
 
     for (const { type, qualifies } of toCheck) {

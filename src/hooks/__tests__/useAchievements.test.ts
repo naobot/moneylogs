@@ -115,6 +115,63 @@ describe("awardGroupAchievements — ineligible cases", () => {
     expect(result).toHaveLength(0);
   });
 
+  it("awards no top_spender when the highest total is tied", async () => {
+    const tiedTop = [makePost("user1", 300), makePost("user2", 300), makePost("user3", 100)];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: tiedTop,
+    });
+    expect(result.map((a) => a.type)).not.toContain("top_spender");
+  });
+
+  it("awards no lowest_spender when the lowest total is tied", async () => {
+    const tiedLowest = [makePost("user1", 300), makePost("user2", 100), makePost("user3", 100)];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user3",
+      logPosts: tiedLowest,
+    });
+    expect(result.map((a) => a.type)).not.toContain("lowest_spender");
+  });
+
+  it("still awards the untied end when only one extreme is tied", async () => {
+    const tiedTop = [makePost("user1", 300), makePost("user2", 300), makePost("user3", 100)];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user3",
+      logPosts: tiedTop,
+    });
+    expect(result.map((a) => a.type)).toEqual(["lowest_spender"]);
+  });
+
+  it("awards nothing when every total is tied", async () => {
+    const allTied = [makePost("user1", 100), makePost("user2", 100), makePost("user3", 100)];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: allTied,
+    });
+    expect(result).toHaveLength(0);
+    expect(vi.mocked(setDoc)).not.toHaveBeenCalled();
+  });
+
+  it("treats floating-point-equal totals as tied", async () => {
+    // 0.1 + 0.2 === 0.30000000000000004, which is not === 0.3
+    const fpTied = [
+      makePost("user1", 0.1),
+      makePost("user1", 0.2),
+      makePost("user2", 0.3),
+      makePost("user3", 0.05),
+    ];
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: fpTied,
+    });
+    expect(result.map((a) => a.type)).not.toContain("top_spender");
+  });
+
   it("returns an empty array and skips Firestore when there are no posts", async () => {
     const result = await awardGroupAchievements({
       ...baseArgs,
