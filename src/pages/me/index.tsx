@@ -1,5 +1,6 @@
 import cx from "classnames";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTimezoneSelect, allTimezones } from "react-timezone-select";
 
 import { useCurrentUser } from "@/contexts";
@@ -156,7 +157,12 @@ export const UserSettings = () => {
             {achievements.map((achievement) => {
               const meta = ACHIEVEMENT_META[achievement.type];
               return (
-                <div key={achievement.id} className="AchievementsList__item">
+                <Link
+                  key={achievement.id}
+                  to={`/g/${achievement.groupId}`}
+                  className="AchievementsList__item"
+                  aria-label={`${meta.title} — unlocked on ${achievement.groupTitle}`}
+                >
                   <span className="AchievementsList__item__icon" aria-hidden="true">
                     <Icon type={meta.icon} />
                   </span>
@@ -167,7 +173,7 @@ export const UserSettings = () => {
                     </strong>
                     <span>{achievement.groupTitle}</span>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
