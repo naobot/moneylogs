@@ -281,8 +281,6 @@
 }
 
 .AchievementsBanner {
-  background: linear-gradient(135deg, #fffbe6 0%, #fff9c4 100%);
-  border-color: #f0c040;
   text-align: left;
 
   &__heading {
@@ -334,9 +332,8 @@
     align-items: center;
     gap: 0.75em;
     padding: 0.6em 0.8em;
-    border: 1px solid var(--c-border, #e0e0e0);
-    border-radius: 6px;
-    background: #fafafa;
+    border: 1px solid var(--c-black);
+    border-radius: 2px;
 
     &__icon {
       display: inline-flex;
