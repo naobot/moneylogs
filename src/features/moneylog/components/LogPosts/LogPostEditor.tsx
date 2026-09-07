@@ -100,6 +100,7 @@ const LogPostEditor = forwardRef(
         case "CAD":
         case "NTD":
         case "AUD":
+        case "SGD":
           return /-?(\$)-?(\d+,)*\d+(\.\d\d)?/g;
         case "KRW":
           return /-?(₩)-?(\d+,)*\d+k?/g;

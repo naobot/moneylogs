@@ -1,116 +1,121 @@
-import { useEffect, useState, useCallback, useRef } from "react"
-import { collection, query, orderBy, getDocs } from "firebase/firestore"
-// @ts-ignore
-import { db } from '@/config/firebase-config'
+import { useEffect, useState, useCallback, useRef } from "react";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { db } from "@/config/firebase-config";
+import { Comment } from "@/types/user";
+
+type EventListener = (...args: unknown[]) => void;
 
 // Simple event emitter for browser
 class SimpleEventEmitter {
-  private events: { [key: string]: Function[] } = {}
+  private events: { [key: string]: EventListener[] } = {};
 
-  on(event: string, callback: Function) {
+  on(event: string, callback: EventListener) {
     if (!this.events[event]) {
-      this.events[event] = []
+      this.events[event] = [];
     }
-    this.events[event].push(callback)
+    this.events[event].push(callback);
   }
 
-  off(event: string, callback: Function) {
-    if (!this.events[event]) return
-    this.events[event] = this.events[event].filter(cb => cb !== callback)
+  off(event: string, callback: EventListener) {
+    if (!this.events[event]) return;
+    this.events[event] = this.events[event].filter((cb) => cb !== callback);
   }
 
-  emit(event: string, ...args: any[]) {
-    if (!this.events[event]) return
-    this.events[event].forEach(callback => callback(...args))
+  emit(event: string, ...args: unknown[]) {
+    if (!this.events[event]) return;
+    this.events[event].forEach((callback) => callback(...args));
   }
 }
 
 // Global event emitter for cache invalidation
-const cacheInvalidationEmitter = new SimpleEventEmitter()
+const cacheInvalidationEmitter = new SimpleEventEmitter();
 
 // Global comment cache with timestamp tracking
-const commentCache = new Map<string, { data: any[], timestamp: number }>()
+const commentCache = new Map<string, { data: Comment[]; timestamp: number }>();
 
 // Cache duration in milliseconds (5 minutes)
-const CACHE_DURATION = 5 * 60 * 1000
+const CACHE_DURATION = 5 * 60 * 1000;
 
 // Function to invalidate cache for a specific post
 export const invalidateCommentCache = (postId: string) => {
-  console.log(`🗑️ invalidating comment cache for post ${postId}`)
-  commentCache.delete(postId)
+  console.log(`🗑️ invalidating comment cache for post ${postId}`);
+  commentCache.delete(postId);
   // Emit event to notify all listeners
-  cacheInvalidationEmitter.emit(`invalidate-${postId}`)
-}
+  cacheInvalidationEmitter.emit(`invalidate-${postId}`);
+};
 
 // Function to check if cache is still valid
 const isCacheValid = (postId: string): boolean => {
-  const cached = commentCache.get(postId)
-  if (!cached) return false
+  const cached = commentCache.get(postId);
+  if (!cached) return false;
 
-  const now = Date.now()
-  const isExpired = now - cached.timestamp > CACHE_DURATION
+  const now = Date.now();
+  const isExpired = now - cached.timestamp > CACHE_DURATION;
 
   if (isExpired) {
-    console.log(`⏰ cache expired for post ${postId}`)
-    commentCache.delete(postId)
-    return false
+    console.log(`⏰ cache expired for post ${postId}`);
+    commentCache.delete(postId);
+    return false;
   }
 
-  return true
-}
+  return true;
+};
 
 type UseGetCommentsParams = {
-  logPostId?: string | null
-  forceFresh?: boolean
-}
+  logPostId?: string | null;
+  forceFresh?: boolean;
+};
 
 export const useGetComments = ({ logPostId, forceFresh = false }: UseGetCommentsParams) => {
   const [state, setState] = useState({
-    data: [] as any[],
+    data: [] as Comment[],
     isLoading: false,
     isSuccess: false,
-    error: null as any,
-  })
+    error: null as unknown,
+  });
 
   // Use ref to track the current postId to handle cleanup properly
-  const currentPostIdRef = useRef<string | null>(null)
+  const currentPostIdRef = useRef<string | null>(null);
 
   // Track if we should skip cache for this specific instance
-  const skipCacheRef = useRef(false)
+  const skipCacheRef = useRef(false);
 
   // Fetch comments from Firestore
   const fetchComments = useCallback(async (postId: string, bypassCache: boolean = false) => {
     try {
       // Check cache first (unless bypassing)
       if (!bypassCache && !skipCacheRef.current && isCacheValid(postId)) {
-        const cached = commentCache.get(postId)
+        const cached = commentCache.get(postId);
         if (cached) {
-          console.log(`💾 using cached comments for post ${postId}`)
+          console.log(`💾 using cached comments for post ${postId}`);
           setState({
             data: cached.data,
             isLoading: false,
             isSuccess: true,
             error: null,
-          })
-          return cached.data
+          });
+          return cached.data;
         }
       }
 
-      console.log(`⬇️ fetching fresh comments for post ${postId} (bypassCache: ${bypassCache})`)
-      setState(prev => ({ ...prev, isLoading: true }))
+      console.log(`⬇️ fetching fresh comments for post ${postId} (bypassCache: ${bypassCache})`);
+      setState((prev) => ({ ...prev, isLoading: true }));
 
-      const commentsRef = collection(db, "log_posts", postId, "comments")
-      const q = query(commentsRef, orderBy("createdAt", "asc"))
-      const querySnapshot = await getDocs(q)
+      const commentsRef = collection(db, "log_posts", postId, "comments");
+      const q = query(commentsRef, orderBy("createdAt", "asc"));
+      const querySnapshot = await getDocs(q);
 
-      const comments = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
+      const comments = querySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          }) as Comment,
+      );
 
       // Cache the results
-      console.log(`💾 caching fresh comments for post ${postId} (${comments.length} comments)`)
-      commentCache.set(postId, { data: comments, timestamp: Date.now() })
+      console.log(`💾 caching fresh comments for post ${postId} (${comments.length} comments)`);
+      commentCache.set(postId, { data: comments, timestamp: Date.now() });
 
       // Only update state if this is still the current post
       if (currentPostIdRef.current === postId) {
@@ -119,35 +124,38 @@ export const useGetComments = ({ logPostId, forceFresh = false }: UseGetComments
           isLoading: false,
           isSuccess: true,
           error: null,
-        })
+        });
       }
 
-      return comments
+      return comments;
     } catch (error) {
-      console.error(`❌ error fetching comments for post ${postId}:`, error)
+      console.error(`❌ error fetching comments for post ${postId}:`, error);
       if (currentPostIdRef.current === postId) {
         setState({
           data: [],
           isLoading: false,
           isSuccess: false,
           error,
-        })
+        });
       }
-      throw error
+      throw error;
     }
-  }, [])
+  }, []);
 
   // Manual refresh function
-  const refreshComments = useCallback(async (postId?: string) => {
-    const targetPostId = postId || currentPostIdRef.current
-    if (!targetPostId) return
+  const refreshComments = useCallback(
+    async (postId?: string) => {
+      const targetPostId = postId || currentPostIdRef.current;
+      if (!targetPostId) return;
 
-    console.log(`🔄 manually refreshing comments for post ${targetPostId}`)
-    invalidateCommentCache(targetPostId)
-    skipCacheRef.current = true
-    await fetchComments(targetPostId, true)
-    skipCacheRef.current = false
-  }, [fetchComments])
+      console.log(`🔄 manually refreshing comments for post ${targetPostId}`);
+      invalidateCommentCache(targetPostId);
+      skipCacheRef.current = true;
+      await fetchComments(targetPostId, true);
+      skipCacheRef.current = false;
+    },
+    [fetchComments],
+  );
 
   // Main effect to handle comment loading and cache invalidation
   useEffect(() => {
@@ -157,47 +165,47 @@ export const useGetComments = ({ logPostId, forceFresh = false }: UseGetComments
         isLoading: false,
         isSuccess: false,
         error: null,
-      })
-      currentPostIdRef.current = null
-      return
+      });
+      currentPostIdRef.current = null;
+      return;
     }
 
     // Update current post ref
-    currentPostIdRef.current = logPostId
+    currentPostIdRef.current = logPostId;
 
     // If forceFresh is true, invalidate cache immediately
     if (forceFresh) {
-      console.log(`🚨 forceFresh enabled for post ${logPostId}, invalidating cache`)
-      invalidateCommentCache(logPostId)
-      skipCacheRef.current = true
+      console.log(`🚨 forceFresh enabled for post ${logPostId}, invalidating cache`);
+      invalidateCommentCache(logPostId);
+      skipCacheRef.current = true;
     }
 
     // Initial fetch
     fetchComments(logPostId, forceFresh).finally(() => {
-      skipCacheRef.current = false
-    })
+      skipCacheRef.current = false;
+    });
 
     // Listen for cache invalidation events
     const handleInvalidation = () => {
-      console.log(`📢 received cache invalidation event for post ${logPostId}`)
+      console.log(`📢 received cache invalidation event for post ${logPostId}`);
       if (currentPostIdRef.current === logPostId) {
-        fetchComments(logPostId, true)
+        fetchComments(logPostId, true);
       }
-    }
+    };
 
-    console.log(`🎧 subscribing to cache invalidation events for post ${logPostId}`)
-    cacheInvalidationEmitter.on(`invalidate-${logPostId}`, handleInvalidation)
+    console.log(`🎧 subscribing to cache invalidation events for post ${logPostId}`);
+    cacheInvalidationEmitter.on(`invalidate-${logPostId}`, handleInvalidation);
 
     // Cleanup
     return () => {
-      console.log(`🔌 unsubscribing from cache invalidation events for post ${logPostId}`)
-      cacheInvalidationEmitter.off(`invalidate-${logPostId}`, handleInvalidation)
-      currentPostIdRef.current = null
-    }
-  }, [logPostId, forceFresh, fetchComments])
+      console.log(`🔌 unsubscribing from cache invalidation events for post ${logPostId}`);
+      cacheInvalidationEmitter.off(`invalidate-${logPostId}`, handleInvalidation);
+      currentPostIdRef.current = null;
+    };
+  }, [logPostId, forceFresh, fetchComments]);
 
   return {
     ...state,
     refreshComments,
-  }
-}
+  };
+};

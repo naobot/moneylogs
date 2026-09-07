@@ -71,6 +71,7 @@ export const CURRENCIES: Array<Currency> = [
   "CAD",
   "KRW",
   "CNY",
+  "SGD",
   "EUR",
   "GBP",
   "NTD",

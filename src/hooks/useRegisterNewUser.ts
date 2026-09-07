@@ -1,16 +1,15 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore"
-import { useMutation } from "./useFirebase"
-// @ts-ignore
-import { db } from '@/config/firebase-config'
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useMutation } from "./useFirebase";
+import { db } from "@/config/firebase-config";
 
 type AddNewUserArgs = {
-  userId: string
-  displayName: string
-  email: string
-}
+  userId: string;
+  displayName: string;
+  email: string;
+};
 
 export const useRegisterNewUser = () => {
-  const usersCollectionRef = collection(db, 'users')
+  const usersCollectionRef = collection(db, "users");
 
   const addNewUserFn = async ({ userId, displayName, email }: AddNewUserArgs): Promise<string> => {
     const docRef = await addDoc(usersCollectionRef, {
@@ -19,19 +18,19 @@ export const useRegisterNewUser = () => {
       email,
       createdAt: serverTimestamp(),
       groups: [], // Initialize groups array instead of logs
-    })
+    });
 
     if (!docRef?.id) {
-      throw new Error('Failed to create user')
+      throw new Error("Failed to create user");
     }
 
-    return docRef.id
-  }
+    return docRef.id;
+  };
 
-  const addNewUserMutation = useMutation(addNewUserFn)
+  const addNewUserMutation = useMutation(addNewUserFn);
 
   return {
     addNewUser: addNewUserMutation,
     addNewUserFn,
-  }
-}
+  };
+};

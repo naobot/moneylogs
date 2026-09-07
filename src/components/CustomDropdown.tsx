@@ -1,59 +1,59 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from "react";
 
-import './style.scss'
+import "./style.scss";
 
 export interface DropdownOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface CustomDropdownProps {
-  options: DropdownOption[]
-  onSelect: (option: DropdownOption) => void
-  children: React.ReactNode
-  placeholder?: string
+  options: DropdownOption[];
+  onSelect: (option: DropdownOption) => void;
+  children: React.ReactNode;
+  placeholder?: string;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   onSelect,
   children,
-  placeholder = "Select an option..."
+  placeholder = "Select an option...",
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [selectedOption, setSelectedOption] = useState<DropdownOption | null>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<DropdownOption | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+        setIsOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleTriggerClick = () => {
-    setIsOpen(!isOpen)
-  }
+    setIsOpen(!isOpen);
+  };
 
   const handleOptionClick = (option: DropdownOption) => {
-    setSelectedOption(option)
-    onSelect(option)
-    setIsOpen(false)
-  }
+    setSelectedOption(option);
+    onSelect(option);
+    setIsOpen(false);
+  };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      setIsOpen(false)
-    } else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      setIsOpen(!isOpen)
+    if (event.key === "Escape") {
+      setIsOpen(false);
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setIsOpen(!isOpen);
     }
-  }
+  };
 
   return (
     <div className="CustomDropdown" ref={dropdownRef}>
@@ -119,7 +119,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         ))}
       </select>*/}
     </div>
-  )
-}
+  );
+};
 
-export default CustomDropdown
+export default CustomDropdown;

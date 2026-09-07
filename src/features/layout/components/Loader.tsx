@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import { CSSProperties } from "react";
 
 const Loader = ({ progress }: { progress: number }) => {
   return (
@@ -8,13 +8,13 @@ const Loader = ({ progress }: { progress: number }) => {
           className="LoadingBar"
           style={
             {
-              '--progress': `${progress}%`,
+              "--progress": `${progress}%`,
             } as CSSProperties
           }
         ></div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Loader
+export default Loader;

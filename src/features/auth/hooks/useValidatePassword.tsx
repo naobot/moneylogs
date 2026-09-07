@@ -1,33 +1,33 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import { getAuth, PasswordValidationStatus, validatePassword } from "firebase/auth";
 
 const useValidatePassword = (password: string) => {
-  const [isValid, setIsValid] = useState(false)
-  const [status, setStatus] = useState<PasswordValidationStatus | { isValid: boolean }>()
+  const [isValid, setIsValid] = useState(false);
+  const [status, setStatus] = useState<PasswordValidationStatus | { isValid: boolean }>();
 
   const handleValidate = async (password: string) => {
-    if (import.meta.env.VITE_FIREBASE_ENV == 'development') {
-      setStatus({ isValid: true })
+    if (import.meta.env.VITE_FIREBASE_ENV == "development") {
+      setStatus({ isValid: true });
     } else {
-      const validateStatus = await validatePassword(getAuth(), password)
-      setStatus(validateStatus)
+      const validateStatus = await validatePassword(getAuth(), password);
+      setStatus(validateStatus);
     }
-  }
+  };
 
   useEffect(() => {
-    handleValidate(password)
-  }, [password])
+    handleValidate(password);
+  }, [password]);
 
   useEffect(() => {
     if (status) {
-      setIsValid(status?.isValid)
+      setIsValid(status?.isValid);
     }
-  }, [status])
+  }, [status]);
 
   return {
     isValid,
-    status
-  }
-}
+    status,
+  };
+};
 
-export default useValidatePassword
+export default useValidatePassword;

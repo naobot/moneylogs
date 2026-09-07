@@ -12,6 +12,7 @@ export type Currency =
   | "MYR"
   | "KRW"
   | "CNY"
+  | "SGD"
   | "GBP"
   | "AUD"
   | "NTD"
