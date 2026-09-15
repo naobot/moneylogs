@@ -21,6 +21,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToastContext } from "@/hooks/useToastContext";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
+import { getAutoPostTimezone } from "@/utils/timezone";
 
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
@@ -77,6 +78,7 @@ const LogPostEditor = forwardRef(
       timezone ?? user?.timezone ?? null,
     );
     const [showTimezone, setShowTimezone] = useState(!!timezone);
+    const [isAutoTimezone, setIsAutoTimezone] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const editorApiRef = useRef<TextAreaTextApi | null>(null);
@@ -239,6 +241,7 @@ const LogPostEditor = forwardRef(
     const handleClickLocation = (option: DropdownOption) => {
       setNewTimezone(option.value);
       setShowTimezone(true);
+      setIsAutoTimezone(false);
     };
 
     useEffect(() => {
@@ -249,8 +252,17 @@ const LogPostEditor = forwardRef(
 
     useEffect(() => {
       if (!timezone) {
-        setShowTimezone(false);
-        setNewTimezone(null);
+        const detectedTimezone =
+          type === "new" ? getAutoPostTimezone(user?.timezone, newEntryDate) : null;
+
+        if (detectedTimezone) {
+          setNewTimezone(detectedTimezone);
+          setShowTimezone(true);
+          setIsAutoTimezone(true);
+        } else {
+          setShowTimezone(false);
+          setNewTimezone(null);
+        }
       }
 
       const lastCurrency = localStorage.getItem("ML__lastCurrency") as Currency;
@@ -290,7 +302,7 @@ const LogPostEditor = forwardRef(
             <div style={{ position: "relative" }}>
               {activeEditorTip === "timezone" && (
                 <TutorialTooltip
-                  text="Travelling? You can set a timezone specific to this post if it's different from the one set in your profile"
+                  text="Travelling? You can set a timezone specific to this post if it's different from the one set in your profile. If your device's timezone differs from your profile, it's set automatically"
                   onDismiss={dismissTip}
                   position="bottom"
                 />
@@ -367,7 +379,10 @@ const LogPostEditor = forwardRef(
         {showTimezone && newTimezone && (
           <div className="LogPosts__posts__item__header">
             <div className="LogPosts__posts__item__header__left">
-              <div className="TimezoneSetter">{parseTimezone(newTimezone).label}</div>
+              <div className="TimezoneSetter">
+                {parseTimezone(newTimezone)?.label ?? newTimezone}
+                {isAutoTimezone && " (auto-detected)"}
+              </div>
             </div>
           </div>
         )}
