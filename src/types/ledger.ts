@@ -55,7 +55,6 @@ export type LedgerMonth = {
   byCategory: Record<string, CurrencyAmounts>;
   byMember: Record<string, CurrencyAmounts>;
   byDay: Record<string, CurrencyAmounts>; // keyed "DD"
-  sourceUpdatedAt: Timestamp | null;
   computedAt: Timestamp;
 };
 

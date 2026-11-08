@@ -15,13 +15,14 @@ import {
   spotsLeft,
   todayInTz,
 } from "@/utils/ledger";
-import { defaultEntryDate, formatTotals, sumByCurrency } from "@/utils/ledgerEntries";
+import { defaultEntryDate } from "@/utils/ledgerEntries";
 import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
 import CategoryManager from "./CategoryManager";
+import LedgerStats from "./LedgerStats";
 
 import "./Ledger.scss";
 
@@ -51,7 +52,6 @@ export const Ledger = ({ ledger }: LedgerProps) => {
 
   const categories = ledger.categories ?? [];
   const firstCategory = activeCategories(categories)[0]?.id ?? "";
-  const monthTotals = sumByCurrency(entries);
 
   const handleAdd = async (input: LedgerEntryInput) => {
     if (!user) throw new Error("Not signed in");
@@ -126,10 +126,15 @@ export const Ledger = ({ ledger }: LedgerProps) => {
                 this month
               </button>
             )}
-            <span className="Ledger__month__total">
-              {!isLoading && entries.length > 0 ? formatTotals(monthTotals) : ""}
-            </span>
           </nav>
+
+          <LedgerStats
+            ledger={ledger}
+            month={month}
+            today={today}
+            entries={entries}
+            isLoading={isLoading}
+          />
 
           <EntryForm
             mode="add"
