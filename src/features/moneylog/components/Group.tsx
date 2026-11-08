@@ -26,6 +26,7 @@ import LogsSummary from "./LogsSummary/LogsSummary";
 import Modal from "@/components/Modal";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
+import LogActionsModal from "@/features/logActions/LogActionsModal";
 
 export const Group = ({
   group,
@@ -54,6 +55,7 @@ export const Group = ({
   );
   const [displaySummary, setDisplaySummary] = useState(() => absoluteEnd(group).isBefore(dayjs()));
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
 
   const isFutureGroup = useMemo(() => {
@@ -317,6 +319,11 @@ export const Group = ({
           </div>
 
           <div className="Group__header__right">
+            {!isSpectator && (
+              <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
+                <IconText type={"pencil"} fill={"white"} text="manage" />
+              </div>
+            )}
             {!isPostingClosed &&
               !isSpectator &&
               group?.members?.length < group?.max_participants && (
@@ -396,6 +403,15 @@ export const Group = ({
           )}
         </div>
       </div>
+      {!isSpectator && groupId && (
+        <LogActionsModal
+          isOpen={showManageModal}
+          onClose={() => setShowManageModal(false)}
+          logId={groupId}
+          logTitle={group.title}
+          kind="social"
+        />
+      )}
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
         <Modal.Header title={"Invite"}>Invite</Modal.Header>
         <Modal.Body>

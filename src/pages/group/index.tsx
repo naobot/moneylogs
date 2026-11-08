@@ -4,11 +4,12 @@ import { useParams } from "react-router-dom";
 import { useCurrentUser } from "@/contexts";
 import { parseReferenceArray } from "@/utils/helpers";
 import { useGetGroup } from "@/hooks/useGetGroup";
+import { LogNotFound } from "@/features/logActions/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
 export const GroupPage = () => {
   const { groupId } = useParams();
-  const { group, isSuccess: isSuccessGroup } = useGetGroup(groupId);
+  const { group, isSuccess: isSuccessGroup, isError } = useGetGroup(groupId);
   const { user: loggedInUser } = useCurrentUser();
 
   const memberIds = useMemo(() => {
@@ -20,6 +21,8 @@ export const GroupPage = () => {
     () => !memberIds.includes(loggedInUser?.id ?? ""),
     [loggedInUser, memberIds],
   );
+
+  if (isError) return <LogNotFound />;
 
   return (
     <>

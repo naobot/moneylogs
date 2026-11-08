@@ -18,6 +18,7 @@ import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
+import LogActionsModal from "@/features/logActions/LogActionsModal";
 
 import "./Ledger.scss";
 
@@ -43,6 +44,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
 
   const spots = spotsLeft(ledger);
@@ -69,6 +71,9 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
             <div className="Group__header__item Group__header__title">{ledger.title}</div>
           </div>
           <div className="Group__header__right">
+            <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
+              <IconText type={"pencil"} fill={"white"} text="manage" />
+            </div>
             <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
               <IconText type={"pencil"} fill={"white"} text="categories" />
             </div>
@@ -129,6 +134,13 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
           {children({ month, today, setMonth })}
         </div>
       </div>
+      <LogActionsModal
+        isOpen={showManageModal}
+        onClose={() => setShowManageModal(false)}
+        logId={ledger.id}
+        logTitle={ledger.title}
+        kind="financial"
+      />
       <CategoryManager
         isOpen={showCategories}
         categories={ledger.categories ?? []}

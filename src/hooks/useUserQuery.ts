@@ -1,4 +1,4 @@
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { useMutation } from "./useFirebase";
 
@@ -76,10 +76,23 @@ export const useUserQuery = () => {
     });
   };
 
+  /** Hide a log (social group or ledger) from this user's own lists. */
+  const archiveLogFn = async ({ userId, logId }: { userId: string; logId: string }) => {
+    await updateDoc(doc(db, "users", userId), {
+      [`archivedLogs.${logId}`]: serverTimestamp(),
+    });
+  };
+
+  const unarchiveLogFn = async ({ userId, logId }: { userId: string; logId: string }) => {
+    await updateDoc(doc(db, "users", userId), { [`archivedLogs.${logId}`]: deleteField() });
+  };
+
   // Mutations
   const updateViewTrackingMutation = useMutation(updateViewTrackingFn);
   const updateUserProfileMutation = useMutation(updateUserProfileFn);
   const updatePinnedPostMutation = useMutation(updatePinnedPostFn);
+  const archiveLogMutation = useMutation(archiveLogFn);
+  const unarchiveLogMutation = useMutation(unarchiveLogFn);
 
   return {
     updateViewTracking: updateViewTrackingMutation,
@@ -89,5 +102,7 @@ export const useUserQuery = () => {
     markCommentsAsViewedFn,
     updatePinnedPost: updatePinnedPostMutation,
     updatePinnedPostFn,
+    archiveLog: archiveLogMutation,
+    unarchiveLog: unarchiveLogMutation,
   };
 };
