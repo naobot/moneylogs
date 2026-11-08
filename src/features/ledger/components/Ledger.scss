@@ -421,6 +421,60 @@
     font-size: 0.8em;
   }
 
+  &__budgetSummary {
+    font-size: 0.75em;
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+
+  // Inline budget editor: wraps onto its own line under the category row.
+  &__budget {
+    flex-basis: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+    padding: 0.4em 0 0.2em 1.5em;
+    font-size: 0.85em;
+
+    &__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+      }
+    }
+
+    &__form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4em;
+
+      input {
+        width: 9em;
+        font: inherit;
+        text-align: right;
+        border: none;
+        border-bottom: 1px dashed var(--c-black);
+        background: transparent;
+
+        &:focus {
+          outline: none;
+          border-bottom-style: solid;
+        }
+      }
+
+      select {
+        font: inherit;
+        border-radius: 0;
+      }
+    }
+  }
+
   &__subheading {
     margin: 1.5em 0 0.25em;
   }
@@ -464,6 +518,19 @@
 
     &__totals {
       font-weight: 700;
+    }
+
+    &__budget {
+      font-size: 0.8em;
+      white-space: nowrap;
+
+      // Over budget: inverted within the strip.
+      &--over {
+        padding: 0 0.4em;
+        color: var(--c-black);
+        background: var(--c-white);
+        font-weight: 700;
+      }
     }
 
     &__toggle {
@@ -546,6 +613,44 @@
     gap: 0.5em;
   }
 
+  &__note {
+    margin: 0;
+    font-size: 0.75em;
+    opacity: 0.7;
+  }
+
+  &__budget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+
+    &__meter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4em 1em;
+      font-size: 0.9em;
+    }
+
+    &__track {
+      display: block;
+      flex: 1;
+      min-width: 8em;
+      height: 1em;
+      border: 1px solid var(--c-black);
+    }
+
+    &__fill {
+      display: block;
+      height: 100%;
+      background: var(--c-black);
+    }
+
+    &--over &__track {
+      border-width: 3px;
+    }
+  }
+
   &__insights {
     margin: 0;
     padding-left: 1.2em;
@@ -587,6 +692,28 @@
       display: block;
       height: 100%;
       background: var(--c-black);
+    }
+
+    // Budget progress uses a dashed track to set it apart from share-of-spending bars.
+    &__track--budget {
+      border-style: dashed;
+    }
+
+    &--over {
+      .LedgerStats__shares__track {
+        border: 3px solid var(--c-black);
+      }
+
+      .LedgerStats__shares__pct {
+        font-weight: 700;
+        color: var(--c-white);
+        background: var(--c-black);
+        padding: 0 0.2em;
+      }
+    }
+
+    &__amount small {
+      opacity: 0.7;
     }
 
     &__amount,

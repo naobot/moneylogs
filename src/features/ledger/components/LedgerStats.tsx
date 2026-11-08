@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import cx from "classnames";
 import { Link } from "react-router-dom";
 
 import { Currency } from "@/types/user";
@@ -14,7 +15,11 @@ import {
 import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
 import {
   aggregateEntries,
+  BudgetRow,
+  BudgetSummary,
+  budgetSummary,
   buildInsights,
+  categoryBudgetRows,
   categoryShares,
   currenciesByUse,
   dailySeries,
@@ -64,6 +69,13 @@ export const LedgerStatsStrip = ({
   const catShares = categoryShares(agg, currency, ledger.categories ?? []);
   const hasEntries = agg.entryCount > 0;
   const currentMonth = monthKeyOf(today);
+  const budget = budgetSummary({
+    month,
+    today,
+    currency,
+    agg,
+    categories: ledger.categories ?? [],
+  });
 
   return (
     <Link
@@ -75,6 +87,17 @@ export const LedgerStatsStrip = ({
         {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
       </span>
       {hasEntries && !isLoading && <CategoryBar shares={catShares} currency={currency} />}
+      {budget && !isLoading && (
+        <span
+          className={cx("LedgerStats__strip__budget", {
+            "LedgerStats__strip__budget--over": budget.over,
+          })}
+        >
+          {budget.over
+            ? `over budget by ${formatAmount(-budget.remaining, currency)}`
+            : `${pct(budget.used)} of ${formatAmount(budget.budget, currency)} budget`}
+        </span>
+      )}
       <span className="LedgerStats__strip__toggle" aria-hidden="true">
         ›
       </span>
@@ -103,6 +126,8 @@ export const LedgerStatsPanel = ({
 
   const categories = ledger.categories ?? [];
   const catShares = categoryShares(agg, currency, categories);
+  const catRows = categoryBudgetRows(agg, currency, categories);
+  const budget = budgetSummary({ month, today, currency, agg, categories });
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const names: Record<string, string> = {};
   for (const e of entries) names[e.authorUid] = e.authorName;
@@ -148,15 +173,31 @@ export const LedgerStatsPanel = ({
         </div>
       )}
 
+      {budget && <BudgetSection budget={budget} currency={currency} />}
+
       {!hasEntries ? (
         <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>
       ) : (
         <>
           <Insights insights={insights} currency={currency} />
+        </>
+      )}
 
+      {(hasEntries || catRows.length > 0) && (
+        <>
           <h4 className="LedgerStats__heading">By category · {currency}</h4>
-          <ShareRows rows={catShares} currency={currency} label="Spending by category" />
+          {budget && (
+            <p className="LedgerStats__note">
+              Categories with a budget show progress toward it; the rest show their share of
+              spending.
+            </p>
+          )}
+          <ShareRows rows={catRows} currency={currency} label="Spending by category" />
+        </>
+      )}
 
+      {hasEntries && (
+        <>
           <div className="LedgerStats__chartHeader">
             <h4 className="LedgerStats__heading">Day by day · {currency}</h4>
             <div className="Segmented" role="group" aria-label="Graph type">
@@ -208,28 +249,107 @@ export const LedgerStatsPanel = ({
 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
 
+/**
+ * Horizontal bars. Rows with a budget show progress toward it (capped fill, heavy border
+ * when over); rows without show their share of the month's spending.
+ */
 const ShareRows = ({
   rows,
   currency,
   label,
 }: {
-  rows: Share[];
+  rows: Array<Share & Partial<Pick<BudgetRow, "budget" | "over">>>;
   currency: Currency;
   label: string;
 }) => (
   <ul className="LedgerStats__shares" aria-label={label}>
-    {rows.map((row) => (
-      <li key={row.id}>
-        <span className="LedgerStats__shares__name">{row.name}</span>
-        <span className="LedgerStats__shares__track" aria-hidden="true">
-          <span className="LedgerStats__shares__fill" style={{ width: pct(row.share) }} />
-        </span>
-        <span className="LedgerStats__shares__amount">{formatAmount(row.amount, currency)}</span>
-        <span className="LedgerStats__shares__pct">{pct(row.share)}</span>
-      </li>
-    ))}
+    {rows.map((row) => {
+      const budgeted = row.budget !== undefined;
+      const ratio = budgeted ? row.amount / row.budget! : row.share;
+      return (
+        <li key={row.id} className={cx({ "LedgerStats__shares--over": row.over })}>
+          <span className="LedgerStats__shares__name">{row.name}</span>
+          <span
+            className={cx("LedgerStats__shares__track", {
+              "LedgerStats__shares__track--budget": budgeted,
+            })}
+            aria-hidden="true"
+          >
+            <span
+              className="LedgerStats__shares__fill"
+              style={{ width: pct(Math.min(ratio, 1)) }}
+            />
+          </span>
+          <span className="LedgerStats__shares__amount">
+            {formatAmount(row.amount, currency)}
+            {budgeted && <small> / {formatAmount(row.budget!, currency)}</small>}
+          </span>
+          <span className="LedgerStats__shares__pct" title={budgeted ? "of budget" : "of spending"}>
+            {pct(ratio)}
+          </span>
+        </li>
+      );
+    })}
   </ul>
 );
+
+const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: Currency }) => {
+  const lines: string[] = [];
+  if (budget.over) {
+    lines.push(`Over budget by ${formatAmount(-budget.remaining, currency)}.`);
+  } else {
+    lines.push(`${formatAmount(budget.remaining, currency)} left.`);
+    if (budget.perDayLeft !== null && budget.daysLeft) {
+      lines.push(
+        `About ${formatAmount(budget.perDayLeft, currency)} a day for the remaining ${budget.daysLeft} day${budget.daysLeft === 1 ? "" : "s"}.`,
+      );
+    }
+  }
+  if (budget.projected !== null) {
+    const diff = budget.projected - budget.budget;
+    lines.push(
+      `At this pace: about ${formatAmount(budget.projected, currency)} by month end${
+        Math.abs(diff) < 0.01
+          ? ", right on budget."
+          : diff > 0
+            ? ` (${formatAmount(diff, currency)} over).`
+            : ` (${formatAmount(-diff, currency)} under).`
+      }`,
+    );
+  }
+  return (
+    <div className={cx("LedgerStats__budget", { "LedgerStats__budget--over": budget.over })}>
+      <h4 className="LedgerStats__heading">Budget · {currency}</h4>
+      <div className="LedgerStats__budget__meter">
+        <span
+          className="LedgerStats__budget__track"
+          role="meter"
+          aria-label={`${currency} budget used`}
+          aria-valuemin={0}
+          aria-valuemax={budget.budget}
+          aria-valuenow={budget.spent}
+        >
+          <span
+            className="LedgerStats__budget__fill"
+            style={{ width: pct(Math.min(budget.used, 1)) }}
+          />
+        </span>
+        <strong>
+          {formatAmount(budget.spent, currency)} / {formatAmount(budget.budget, currency)} (
+          {pct(budget.used)})
+        </strong>
+      </div>
+      <ul className="LedgerStats__insights">
+        {lines.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+      </ul>
+      <p className="LedgerStats__note">
+        Counts spending in categories that have a {currency} budget.
+      </p>
+    </div>
+  );
+};
 
 /** A monochrome stacked bar: largest categories as distinct fills, the rest grouped. */
 const CategoryBar = ({ shares, currency }: { shares: Share[]; currency: Currency }) => {
