@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { auth } from "@/config/firebase-config";
 import { signOut } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
 
 import Button from "@/components/Button";
@@ -17,23 +18,17 @@ const MainNav = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const isHome = location.pathname === "/";
-  const currentGroupId = location.pathname.match(/\/g\/([^/]+)/)?.[1];
+  const currentGroupId = location.pathname.match(/\/[gl]\/([^/]+)/)?.[1];
   const { currentGroups, allGroups, isSuccess, isLoading } = useGetCurrentGroups();
+  const { ledgers } = useGetMyLedgers();
 
   const pastGroups = allGroups
     .filter((group) => absoluteEnd(group).isBefore(new Date()))
     .sort(byMostRecentlyEnded)
     .slice(0, 3);
 
-  const highlightedGroupId = useMemo(() => {
-    if (currentGroupId) {
-      return currentGroupId;
-    } else if (isHome && currentGroups) {
-      return currentGroups[0]?.id;
-    }
-    return null;
-  }, [currentGroupId, currentGroups, isHome]);
+  // Home is a list of logs now, so only highlight the log actually being viewed.
+  const highlightedGroupId = currentGroupId ?? null;
 
   const [signOutPending, setSignOutPending] = useState(false);
 
@@ -60,16 +55,23 @@ const MainNav = () => {
           <>
             <Button className="MainNav__item--icon" to="/" title="Home" icon="home" />
             <Button className="MainNav__item--icon" to="/me" title="My Preferences" icon="user" />
-            {isLoading && <div>...</div>}
-            {isSuccess && (
-              <div className="MainNav__list">
+            <div className="MainNav__list">
+              <Button title="New Log" to={"/create"} text="+" buttonStyle="primary-border-lite" />
+              {/* Financial logs never end, so they're always listed — independently of
+                  whether the social groups query has loaded. */}
+              {ledgers.map((ledger) => (
                 <Button
-                  title="New Log Group"
-                  to={"/create"}
-                  text="+"
+                  key={ledger.id}
+                  to={`/l/${ledger.id}`}
+                  title={ledger.title}
+                  text={`$ ${ledger.title}`}
                   buttonStyle="primary-border-lite"
+                  isSelected={highlightedGroupId == ledger.id}
                 />
-                {currentGroups.map((group) => (
+              ))}
+              {isLoading && <div>...</div>}
+              {isSuccess &&
+                currentGroups.map((group) => (
                   <Button
                     key={group.id}
                     to={`/g/${group.id}`}
@@ -79,7 +81,8 @@ const MainNav = () => {
                     isSelected={highlightedGroupId == group?.id}
                   />
                 ))}
-                {pastGroups.map((group) => (
+              {isSuccess &&
+                pastGroups.map((group) => (
                   <Button
                     key={group.id}
                     to={`/g/${group.id}`}
@@ -90,8 +93,7 @@ const MainNav = () => {
                     isSelected={highlightedGroupId == group?.id}
                   />
                 ))}
-              </div>
-            )}
+            </div>
           </>
         )}
       </div>

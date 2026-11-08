@@ -22,6 +22,8 @@ import { UserSettings } from "@/pages/me";
 import { CreateNewLog } from "@/pages/create";
 import { GroupPage } from "@/pages/group";
 import { InvitePage } from "@/pages/group/invite";
+import { LedgerPage } from "@/pages/ledger";
+import { LedgerInvitePage } from "@/pages/ledger/invite";
 import { About } from "@/pages/about";
 
 import "./App.scss";
@@ -96,6 +98,22 @@ const App = () => {
               element={
                 <CheckAuth>
                   <InvitePage />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="/l/:ledgerId"
+              element={
+                <CheckAuth>
+                  <LedgerPage />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="/l/:ledgerId/invite"
+              element={
+                <CheckAuth>
+                  <LedgerInvitePage />
                 </CheckAuth>
               }
             />

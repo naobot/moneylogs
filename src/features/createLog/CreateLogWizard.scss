@@ -1,0 +1,122 @@
+@use "@/constants.scss";
+
+.CreateLogWizard {
+  max-width: var(--main-width);
+  align-self: flex-start;
+
+  @media (max-width: constants.$breakpoint-sm) {
+    padding: 1em;
+  }
+
+  &__progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em 1.5em;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0.75em 0;
+    border-bottom: 1px dashed var(--c-black);
+    font-size: 0.85em;
+
+    &__step {
+      opacity: 0.45;
+
+      &--done {
+        opacity: 0.8;
+      }
+
+      &--current {
+        opacity: 1;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 0.25em;
+      }
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 0.75em;
+  }
+
+  &__question {
+    margin: 0.25em 0 0.5em;
+  }
+
+  &__hint {
+    opacity: 0.7;
+    font-size: 0.85em;
+    margin: 0;
+  }
+
+  &__choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__choice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4em;
+    padding: 1em;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: var(--c-white);
+    color: var(--c-black);
+    border: 2px solid var(--c-black);
+
+    strong {
+      font-size: 1.1em;
+    }
+
+    span {
+      font-size: 0.85em;
+    }
+
+    &:hover,
+    &:focus-visible,
+    &--selected {
+      background: var(--c-black);
+      color: var(--c-white);
+    }
+  }
+
+  &__review {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5em 1.5em;
+    margin: 0;
+
+    dt {
+      opacity: 0.7;
+    }
+
+    dd {
+      margin: 0;
+    }
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: 1fr;
+      gap: 0.15em;
+
+      dd {
+        margin-bottom: 0.5em;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+    width: 100%;
+  }
+}

@@ -79,20 +79,6 @@
       ]
     },
     {
-      "collectionGroup": "ledgers",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "memberUids",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "entries",
       "queryScope": "COLLECTION",
       "fields": [
