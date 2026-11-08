@@ -13,6 +13,9 @@ import {
   addDoc,
   doc,
   setDoc,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
 
@@ -299,6 +302,164 @@ async function addComment(
   console.log(`💬 Added comment: "${comment.content}" by ${author.displayName}`);
 }
 
+// Financial-mode ledgers. These go through the members-only security rules, so each
+// write is made while signed in as the acting user.
+const DEFAULT_LEDGER_CATEGORIES = [
+  "Food",
+  "Groceries",
+  "Transport",
+  "Housing",
+  "Utilities",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Travel",
+  "Other",
+].map((name, order) => ({ id: name.toLowerCase(), name, order }));
+
+const testLedgers = [
+  {
+    title: "Alice personal",
+    ownerEmail: "alice.vancouver@test.com",
+    joinerEmails: [] as string[],
+    defaultCurrency: "CAD",
+  },
+  {
+    title: "Alice + Bob home",
+    ownerEmail: "alice.vancouver@test.com",
+    joinerEmails: ["bob.nyc@test.com"],
+    defaultCurrency: "CAD",
+  },
+];
+
+const sampleEntries = [
+  {
+    ledgerIndex: 0,
+    authorEmail: "alice.vancouver@test.com",
+    daysAgo: 0,
+    amount: 14.5,
+    currency: "CAD",
+    categoryId: "food",
+    note: "Ramen",
+  },
+  {
+    ledgerIndex: 0,
+    authorEmail: "alice.vancouver@test.com",
+    daysAgo: 1,
+    amount: 82.3,
+    currency: "CAD",
+    categoryId: "groceries",
+  },
+  {
+    ledgerIndex: 0,
+    authorEmail: "alice.vancouver@test.com",
+    daysAgo: 3,
+    amount: 3.15,
+    currency: "CAD",
+    categoryId: "transport",
+    note: "Bus",
+  },
+  {
+    ledgerIndex: 0,
+    authorEmail: "alice.vancouver@test.com",
+    daysAgo: 40,
+    amount: 1200,
+    currency: "JPY",
+    categoryId: "food",
+    note: "Onigiri haul",
+  },
+  {
+    ledgerIndex: 1,
+    authorEmail: "alice.vancouver@test.com",
+    daysAgo: 2,
+    amount: 1850,
+    currency: "CAD",
+    categoryId: "housing",
+    note: "Rent",
+  },
+  {
+    ledgerIndex: 1,
+    authorEmail: "bob.nyc@test.com",
+    daysAgo: 2,
+    amount: 96.4,
+    currency: "CAD",
+    categoryId: "utilities",
+    note: "Hydro",
+  },
+  {
+    ledgerIndex: 1,
+    authorEmail: "bob.nyc@test.com",
+    daysAgo: 5,
+    amount: 120,
+    currency: "USD",
+    categoryId: "groceries",
+  },
+];
+
+const dateKeyDaysAgo = (daysAgo: number) => {
+  const d = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+async function signInAs(email: string) {
+  const seeded = testUsers.find((u) => u.email === email);
+  if (!seeded) throw new Error(`Unknown seed user ${email}`);
+  await signInWithEmailAndPassword(auth, seeded.email, seeded.password);
+}
+
+async function createLedgers(createdUsers: SeededUser[]) {
+  const ledgerIds: string[] = [];
+  for (const ledger of testLedgers) {
+    const owner = createdUsers.find((u) => u.email === ledger.ownerEmail);
+    if (!owner) continue;
+    await signInAs(owner.email);
+    const ref = await addDoc(collection(db, "ledgers"), {
+      title: ledger.title,
+      max_participants: 4,
+      defaultCurrency: ledger.defaultCurrency,
+      members: [doc(db, "users", owner.uid)],
+      memberUids: [owner.uid],
+      categories: DEFAULT_LEDGER_CATEGORIES,
+      createdAt: serverTimestamp(),
+    });
+    for (const email of ledger.joinerEmails) {
+      const joiner = createdUsers.find((u) => u.email === email);
+      if (!joiner) continue;
+      await signInAs(email);
+      await updateDoc(ref, {
+        members: arrayUnion(doc(db, "users", joiner.uid)),
+        memberUids: arrayUnion(joiner.uid),
+      });
+    }
+    console.log(`✅ Created financial log: ${ledger.title}`);
+    ledgerIds.push(ref.id);
+  }
+
+  for (const entry of sampleEntries) {
+    const author = createdUsers.find((u) => u.email === entry.authorEmail);
+    const ledgerId = ledgerIds[entry.ledgerIndex];
+    if (!author || !ledgerId) continue;
+    await signInAs(author.email);
+    const date = dateKeyDaysAgo(entry.daysAgo);
+    await addDoc(collection(db, "ledgers", ledgerId, "entries"), {
+      amount: entry.amount,
+      currency: entry.currency,
+      categoryId: entry.categoryId,
+      date,
+      month: date.slice(0, 7),
+      ...(entry.note ? { note: entry.note } : {}),
+      author: doc(db, "users", author.uid),
+      authorUid: author.uid,
+      authorName: author.displayName,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+  console.log(`✅ Created ${sampleEntries.length} financial entries`);
+  return ledgerIds;
+}
+
 async function seedEmulator() {
   console.log("🌱 Starting emulator seeding...");
 
@@ -339,11 +500,15 @@ async function seedEmulator() {
       }
     }
 
+    console.log("\n💰 Creating financial logs...");
+    const ledgerIds = await createLedgers(createdUsers);
+
     console.log("\n🎉 Emulator seeding completed successfully!");
     console.log("\n📊 Summary:");
     console.log(`- ${createdUsers.length} users created`);
     console.log(`- ${groupIds.length} groups created`);
     console.log(`- ${postIds.length} posts created`);
+    console.log(`- ${ledgerIds.length} financial logs created`);
     console.log("- Several comments added");
     console.log("\n🔗 Open Emulator UI: http://127.0.0.1:1331/");
   } catch (error) {

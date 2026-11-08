@@ -1,6 +1,6 @@
 import dayjs from "@/utils/configuredDayjs";
 import { isCurrency } from "@/utils/currency";
-import { LedgerCategory, LedgerEntryInput } from "@/types/ledger";
+import { Ledger, LedgerCategory, LedgerEntryInput } from "@/types/ledger";
 
 export const MAX_CATEGORY_NAME_LENGTH = 20;
 export const MAX_NOTE_LENGTH = 140;
@@ -92,3 +92,7 @@ export const validateEntry = (
   if (entry.note !== undefined && entry.note.length > MAX_NOTE_LENGTH) errors.push("note");
   return errors;
 };
+
+/** Remaining member slots (never negative). */
+export const spotsLeft = (ledger: Pick<Ledger, "max_participants" | "memberUids">): number =>
+  Math.max(0, ledger.max_participants - (ledger.memberUids?.length ?? 0));

@@ -5,6 +5,7 @@ import { signOut } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
 
 import Button from "@/components/Button";
@@ -18,8 +19,9 @@ const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
-  const currentGroupId = location.pathname.match(/\/g\/([^/]+)/)?.[1];
+  const currentGroupId = location.pathname.match(/\/[gl]\/([^/]+)/)?.[1];
   const { currentGroups, allGroups, isSuccess, isLoading } = useGetCurrentGroups();
+  const { ledgers } = useGetMyLedgers();
 
   const pastGroups = allGroups
     .filter((group) => absoluteEnd(group).isBefore(new Date()))
@@ -63,12 +65,17 @@ const MainNav = () => {
             {isLoading && <div>...</div>}
             {isSuccess && (
               <div className="MainNav__list">
-                <Button
-                  title="New Log Group"
-                  to={"/create"}
-                  text="+"
-                  buttonStyle="primary-border-lite"
-                />
+                <Button title="New Log" to={"/create"} text="+" buttonStyle="primary-border-lite" />
+                {ledgers.map((ledger) => (
+                  <Button
+                    key={ledger.id}
+                    to={`/l/${ledger.id}`}
+                    title={ledger.title}
+                    text={`$ ${ledger.title}`}
+                    buttonStyle="primary-border-lite"
+                    isSelected={highlightedGroupId == ledger.id}
+                  />
+                ))}
                 {currentGroups.map((group) => (
                   <Button
                     key={group.id}
