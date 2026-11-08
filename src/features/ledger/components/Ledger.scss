@@ -1,18 +1,225 @@
+@use "@/constants.scss";
+
 .Ledger {
   &__body {
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
     width: 100%;
+    max-width: var(--main-width);
+    align-self: center;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-bottom: 1em;
   }
 
   &__empty {
     opacity: 0.6;
     font-size: 0.9em;
     text-align: center;
+  }
+
+  &__month {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em 0.75em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid var(--c-black);
+
+    &__step,
+    &__today {
+      font: inherit;
+      cursor: pointer;
+      background: var(--c-white);
+      color: var(--c-black);
+      border: 1px solid var(--c-black);
+      border-radius: 0;
+      padding: 0 0.5em;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--c-black);
+        color: var(--c-white);
+      }
+    }
+
+    &__today {
+      font-size: 0.8em;
+    }
+
+    &__label {
+      min-width: 8ch;
+      text-align: center;
+    }
+
+    &__total {
+      margin-left: auto;
+      font-weight: 700;
+    }
+  }
+}
+
+.EntryForm {
+  position: relative;
+  display: grid;
+  grid-template-columns: 7em 5.5em minmax(8em, 1fr) 9.5em minmax(8em, 2fr) auto;
+  align-items: end;
+  gap: 0.5em;
+  padding: 0.75em;
+  border: 1px dashed var(--c-black);
+
+  // Inputs and selects share one height so the row lines up.
+  input,
+  select {
+    box-sizing: border-box;
+    height: 2em;
+    border-radius: 0;
+  }
+
+  @media (max-width: constants.$breakpoint-md) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    min-width: 0;
+
+    span {
+      font-size: 0.75em;
+      opacity: 0.7;
+    }
+
+    input,
+    select {
+      font: inherit;
+      width: 100%;
+      min-width: 0;
+    }
+
+    input[aria-invalid="true"] {
+      outline: 2px solid var(--c-black);
+    }
+  }
+
+  &__amount input {
+    text-align: right;
+  }
+
+  @media (max-width: constants.$breakpoint-md) {
+    &__note {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5em;
+
+    @media (max-width: constants.$breakpoint-md) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  // Visually hidden (not display:none) so Enter triggers implicit submission everywhere.
+  &__submit {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__error {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.85em;
+  }
+
+  &--edit {
+    border-style: solid;
+  }
+}
+
+.EntryList {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  &__day {
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1em;
+      padding: 0.25em 0.5em;
+      background: var(--c-black);
+      color: var(--c-white);
+      font-size: 0.85em;
+    }
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(7em, 10em) 1fr auto 3.5em;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.4em 0.5em;
+    border-bottom: 1px dashed var(--c-black);
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: 1fr auto;
+
+      .EntryList__note {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+    }
+
+    &--editing {
+      display: block;
+      padding: 0.5em 0;
+    }
+  }
+
+  &__category {
+    font-weight: 700;
+  }
+
+  &__note {
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    small {
+      opacity: 0.7;
+    }
+  }
+
+  &__amount {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__menu {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 0.4em;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-column: 2;
+      grid-row: 2;
+    }
   }
 }
 

@@ -1,10 +1,25 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-import { Ledger as LedgerType } from "@/types/ledger";
-import { spotsLeft } from "@/utils/ledger";
+import { useCurrentUser } from "@/contexts";
+import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
+import { useLedgerEntryQuery } from "@/hooks/useLedgerEntryQuery";
+import { Ledger as LedgerType, LedgerEntryInput } from "@/types/ledger";
+import {
+  activeCategories,
+  formatMonth,
+  isValidMonthKey,
+  monthKeyOf,
+  shiftMonth,
+  spotsLeft,
+  todayInTz,
+} from "@/utils/ledger";
+import { defaultEntryDate, formatTotals, sumByCurrency } from "@/utils/ledgerEntries";
 import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
+import EntryForm from "./EntryForm";
+import EntryList from "./EntryList";
 
 import "./Ledger.scss";
 
@@ -13,9 +28,37 @@ type LedgerProps = {
 };
 
 export const Ledger = ({ ledger }: LedgerProps) => {
+  const { user } = useCurrentUser();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
+
   const spots = spotsLeft(ledger);
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
+
+  // The viewed month lives in ?month= so refresh/back keep your place.
+  const today = todayInTz(user?.timezone);
+  const currentMonth = monthKeyOf(today);
+  const requestedMonth = searchParams.get("month") ?? "";
+  const month = isValidMonthKey(requestedMonth) ? requestedMonth : currentMonth;
+  const setMonth = (next: string) => setSearchParams(next === currentMonth ? {} : { month: next });
+
+  const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
+  const { addEntry, editEntry, deleteEntry } = useLedgerEntryQuery();
+
+  const categories = ledger.categories ?? [];
+  const firstCategory = activeCategories(categories)[0]?.id ?? "";
+  const monthTotals = sumByCurrency(entries);
+
+  const handleAdd = async (input: LedgerEntryInput) => {
+    if (!user) throw new Error("Not signed in");
+    await addEntry.mutate({
+      ledgerId: ledger.id,
+      input,
+      author: { uid: user.userId, userDocId: user.id, displayName: user.displayName },
+    });
+    // Logged into another month (e.g. a late receipt): jump there so it's visible.
+    if (monthKeyOf(input.date) !== month) setMonth(monthKeyOf(input.date));
+  };
 
   return (
     <>
@@ -47,8 +90,73 @@ export const Ledger = ({ ledger }: LedgerProps) => {
             )}
           </div>
         </div>
+
         <div className="Ledger__body">
-          <p className="Ledger__empty">No entries yet.</p>
+          <nav className="Ledger__month" aria-label="Month">
+            <button
+              type="button"
+              className="Ledger__month__step"
+              aria-label="Previous month"
+              onClick={() => setMonth(shiftMonth(month, -1))}
+            >
+              ‹
+            </button>
+            <strong className="Ledger__month__label">{formatMonth(month)}</strong>
+            <button
+              type="button"
+              className="Ledger__month__step"
+              aria-label="Next month"
+              onClick={() => setMonth(shiftMonth(month, 1))}
+            >
+              ›
+            </button>
+            {month !== currentMonth && (
+              <button
+                type="button"
+                className="Ledger__month__today"
+                onClick={() => setMonth(currentMonth)}
+              >
+                this month
+              </button>
+            )}
+            <span className="Ledger__month__total">
+              {!isLoading && entries.length > 0 ? formatTotals(monthTotals) : ""}
+            </span>
+          </nav>
+
+          <EntryForm
+            mode="add"
+            categories={categories}
+            isSaving={addEntry.isLoading}
+            initial={{
+              amount: "",
+              currency: ledger.defaultCurrency,
+              categoryId: firstCategory,
+              date: defaultEntryDate(month, today),
+              note: "",
+            }}
+            onSubmit={handleAdd}
+          />
+
+          {isLoading && <p className="Ledger__empty">...</p>}
+          {isError && (
+            <p className="error-message">Couldn't load entries for {formatMonth(month)}.</p>
+          )}
+          {!isLoading && !isError && entries.length === 0 && (
+            <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>
+          )}
+          {!isLoading && entries.length > 0 && (
+            <EntryList
+              entries={entries}
+              categories={categories}
+              currentUid={user?.userId}
+              showAuthors={isShared}
+              isSavingEdit={editEntry.isLoading}
+              isDeleting={deleteEntry.isLoading}
+              onEdit={(entryId, input) => editEntry.mutate({ ledgerId: ledger.id, entryId, input })}
+              onDelete={(entryId) => deleteEntry.mutate({ ledgerId: ledger.id, entryId })}
+            />
+          )}
         </div>
       </div>
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
