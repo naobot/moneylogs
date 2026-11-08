@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { collection, orderBy, query, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/config/firebase-config";
 import { Ledger } from "@/types/ledger";
+import { sortLedgersNewestFirst } from "@/utils/ledger";
 import { useFirebaseCollection } from "./useFirebase";
 
 /** Financial logs the signed-in user is a member of, newest first. */
@@ -12,15 +13,12 @@ export const useGetMyLedgers = () => {
 
   const result = useFirebaseCollection<Ledger>({
     // `memberUids array-contains uid` is what lets security rules prove the list query.
+    // No orderBy: that would need a composite index, and a user only has a handful of
+    // logs, so sorting client-side is free and keeps this working before indexes deploy.
     queryBuilder: () =>
-      uid
-        ? query(
-            collection(db, "ledgers"),
-            where("memberUids", "array-contains", uid),
-            orderBy("createdAt", "desc"),
-          )
-        : null,
-    dataTransformer: (docs) => docs.map((d) => ({ id: d.id, ...d.data() }) as Ledger),
+      uid ? query(collection(db, "ledgers"), where("memberUids", "array-contains", uid)) : null,
+    dataTransformer: (docs) =>
+      sortLedgersNewestFirst(docs.map((d) => ({ id: d.id, ...d.data() }) as Ledger)),
     dependencies: [uid],
     enabled: !!uid,
   });

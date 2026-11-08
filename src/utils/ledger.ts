@@ -96,3 +96,14 @@ export const validateEntry = (
 /** Remaining member slots (never negative). */
 export const spotsLeft = (ledger: Pick<Ledger, "max_participants" | "memberUids">): number =>
   Math.max(0, ledger.max_participants - (ledger.memberUids?.length ?? 0));
+
+/**
+ * Newest first by createdAt. A just-created ledger has a pending (null) server timestamp
+ * in its first local snapshot, so treat a missing createdAt as "now" to keep it on top.
+ */
+export const sortLedgersNewestFirst = <T extends Pick<Ledger, "createdAt">>(
+  ledgers: ReadonlyArray<T>,
+): T[] => {
+  const millis = (l: T) => l.createdAt?.toMillis?.() ?? Number.POSITIVE_INFINITY;
+  return [...ledgers].sort((a, b) => millis(b) - millis(a));
+};
