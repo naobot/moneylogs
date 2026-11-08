@@ -27,6 +27,7 @@ import Modal from "@/components/Modal";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
+import { creatorUid } from "@/utils/logOwnership";
 
 export const Group = ({
   group,
@@ -410,6 +411,7 @@ export const Group = ({
           logId={groupId}
           logTitle={group.title}
           kind="social"
+          creatorUid={creatorUid(group, "social")}
         />
       )}
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>

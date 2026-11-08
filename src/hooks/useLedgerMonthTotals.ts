@@ -23,7 +23,11 @@ export const useLedgerMonthTotals = (ledgerIds: ReadonlyArray<string>, month: st
             snap.exists() ? ((snap.data().totals as CurrencyAmounts) ?? {}) : {},
           ] as const;
         } catch (err) {
-          console.error(`Failed to load ${month} totals for ledger ${id}:`, err);
+          // A ledger that was just deleted can still be in the list for a moment; its
+          // summaries are then unreadable (rules look up the ledger). Not an error.
+          if ((err as { code?: string })?.code !== "permission-denied") {
+            console.error(`Failed to load ${month} totals for ledger ${id}:`, err);
+          }
           return [id, null] as const;
         }
       }),

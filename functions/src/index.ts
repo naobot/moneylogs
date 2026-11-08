@@ -379,3 +379,4 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
   return backfilledPosts;
 }
 export { recomputeLedgerMonth } from "./ledger";
+export { deleteLog } from "./deleteLog";

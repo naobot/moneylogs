@@ -31,6 +31,11 @@ export const recomputeLedgerMonth = onDocumentWritten(
     const db = getFirestore();
     const ledgerRef = db.collection("ledgers").doc(ledgerId);
 
+    // The ledger is being (or has been) deleted by deleteLog: don't rebuild summaries,
+    // which would otherwise leave ghost months/ docs under a deleted ledger.
+    const ledgerSnap = await ledgerRef.get();
+    if (!ledgerSnap.exists || ledgerSnap.get("deleting") === true) return;
+
     for (const month of affectedMonths(before, after)) {
       const monthRef = ledgerRef.collection("months").doc(month);
       const entriesQuery = ledgerRef.collection("entries").where("month", "==", month);

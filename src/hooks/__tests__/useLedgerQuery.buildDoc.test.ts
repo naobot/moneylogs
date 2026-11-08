@@ -21,6 +21,7 @@ describe("buildNewLedgerDoc", () => {
       [
         "categories",
         "createdAt",
+        "createdBy",
         "defaultCurrency",
         "max_participants",
         "memberUids",
@@ -33,6 +34,7 @@ describe("buildNewLedgerDoc", () => {
   it("makes the creator the sole member by auth uid and doc ref", () => {
     const docData = buildNewLedgerDoc(base);
     expect(docData.memberUids).toEqual(["auth-uid"]);
+    expect(docData.createdBy).toBe("auth-uid");
     expect(docData.members).toEqual([{ path: "users/user-doc" }]);
   });
 

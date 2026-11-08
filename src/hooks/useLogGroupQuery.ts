@@ -49,6 +49,7 @@ export const useLogGroupQuery = () => {
       start: Timestamp.fromDate(new Date(startWallClock)),
       end: Timestamp.fromDate(new Date(endWallClock)),
       createdAt: serverTimestamp(),
+      createdBy: currentUserId, // auth uid; only the creator can delete the group
       members: [userDocRef],
     });
 
