@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import cx from "classnames";
+import { Link } from "react-router-dom";
 
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, Ledger, LedgerEntry } from "@/types/ledger";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
-import { formatMonth, shiftMonth, trailingMonths } from "@/utils/ledger";
+import {
+  formatMonth,
+  ledgerViewPath,
+  monthKeyOf,
+  shiftMonth,
+  trailingMonths,
+} from "@/utils/ledger";
 import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
 import {
   aggregateEntries,
@@ -20,17 +26,8 @@ import {
 import Button from "@/components/Button";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 
-const OPEN_KEY = "ML__ledgerStatsOpen";
 const TREND_MONTHS = 6;
 const BAR_SEGMENTS = 4; // top categories drawn individually; the rest are grouped
-
-const readOpen = () => {
-  try {
-    return localStorage.getItem(OPEN_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
 
 type LedgerStatsProps = {
   ledger: Ledger;
@@ -40,36 +37,66 @@ type LedgerStatsProps = {
   isLoading: boolean;
 };
 
-/**
- * Always-visible stats for the viewed month. The viewed month is aggregated live from its
- * loaded entries (same aggregator as the backend, so it can't drift); earlier months come
- * from the derived month summaries written by the recomputeLedgerMonth function.
- */
-export const LedgerStats = ({ ledger, month, today, entries, isLoading }: LedgerStatsProps) => {
-  const [open, setOpen] = useState(readOpen);
-  const [chartMode, setChartMode] = useState<"bars" | "cumulative">("bars");
-  const [pickedCurrency, setPickedCurrency] = useState<Currency | null>(null);
-
-  const toggle = () => {
-    setOpen((o) => {
-      try {
-        localStorage.setItem(OPEN_KEY, o ? "0" : "1");
-      } catch {
-        // Per-viewer convenience only.
-      }
-      return !o;
-    });
-  };
-
-  const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
+/** Pick the currency to show: an explicit choice if still used, else the most-used one. */
+const useStatsCurrency = (ledger: Ledger, month: string, entries: ReadonlyArray<LedgerEntry>) => {
+  const [picked, setPicked] = useState<Currency | null>(null);
   const currencies = useMemo(() => currenciesByUse(entries), [entries]);
-  const currency: Currency =
-    pickedCurrency && currencies.includes(pickedCurrency)
-      ? pickedCurrency
-      : (currencies[0] ?? ledger.defaultCurrency);
-
   // Reset an explicit pick when changing month (the new month may not use it).
-  useEffect(() => setPickedCurrency(null), [month]);
+  useEffect(() => setPicked(null), [month]);
+  const currency: Currency =
+    picked && currencies.includes(picked) ? picked : (currencies[0] ?? ledger.defaultCurrency);
+  return { currency, currencies, setPicked };
+};
+
+/**
+ * Compact, always-visible indicator on the entries page: this month's totals and a
+ * category bar. Links to the full stats page for the same month.
+ */
+export const LedgerStatsStrip = ({
+  ledger,
+  month,
+  today,
+  entries,
+  isLoading,
+}: LedgerStatsProps) => {
+  const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
+  const { currency } = useStatsCurrency(ledger, month, entries);
+  const catShares = categoryShares(agg, currency, ledger.categories ?? []);
+  const hasEntries = agg.entryCount > 0;
+  const currentMonth = monthKeyOf(today);
+
+  return (
+    <Link
+      className="LedgerStats LedgerStats__strip"
+      to={ledgerViewPath(ledger.id, "stats", month, currentMonth)}
+      aria-label={`${formatMonth(month)} stats`}
+    >
+      <span className="LedgerStats__strip__totals">
+        {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
+      </span>
+      {hasEntries && !isLoading && <CategoryBar shares={catShares} currency={currency} />}
+      <span className="LedgerStats__strip__toggle" aria-hidden="true">
+        ›
+      </span>
+    </Link>
+  );
+};
+
+/**
+ * Full stats for the viewed month. The viewed month is aggregated live from its loaded
+ * entries (same aggregator as the backend, so it can't drift); earlier months come from
+ * the derived month summaries written by the recomputeLedgerMonth function.
+ */
+export const LedgerStatsPanel = ({
+  ledger,
+  month,
+  today,
+  entries,
+  isLoading,
+}: LedgerStatsProps) => {
+  const [chartMode, setChartMode] = useState<"bars" | "cumulative">("bars");
+  const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
+  const { currency, currencies, setPicked } = useStatsCurrency(ledger, month, entries);
 
   const trend = trailingMonths(month, TREND_MONTHS);
   const { byMonth } = useLedgerMonths({ ledgerId: ledger.id, from: trend[0], to: month });
@@ -94,97 +121,87 @@ export const LedgerStats = ({ ledger, month, today, entries, isLoading }: Ledger
   for (const m of trend) totalsByMonth[m] = m === month ? agg.totals : byMonth[m]?.totals;
 
   const hasEntries = agg.entryCount > 0;
-  const panelId = `ledger-stats-${ledger.id}`;
+
+  if (isLoading) return <p className="Ledger__empty">...</p>;
 
   return (
-    <section className={cx("LedgerStats", { "LedgerStats--open": open })}>
-      <button
-        type="button"
-        className="LedgerStats__strip"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={toggle}
-      >
-        <span className="LedgerStats__strip__totals">
-          {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
-        </span>
-        {hasEntries && !isLoading && <CategoryBar shares={catShares} currency={currency} />}
-        <span className="LedgerStats__strip__toggle">{open ? "hide stats ▴" : "stats ▾"}</span>
-      </button>
+    <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>
+      <div className="LedgerStats__summary">
+        <strong className="LedgerStats__summary__totals">
+          {hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
+        </strong>
+        {hasEntries && <CategoryBar shares={catShares} currency={currency} />}
+      </div>
 
-      {open && (
-        <div className="LedgerStats__panel" id={panelId}>
-          {currencies.length > 1 && (
-            <div className="Segmented" role="group" aria-label="Currency">
-              {currencies.map((c) => (
-                <Button
-                  key={c}
-                  text={c}
-                  size="sm"
-                  buttonStyle="primary-border"
-                  isSelected={c === currency}
-                  onClick={() => setPickedCurrency(c)}
-                />
-              ))}
-            </div>
-          )}
-
-          {!hasEntries ? (
-            <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>
-          ) : (
-            <>
-              <Insights insights={insights} currency={currency} />
-
-              <h4 className="LedgerStats__heading">By category · {currency}</h4>
-              <ShareRows rows={catShares} currency={currency} label="Spending by category" />
-
-              <div className="LedgerStats__chartHeader">
-                <h4 className="LedgerStats__heading">Day by day · {currency}</h4>
-                <div className="Segmented" role="group" aria-label="Graph type">
-                  <Button
-                    text="daily"
-                    size="sm"
-                    buttonStyle="primary-border"
-                    isSelected={chartMode === "bars"}
-                    onClick={() => setChartMode("bars")}
-                  />
-                  <Button
-                    text="running total"
-                    size="sm"
-                    buttonStyle="primary-border"
-                    isSelected={chartMode === "cumulative"}
-                    onClick={() => setChartMode("cumulative")}
-                  />
-                </div>
-              </div>
-              <SpendingChart
-                series={dailySeries(month, agg.byDay, currency, today)}
-                mode={chartMode}
-                currency={currency}
-                barRadius={0}
-              />
-
-              {isShared && people.length > 0 && (
-                <>
-                  <h4 className="LedgerStats__heading">By person · {currency}</h4>
-                  <ShareRows rows={people} currency={currency} label="Spending by person" />
-                </>
-              )}
-            </>
-          )}
-
-          <h4 className="LedgerStats__heading">
-            Last {TREND_MONTHS} months · {currency}
-          </h4>
-          <SpendingChart
-            series={monthlySeries(trend, totalsByMonth, currency)}
-            mode="bars"
-            currency={currency}
-            barRadius={0}
-            axisFormat="MMM YY"
-          />
+      {currencies.length > 1 && (
+        <div className="Segmented" role="group" aria-label="Currency">
+          {currencies.map((c) => (
+            <Button
+              key={c}
+              text={c}
+              size="sm"
+              buttonStyle="primary-border"
+              isSelected={c === currency}
+              onClick={() => setPicked(c)}
+            />
+          ))}
         </div>
       )}
+
+      {!hasEntries ? (
+        <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>
+      ) : (
+        <>
+          <Insights insights={insights} currency={currency} />
+
+          <h4 className="LedgerStats__heading">By category · {currency}</h4>
+          <ShareRows rows={catShares} currency={currency} label="Spending by category" />
+
+          <div className="LedgerStats__chartHeader">
+            <h4 className="LedgerStats__heading">Day by day · {currency}</h4>
+            <div className="Segmented" role="group" aria-label="Graph type">
+              <Button
+                text="daily"
+                size="sm"
+                buttonStyle="primary-border"
+                isSelected={chartMode === "bars"}
+                onClick={() => setChartMode("bars")}
+              />
+              <Button
+                text="running total"
+                size="sm"
+                buttonStyle="primary-border"
+                isSelected={chartMode === "cumulative"}
+                onClick={() => setChartMode("cumulative")}
+              />
+            </div>
+          </div>
+          <SpendingChart
+            series={dailySeries(month, agg.byDay, currency, today)}
+            mode={chartMode}
+            currency={currency}
+            barRadius={0}
+          />
+
+          {isShared && people.length > 0 && (
+            <>
+              <h4 className="LedgerStats__heading">By person · {currency}</h4>
+              <ShareRows rows={people} currency={currency} label="Spending by person" />
+            </>
+          )}
+        </>
+      )}
+
+      <h4 className="LedgerStats__heading">
+        Last {TREND_MONTHS} months · {currency}
+      </h4>
+      <SpendingChart
+        series={monthlySeries(trend, totalsByMonth, currency)}
+        mode="bars"
+        currency={currency}
+        barRadius={0}
+        axisFormat="MMM YY"
+      />
     </section>
   );
 };
@@ -276,4 +293,4 @@ const Insights = ({
   );
 };
 
-export default LedgerStats;
+export default LedgerStatsPanel;

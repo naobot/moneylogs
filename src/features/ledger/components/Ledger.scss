@@ -49,6 +49,23 @@
       font-size: 0.8em;
     }
 
+    // Switch between the entries and stats views (pushed to the right).
+    &__view {
+      margin-left: auto;
+      padding: 0.1em 0.75em;
+      font-weight: 700;
+      color: var(--c-white);
+      background: var(--c-black);
+      border: 1px solid var(--c-black);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--c-black);
+        background: var(--c-white);
+      }
+    }
+
     &__label {
       min-width: 8ch;
       text-align: center;
@@ -433,6 +450,8 @@
     border: none;
     border-radius: 0;
     cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
 
     // Monochrome focus ring (the browser default is blue).
     &:focus {
@@ -500,6 +519,18 @@
     gap: 0.75em;
     padding: 0.75em;
     background: #fff;
+  }
+
+  // Month headline at the top of the stats page: totals + category bar.
+  &__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4em 1em;
+    padding: 0.5em 0.75em;
+    margin: -0.75em -0.75em 0;
+    color: var(--c-white);
+    background: var(--c-black);
   }
 
   &__heading {
