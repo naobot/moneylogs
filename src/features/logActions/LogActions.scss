@@ -17,6 +17,12 @@
       font-size: 0.9em;
     }
 
+    ul {
+      margin: 0;
+      padding-left: 1.2em;
+      font-size: 0.9em;
+    }
+
     & + & {
       margin-top: 1.25em;
       padding-top: 1em;
@@ -67,6 +73,38 @@
     &:focus-visible {
       background: var(--c-black);
       color: var(--c-white);
+    }
+  }
+}
+
+// Danger zone: heavier rule above, inverted heading. Monochrome only.
+.LogActions__danger {
+  border-top: 3px solid var(--c-black) !important;
+
+  h4 {
+    padding: 0.1em 0.4em;
+    color: var(--c-white);
+    background: var(--c-black);
+  }
+}
+
+.LogActions__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  width: 100%;
+  font-size: 0.9em;
+
+  input {
+    font: inherit;
+    border: none;
+    border-bottom: 1px dashed var(--c-black);
+    background: transparent;
+    padding: 0.2em 0;
+
+    &:focus {
+      outline: none;
+      border-bottom-style: solid;
     }
   }
 }

@@ -52,6 +52,8 @@ export type Group = {
   startWallClock?: string; // "YYYY-MM-DDTHH:mm" — timezone-agnostic wall-clock time
   endWallClock?: string; // "YYYY-MM-DDTHH:mm" — timezone-agnostic wall-clock time
   createdAt: Timestamp;
+  /** Auth uid of the creator (only they can delete). Missing on groups created before this. */
+  createdBy?: string;
   logs: Array<Log>;
   analytics?: GroupAnalytics;
 };

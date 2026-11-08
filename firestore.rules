@@ -49,12 +49,18 @@ service cloud.firestore {
     match /ledgers/{ledgerId} {
       // `get` and `list` both reference resource.data, so the
       // `memberUids array-contains uid` list query is provable.
-      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      // Reading a ledger that doesn't exist (e.g. just deleted) is allowed so the app can
+      // show "not found" rather than "private"; there's no data to leak.
+      allow read: if signedIn()
+        && (resource == null || request.auth.uid in resource.data.memberUids);
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(
              ['title', 'max_participants', 'members', 'memberUids', 'categories',
-              'defaultCurrency', 'createdAt'])
+              'defaultCurrency', 'createdAt', 'createdBy'])
+        // Optional so tabs still running the previous app build can create ledgers.
+        && (!('createdBy' in request.resource.data)
+            || request.resource.data.createdBy == request.auth.uid)
         && validLedgerFields(request.resource.data)
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.createdAt == request.time;
@@ -101,7 +107,9 @@ service cloud.firestore {
       match /entries/{entryId} {
         allow read: if isLedgerMember(ledgerId);
 
+        // No new entries while the deleteLog function is removing the ledger.
         allow create: if isLedgerMember(ledgerId)
+          && ledgerData(ledgerId).get('deleting', false) == false
           && validEntry(request.resource.data)
           && request.resource.data.createdAt == request.time;
 

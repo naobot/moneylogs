@@ -11,6 +11,14 @@ vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({ user: { id: "doc-1", userId: "uid-1", archivedLogs } }),
 }));
 vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast }) }));
+// Hoisted: the modal creates its callable at import time.
+const { deleteCall, navigate } = vi.hoisted(() => ({
+  deleteCall: vi.fn(async () => ({ data: { deleted: true } })),
+  navigate: vi.fn(),
+}));
+vi.mock("@/config/firebase-config", () => ({ functions: {} }));
+vi.mock("firebase/functions", () => ({ httpsCallable: () => deleteCall }));
+vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 vi.mock("@/hooks/useUserQuery", () => ({
   useUserQuery: () => ({
     archiveLog: { mutate: archive, isLoading: false },
@@ -42,10 +50,17 @@ describe("LogActionsModal", () => {
     document.body.innerHTML = "";
   });
 
-  const render = () =>
+  const render = (creatorUid?: string) =>
     act(() =>
       root.render(
-        <LogActionsModal isOpen onClose={onClose} logId="g1" logTitle="Tokyo" kind="social" />,
+        <LogActionsModal
+          isOpen
+          onClose={onClose}
+          logId="g1"
+          logTitle="Tokyo"
+          kind="social"
+          creatorUid={creatorUid}
+        />,
       ),
     );
   const button = (text: string) =>
@@ -76,5 +91,62 @@ describe("LogActionsModal", () => {
     await act(async () => button("Archive for me")!.click());
     expect(document.body.textContent).toContain("Couldn't update that");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  describe("delete", () => {
+    const confirmInput = () =>
+      document.querySelector(".LogActions__confirm input") as HTMLInputElement;
+    const deleteButton = () => button("Delete log group")!;
+    const type = (value: string) => {
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!;
+      act(() => {
+        descriptor.set?.call(confirmInput(), value);
+        confirmInput().dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    };
+
+    beforeEach(() => {
+      archivedLogs = {};
+      deleteCall.mockClear();
+      navigate.mockClear();
+    });
+
+    it("is hidden from members who didn't create the log, and when the creator is unknown", () => {
+      render("someone-else");
+      expect(document.body.textContent).not.toContain("Delete this log group");
+      act(() => root.unmount());
+      root = createRoot(container);
+      render(undefined);
+      expect(document.body.textContent).not.toContain("Delete this log group");
+    });
+
+    it("warns that it affects everyone and needs the title typed to enable", () => {
+      render("uid-1");
+      expect(document.body.textContent).toContain("can't be undone");
+      expect(document.body.textContent).toContain("achievements");
+      expect(deleteButton().disabled).toBe(true);
+      type("Toky");
+      expect(deleteButton().disabled).toBe(true);
+      type("tokyo ");
+      expect(deleteButton().disabled).toBe(false);
+    });
+
+    it("calls the function, then goes home", async () => {
+      render("uid-1");
+      type("Tokyo");
+      await act(async () => deleteButton().click());
+      expect(deleteCall).toHaveBeenCalledWith({ kind: "social", id: "g1" });
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+    });
+
+    it("explains a refusal and stays put", async () => {
+      const { FirebaseError } = await import("firebase/app");
+      deleteCall.mockRejectedValueOnce(new FirebaseError("functions/permission-denied", "no"));
+      render("uid-1");
+      type("Tokyo");
+      await act(async () => deleteButton().click());
+      expect(document.body.textContent).toContain("Only the person who created this log");
+      expect(navigate).not.toHaveBeenCalled();
+    });
   });
 });

@@ -29,6 +29,10 @@ export type Ledger = {
   categories: Array<LedgerCategory>;
   defaultCurrency: Currency;
   createdAt: Timestamp;
+  /** Auth uid of the creator. Older ledgers lack it; memberUids[0] is the creator there. */
+  createdBy?: string;
+  /** Set by the deleteLog function while the ledger is being removed. */
+  deleting?: boolean;
 };
 
 // ledgers/{ledgerId}/entries/{entryId}

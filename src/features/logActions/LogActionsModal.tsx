@@ -1,9 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { httpsCallable } from "firebase/functions";
+import { FirebaseError } from "firebase/app";
 
 import { useCurrentUser } from "@/contexts";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useToastContext } from "@/hooks/useToastContext";
+import { functions } from "@/config/firebase-config";
 import { isArchived } from "@/utils/archivedLogs";
+import { confirmsDeletion } from "@/utils/logOwnership";
+import { useMutation } from "@/hooks/useFirebase";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -18,6 +24,27 @@ type LogActionsModalProps = {
   logId: string;
   logTitle: string;
   kind: LogKind;
+  /** Auth uid of the log's creator, when known (see utils/logOwnership). */
+  creatorUid?: string;
+};
+
+const deleteLogCallable = httpsCallable<{ kind: LogKind; id: string }, { deleted: boolean }>(
+  functions,
+  "deleteLog",
+);
+
+const deleteErrorMessage = (err: unknown): string => {
+  const code = err instanceof FirebaseError ? err.code.replace("functions/", "") : "";
+  switch (code) {
+    case "permission-denied":
+      return "Only the person who created this log can delete it.";
+    case "not-found":
+      return "This log has already been deleted.";
+    case "failed-precondition":
+      return "This log's creator isn't recorded yet, so it can't be deleted.";
+    default:
+      return "Couldn't delete the log. Nothing you can see has changed, so please try again.";
+  }
 };
 
 /**
@@ -30,14 +57,34 @@ export const LogActionsModal = ({
   logId,
   logTitle,
   kind,
+  creatorUid,
 }: LogActionsModalProps) => {
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
+  const [confirmText, setConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deletion = useMutation(async () => deleteLogCallable({ kind, id: logId }));
+  const isCreator = !!user && !!creatorUid && user.userId === creatorUid;
+  const canDelete = confirmsDeletion(confirmText, logTitle) && !deletion.isLoading;
+
+  const handleDelete = async () => {
+    if (!canDelete) return;
+    setDeleteError(null);
+    try {
+      await deletion.mutate(undefined);
+      showToast(`Deleted ${logTitle}`, "success");
+      void navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Failed to delete log:", err);
+      setDeleteError(deleteErrorMessage(err));
+    }
+  };
   const { showToast } = useToastContext();
   const { archiveLog, unarchiveLog } = useUserQuery();
   const [failed, setFailed] = useState(false);
 
   const archived = isArchived(user, logId);
-  const pending = archiveLog.isLoading || unarchiveLog.isLoading;
+  const pending = archiveLog.isLoading || unarchiveLog.isLoading || deletion.isLoading;
   const noun = kind === "financial" ? "financial log" : "log group";
 
   const toggleArchive = async () => {
@@ -79,6 +126,53 @@ export const LogActionsModal = ({
           />
           {failed && <p className="error-message">Couldn't update that. Please try again.</p>}
         </section>
+
+        {isCreator && (
+          <section className="LogActions__section LogActions__danger">
+            <h4>Delete this {noun}</h4>
+            <p>
+              <strong>This can't be undone.</strong> Deleting removes it for <em>everyone</em>:
+            </p>
+            <ul>
+              {kind === "financial" ? (
+                <li>every entry, category and monthly stat</li>
+              ) : (
+                <li>every post, comment and uploaded image</li>
+              )}
+              <li>it disappears from all members' navigation, lists and history</li>
+              <li>any achievements earned in it are removed from members' profiles</li>
+            </ul>
+            <label className="LogActions__confirm">
+              <span>
+                Type <strong>{logTitle}</strong> to confirm:
+              </span>
+              <input
+                value={confirmText}
+                autoComplete="off"
+                disabled={deletion.isLoading}
+                onChange={(e) => {
+                  setConfirmText(e.target.value);
+                  setDeleteError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleDelete();
+                }}
+              />
+            </label>
+            <Button
+              text={deletion.isLoading ? "Deleting…" : `Delete ${noun}`}
+              size="sm"
+              buttonStyle="primary-border"
+              loading={deletion.isLoading}
+              disabled={!canDelete}
+              onClick={() => void handleDelete()}
+            />
+            {deletion.isLoading && (
+              <p role="status">Removing everything. This can take a few seconds…</p>
+            )}
+            {deleteError && <p className="error-message">{deleteError}</p>}
+          </section>
+        )}
       </Modal.Body>
       <Modal.Actions>
         <Modal.CancelButton text="Close" />

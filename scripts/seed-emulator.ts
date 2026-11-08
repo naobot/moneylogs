@@ -89,6 +89,9 @@ const testUsers = [
 const testGroups = [
   {
     title: "Roommates - Vancouver House",
+    // Recorded creator (as the app now writes). "Asia Trip 2025" deliberately has none,
+    // like groups created before createdBy existed, to exercise the backfill script.
+    creatorEmail: "alice.vancouver@test.com" as string | undefined,
     members: [
       "alice.vancouver@test.com",
       "bob.nyc@test.com",
@@ -99,6 +102,7 @@ const testGroups = [
   },
   {
     title: "Asia Trip 2025",
+    creatorEmail: undefined as string | undefined,
     members: [
       "charlie.london@test.com",
       "diana.berlin@test.com",
@@ -235,9 +239,14 @@ async function createLogGroup(groupInfo: (typeof testGroups)[0], createdUsers: S
     .filter((user) => groupInfo.members.includes(user.email))
     .map((user) => doc(db, "users", user.uid));
 
+  const creator = createdUsers.find((user) => user.email === groupInfo.creatorEmail);
   const groupData = {
     title: groupInfo.title,
-    members: memberUids,
+    // The app prepends joiners, so the creator ends up last; mirror that.
+    members: creator
+      ? [...memberUids.filter((ref) => ref.id !== creator.uid), doc(db, "users", creator.uid)]
+      : memberUids,
+    ...(creator ? { createdBy: creator.uid } : {}),
     max_participants: groupInfo.max_participants,
     createdAt: Timestamp.now(),
     start: Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)), // 30 days ago
@@ -420,6 +429,7 @@ async function createLedgers(createdUsers: SeededUser[]) {
       defaultCurrency: ledger.defaultCurrency,
       members: [doc(db, "users", owner.uid)],
       memberUids: [owner.uid],
+      createdBy: owner.uid,
       categories: DEFAULT_LEDGER_CATEGORIES,
       createdAt: serverTimestamp(),
     });

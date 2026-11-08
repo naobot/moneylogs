@@ -19,6 +19,7 @@ import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
+import { creatorUid } from "@/utils/logOwnership";
 
 import "./Ledger.scss";
 
@@ -140,6 +141,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
         logId={ledger.id}
         logTitle={ledger.title}
         kind="financial"
+        creatorUid={creatorUid(ledger, "financial")}
       />
       <CategoryManager
         isOpen={showCategories}

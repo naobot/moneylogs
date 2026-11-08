@@ -52,6 +52,7 @@ export const buildNewLedgerDoc = <TRef, TTime>({
   defaultCurrency,
   members: [userDocRef],
   memberUids: [member.uid],
+  createdBy: member.uid,
   categories: categories.map((c) => ({ ...c })),
   createdAt,
 });
