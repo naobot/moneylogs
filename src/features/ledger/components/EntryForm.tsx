@@ -89,70 +89,84 @@ export const EntryForm = ({
       }}
       noValidate
     >
-      <label className="EntryForm__field EntryForm__amount">
-        <span>Amount</span>
+      {/* Mirrors the social post editor: a compact, label-less header row
+          (date · amount + currency · category), then the note and a small button. */}
+      <div className="EntryForm__header">
+        <div className="EntryForm__header__left">
+          <input
+            type="date"
+            aria-label="Date"
+            value={values.date}
+            aria-invalid={errors.includes("date")}
+            onChange={(e) => set({ date: e.target.value })}
+          />
+        </div>
+        <div className="EntryForm__header__center">
+          <input
+            ref={amountRef}
+            className="LogPostsCurrency__input EntryForm__amount"
+            aria-label="Amount"
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="0"
+            value={values.amount}
+            aria-invalid={amountTouched && errors.includes("amount")}
+            onChange={(e) => set({ amount: e.target.value })}
+            autoFocus={mode === "edit"}
+          />
+          <select
+            aria-label="Currency"
+            value={values.currency}
+            onChange={(e) => set({ currency: e.target.value as Currency })}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="EntryForm__header__right">
+          <select
+            aria-label="Category"
+            value={values.categoryId}
+            onChange={(e) => set({ categoryId: e.target.value })}
+          >
+            {options.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+                {c.archived ? " (archived)" : ""}
+              </option>
+            ))}
+          </select>
+          {onCancel && (
+            <Button
+              buttonStyle="primary-border-lite"
+              size="sm"
+              text={"×"}
+              title="Close"
+              onClick={onCancel}
+            />
+          )}
+        </div>
+      </div>
+      <div className="EntryForm__body">
         <input
-          ref={amountRef}
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder="0"
-          value={values.amount}
-          aria-invalid={amountTouched && errors.includes("amount")}
-          onChange={(e) => set({ amount: e.target.value })}
-          autoFocus={mode === "edit"}
-        />
-      </label>
-      <label className="EntryForm__field">
-        <span>Currency</span>
-        <select
-          value={values.currency}
-          onChange={(e) => set({ currency: e.target.value as Currency })}
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="EntryForm__field">
-        <span>Category</span>
-        <select value={values.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>
-          {options.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.archived ? " (archived)" : ""}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="EntryForm__field">
-        <span>Date</span>
-        <input
-          type="date"
-          value={values.date}
-          aria-invalid={errors.includes("date")}
-          onChange={(e) => set({ date: e.target.value })}
-        />
-      </label>
-      <label className="EntryForm__field EntryForm__note">
-        <span>Note</span>
-        <input
+          className="EntryForm__note"
+          aria-label="Note"
           maxLength={MAX_NOTE_LENGTH}
-          placeholder="optional"
+          placeholder="note (optional)"
           value={values.note}
           onChange={(e) => set({ note: e.target.value })}
         />
-      </label>
-      <div className="EntryForm__actions">
         <Button
           text={mode === "add" ? "Add" : "Save"}
           buttonStyle="primary-border"
+          size="sm"
           disabled={!canSave}
           loading={mode === "edit" && isSaving}
           onClick={() => void handleSubmit()}
         />
-        {onCancel && <Button text="Cancel" buttonStyle="primary-border-lite" onClick={onCancel} />}
       </div>
       {/* Enter in any field submits via the form's implicit submission. */}
       <button type="submit" className="EntryForm__submit" tabIndex={-1} aria-hidden="true" />

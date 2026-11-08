@@ -53,9 +53,7 @@ describe("EntryForm", () => {
   };
 
   const field = (label: string) =>
-    Array.from(container.querySelectorAll("label"))
-      .find((l) => l.querySelector("span")?.textContent === label)!
-      .querySelector("input, select") as HTMLInputElement | HTMLSelectElement;
+    container.querySelector(`[aria-label="${label}"]`) as HTMLInputElement | HTMLSelectElement;
 
   const setValue = (el: HTMLInputElement | HTMLSelectElement, value: string) => {
     const proto =
@@ -125,5 +123,25 @@ describe("EntryForm", () => {
     const select = field("Category") as HTMLSelectElement;
     expect(select.value).toBe("old");
     expect(Array.from(select.options).map((o) => o.textContent)).toContain("Old stuff (archived)");
+  });
+});
+
+describe("EntryForm close button", () => {
+  it("only shows the × close control when the form can be cancelled", () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const onCancel = vi.fn();
+    const props = {
+      categories: CATEGORIES,
+      initial: INITIAL,
+      isSaving: false,
+      onSubmit: async () => {},
+    };
+    act(() => root.render(<EntryForm mode="add" {...props} />));
+    expect(container.querySelector('[title="Close"]')).toBeNull();
+    act(() => root.render(<EntryForm mode="edit" {...props} onCancel={onCancel} />));
+    act(() => (container.querySelector('[title="Close"]') as HTMLButtonElement).click());
+    expect(onCancel).toHaveBeenCalled();
+    act(() => root.unmount());
   });
 });
