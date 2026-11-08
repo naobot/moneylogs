@@ -1,16 +1,33 @@
 import { useMemo, useRef, useState } from "react";
 import cx from "classnames";
+import type dayjs from "dayjs";
 import { Currency } from "@/types/user";
-import { SpendingPoint } from "./spendingSeries";
 
 type ChartMode = "bars" | "cumulative";
 
-interface SpendingChartProps {
-  series: SpendingPoint[];
+/** The fields the chart reads. SpendingPoint (social) and StatPoint (financial) both fit. */
+export type ChartPoint = {
+  key: string;
+  date: dayjs.Dayjs;
+  label: string;
+  amount: number;
+  cumulative: number;
+  posts?: ReadonlyArray<unknown>;
+  count?: number;
+};
+
+interface SpendingChartProps<P extends ChartPoint> {
+  series: P[];
   mode: ChartMode;
   currency: Currency;
-  onSelectPoint?: (point: SpendingPoint) => void;
+  onSelectPoint?: (point: P) => void;
   selectedKey?: string | null;
+  /** Corner radius of bar tops (financial mode uses square bars). */
+  barRadius?: number;
+  /** Noun for the per-bar item count in the tooltip, e.g. ["post", "posts"]. */
+  itemNoun?: [string, string];
+  /** Axis label format for the first/last points. */
+  axisFormat?: string;
 }
 
 // Fixed viewBox; CSS scales the SVG responsively (uniform, so strokes stay crisp).
@@ -39,13 +56,16 @@ const topRoundedBar = (x: number, y: number, w: number, h: number, r: number) =>
   ].join(" ");
 };
 
-const SpendingChart = ({
+const SpendingChart = <P extends ChartPoint>({
   series,
   mode,
   currency,
   onSelectPoint,
   selectedKey,
-}: SpendingChartProps) => {
+  barRadius = 4,
+  itemNoun = ["post", "posts"],
+  axisFormat = "D MMM",
+}: SpendingChartProps<P>) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
@@ -88,6 +108,7 @@ const SpendingChart = ({
   const labelIdx = n <= 1 ? [0] : [0, Math.floor((n - 1) / 2), n - 1];
 
   const hovered = hover != null ? series[hover] : null;
+  const hoveredCount = hovered ? (hovered.count ?? hovered.posts?.length ?? 0) : 0;
   const summary =
     mode === "cumulative"
       ? `Cumulative ${currency} spending over time. Ends at ${fmt(series[n - 1]?.cumulative ?? 0, currency)}.`
@@ -132,7 +153,13 @@ const SpendingChart = ({
                   "SpendingChart__bar--hover": hover === i,
                   "SpendingChart__bar--dim": selectedKey != null && !isSelected,
                 })}
-                d={topRoundedBar(PAD.left + band * i + gap / 2, yOf(p.amount), barWidth, h, 4)}
+                d={topRoundedBar(
+                  PAD.left + band * i + gap / 2,
+                  yOf(p.amount),
+                  barWidth,
+                  h,
+                  barRadius,
+                )}
               />
             );
           })}
@@ -165,7 +192,7 @@ const SpendingChart = ({
             y={BASELINE + 16}
             textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
           >
-            {series[i]?.date.format("D MMM")}
+            {series[i]?.date.format(axisFormat)}
           </text>
         ))}
 
@@ -202,9 +229,9 @@ const SpendingChart = ({
         >
           <strong>{hovered.label}</strong>
           <span>{fmt(mode === "cumulative" ? hovered.cumulative : hovered.amount, currency)}</span>
-          {mode === "bars" && hovered.posts.length > 0 && (
+          {mode === "bars" && hoveredCount > 0 && (
             <span className="SpendingChart__tooltip__meta">
-              {hovered.posts.length} post{hovered.posts.length === 1 ? "" : "s"}
+              {hoveredCount} {hoveredCount === 1 ? itemNoun[0] : itemNoun[1]}
             </span>
           )}
         </div>

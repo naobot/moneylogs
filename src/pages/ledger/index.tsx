@@ -1,9 +1,13 @@
+import { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useGetLedger } from "@/hooks/useGetLedger";
+import { Ledger as LedgerType } from "@/types/ledger";
 import { Ledger } from "@/features/ledger/components/Ledger";
+import { LedgerStatsView } from "@/features/ledger/components/LedgerStatsView";
 
-export const LedgerPage = () => {
+/** Loads the ledger and handles the private / not-found / error states for its pages. */
+const LedgerRoute = ({ render }: { render: (ledger: LedgerType) => ReactNode }) => {
   const { ledgerId } = useParams();
   const { ledger, isLoading, isSuccess, isDenied, isNotFound, isError } = useGetLedger(ledgerId);
 
@@ -31,5 +35,11 @@ export const LedgerPage = () => {
     );
   }
 
-  return isSuccess && ledger ? <Ledger ledger={ledger} /> : null;
+  return isSuccess && ledger ? <>{render(ledger)}</> : null;
 };
+
+export const LedgerPage = () => <LedgerRoute render={(ledger) => <Ledger ledger={ledger} />} />;
+
+export const LedgerStatsPage = () => (
+  <LedgerRoute render={(ledger) => <LedgerStatsView ledger={ledger} />} />
+);

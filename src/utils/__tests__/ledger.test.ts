@@ -5,6 +5,7 @@ import {
   formatMonth,
   isValidDateKey,
   isValidMonthKey,
+  ledgerViewPath,
   monthKeyOf,
   normaliseCategoryName,
   resolveCategory,
@@ -127,5 +128,14 @@ describe("isCurrency", () => {
     expect(isCurrency("SGD")).toBe(true);
     expect(isCurrency("XYZ")).toBe(false);
     expect(isCurrency(undefined)).toBe(false);
+  });
+});
+
+describe("ledgerViewPath", () => {
+  it("links the entries and stats views, carrying a non-current month", () => {
+    expect(ledgerViewPath("abc", "stats", "2026-11", "2026-11")).toBe("/l/abc/stats");
+    expect(ledgerViewPath("abc", "stats", "2026-09", "2026-11")).toBe("/l/abc/stats?month=2026-09");
+    expect(ledgerViewPath("abc", "entries", "2026-09", "2026-11")).toBe("/l/abc?month=2026-09");
+    expect(ledgerViewPath("abc", "entries", "2026-11", "2026-11")).toBe("/l/abc");
   });
 });

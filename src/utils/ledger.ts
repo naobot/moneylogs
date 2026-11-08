@@ -107,3 +107,16 @@ export const sortLedgersNewestFirst = <T extends Pick<Ledger, "createdAt">>(
   const millis = (l: T) => l.createdAt?.toMillis?.() ?? Number.POSITIVE_INFINITY;
   return [...ledgers].sort((a, b) => millis(b) - millis(a));
 };
+
+export type LedgerView = "entries" | "stats";
+
+/** Path for a ledger view, carrying the month (omitted when it's the current one). */
+export const ledgerViewPath = (
+  ledgerId: string,
+  view: LedgerView,
+  month: string,
+  currentMonth: string,
+): string => {
+  const base = view === "stats" ? `/l/${ledgerId}/stats` : `/l/${ledgerId}`;
+  return month === currentMonth ? base : `${base}?month=${month}`;
+};

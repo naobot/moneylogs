@@ -49,14 +49,26 @@
       font-size: 0.8em;
     }
 
+    // Switch between the entries and stats views (pushed to the right).
+    &__view {
+      margin-left: auto;
+      padding: 0.1em 0.75em;
+      font-weight: 700;
+      color: var(--c-white);
+      background: var(--c-black);
+      border: 1px solid var(--c-black);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--c-black);
+        background: var(--c-white);
+      }
+    }
+
     &__label {
       min-width: 8ch;
       text-align: center;
-    }
-
-    &__total {
-      margin-left: auto;
-      font-weight: 700;
     }
   }
 }
@@ -265,10 +277,16 @@
 
   li {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    grid-gap: 1em;
+    align-items: baseline;
+    gap: 0.25em 1em;
     padding: 0.4em 0;
     border-bottom: 1px dashed var(--c-black);
+  }
+
+  &__month {
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -411,5 +429,182 @@
     margin: 0 0 0.5em;
     font-size: 0.8em;
     opacity: 0.7;
+  }
+}
+
+// Always-on stats: a one-line strip (totals + category bar) that expands into a panel.
+.LedgerStats {
+  border: 2px solid var(--c-black);
+
+  &__strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4em 1em;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    font: inherit;
+    text-align: left;
+    color: var(--c-white);
+    background: var(--c-black);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+
+    // Monochrome focus ring (the browser default is blue).
+    &:focus {
+      outline: none;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--c-white);
+      outline-offset: -4px;
+    }
+
+    &__totals {
+      font-weight: 700;
+    }
+
+    &__toggle {
+      margin-left: auto;
+      font-size: 0.8em;
+    }
+  }
+
+  // Stacked category bar in the strip: white/black fills and patterns only.
+  &__bar {
+    display: flex;
+    flex: 1;
+    min-width: 6em;
+    height: 0.8em;
+    border: 1px solid var(--c-white);
+
+    &__seg {
+      display: block;
+      height: 100%;
+      box-sizing: border-box;
+
+      & + & {
+        border-left: 1px solid var(--c-black);
+      }
+
+      &--0 {
+        background: var(--c-white);
+      }
+      &--1 {
+        background: var(--c-white);
+        outline: 1px dashed var(--c-black);
+        outline-offset: -3px;
+      }
+      &--2 {
+        background: var(--c-black);
+        outline: 1px dotted var(--c-white);
+        outline-offset: -3px;
+      }
+      &--3 {
+        background: var(--c-black);
+        border-top: 2px solid var(--c-white);
+        border-bottom: 2px solid var(--c-white);
+      }
+      &--rest {
+        background: var(--c-black);
+      }
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    padding: 0.75em;
+    background: #fff;
+  }
+
+  // Month headline at the top of the stats page: totals + category bar.
+  &__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4em 1em;
+    padding: 0.5em 0.75em;
+    margin: -0.75em -0.75em 0;
+    color: var(--c-white);
+    background: var(--c-black);
+  }
+
+  &__heading {
+    margin: 0.5em 0 0;
+    font-size: 0.85em;
+  }
+
+  &__chartHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5em;
+  }
+
+  &__insights {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: 0.9em;
+
+    li + li {
+      margin-top: 0.2em;
+    }
+  }
+
+  &__shares {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.85em;
+
+    li {
+      display: grid;
+      grid-template-columns: minmax(6em, 9em) 1fr auto 3em;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.2em 0;
+    }
+
+    &__name {
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__track {
+      display: block;
+      height: 0.7em;
+      border: 1px solid var(--c-black);
+    }
+
+    &__fill {
+      display: block;
+      height: 100%;
+      background: var(--c-black);
+    }
+
+    &__amount,
+    &__pct {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: constants.$breakpoint-sm) {
+      li {
+        grid-template-columns: 1fr auto 2.5em;
+      }
+
+      &__track {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+    }
   }
 }
