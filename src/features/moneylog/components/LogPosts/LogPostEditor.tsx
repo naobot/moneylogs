@@ -26,7 +26,7 @@ import { getAutoPostTimezone } from "@/utils/timezone";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 
-import { CURRENCIES } from "./LogPosts";
+import { CURRENCIES, LAST_CURRENCY_KEY } from "@/utils/currency";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 
 const DRAFT_KEY = "ML__logPostDraft";
@@ -148,7 +148,7 @@ const LogPostEditor = forwardRef(
     };
 
     const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
-      localStorage.setItem("ML__lastCurrency", e.target.value);
+      localStorage.setItem(LAST_CURRENCY_KEY, e.target.value);
       selectedCurrencySet(e.target.value as Currency);
     };
 
@@ -265,7 +265,7 @@ const LogPostEditor = forwardRef(
         }
       }
 
-      const lastCurrency = localStorage.getItem("ML__lastCurrency") as Currency;
+      const lastCurrency = localStorage.getItem(LAST_CURRENCY_KEY) as Currency;
 
       if (type == "new" && lastCurrency && CURRENCIES.includes(lastCurrency)) {
         selectedCurrencySet(lastCurrency as Currency);

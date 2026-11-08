@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 import MDEditor from "@uiw/react-md-editor";
 
-import { Currency, LogPost } from "@/types/user";
+import { LogPost } from "@/types/user";
 import { useCurrentUser } from "@/contexts";
 
 import { useExternalLinkHandler } from "@/hooks/useExternalLinkHandler";
@@ -65,19 +65,7 @@ type DateBanner = {
   _isBanner: boolean;
 };
 
-export const CURRENCIES: Array<Currency> = [
-  "JPY",
-  "USD",
-  "CAD",
-  "KRW",
-  "CNY",
-  "SGD",
-  "EUR",
-  "GBP",
-  "NTD",
-  "AUD",
-  "MYR",
-];
+export { CURRENCIES } from "@/utils/currency";
 
 export const useUserTimezone = (date: string | Date | number, userTimezone?: string) => {
   return dayjs(date).tz(userTimezone || dayjs.tz.guess());
