@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { collection, orderBy, query, where } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/config/firebase-config";
@@ -23,6 +24,12 @@ export const useGetMyLedgers = () => {
     dependencies: [uid],
     enabled: !!uid,
   });
+
+  useEffect(() => {
+    // Surface failures (e.g. a missing index or a rules rejection) instead of silently
+    // rendering "no financial logs".
+    if (result.isError) console.error("Failed to load financial logs:", result.error);
+  }, [result.isError, result.error]);
 
   // useFirebaseCollection starts with isLoading=false until its effect runs; report
   // loading until the first snapshot so callers (Home) don't flash a fallback layout.
