@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
   aggregateEntries,
+  budgetsFor,
+  budgetSummary,
+  categoryBudgetRows,
   buildInsights,
   categoryShares,
   currenciesByUse,
@@ -150,5 +153,88 @@ describe("buildInsights", () => {
     expect(spentThroughDay({ "28": { JPY: 5 }, "29": { JPY: 7 } }, "JPY", Math.min(31, 28))).toBe(
       5,
     );
+  });
+});
+
+describe("budgets", () => {
+  const BUDGETED: LedgerCategory[] = [
+    { id: "food", name: "Food", order: 0, budget: { JPY: 30000, CAD: 200 } },
+    { id: "rent", name: "Rent", order: 1, budget: { JPY: 100000 } },
+    { id: "fun", name: "Fun", order: 2 },
+    { id: "old", name: "Old", order: 3, archived: true, budget: { JPY: 999 } },
+  ];
+  const agg = aggregateEntries([
+    e(36000, "JPY", "food", "2026-11-01"),
+    e(50000, "JPY", "rent", "2026-11-02"),
+    e(9999, "JPY", "fun", "2026-11-03"), // unbudgeted: not counted against the budget
+  ]);
+
+  it("sums active budgets per currency, ignoring archived categories", () => {
+    expect(budgetsFor(BUDGETED, "JPY")).toEqual({
+      total: 130000,
+      byCategory: { food: 30000, rent: 100000 },
+    });
+    expect(budgetsFor(BUDGETED, "USD")).toEqual({ total: 0, byCategory: {} });
+  });
+
+  it("merges budgets into category rows, flags overruns, keeps unspent budgets", () => {
+    const rows = categoryBudgetRows(
+      aggregateEntries([e(36000, "JPY", "food", "2026-11-01")]),
+      "JPY",
+      BUDGETED,
+    );
+    expect(rows.map((r) => [r.name, r.amount, r.budget, r.over])).toEqual([
+      ["Food", 36000, 30000, true],
+      ["Rent", 0, 100000, false],
+    ]);
+  });
+
+  it("summarises the month with pace, allowance and projection", () => {
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-11-10",
+      currency: "JPY",
+      agg,
+      categories: BUDGETED,
+    })!;
+    expect(s).toMatchObject({
+      budget: 130000,
+      spent: 86000,
+      remaining: 44000,
+      over: false,
+      daysLeft: 21,
+    });
+    expect(s.used).toBeCloseTo(86000 / 130000);
+    expect(s.perDayLeft).toBe(Math.round((44000 / 21) * 100) / 100);
+    expect(s.projected).toBe(258000); // 86,000 over 10 days, 30-day month
+  });
+
+  it("has no pace figures for past months and reports overspend", () => {
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-12-05",
+      currency: "JPY",
+      agg: aggregateEntries([e(140000, "JPY", "rent", "2026-11-02")]),
+      categories: BUDGETED,
+    })!;
+    expect(s).toMatchObject({
+      remaining: -10000,
+      over: true,
+      daysLeft: null,
+      perDayLeft: null,
+      projected: null,
+    });
+  });
+
+  it("returns null when nothing is budgeted in the currency", () => {
+    expect(
+      budgetSummary({
+        month: "2026-11",
+        today: "2026-11-10",
+        currency: "USD",
+        agg,
+        categories: BUDGETED,
+      }),
+    ).toBeNull();
   });
 });

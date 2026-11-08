@@ -34,6 +34,7 @@ describe("CategoryManager", () => {
         <CategoryManager
           isOpen
           categories={CATEGORIES}
+          defaultCurrency="JPY"
           onClose={onClose}
           onSave={onSave}
           isSaving={false}
@@ -121,6 +122,28 @@ describe("CategoryManager", () => {
 
     act(() => byLabel("Restore Old").click());
     expect(activeNames()).toEqual(["Food", "Old"]);
+  });
+
+  it("sets and removes a monthly budget per currency", async () => {
+    act(() => byLabel("Budget for Food").click());
+    const input = byLabel("Monthly budget for Food") as HTMLInputElement;
+    type(input, "abc");
+    expect(byLabel("Set budget for Food").disabled).toBe(true);
+    type(input, "30,000");
+    act(() => byLabel("Set budget for Food").click());
+    expect(document.body.textContent).toContain("30,000 JPY / month");
+
+    act(() => byLabel("Remove JPY budget for Food").click());
+    expect(document.body.textContent).not.toContain("30,000 JPY / month");
+    type(byLabel("Monthly budget for Food") as HTMLInputElement, "25000");
+    submit(byLabel("Monthly budget for Food"));
+
+    await act(async () => button("Save").click());
+    expect(onSave).toHaveBeenCalledWith([
+      { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
+      { type: "setBudget", id: "food", currency: "JPY", amount: null },
+      { type: "setBudget", id: "food", currency: "JPY", amount: 25000 },
+    ]);
   });
 
   it("keeps the dialog open with an error when saving fails", async () => {

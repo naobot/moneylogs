@@ -13,11 +13,16 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 
 import { LedgerCategory } from "@/types/ledger";
+import { Currency } from "@/types/user";
+import { CURRENCIES } from "@/utils/currency";
+import { formatAmount, formatTotals, parseAmount } from "@/utils/ledgerEntries";
 import { activeCategories, MAX_CATEGORY_NAME_LENGTH, sortCategories } from "@/utils/ledger";
 import {
   applyCategoryOps,
   categoryNameError,
   CategoryOp,
+  isValidBudgetAmount,
+  MAX_BUDGET,
   MAX_CATEGORIES,
   newCategoryId,
 } from "@/utils/ledgerCategories";
@@ -29,6 +34,8 @@ import Button from "@/components/Button";
 type CategoryManagerProps = {
   isOpen: boolean;
   categories: ReadonlyArray<LedgerCategory>;
+  /** Pre-selected currency when adding a budget. */
+  defaultCurrency: Currency;
   onClose: () => void;
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
   isSaving: boolean;
@@ -52,6 +59,7 @@ export const CategoryManager = (props: CategoryManagerProps) =>
 
 const CategoryManagerDialog = ({
   categories,
+  defaultCurrency,
   onClose,
   onSave,
   isSaving,
@@ -61,6 +69,7 @@ const CategoryManagerDialog = ({
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
+  const [budgetingId, setBudgetingId] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const dragEnabled = useDragReorderEnabled();
 
@@ -181,6 +190,11 @@ const CategoryManagerDialog = ({
                       {category.name}
                     </button>
                   )}
+                  {category.budget && (
+                    <small className="CategoryManager__budgetSummary">
+                      {formatTotals(category.budget)} / month
+                    </small>
+                  )}
                   <span className="CategoryManager__actions">
                     <RowButton
                       label={`Move ${category.name} up`}
@@ -197,6 +211,14 @@ const CategoryManagerDialog = ({
                       ↓
                     </RowButton>
                     <RowButton
+                      label={`Budget for ${category.name}`}
+                      onClick={() =>
+                        setBudgetingId((id) => (id === category.id ? null : category.id))
+                      }
+                    >
+                      budget
+                    </RowButton>
+                    <RowButton
                       label={`Archive ${category.name}`}
                       disabled={lastActive}
                       title={lastActive ? "A log needs at least one category" : undefined}
@@ -205,6 +227,15 @@ const CategoryManagerDialog = ({
                       archive
                     </RowButton>
                   </span>
+                  {budgetingId === category.id && (
+                    <BudgetEditor
+                      category={category}
+                      defaultCurrency={defaultCurrency}
+                      onSet={(currency, amount) =>
+                        push({ type: "setBudget", id: category.id, currency, amount })
+                      }
+                    />
+                  )}
                 </SortableRow>
               ))}
             </ul>
@@ -301,6 +332,84 @@ const CategoryManagerDialog = ({
         />
       </Modal.Actions>
     </Modal>
+  );
+};
+
+/** Inline per-currency monthly budget editor for one category. */
+const BudgetEditor = ({
+  category,
+  defaultCurrency,
+  onSet,
+}: {
+  category: LedgerCategory;
+  defaultCurrency: Currency;
+  onSet: (currency: Currency, amount: number | null) => void;
+}) => {
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
+  const parsed = parseAmount(amount);
+  const valid = isValidBudgetAmount(parsed);
+  const existing = CURRENCIES.filter((c) => category.budget?.[c] !== undefined);
+
+  const submit = () => {
+    if (!valid) return;
+    onSet(currency, parsed);
+    setAmount("");
+  };
+
+  return (
+    <div className="CategoryManager__budget">
+      {existing.length > 0 && (
+        <ul className="CategoryManager__budget__list" aria-label={`${category.name} budgets`}>
+          {existing.map((c) => (
+            <li key={c}>
+              {formatAmount(category.budget![c]!, c)} / month
+              <RowButton
+                label={`Remove ${c} budget for ${category.name}`}
+                onClick={() => onSet(c, null)}
+              >
+                ×
+              </RowButton>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form
+        className="CategoryManager__budget__form"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <input
+          aria-label={`Monthly budget for ${category.name}`}
+          inputMode="decimal"
+          placeholder="Monthly budget"
+          value={amount}
+          autoFocus
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <select
+          aria-label={`Budget currency for ${category.name}`}
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value as Currency)}
+        >
+          {CURRENCIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <RowButton label={`Set budget for ${category.name}`} disabled={!valid} onClick={submit}>
+          {category.budget?.[currency] !== undefined ? "update" : "set"}
+        </RowButton>
+        {amount.trim() !== "" && !valid && (
+          <small className="CategoryManager__error">
+            Enter an amount between 0 and {MAX_BUDGET.toLocaleString("en-US")}.
+          </small>
+        )}
+      </form>
+    </div>
   );
 };
 

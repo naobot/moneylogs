@@ -1,4 +1,6 @@
 import { LedgerCategory } from "@/types/ledger";
+import { Currency } from "@/types/user";
+import { isCurrency } from "@/utils/currency";
 import { MAX_CATEGORY_NAME_LENGTH, normaliseCategoryName } from "@/utils/ledger";
 
 /** Matches the `categories.size() <= 50` cap in firestore.rules. */
@@ -15,7 +17,15 @@ export type CategoryOp =
   | { type: "move"; id: string; toIndex: number } // index within the active list
   | { type: "archive"; id: string }
   | { type: "unarchive"; id: string }
-  | { type: "delete"; id: string };
+  | { type: "delete"; id: string }
+  // Monthly budget for one currency; null removes it.
+  | { type: "setBudget"; id: string; currency: Currency; amount: number | null };
+
+/** Largest budget accepted (sanity bound against typos like an extra few zeros). */
+export const MAX_BUDGET = 1_000_000_000;
+
+export const isValidBudgetAmount = (amount: number): boolean =>
+  Number.isFinite(amount) && amount > 0 && amount <= MAX_BUDGET;
 
 const sameName = (a: string, b: string) =>
   normaliseCategoryName(a).toLowerCase() === normaliseCategoryName(b).toLowerCase();
@@ -119,6 +129,19 @@ export const applyCategoryOp = (
       if (index === -1) return list;
       if (!list[index].archived && list.filter((c) => !c.archived).length <= 1) return list;
       return normaliseOrder(list.filter((c) => c.id !== op.id));
+    }
+    case "setBudget": {
+      if (index === -1 || !isCurrency(op.currency)) return list;
+      if (op.amount !== null && !isValidBudgetAmount(op.amount)) return list;
+      return list.map((c) => {
+        if (c.id !== op.id) return c;
+        const budget = { ...c.budget };
+        if (op.amount === null) delete budget[op.currency];
+        else budget[op.currency] = Math.round(op.amount * 100) / 100;
+        const { budget: _old, ...rest } = c;
+        // Drop the field entirely when no budgets remain.
+        return Object.keys(budget).length > 0 ? { ...rest, budget } : rest;
+      });
     }
   }
 };

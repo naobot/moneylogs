@@ -163,3 +163,107 @@ export const buildInsights = ({
     elapsed,
   };
 };
+
+// ---------------------------------------------------------------------------
+// Budgets: standing monthly amounts per category and currency (never converted).
+// ---------------------------------------------------------------------------
+
+/** Budgets in one currency for active categories. */
+export const budgetsFor = (
+  categories: ReadonlyArray<LedgerCategory>,
+  currency: Currency,
+): { total: number; byCategory: Record<string, number> } => {
+  const byCategory: Record<string, number> = {};
+  for (const c of categories) {
+    const amount = c.budget?.[currency];
+    if (!c.archived && amount && amount > 0) byCategory[c.id] = amount;
+  }
+  const total = Object.values(byCategory).reduce((sum, n) => sum + n, 0);
+  return { total: Math.round(total * 100) / 100, byCategory };
+};
+
+export type BudgetRow = Share & { budget?: number; over: boolean };
+
+/**
+ * Category shares with budgets merged in. Budgeted categories with nothing spent yet are
+ * included (at 0) so you can see what's left in them.
+ */
+export const categoryBudgetRows = (
+  agg: Pick<MonthAggregate, "byCategory">,
+  currency: Currency,
+  categories: ReadonlyArray<LedgerCategory>,
+): BudgetRow[] => {
+  const { byCategory: budgets } = budgetsFor(categories, currency);
+  const rows: BudgetRow[] = categoryShares(agg, currency, categories).map((s) => ({
+    ...s,
+    budget: budgets[s.id],
+    over: budgets[s.id] !== undefined && s.amount > budgets[s.id],
+  }));
+  for (const [id, budget] of Object.entries(budgets)) {
+    if (!rows.some((r) => r.id === id)) {
+      rows.push({
+        id,
+        name: resolveCategory(id, categories).name,
+        amount: 0,
+        share: 0,
+        budget,
+        over: false,
+      });
+    }
+  }
+  return rows;
+};
+
+export type BudgetSummary = {
+  budget: number; // sum of budgets in this currency
+  spent: number; // spending in budgeted categories only
+  remaining: number; // negative when over
+  used: number; // spent / budget
+  over: boolean;
+  /** Days left including today (current month only). */
+  daysLeft: number | null;
+  /** What's left per remaining day (current month, not yet over). */
+  perDayLeft: number | null;
+  /** End-of-month spend at the current daily pace (current month only). */
+  projected: number | null;
+};
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Overall budget position for one currency, or null when nothing is budgeted in it. */
+export const budgetSummary = ({
+  month,
+  today,
+  currency,
+  agg,
+  categories,
+}: {
+  month: string;
+  today: string;
+  currency: Currency;
+  agg: Pick<MonthAggregate, "byCategory">;
+  categories: ReadonlyArray<LedgerCategory>;
+}): BudgetSummary | null => {
+  const { total, byCategory } = budgetsFor(categories, currency);
+  if (total <= 0) return null;
+
+  const spent = r2(
+    Object.keys(byCategory).reduce((sum, id) => sum + (agg.byCategory[id]?.[currency] ?? 0), 0),
+  );
+  const remaining = r2(total - spent);
+  const daysInMonth = dayjs(`${month}-01`).daysInMonth();
+  const isCurrent = month === today.slice(0, 7);
+  const elapsed = elapsedDays(month, today);
+  const daysLeft = isCurrent ? daysInMonth - elapsed + 1 : null;
+
+  return {
+    budget: total,
+    spent,
+    remaining,
+    used: spent / total,
+    over: spent > total,
+    daysLeft,
+    perDayLeft: isCurrent && remaining > 0 && daysLeft ? r2(remaining / daysLeft) : null,
+    projected: isCurrent && elapsed > 0 ? r2((spent / elapsed) * daysInMonth) : null,
+  };
+};

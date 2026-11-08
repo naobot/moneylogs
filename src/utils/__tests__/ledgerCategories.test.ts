@@ -147,3 +147,54 @@ describe("applyCategoryOps — replaying onto a newer server copy", () => {
     expect(result.filter((c) => c.name.toLowerCase() === "gifts")).toHaveLength(1);
   });
 });
+
+describe("setBudget", () => {
+  it("sets, updates and removes per-currency budgets", () => {
+    let list = applyCategoryOp(cats(), {
+      type: "setBudget",
+      id: "food",
+      currency: "JPY",
+      amount: 30000,
+    });
+    list = applyCategoryOp(list, {
+      type: "setBudget",
+      id: "food",
+      currency: "CAD",
+      amount: 99.999,
+    });
+    expect(list[0].budget).toEqual({ JPY: 30000, CAD: 100 });
+    list = applyCategoryOp(list, { type: "setBudget", id: "food", currency: "JPY", amount: 25000 });
+    expect(list[0].budget).toEqual({ JPY: 25000, CAD: 100 });
+    list = applyCategoryOp(list, { type: "setBudget", id: "food", currency: "JPY", amount: null });
+    list = applyCategoryOp(list, { type: "setBudget", id: "food", currency: "CAD", amount: null });
+    expect(list[0]).not.toHaveProperty("budget");
+  });
+
+  it("ignores invalid amounts, currencies and ids", () => {
+    const base = normaliseOrder(cats());
+    for (const amount of [0, -5, NaN, 2_000_000_000]) {
+      expect(
+        applyCategoryOp(cats(), { type: "setBudget", id: "food", currency: "JPY", amount }),
+      ).toEqual(base);
+    }
+    expect(
+      applyCategoryOp(cats(), {
+        type: "setBudget",
+        id: "food",
+        currency: "XYZ" as never,
+        amount: 5,
+      }),
+    ).toEqual(base);
+    expect(
+      applyCategoryOp(cats(), { type: "setBudget", id: "nope", currency: "JPY", amount: 5 }),
+    ).toEqual(base);
+  });
+
+  it("survives replay alongside another member's rename", () => {
+    const server = applyCategoryOp(cats(), { type: "rename", id: "food", name: "Eating out" });
+    const result = applyCategoryOps(server, [
+      { type: "setBudget", id: "food", currency: "JPY", amount: 20000 },
+    ]);
+    expect(result[0]).toMatchObject({ name: "Eating out", budget: { JPY: 20000 } });
+  });
+});
