@@ -1,33 +1,52 @@
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 
+import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { LedgerList } from "@/features/ledger/components/LedgerList";
+import { ArchivedLogsList } from "@/features/logs/ArchivedLogsList";
 
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
 import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";
+import { partitionArchived } from "@/utils/archivedLogs";
 
 // Home lists every log rather than opening the active social group, so financial logs
-// (which never end) are always reachable. A richer dashboard is planned.
+// (which never end) are always reachable. Logs you've archived move into a collapsed list.
 export const Home = () => {
-  const { currentGroups, allGroups, isSuccess, isLoading } = useGetCurrentGroups();
-  const { ledgers, isLoading: ledgersLoading } = useGetMyLedgers();
+  const { user } = useCurrentUser();
+  const { allGroups: groups, isSuccess, isLoading } = useGetCurrentGroups();
+  const { ledgers: allLedgers, isLoading: ledgersLoading } = useGetMyLedgers();
 
   if (isLoading || ledgersLoading) return <div className="InfoBox">...</div>;
 
-  const upcomingGroups = allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()));
-  const pastGroups = allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()));
-  const hasAnything = ledgers.length > 0 || (isSuccess && allGroups.length > 0);
+  const { active: ledgers, archived: archivedLedgers } = partitionArchived(allLedgers, user);
+  const { active: allGroups, archived: archivedGroups } = partitionArchived(
+    isSuccess ? groups : [],
+    user,
+  );
+  const now = dayjs();
+  const currentGroups = allGroups.filter(
+    (g) => !absoluteStart(g).isAfter(now) && !absoluteEnd(g).isBefore(now),
+  );
+  const upcomingGroups = allGroups.filter((g) => absoluteStart(g).isAfter(now));
+  const pastGroups = allGroups.filter((g) => absoluteEnd(g).isBefore(now));
+  const hasActive = ledgers.length > 0 || allGroups.length > 0;
+  const hasArchived = archivedLedgers.length > 0 || archivedGroups.length > 0;
 
-  if (!hasAnything) {
+  if (!hasActive) {
     return (
       <div className="Content__body">
-        <h3>You are not currently part of any logs</h3>
-        <p>If you know someone participating in one, please wait for their invitation link.</p>
+        <h3>
+          {hasArchived ? "All your logs are archived" : "You are not currently part of any logs"}
+        </h3>
+        {!hasArchived && (
+          <p>If you know someone participating in one, please wait for their invitation link.</p>
+        )}
         <p>
           You can also <Link to="/create">create one</Link> yourself.
         </p>
+        <ArchivedLogsList groups={archivedGroups} ledgers={archivedLedgers} />
       </div>
     );
   }
@@ -61,7 +80,7 @@ export const Home = () => {
         <p className="GroupArchive__empty">You are not part of any ongoing log groups.</p>
       )}
 
-      {isSuccess && allGroups.length > 0 && (
+      {allGroups.length > 0 && (
         <>
           <h3>Upcoming groups</h3>
           <GroupArchive
@@ -73,6 +92,8 @@ export const Home = () => {
           <GroupArchive groups={pastGroups} emptyMessage="You have no past log groups." />
         </>
       )}
+
+      <ArchivedLogsList groups={archivedGroups} ledgers={archivedLedgers} />
     </div>
   );
 };

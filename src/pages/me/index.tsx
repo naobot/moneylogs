@@ -23,20 +23,28 @@ import Icon from "@/components/Icon";
 import "./me.scss";
 import "@/features/moneylog/components/LogsSummary/styles.scss";
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
+import { ArchivedLogsList } from "@/features/logs/ArchivedLogsList";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
+import { partitionArchived } from "@/utils/archivedLogs";
 import dayjs from "dayjs";
 import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";
 
 export const UserSettings = () => {
-  const { allGroups, isSuccess } = useGetCurrentGroups();
+  const { allGroups: groups, isSuccess } = useGetCurrentGroups();
+  const { ledgers } = useGetMyLedgers();
 
   const { showToast } = useToastContext();
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
+  // Archived logs (personal) move out of the lists below into a collapsed "Archived" list.
+  const { active: allGroups, archived: archivedGroups } = partitionArchived(groups, user);
+  const archivedLedgers = partitionArchived(ledgers, user).archived;
   const { achievements } = useGetAchievements(user?.id);
   // Same ordering as the Past groups list below — most recently ended group first.
   const orderedAchievements = useMemo(
-    () => sortAchievementsByGroupEnd(achievements, allGroups),
-    [achievements, allGroups],
+    // All groups (archived too), so archiving doesn't reshuffle achievements.
+    () => sortAchievementsByGroupEnd(achievements, groups),
+    [achievements, groups],
   );
   const { options, parseTimezone } = useTimezoneSelect({
     labelStyle: "original",
@@ -202,6 +210,8 @@ export const UserSettings = () => {
             <GroupArchive groups={allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()))} />
           </div>
         )}
+
+      <ArchivedLogsList groups={archivedGroups} ledgers={archivedLedgers} />
     </div>
   );
 };

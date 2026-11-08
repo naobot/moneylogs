@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { needsProfileSetup, parseReferenceArray } from "@/utils/helpers";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useGetGroup } from "@/hooks/useGetGroup";
+import { LogNotFound } from "@/features/logs/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
 import Modal from "@/components/Modal";
@@ -13,7 +14,7 @@ import Button from "@/components/Button";
 export const InvitePage = () => {
   const navigate = useNavigate();
   const { groupId } = useParams();
-  const { group, isSuccess: isSuccessGroup } = useGetGroup(groupId);
+  const { group, isSuccess: isSuccessGroup, isError } = useGetGroup(groupId);
   const { user: loggedInUser } = useCurrentUser();
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery();
 
@@ -64,6 +65,8 @@ export const InvitePage = () => {
       setShowInviteModal(true);
     }
   }, [currentUserIsMember, isSuccessGroup, group?.members]);
+
+  if (isError) return <LogNotFound />;
 
   return (
     <>

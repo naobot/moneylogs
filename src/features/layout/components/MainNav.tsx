@@ -6,6 +6,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
+import { useCurrentUser } from "@/contexts";
+import { isArchived } from "@/utils/archivedLogs";
 import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
 
 import Button from "@/components/Button";
@@ -19,8 +21,17 @@ const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentGroupId = location.pathname.match(/\/[gl]\/([^/]+)/)?.[1];
-  const { currentGroups, allGroups, isSuccess, isLoading } = useGetCurrentGroups();
-  const { ledgers } = useGetMyLedgers();
+  const { user } = useCurrentUser();
+  const groupsQuery = useGetCurrentGroups();
+  const { isSuccess, isLoading } = groupsQuery;
+  const ledgersQuery = useGetMyLedgers();
+
+  // Logs you've archived (for yourself) never appear in the nav.
+  const visible = <T extends { id: string }>(logs: T[]) =>
+    logs.filter((log) => !isArchived(user, log.id));
+  const ledgers = visible(ledgersQuery.ledgers);
+  const currentGroups = visible(groupsQuery.currentGroups);
+  const allGroups = visible(groupsQuery.allGroups);
 
   const pastGroups = allGroups
     .filter((group) => absoluteEnd(group).isBefore(new Date()))

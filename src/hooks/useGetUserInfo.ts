@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
+import { ArchivedLogsMap } from "@/utils/archivedLogs";
 
 export type MoneyLog = {
   id: number;
@@ -38,7 +39,8 @@ export type UserData = {
         lastViewedAt: Timestamp;
       };
     };
-  };
+  } /** Logs this user has archived for themselves (see utils/archivedLogs). */;
+  archivedLogs?: ArchivedLogsMap;
 };
 
 export interface CacheableUserData {
@@ -58,6 +60,7 @@ export interface CacheableUserData {
       [pinnedPost: string]: string;
     };
   };
+  archivedLogs?: ArchivedLogsMap;
 }
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -148,6 +151,7 @@ export const useGetUserInfo = (userId: string) => {
             currentLogId: userData.currentLogId,
             timezone: userData.timezone,
             pinnedPosts: userData.pinnedPosts,
+            archivedLogs: userData.archivedLogs,
           };
 
           setCachedUser(userId, cacheableData);
