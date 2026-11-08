@@ -129,6 +129,16 @@ describe("EntryForm", () => {
     expect(field("Amount").value).toBe("5");
   });
 
+  it("falls back to the first active category if the selected one is archived", () => {
+    render({ initial: { ...INITIAL, categoryId: "transport" } });
+    expect(field("Category").value).toBe("transport");
+    render({
+      initial: { ...INITIAL, categoryId: "transport" },
+      categories: CATEGORIES.map((c) => (c.id === "transport" ? { ...c, archived: true } : c)),
+    });
+    expect(field("Category").value).toBe("food");
+  });
+
   it("keeps an entry's archived category selectable when editing it", () => {
     render({ mode: "edit", initial: { ...INITIAL, amount: "5", categoryId: "old" } });
     const select = field("Category") as HTMLSelectElement;

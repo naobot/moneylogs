@@ -43,6 +43,16 @@ export const EntryForm = ({
     if (mode === "add") setValues((v) => ({ ...v, date: initial.date }));
   }, [initial.date, mode]);
 
+  // If the selected category is archived or deleted while adding, fall back to the first
+  // active one (the ledger's categories update live).
+  useEffect(() => {
+    if (mode !== "add") return;
+    const active = activeCategories(categories);
+    if (active.length > 0 && !active.some((c) => c.id === values.categoryId)) {
+      setValues((v) => ({ ...v, categoryId: active[0].id }));
+    }
+  }, [categories, mode, values.categoryId]);
+
   const set = (patch: Partial<EntryFormValues>) => {
     setFailed(false);
     setValues((v) => ({ ...v, ...patch }));
