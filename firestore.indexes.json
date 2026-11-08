@@ -63,6 +63,20 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "log_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "group",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "postDate",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []
