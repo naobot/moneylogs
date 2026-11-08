@@ -135,6 +135,20 @@
     gap: 0.5em;
   }
 
+  &__noteField {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+  }
+
+  &__noteLabel {
+    flex-shrink: 0;
+    font-size: 0.8em;
+    font-weight: 700;
+  }
+
   &__note {
     flex: 1;
     min-width: 0;

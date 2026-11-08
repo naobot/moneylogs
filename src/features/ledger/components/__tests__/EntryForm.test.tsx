@@ -52,8 +52,12 @@ describe("EntryForm", () => {
     return onSubmit;
   };
 
+  // Header controls are named by aria-label; the note has a visible "Note:" label.
   const field = (label: string) =>
-    container.querySelector(`[aria-label="${label}"]`) as HTMLInputElement | HTMLSelectElement;
+    (container.querySelector(`[aria-label="${label}"]`) ??
+      Array.from(container.querySelectorAll("label"))
+        .find((l) => l.textContent?.startsWith(`${label}:`))
+        ?.querySelector("input")) as HTMLInputElement | HTMLSelectElement;
 
   const setValue = (el: HTMLInputElement | HTMLSelectElement, value: string) => {
     const proto =
@@ -77,6 +81,13 @@ describe("EntryForm", () => {
     expect(addButton().disabled).toBe(true);
     setValue(field("Amount"), "1,200");
     expect(addButton().disabled).toBe(false);
+  });
+
+  it("labels the note visibly and shows example placeholder text", () => {
+    render();
+    const note = field("Note") as HTMLInputElement;
+    expect(note.closest("label")?.textContent).toContain("Note:");
+    expect(note.placeholder).toBe("Example: coffee, new shoes, etc.");
   });
 
   it("only offers active categories when adding", () => {
