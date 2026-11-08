@@ -2,8 +2,125 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    // ---------------------------------------------------------------------
+    // Social mode — unchanged behaviour (fully open), now scoped explicitly
+    // so the financial-mode rules below can actually restrict access.
+    // (Rules are OR'd: a catch-all `allow if true` would override them.)
+    // ---------------------------------------------------------------------
+    match /log_groups/{path=**} {
       allow read, write: if true;
+    }
+    match /log_posts/{path=**} {
+      allow read, write: if true;
+    }
+    match /users/{path=**} {
+      allow read, write: if true;
+    }
+    match /processing/{path=**} {
+      allow read, write: if true;
+    }
+
+    // ---------------------------------------------------------------------
+    // Financial mode — members only.
+    // ---------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ledgerData(ledgerId) {
+      return get(/databases/$(database)/documents/ledgers/$(ledgerId)).data;
+    }
+
+    function isLedgerMember(ledgerId) {
+      return signedIn() && request.auth.uid in ledgerData(ledgerId).memberUids;
+    }
+
+    function validLedgerFields(d) {
+      return d.title is string && d.title.size() > 0 && d.title.size() <= 20
+        && d.max_participants is int && d.max_participants >= 1 && d.max_participants <= 30
+        && d.categories is list && d.categories.size() <= 50
+        && d.defaultCurrency is string
+        && d.memberUids is list && d.members is list
+        && d.memberUids.size() == d.members.size()
+        && d.memberUids.size() <= d.max_participants;
+    }
+
+    match /ledgers/{ledgerId} {
+      // `get` and `list` both reference resource.data, so the
+      // `memberUids array-contains uid` list query is provable.
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['title', 'max_participants', 'members', 'memberUids', 'categories',
+              'defaultCurrency', 'createdAt'])
+        && validLedgerFields(request.resource.data)
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.createdAt == request.time;
+
+      // Members edit settings (title, categories, default currency, cap).
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.memberUids
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['title', 'categories', 'defaultCurrency', 'max_participants'])
+        && validLedgerFields(request.resource.data);
+
+      // A signed-in non-member joins via the invite link: they may only add
+      // themselves (via arrayUnion), and only while there's room.
+      allow update: if signedIn()
+        && !(request.auth.uid in resource.data.memberUids)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['members', 'memberUids'])
+        && request.resource.data.memberUids.toSet()
+             == resource.data.memberUids.toSet().union([request.auth.uid].toSet())
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+        && request.resource.data.members.size() == resource.data.members.size() + 1
+        && request.resource.data.memberUids.size() <= resource.data.max_participants;
+
+      allow delete: if false;
+
+      function validEntry(d) {
+        return d.keys().hasOnly(
+               ['amount', 'currency', 'categoryId', 'date', 'month', 'note',
+                'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(
+               ['amount', 'currency', 'categoryId', 'date', 'month',
+                'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt'])
+          && (d.amount is int || d.amount is float) && d.amount > 0
+          && d.currency is string && d.currency.size() == 3
+          && d.categoryId is string && d.categoryId.size() > 0
+          && d.month is string && d.month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && d.date is string && d.date.matches('^' + d.month + '-(0[1-9]|[12][0-9]|3[01])$')
+          && (!('note' in d) || (d.note is string && d.note.size() <= 140))
+          && d.authorName is string
+          && d.authorUid == request.auth.uid
+          && d.updatedAt == request.time;
+      }
+
+      match /entries/{entryId} {
+        allow read: if isLedgerMember(ledgerId);
+
+        allow create: if isLedgerMember(ledgerId)
+          && validEntry(request.resource.data)
+          && request.resource.data.createdAt == request.time;
+
+        // Only the author may edit or delete; authorship and createdAt are immutable.
+        allow update: if isLedgerMember(ledgerId)
+          && resource.data.authorUid == request.auth.uid
+          && validEntry(request.resource.data)
+          && request.resource.data.author == resource.data.author
+          && request.resource.data.createdAt == resource.data.createdAt;
+
+        allow delete: if isLedgerMember(ledgerId)
+          && resource.data.authorUid == request.auth.uid;
+      }
+
+      // Derived monthly summaries — written only by Cloud Functions (Admin SDK).
+      match /months/{month} {
+        allow read: if isLedgerMember(ledgerId);
+        allow write: if false;
+      }
     }
   }
 }
