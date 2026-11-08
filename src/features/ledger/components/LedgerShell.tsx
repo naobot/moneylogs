@@ -18,7 +18,7 @@ import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
-import LogActionsModal from "@/features/logs/LogActionsModal";
+import LogActionsModal from "@/features/logActions/LogActionsModal";
 
 import "./Ledger.scss";
 

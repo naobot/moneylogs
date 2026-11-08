@@ -1,0 +1,72 @@
+.LogActions {
+  max-width: min(32em, 92vw);
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5em;
+    text-align: left;
+
+    h4,
+    p {
+      margin: 0;
+    }
+
+    p {
+      font-size: 0.9em;
+    }
+
+    & + & {
+      margin-top: 1.25em;
+      padding-top: 1em;
+      border-top: 1px dashed var(--c-black);
+    }
+  }
+}
+
+.ArchivedLogs {
+  margin-top: 1.5em;
+
+  summary {
+    cursor: pointer;
+    font-weight: 700;
+    width: fit-content;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5em 0 0;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1em;
+      padding: 0.35em 0;
+      border-bottom: 1px dashed var(--c-black);
+    }
+
+    small {
+      opacity: 0.6;
+    }
+  }
+
+  &__unarchive {
+    font: inherit;
+    font-size: 0.8em;
+    cursor: pointer;
+    background: var(--c-white);
+    color: var(--c-black);
+    border: 1px solid var(--c-black);
+    border-radius: 0;
+    padding: 0.1em 0.5em;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--c-black);
+      color: var(--c-white);
+    }
+  }
+}

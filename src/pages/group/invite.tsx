@@ -5,7 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { needsProfileSetup, parseReferenceArray } from "@/utils/helpers";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useGetGroup } from "@/hooks/useGetGroup";
-import { LogNotFound } from "@/features/logs/LogNotFound";
+import { LogNotFound } from "@/features/logActions/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
 import Modal from "@/components/Modal";

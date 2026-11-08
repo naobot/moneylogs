@@ -5,7 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { LedgerList } from "@/features/ledger/components/LedgerList";
-import { ArchivedLogsList } from "@/features/logs/ArchivedLogsList";
+import { ArchivedLogsList } from "@/features/logActions/ArchivedLogsList";
 
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
 import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useCurrentUser } from "@/contexts";
 import { parseReferenceArray } from "@/utils/helpers";
 import { useGetGroup } from "@/hooks/useGetGroup";
-import { LogNotFound } from "@/features/logs/LogNotFound";
+import { LogNotFound } from "@/features/logActions/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
 export const GroupPage = () => {

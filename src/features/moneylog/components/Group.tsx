@@ -26,7 +26,7 @@ import LogsSummary from "./LogsSummary/LogsSummary";
 import Modal from "@/components/Modal";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
-import LogActionsModal from "@/features/logs/LogActionsModal";
+import LogActionsModal from "@/features/logActions/LogActionsModal";
 
 export const Group = ({
   group,

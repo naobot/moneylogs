@@ -23,7 +23,7 @@ import Icon from "@/components/Icon";
 import "./me.scss";
 import "@/features/moneylog/components/LogsSummary/styles.scss";
 import GroupArchive from "@/features/moneylog/components/GroupArchive";
-import { ArchivedLogsList } from "@/features/logs/ArchivedLogsList";
+import { ArchivedLogsList } from "@/features/logActions/ArchivedLogsList";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { partitionArchived } from "@/utils/archivedLogs";
 import dayjs from "dayjs";
