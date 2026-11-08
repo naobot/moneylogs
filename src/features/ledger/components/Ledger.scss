@@ -271,3 +271,145 @@
     border-bottom: 1px dashed var(--c-black);
   }
 }
+
+.CategoryManager {
+  min-width: min(28em, 90vw);
+
+  &__list {
+    list-style: none;
+    margin: 0 0 1em;
+    padding: 0;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.35em 0;
+    border-bottom: 1px dashed var(--c-black);
+    background: var(--c-white);
+
+    &--dragging {
+      position: relative;
+      z-index: 1;
+      outline: 2px solid var(--c-black);
+    }
+  }
+
+  &__handle {
+    cursor: grab;
+    user-select: none;
+    padding: 0 0.25em;
+    opacity: 0.6;
+    touch-action: none;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    font: inherit;
+    font-weight: 700;
+    background: none;
+    border: none;
+    padding: 0.1em 0;
+    color: inherit;
+    cursor: text;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline dashed;
+      text-underline-offset: 0.2em;
+    }
+
+    &--archived {
+      cursor: default;
+      font-weight: 400;
+      opacity: 0.6;
+      text-decoration: line-through;
+
+      &:hover {
+        text-decoration: line-through;
+      }
+    }
+  }
+
+  &__rename {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    input {
+      font: inherit;
+      font-weight: 700;
+      border-radius: 0;
+    }
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: 0.25em;
+    margin-left: auto;
+  }
+
+  &__rowButton {
+    font: inherit;
+    font-size: 0.8em;
+    cursor: pointer;
+    background: var(--c-white);
+    color: var(--c-black);
+    border: 1px solid var(--c-black);
+    border-radius: 0;
+    padding: 0.1em 0.5em;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--c-black);
+      color: var(--c-white);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+
+  &__add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      border: none;
+      border-bottom: 1px dashed var(--c-black);
+      background: transparent;
+      padding: 0.2em 0;
+
+      &:focus {
+        outline: none;
+        border-bottom-style: solid;
+      }
+    }
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-size: 0.8em;
+  }
+
+  &__subheading {
+    margin: 1.5em 0 0.25em;
+  }
+
+  &__hint {
+    margin: 0 0 0.5em;
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
+}

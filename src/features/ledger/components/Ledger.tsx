@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useCurrentUser } from "@/contexts";
 import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
 import { useLedgerEntryQuery } from "@/hooks/useLedgerEntryQuery";
+import { useLedgerCategoryQuery } from "@/hooks/useLedgerCategoryQuery";
 import { Ledger as LedgerType, LedgerEntryInput } from "@/types/ledger";
 import {
   activeCategories,
@@ -20,6 +21,7 @@ import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
+import CategoryManager from "./CategoryManager";
 
 import "./Ledger.scss";
 
@@ -31,6 +33,7 @@ export const Ledger = ({ ledger }: LedgerProps) => {
   const { user } = useCurrentUser();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
 
   const spots = spotsLeft(ledger);
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
@@ -44,6 +47,7 @@ export const Ledger = ({ ledger }: LedgerProps) => {
 
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
   const { addEntry, editEntry, deleteEntry } = useLedgerEntryQuery();
+  const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
 
   const categories = ledger.categories ?? [];
   const firstCategory = activeCategories(categories)[0]?.id ?? "";
@@ -73,6 +77,9 @@ export const Ledger = ({ ledger }: LedgerProps) => {
             <div className="Group__header__item Group__header__title">{ledger.title}</div>
           </div>
           <div className="Group__header__right">
+            <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
+              <IconText type={"pencil"} fill={"white"} text="categories" />
+            </div>
             {spots > 0 && (
               <>
                 <div
@@ -159,6 +166,14 @@ export const Ledger = ({ ledger }: LedgerProps) => {
           )}
         </div>
       </div>
+      <CategoryManager
+        isOpen={showCategories}
+        categories={categories}
+        onClose={() => setShowCategories(false)}
+        isSaving={saveCategoryOps.isLoading}
+        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
+        checkInUse={(categoryId) => isCategoryUsed.mutate({ ledgerId: ledger.id, categoryId })}
+      />
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
         <Modal.Header title={"Invite"}>Invite</Modal.Header>
         <Modal.Body>
