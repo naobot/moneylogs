@@ -322,7 +322,7 @@ export const Group = ({
           <div className="Group__header__right">
             {!isSpectator && (
               <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
-                <IconText type={"pencil"} fill={"white"} text="manage" />
+                <IconText type={"gear"} fill={"white"} text="manage" />
               </div>
             )}
             {!isPostingClosed &&

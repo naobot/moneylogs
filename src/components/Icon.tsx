@@ -25,12 +25,14 @@ export type IconType =
   | "pencil"
   | "speech-filled"
   | "calculator"
-  | "pin";
+  | "pin"
+  | "gear";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
   const kyIcons = ["pencil"];
   const bluetipIcons = ["pin"];
+  const moneylogsIcons = ["gear"]; // drawn in-house
 
   const iconSet = rkIcons.includes(type)
     ? "reandra-khansa"
@@ -38,7 +40,9 @@ const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
       ? "kanyayee"
       : bluetipIcons.includes(type)
         ? "bluetip"
-        : "nakals";
+        : moneylogsIcons.includes(type)
+          ? "moneylogs"
+          : "nakals";
   const whiteFilter =
     "invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%) contrast(100%)";
 
