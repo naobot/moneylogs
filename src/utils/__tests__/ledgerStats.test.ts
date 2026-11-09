@@ -9,6 +9,7 @@ import {
   currenciesByUse,
   dailySeries,
   elapsedDays,
+  inCategoryOrder,
   memberShares,
   monthlySeries,
   spentThroughDay,
@@ -61,6 +62,11 @@ describe("shares", () => {
     expect(categoryShares(agg, "CAD", CATS)).toEqual([
       { id: "rent", name: "Rent", amount: 5, share: 1 },
     ]);
+  });
+
+  it("reorders rows to the category order, unknown ids last in input order", () => {
+    const rows = [{ id: "x" }, { id: "rent" }, { id: "y" }, { id: "food" }];
+    expect(inCategoryOrder(rows, CATS).map((r) => r.id)).toEqual(["food", "rent", "x", "y"]);
   });
 
   it("splits by member with a fallback name", () => {
@@ -187,6 +193,19 @@ describe("budgets", () => {
       ["Food", 36000, 30000, true],
       ["Rent", 0, 100000, false],
     ]);
+  });
+
+  it("lists category rows in the Categories panel order, not by amount", () => {
+    const rows = categoryBudgetRows(
+      aggregateEntries([
+        e(9999, "JPY", "fun", "2026-11-01"),
+        e(50, "JPY", "gone", "2026-11-01"),
+        e(36000, "JPY", "food", "2026-11-02"),
+      ]),
+      "JPY",
+      BUDGETED,
+    );
+    expect(rows.map((r) => r.name)).toEqual(["Food", "Rent", "Fun", "Uncategorised"]);
   });
 
   it("summarises the month with pace, allowance and projection", () => {
