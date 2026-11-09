@@ -73,7 +73,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
           </div>
           <div className="Group__header__right">
             <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
-              <IconText type={"pencil"} fill={"white"} text="manage" />
+              <IconText type={"gear"} fill={"white"} text="manage" />
             </div>
             <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
               <IconText type={"pencil"} fill={"white"} text="categories" />
