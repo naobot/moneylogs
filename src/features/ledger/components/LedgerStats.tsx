@@ -3,7 +3,7 @@ import cx from "classnames";
 import { Link } from "react-router-dom";
 
 import { Currency } from "@/types/user";
-import { CurrencyAmounts, Ledger, LedgerEntry } from "@/types/ledger";
+import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry } from "@/types/ledger";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
 import {
   formatMonth,
@@ -21,6 +21,7 @@ import {
   buildInsights,
   categoryBudgetRows,
   categoryShares,
+  inCategoryOrder,
   currenciesByUse,
   dailySeries,
   memberShares,
@@ -86,7 +87,9 @@ export const LedgerStatsStrip = ({
       <span className="LedgerStats__strip__totals">
         {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
       </span>
-      {hasEntries && !isLoading && <CategoryBar shares={catShares} currency={currency} />}
+      {hasEntries && !isLoading && (
+        <CategoryBar shares={catShares} currency={currency} categories={ledger.categories ?? []} />
+      )}
       {budget && !isLoading && (
         <span
           className={cx("LedgerStats__strip__budget", {
@@ -155,7 +158,9 @@ export const LedgerStatsPanel = ({
         <strong className="LedgerStats__summary__totals">
           {hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
         </strong>
-        {hasEntries && <CategoryBar shares={catShares} currency={currency} />}
+        {hasEntries && (
+          <CategoryBar shares={catShares} currency={currency} categories={categories} />
+        )}
       </div>
 
       {currencies.length > 1 && (
@@ -351,9 +356,20 @@ const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: 
   );
 };
 
-/** A monochrome stacked bar: largest categories as distinct fills, the rest grouped. */
-const CategoryBar = ({ shares, currency }: { shares: Share[]; currency: Currency }) => {
-  const top = shares.slice(0, BAR_SEGMENTS);
+/**
+ * A monochrome stacked bar: largest categories as distinct fills (drawn in the order set
+ * in the Categories panel), the rest grouped at the end.
+ */
+const CategoryBar = ({
+  shares,
+  currency,
+  categories,
+}: {
+  shares: Share[];
+  currency: Currency;
+  categories: ReadonlyArray<LedgerCategory>;
+}) => {
+  const top = inCategoryOrder(shares.slice(0, BAR_SEGMENTS), categories);
   const rest = shares.slice(BAR_SEGMENTS).reduce((sum, s) => sum + s.share, 0);
   const segments =
     rest > 0 ? [...top, { id: "__rest", name: "Other", share: rest, amount: 0 }] : top;

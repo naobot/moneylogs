@@ -45,6 +45,19 @@ export const categoryShares = (
   categories: ReadonlyArray<LedgerCategory>,
 ): Share[] => toShares(agg.byCategory, currency, (id) => resolveCategory(id, categories).name);
 
+/**
+ * Rows in the order set in the Categories panel (stable; unknown ids last). Shares are
+ * computed largest-first, so use this for display only — not when the biggest matters.
+ */
+export const inCategoryOrder = <T extends { id: string }>(
+  rows: ReadonlyArray<T>,
+  categories: ReadonlyArray<LedgerCategory>,
+): T[] =>
+  [...rows].sort((a, b) => {
+    const diff = resolveCategory(a.id, categories).order - resolveCategory(b.id, categories).order;
+    return diff || 0; // Infinity - Infinity is NaN: two unknown ids keep their order
+  });
+
 export const memberShares = (
   agg: Pick<MonthAggregate, "byMember">,
   currency: Currency,
@@ -211,7 +224,7 @@ export const categoryBudgetRows = (
       });
     }
   }
-  return rows;
+  return inCategoryOrder(rows, categories);
 };
 
 export type BudgetSummary = {
