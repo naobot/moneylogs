@@ -1,0 +1,143 @@
+@use "/src/constants.scss";
+
+// Home dashboard. Monochrome, square corners, no shadows — cards are ruled boxes, and
+// new activity is the inverted black block.
+.Dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  padding-bottom: 1em;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25em 1em;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.75em;
+
+    &--large {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+
+    &--small {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    }
+
+    &--compact {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+.LogCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  min-width: 0;
+  padding: 0.8em;
+  border: 2px solid var(--c-black);
+  background-color: var(--c-white);
+  color: var(--c-black);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--c-black);
+    color: var(--c-white);
+    outline: none;
+
+    .LogCard__badge {
+      background-color: var(--c-white);
+      color: var(--c-black);
+    }
+  }
+
+  &--large {
+    min-height: 8.5em;
+  }
+
+  &--small {
+    min-height: 5em;
+    padding: 0.6em;
+  }
+
+  &--compact {
+    gap: 0.2em;
+    padding: 0.4em 0.6em;
+    border-width: 1px;
+    font-size: 0.9em;
+    opacity: 0.75;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  // Something new since your last visit: a heavier frame plus the badge.
+  &--fresh {
+    border-width: 4px;
+  }
+
+  &__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4em;
+  }
+
+  &__kind {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+  }
+
+  &__badge {
+    margin-left: auto;
+    padding: 0.1em 0.4em;
+    font-size: 0.8em;
+    font-weight: 700;
+    background-color: var(--c-black);
+    color: var(--c-white);
+    white-space: nowrap;
+  }
+
+  &__title {
+    overflow-wrap: anywhere;
+
+    .LogCard--large & {
+      font-size: 1.2em;
+    }
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
+    margin-top: auto;
+    font-size: 0.85em;
+    opacity: 0.8;
+    font-variant-numeric: tabular-nums;
+  }
+}
