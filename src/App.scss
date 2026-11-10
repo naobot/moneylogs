@@ -1,6 +1,7 @@
 @use "./constants.scss";
 @use "./tokens.scss";
 @use "./fonts.scss";
+@use "./texture.scss";
 
 :root {
   font-family: var(--font-mono);

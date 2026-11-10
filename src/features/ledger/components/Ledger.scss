@@ -1,4 +1,5 @@
 @use "@/constants.scss";
+@use "@/texture.scss" as tex;
 
 .Ledger {
   &__body {
@@ -486,23 +487,22 @@
         border-left: 1px solid var(--ink);
       }
 
+      // A 1-bit density ramp, paper -> ink, so neighbouring categories differ in
+      // how dark they read, not only in pattern.
       &--0 {
         background: var(--paper);
       }
       &--1 {
         background: var(--paper);
-        outline: 1px dashed var(--ink);
-        outline-offset: -3px;
+        @include tex.texture(dots);
       }
       &--2 {
-        background: var(--ink);
-        outline: 1px dotted var(--paper);
-        outline-offset: -3px;
+        background: var(--paper);
+        @include tex.texture(hatch);
       }
       &--3 {
-        background: var(--ink);
-        border-top: 2px solid var(--paper);
-        border-bottom: 2px solid var(--paper);
+        background: var(--paper);
+        @include tex.texture(dither);
       }
       &--rest {
         background: var(--ink);

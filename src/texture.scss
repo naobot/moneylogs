@@ -1,0 +1,75 @@
+// 1-bit texture fills: the dithers, hatches and stripes early bitmap screens used to
+// fake grey. Drawn in the current --ink through a CSS mask (not a gradient), so they
+// follow Night shift and add no colour.
+//
+// Use the mixin inside a component, or the .tex-* utility classes in markup.
+// Rules: one texture per component; never directly under body text; hover is
+// inversion, not texture.
+
+@use "sass:map";
+
+$patterns: (
+  // 1 px in 4 (25%)
+  dots: (
+    svg:
+      "%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E",
+    size: 4px 4px,
+  ),
+  // checkerboard (50%)
+  dither: (
+    svg:
+      "%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1'/%3E%3Crect x='1' y='1' width='1' height='1'/%3E%3C/svg%3E",
+    size: 2px 2px,
+  ),
+  // 45° lines
+  hatch: (
+    svg:
+      "%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect x='3' width='1' height='1'/%3E%3Crect x='2' y='1' width='1' height='1'/%3E%3Crect x='1' y='2' width='1' height='1'/%3E%3Crect y='3' width='1' height='1'/%3E%3C/svg%3E",
+    size: 4px 4px,
+  ),
+  // horizontal 1-on-1-off: classic window title bars
+  stripe: (
+    svg:
+      "%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E",
+    size: 1px 2px,
+  ),
+  // 8 px graph paper
+  grid: (
+    svg:
+      "%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' shape-rendering='crispEdges'%3E%3Crect width='8' height='1'/%3E%3Crect width='1' height='8'/%3E%3C/svg%3E",
+    size: 8px 8px,
+  ),
+);
+
+/// Paints `$name` behind the element's content, in `$ink`.
+@mixin texture($name, $ink: var(--ink)) {
+  $p: map.get($patterns, $name);
+  $url: url("data:image/svg+xml,#{map.get($p, svg)}");
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: $ink;
+    -webkit-mask-image: $url;
+    mask-image: $url;
+    -webkit-mask-size: map.get($p, size);
+    mask-size: map.get($p, size);
+    mask-repeat: repeat;
+    pointer-events: none;
+  }
+}
+
+@each $name, $_ in $patterns {
+  .tex-#{$name} {
+    @include texture($name);
+  }
+}
+
+// Graph paper is a background, so it sits faint.
+.tex-grid::before {
+  opacity: 0.15;
+}
