@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import PostPreview from "./PostPreview";
+import { formatDate } from "@/utils/dateFormat";
 
 interface SpendingData {
   totalSpent: Map<Currency, number>;
@@ -174,7 +175,7 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
     for (const [, weekData] of weeklyTotals) {
       const weekStart = weekData.date;
       const weekEnd = weekStart.add(6, "day");
-      const weekRange = `${weekStart.format("ddd D MMM YYYY")} to ${weekEnd.format("ddd D MMM YYYY")}`;
+      const weekRange = `${formatDate(weekStart)} to ${formatDate(weekEnd)}`;
 
       for (const [currency, amount] of weekData.currencyMap) {
         const current = expensiveWeek.get(currency);
@@ -187,7 +188,7 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
     // Find most expensive day per currency (existing logic)
     const expensiveDay = new Map<Currency, { day: string; amount: number; posts: LogPost[] }>();
     for (const [, dayData] of dailyTotals) {
-      const dayFormatted = dayData.date.format("ddd D MMM YYYY");
+      const dayFormatted = formatDate(dayData.date);
 
       for (const [currency, amount] of dayData.currencyMap) {
         const current = expensiveDay.get(currency);
@@ -298,10 +299,8 @@ const TotalText = ({ children }: { children: ReactNode }) => {
         </span>
         <span>
           {" "}
-          in total over the period of {dayjs(group.start.seconds * 1000).format(
-            "ddd D MMM YYYY",
-          )}{" "}
-          to {dayjs(group.end.seconds * 1000).format("ddd D MMM YYYY")}
+          in total over the period of {formatDate(dayjs(group.start.seconds * 1000))} to{" "}
+          {formatDate(dayjs(group.end.seconds * 1000))}
         </span>
       </div>
     </div>

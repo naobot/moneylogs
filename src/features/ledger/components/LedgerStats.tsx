@@ -257,7 +257,7 @@ export const LedgerStatsPanel = ({
         mode="bars"
         currency={currency}
         barRadius={0}
-        axisFormat="MMM YY"
+        axisFormat="month"
       />
     </section>
   );

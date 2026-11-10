@@ -8,6 +8,7 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { getResetEmailErrorMessage } from "@/features/auth/accountErrors";
 import dayjs from "@/utils/configuredDayjs";
+import { useDateFormat } from "@/utils/dateFormat";
 
 import Button from "@/components/Button";
 import { ChangePasswordModal } from "./ChangePasswordModal";
@@ -18,6 +19,7 @@ import "./AccountSection.scss";
 export const AccountSection = () => {
   const [firebaseUser] = useAuthState(auth);
   const { user } = useCurrentUser();
+  const { formatDate } = useDateFormat();
   const { showToast } = useToastContext();
   const { signOut, isPending: signOutPending } = useSignOut();
   const [resetPending, setResetPending] = useState(false);
@@ -25,7 +27,7 @@ export const AccountSection = () => {
 
   const email = firebaseUser?.email ?? user?.email;
   const memberSince = user?.createdAt?.seconds
-    ? dayjs.unix(user.createdAt.seconds).format("D MMM YYYY")
+    ? formatDate(dayjs.unix(user.createdAt.seconds), { weekday: false })
     : null;
 
   const sendReset = async () => {

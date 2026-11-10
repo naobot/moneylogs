@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import "./index.css";
 import { initTheme } from "@/utils/theme";
+import { initDisplayPrefs } from "@/utils/displayPrefs";
 import App from "@/App";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
@@ -54,8 +55,9 @@ Sentry.init({
   enableLogs: true,
 });
 
-// Apply the stored theme before the first paint so Night shift never flashes Paper.
+// Apply the stored theme and display prefs before the first paint so nothing flashes.
 initTheme();
+initDisplayPrefs();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

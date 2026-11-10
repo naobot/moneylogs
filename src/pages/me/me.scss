@@ -27,6 +27,34 @@
   }
 }
 
+.DisplaySection__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.DisplaySection__label {
+  min-width: 8em;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+// A sample entry so size and alignment changes are visible as they're made.
+.DisplaySample {
+  margin: var(--space-5) 0 var(--space-4);
+  padding: var(--space-4);
+  background-color: var(--sheet);
+  border: var(--border-hairline) dashed var(--ink);
+
+  &__meta {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+    margin-bottom: var(--space-2);
+  }
+}
+
 .DisplaySection__hint {
   margin: 0;
   font-size: 0.85em;
