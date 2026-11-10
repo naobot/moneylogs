@@ -1,45 +1,46 @@
-// Reaction chips under a post: hairline-framed tallies. Your own reaction is shown by
-// inversion, never by a new colour. Disabled chips (read-only, spectators) stay full
-// strength: they are a record, not an unavailable control.
+// Reactions in the post header, left of the comment bubble. Applied emoji are bare
+// (no frames): an emoji and its count. Your own count is underlined; nothing adds a colour.
 .PostReactions {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  margin: var(--space-3) 0 var(--space-2);
+  justify-content: flex-end;
+  gap: 0.6em;
+  // Shrinks before anything else in the header cell. The cell itself is min-width: 0
+  // (see .LogPosts__posts__item__comments), so the applied emoji clip at the cell's
+  // edge rather than widening the column into the centred currency label.
+  flex: 0 1 auto;
+  min-width: 0;
 
-  &__chip {
+  &__applied {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 0.5em;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
     font: inherit;
-    font-size: 0.8em;
-    line-height: 1.4;
-    color: var(--ink);
-    background: var(--paper);
-    border: var(--border-hairline) solid var(--ink);
-    border-radius: var(--radius-none);
-    padding: 0 var(--space-3);
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
 
-    &:hover:not(:disabled),
     &:focus-visible {
-      outline: var(--border-hairline) solid var(--ink);
-      outline-offset: 1px;
-    }
-
-    &:disabled {
-      cursor: default;
-    }
-
-    &--mine {
-      background: var(--inverse-surface);
-      color: var(--inverse-ink);
+      outline: var(--border-hairline) dashed var(--ink);
+      outline-offset: 2px;
     }
   }
 
+  &__tally {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15em;
+    flex-shrink: 0;
+  }
+
   &__emoji {
-    font-size: 1.15em;
+    font-size: 1.1em;
+    line-height: 1;
   }
 
   &__count {
@@ -47,24 +48,158 @@
     font-variant-numeric: tabular-nums;
   }
 
-  &__add {
-    line-height: 1.4;
+  &__tally--mine &__count {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &__more {
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    // Same nudge the comment bubble gets inside IconText, so the two share a line.
+    .Icon {
+      margin-bottom: 0;
+    }
+
+    &:hover,
+    &--open {
+      .Icon img {
+        filter: var(--icon-filter-inverse);
+      }
+      background: var(--inverse-surface);
+    }
+
+    &:focus-visible {
+      outline: var(--border-hairline) dashed var(--ink);
+      outline-offset: 2px;
+    }
   }
 }
 
-// The picker lives in a striped tool modal; frimousse is headless, so all of it is here.
-.PostReactions__modal {
-  max-width: min(var(--modal-width), calc(100vw - 2 * var(--space-5)));
+// Who reacted (hover)
+.ReactionTooltip {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.72em;
+  max-width: min(260px, 80vw);
+  line-height: 1.4;
 }
 
+// The curated row: on hover, and atop the full picker
+.ReactionQuick {
+  padding: var(--space-2);
+}
+
+.ReactionQuick__row {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.ReactionQuick__emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 1.9em;
+  font-size: 1.2em;
+  line-height: 1;
+  background: none;
+  border: var(--border-hairline) solid transparent;
+  border-radius: var(--radius-none);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--ink);
+    outline: none;
+  }
+
+  &--mine {
+    border-color: var(--ink);
+    border-style: dashed;
+  }
+}
+
+// The full palette: a tooltip-like panel, no backdrop
+.ReactionPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 340px;
+  padding: var(--space-3);
+
+  .ReactionQuick__row {
+    justify-content: space-between;
+    padding-bottom: var(--space-3);
+    border-bottom: var(--border-hairline) dotted var(--ink);
+  }
+}
+
+// Everything applied, and by whom
+.ReactionDetails {
+  width: 280px;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.8em;
+
+  &__title {
+    font-weight: 700;
+    text-transform: lowercase;
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+    border-bottom: var(--border-hairline) solid var(--ink);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto 2ch 1fr auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+
+    & + & {
+      border-top: var(--border-hairline) dotted var(--ink);
+    }
+  }
+
+  &__emoji {
+    font-size: 1.25em;
+  }
+
+  &__count {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  &__names {
+    overflow-wrap: anywhere;
+  }
+}
+
+// frimousse is headless, so all of the picker is styled here.
 .EmojiPicker {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   width: 100%;
-  height: min(360px, 60vh);
-  // frimousse sizes rows from these
-  --frimousse-viewport-width: 100%;
+  height: min(320px, 50vh);
 
   &__search {
     width: 100%;
@@ -85,6 +220,7 @@
     align-items: center;
     justify-content: center;
     min-height: 6em;
+    margin: 0;
     color: var(--ink-muted);
   }
 
@@ -111,9 +247,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2em;
-    height: 2em;
-    font-size: 1.3em;
+    width: 1.9em;
+    height: 1.9em;
+    font-size: 1.2em;
     background: transparent;
     border: var(--border-hairline) solid transparent;
     border-radius: var(--radius-none);

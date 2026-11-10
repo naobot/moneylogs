@@ -5,6 +5,10 @@ type EmojiPickerPanelProps = {
   onSelect: (emoji: string) => void;
 };
 
+// Focusing the search on touch screens would pop the keyboard over the palette.
+const hasHover = () =>
+  typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
+
 /**
  * The full emoji picker (frimousse: headless, so every part is styled from our tokens in
  * PostReactions.scss). Loaded lazily by PostReactions so it stays out of the main bundle.
@@ -19,7 +23,7 @@ const EmojiPickerPanel = ({ onSelect }: EmojiPickerPanelProps) => (
     <EmojiPicker.Search
       className="EmojiPicker__search LineInput"
       placeholder="search emoji"
-      autoFocus
+      autoFocus={hasHover()}
     />
     <EmojiPicker.Viewport className="EmojiPicker__viewport">
       <EmojiPicker.Loading className="EmojiPicker__status">loading…</EmojiPicker.Loading>

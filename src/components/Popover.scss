@@ -1,0 +1,18 @@
+// A small floating panel: paper with a hairline ink frame, square corners, no shadow.
+// Positioned (fixed) by Popover.tsx.
+.Popover {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+  color: var(--ink);
+  background-color: var(--paper);
+  border: var(--border-hairline) solid var(--ink);
+  border-radius: var(--radius-none);
+  font-family: var(--font-mono);
+
+  // Tooltips: read-only, never in the pointer's way.
+  &--passive {
+    pointer-events: none;
+  }
+}
