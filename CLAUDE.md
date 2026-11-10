@@ -148,7 +148,7 @@ Linting and formatting run automatically on staged files pre-commit.
 - **Tokens are the single source.** Read colours, spacing, corners, frame weights and z-index from the CSS custom properties in `src/tokens.scss`; never hard-code a colour, radius or font.
 - **Two inks only:** `--ink` on `--paper` (`--sheet` for framed writing surfaces). Never introduce new colours. Emphasis is inversion (`--inverse-surface` / `--inverse-ink`). Secondary text is never fainter than 0.7 opacity / `--ink-muted`.
 - **Night shift** swaps the inks under `:root[data-theme="night"]`. Anything written against tokens works in both; icons flip via `--icon-filter` / `.Icon--inverse` (`fill="white"`), markdown via `markdownColorMode()`.
-- **Type:** Hack reads, Pixelify presses. Hack (`--font-mono`) for all text; Pixelify Sans (`--font-pixel`) only for button labels (`.Button strong`, `RowButton`). User content keeps its own case (`.keep-case`).
+- **Type:** one typeface, Hack (`--font-mono`), self-hosted, for everything. Hierarchy comes from size, weight (400/700) and case: headings lowercase, button labels caps-lock. User content keeps its own case (`.keep-case`).
 - **Corners are square by default.** Rounding is a deliberate exception tied to a physical object, with its own token: `--radius-tab` (folder tabs), `--radius-bubble` (speech bubbles). No drop shadows or gradients.
 - **Frames and lines carry meaning:** 1px secondary, 2px container, 3px warning, 4px new activity; solid = committed, dashed = editable, dotted = past.
 - **Variation** comes from 1-bit textures (`src/texture.scss`: `texture()` mixin, `.tex-*`), striped tool-modal headers (`Modal.Header striped`), and text-mode glyphs — not from new colours.

@@ -1,9 +1,8 @@
 // Self-hosted web fonts. Bundled through Vite so they get hashed, immutable-cached
 // filenames under assets/ — no third-party font requests.
 //
-// Hack (MIT + Bitstream Vera licence): everything you read.
-// Pixelify Sans 600, latin subset (SIL OFL 1.1): button labels only.
-// Licences: src/assets/fonts/Hack-LICENSE.md, src/assets/fonts/PixelifySans-OFL.txt
+// Hack (MIT + Bitstream Vera licence) is the app's single typeface.
+// Licence: src/assets/fonts/Hack-LICENSE.md
 
 @font-face {
   font-family: Hack;
@@ -34,13 +33,5 @@
   src: url("@/assets/fonts/Hack-bolditalic.woff2") format("woff2");
   font-weight: 700;
   font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pixelify Sans";
-  src: url("@/assets/fonts/PixelifySans-600.woff2") format("woff2");
-  font-weight: 600;
-  font-style: normal;
   font-display: swap;
 }

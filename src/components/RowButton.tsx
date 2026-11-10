@@ -3,8 +3,8 @@ import cx from "classnames";
 
 type RowButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   /**
-   * The label is a single symbol (‹ › ↑ ↓ ×) rather than a word: it keeps its own
-   * case and is set in Hack instead of the pixel button face. Give it an aria-label.
+   * The label is a single symbol (‹ › ↑ ↓ ×) rather than a word: it skips the
+   * caps-lock treatment and gets snugger padding. Give it an aria-label.
    */
   glyph?: boolean;
 };

@@ -284,25 +284,19 @@ h6,
   text-transform: none;
 }
 
-// Button labels: "Hack reads, Pixelify presses" — press-able app labels are set in
-// the pixel face, so they share the grain of the pixel icons.
+// Button labels are small caps-lock.
 .Button strong,
 .RowButton {
-  font-family: var(--font-pixel);
-  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .Button strong {
   font-size: 0.85em;
 }
 
-// The nav's log buttons show log titles (user content), so they keep their case
-// and stay in Hack.
+// The nav's log buttons show log titles (user content), so they keep their case.
 .MainNav__list .Button strong {
-  font-family: var(--font-mono);
-  font-weight: 700;
   text-transform: none;
   letter-spacing: normal;
   font-size: inherit;
@@ -395,7 +389,7 @@ h6,
 }
 
 // Small hairline-framed action at the end of a list row or beside a stepper.
-// Words are pixel caps-lock (see the label rule above); glyphs (‹ › ↑ ↓ ×) stay in Hack.
+// Words are caps-lock (see the label rule above); glyphs (‹ › ↑ ↓ ×) keep their own form.
 .RowButton {
   font-size: 0.75em;
   cursor: pointer;
@@ -417,8 +411,6 @@ h6,
   }
 
   &--glyph {
-    font-family: var(--font-mono);
-    font-weight: 400;
     font-size: 0.9em;
     text-transform: none;
     letter-spacing: normal;
