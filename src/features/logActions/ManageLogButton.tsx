@@ -1,3 +1,4 @@
+import RowButton from "@/components/RowButton";
 import { ManageTarget } from "./manageTarget";
 
 import "./LogActions.scss";
@@ -9,14 +10,9 @@ type ManageLogButtonProps = {
 
 /** Small row button that opens the Manage modal (archive / delete) for one log. */
 export const ManageLogButton = ({ target, onManage }: ManageLogButtonProps) => (
-  <button
-    type="button"
-    className="LogRowButton"
-    aria-label={`Manage ${target.title}`}
-    onClick={() => onManage(target)}
-  >
+  <RowButton aria-label={`Manage ${target.title}`} onClick={() => onManage(target)}>
     manage
-  </button>
+  </RowButton>
 );
 
 export default ManageLogButton;

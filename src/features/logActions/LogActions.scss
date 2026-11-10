@@ -60,23 +60,6 @@
   }
 }
 
-.LogRowButton {
-  font: inherit;
-  font-size: 0.7em;
-  cursor: pointer;
-  background: var(--paper);
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-none);
-  padding: 0.1em 0.5em;
-
-  &:hover:not(:disabled),
-  &:focus-visible {
-    background: var(--ink);
-    color: var(--paper);
-  }
-}
-
 // Row actions sit at the end of a list row.
 .LogRowActions {
   display: inline-flex;
@@ -99,7 +82,7 @@
 
     // Push to the right edge, like the other lists' row actions, even when the row
     // wraps and the button lands on its own line.
-    > .LogRowButton {
+    > .RowButton {
       margin-left: auto;
     }
   }

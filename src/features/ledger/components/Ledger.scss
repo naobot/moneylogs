@@ -28,27 +28,6 @@
     padding-bottom: 0.5em;
     border-bottom: 2px solid var(--ink);
 
-    &__step,
-    &__today {
-      font: inherit;
-      cursor: pointer;
-      background: var(--paper);
-      color: var(--ink);
-      border: 1px solid var(--ink);
-      border-radius: var(--radius-none);
-      padding: 0 0.5em;
-
-      &:hover,
-      &:focus-visible {
-        background: var(--ink);
-        color: var(--paper);
-      }
-    }
-
-    &__today {
-      font-size: 0.8em;
-    }
-
     // Switch between the entries and stats views (pushed to the right).
     &__view {
       margin-left: auto;
@@ -370,28 +349,6 @@
     display: inline-flex;
     gap: 0.25em;
     margin-left: auto;
-  }
-
-  &__rowButton {
-    font: inherit;
-    font-size: 0.8em;
-    cursor: pointer;
-    background: var(--paper);
-    color: var(--ink);
-    border: 1px solid var(--ink);
-    border-radius: var(--radius-none);
-    padding: 0.1em 0.5em;
-
-    &:hover:not(:disabled),
-    &:focus-visible {
-      background: var(--ink);
-      color: var(--paper);
-    }
-
-    &:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
   }
 
   &__add {

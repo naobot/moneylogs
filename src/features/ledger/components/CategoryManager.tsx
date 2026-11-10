@@ -12,6 +12,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import SharedRowButton from "@/components/RowButton";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { CURRENCIES } from "@/utils/currency";
@@ -197,6 +198,7 @@ const CategoryManagerDialog = ({
                   )}
                   <span className="CategoryManager__actions">
                     <RowButton
+                      glyph
                       label={`Move ${category.name} up`}
                       disabled={index === 0}
                       onClick={() => move(category.id, index - 1)}
@@ -204,6 +206,7 @@ const CategoryManagerDialog = ({
                       ↑
                     </RowButton>
                     <RowButton
+                      glyph
                       label={`Move ${category.name} down`}
                       disabled={index === active.length - 1}
                       onClick={() => move(category.id, index + 1)}
@@ -365,6 +368,7 @@ const BudgetEditor = ({
             <li key={c}>
               {formatAmount(category.budget![c]!, c)} / month
               <RowButton
+                glyph
                 label={`Remove ${c} budget for ${category.name}`}
                 onClick={() => onSet(c, null)}
               >
@@ -418,24 +422,25 @@ const RowButton = ({
   title,
   disabled,
   onClick,
+  glyph,
   children,
 }: {
   label: string;
   title?: string;
   disabled?: boolean;
   onClick: () => void;
+  glyph?: boolean;
   children: ReactNode;
 }) => (
-  <button
-    type="button"
-    className="CategoryManager__rowButton"
+  <SharedRowButton
+    glyph={glyph}
     aria-label={label}
     title={title ?? label}
     disabled={disabled}
     onClick={onClick}
   >
     {children}
-  </button>
+  </SharedRowButton>
 );
 
 const SortableRow = ({

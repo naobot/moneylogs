@@ -269,8 +269,7 @@ h6,
 // Button labels: "Hack reads, Pixelify presses" — press-able app labels are set in
 // the pixel face, so they share the grain of the pixel icons.
 .Button strong,
-.LogRowButton,
-.Ledger__month__today {
+.RowButton {
   font-family: var(--font-pixel);
   font-weight: 600;
   text-transform: uppercase;
@@ -374,6 +373,38 @@ h6,
 
   &:hover {
     border: none;
+  }
+}
+
+// Small hairline-framed action at the end of a list row or beside a stepper.
+// Words are pixel caps-lock (see the label rule above); glyphs (‹ › ↑ ↓ ×) stay in Hack.
+.RowButton {
+  font-size: 0.75em;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border-hairline) solid var(--ink);
+  border-radius: var(--radius-none);
+  padding: 0.1em 0.5em;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+  }
+
+  &:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  &--glyph {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 0.9em;
+    text-transform: none;
+    letter-spacing: normal;
+    padding: 0 0.5em;
   }
 }
 
