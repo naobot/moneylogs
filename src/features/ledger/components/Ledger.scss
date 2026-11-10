@@ -496,6 +496,16 @@
     }
   }
 
+  // Key swatch beside a category's share row: the same fill as its segment in the
+  // stacked bar, drawn as a tiny framed piece of that bar.
+  &__swatch {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 0.9em;
+    height: 0.9em;
+    border: var(--border-hairline) solid var(--ink);
+  }
+
   &__panel {
     display: flex;
     flex-direction: column;
@@ -578,7 +588,14 @@
     }
 
     &__name {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      min-width: 0;
       font-weight: 700;
+    }
+
+    &__label {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
