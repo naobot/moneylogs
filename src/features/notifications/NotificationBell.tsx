@@ -71,7 +71,6 @@ export const NotificationBell = () => {
           to="/notifications"
           icon="bell"
           aria-label={label}
-          isSelected={onPage}
         />
         {badge && (
           <span className="NotificationBell__badge" aria-hidden="true">
