@@ -141,6 +141,18 @@ html {
   }
 }
 
+// Adjacent icon-only buttons in the nav (theme toggle + sign out): no gap between them
+// and slimmer side padding, so the two icons sit close and share a centre line.
+.MainNav__iconPair {
+  display: inline-flex;
+  align-items: center;
+
+  > .Button {
+    padding-left: 0.1em;
+    padding-right: 0.1em;
+  }
+}
+
 .Menu {
   display: inline-flex;
   grid-gap: 0.4em;

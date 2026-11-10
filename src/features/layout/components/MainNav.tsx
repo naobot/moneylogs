@@ -94,8 +94,11 @@ const MainNav = () => {
         <Link to={"/about"}>
           moneylogs <small>{__APP_VERSION__}</small>
         </Link>
-        <ThemeToggle />
-        <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
+        {/* Theme toggle and sign-out read as one pair of icons, set close together. */}
+        <span className="MainNav__iconPair">
+          <ThemeToggle />
+          <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
+        </span>
       </div>
     </nav>
   );
