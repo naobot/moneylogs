@@ -9,6 +9,7 @@
     "lint": "vp lint .",
     "preview": "vp preview",
     "seed-emulator": "npx tsx scripts/seed-emulator.ts",
+    "center-icons": "node scripts/center-icons.mjs",
     "prepare": "vp config",
     "test": "vitest run",
     "test:watch": "vitest"

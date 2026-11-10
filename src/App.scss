@@ -171,12 +171,6 @@ html {
     padding-left: 0.1em;
     padding-right: 0.1em;
   }
-
-  // .Icon's -5px baseline nudge is for icons in running text; inside a centred button
-  // it drags the icon 2.5px below the neighbouring "moneylogs" text. Cancel it here.
-  .Icon {
-    margin-bottom: 0;
-  }
 }
 
 .Menu {
@@ -279,7 +273,10 @@ html {
   align-items: center;
   width: 21px;
   height: 21px;
-  margin-bottom: -5px;
+  // Every SVG in public/icons has its art centred in a square viewBox, so the icon box's
+  // centre is the art's centre. In running text, middle-align it to the text; inside flex
+  // rows (buttons, IconText) vertical-align is ignored and align-items centres it.
+  vertical-align: middle;
 
   &--sm {
     width: 16px;
@@ -343,10 +340,6 @@ h6,
 // On small screens a log button collapses to its type icon (social / $), except the log
 // whose page we're on, which keeps its title. The full title stays in the tooltip.
 .MainNav__log {
-  .Icon {
-    margin-bottom: 0;
-  }
-
   @media (max-width: constants.$breakpoint-sm) {
     &:not(.Button--active) strong {
       display: none;
@@ -1141,23 +1134,12 @@ h6,
         > .IconText {
           flex-shrink: 0;
         }
-
-        // .Icon's -5px nudge is for icons in running text. Here the comment bubble and
-        // the react smiley are flex-centred, so the nudge only dragged them below the
-        // counts beside them. Without it both icons centre on those numbers.
-        .Icon {
-          margin-bottom: 0;
-        }
       }
 
       &__reactions {
         display: flex;
         justify-content: flex-end;
         font-size: 0.8em;
-
-        .Icon {
-          margin-bottom: 0;
-        }
       }
 
       &__content {
