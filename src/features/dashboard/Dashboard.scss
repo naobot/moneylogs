@@ -65,20 +65,20 @@
   gap: 0.4em;
   min-width: 0;
   padding: 0.8em;
-  border: 2px solid var(--c-black);
-  background-color: var(--c-white);
-  color: var(--c-black);
+  border: 2px solid var(--ink);
+  background-color: var(--paper);
+  color: var(--ink);
   text-decoration: none;
 
   &:hover,
   &:focus-visible {
-    background-color: var(--c-black);
-    color: var(--c-white);
+    background-color: var(--ink);
+    color: var(--paper);
     outline: none;
 
     .LogCard__badge {
-      background-color: var(--c-white);
-      color: var(--c-black);
+      background-color: var(--paper);
+      color: var(--ink);
     }
   }
 
@@ -128,8 +128,8 @@
     padding: 0.1em 0.4em;
     font-size: 0.8em;
     font-weight: 700;
-    background-color: var(--c-black);
-    color: var(--c-white);
+    background-color: var(--ink);
+    color: var(--paper);
     white-space: nowrap;
   }
 

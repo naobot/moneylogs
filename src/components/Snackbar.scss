@@ -30,15 +30,15 @@
     animation: snackbar-enter 0.2s ease-out;
 
     &--success {
-      background-color: var(--c-white);
-      color: var(--c-black);
-      border-bottom: 1px solid var(--c-black);
+      background-color: var(--paper);
+      color: var(--ink);
+      border-bottom: 1px solid var(--ink);
 
       .Snackbar__close {
         color: var(--ink-muted);
 
         &:hover {
-          color: var(--c-black);
+          color: var(--ink);
         }
       }
     }

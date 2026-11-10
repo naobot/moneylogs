@@ -62,15 +62,15 @@ html {
     max-width: 450px;
     text-align: center;
     border-radius: var(--radius-none);
-    border: 1px solid var(--c-black);
+    border: 1px solid var(--ink);
     padding: 3px;
     opacity: 0.6;
   }
 }
 
 .LoadingBar {
-  color: var(--c-black);
-  background-color: var(--c-black);
+  color: var(--ink);
+  background-color: var(--ink);
   width: var(--progress);
   height: 100%;
   border-radius: var(--radius-none);
@@ -87,7 +87,7 @@ html {
     padding: 0.5em;
     cursor: pointer;
     text-align: center;
-    border: 2px solid var(--c-black);
+    border: 2px solid var(--ink);
   }
 
   &__block {
@@ -183,11 +183,11 @@ html {
   width: 100%;
   padding: 0.6em 1em;
   font-size: 0.75em;
-  border-top: 2px solid var(--c-black);
+  border-top: 2px solid var(--ink);
   box-sizing: border-box;
 
   a {
-    color: var(--c-black);
+    color: var(--ink);
   }
 
   &__sep {
@@ -207,8 +207,8 @@ html {
   max-width: calc(100vw - 2em);
   box-sizing: border-box;
   padding: 0.5em 0.5em 0.5em 1em;
-  background-color: var(--c-white);
-  border: 2px solid var(--c-black);
+  background-color: var(--paper);
+  border: 2px solid var(--ink);
   border-radius: var(--radius-none);
   font-size: 0.85em;
 
@@ -223,7 +223,7 @@ html {
     font-size: 1.2em;
     line-height: 1;
     padding: 0 0.25em;
-    color: var(--c-black);
+    color: var(--ink);
   }
 }
 
@@ -311,38 +311,38 @@ h6,
   }
 
   &--active {
-    background-color: var(--c-black) !important;
-    color: var(--c-white) !important;
+    background-color: var(--ink) !important;
+    color: var(--paper) !important;
     cursor: default;
   }
 
   &--primary {
-    background-color: var(--c-white);
-    color: var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
   }
 
   &--primary-border {
-    background-color: var(--c-white);
-    color: var(--c-black);
-    border: 2px solid var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
     font-weight: 700;
 
     &:hover {
-      border: 2px solid var(--c-black) !important;
-      background-color: var(--c-black);
-      color: var(--c-white);
+      border: 2px solid var(--ink) !important;
+      background-color: var(--ink);
+      color: var(--paper);
     }
   }
 
   &--primary-border-lite {
-    background-color: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink);
 
     &:hover {
-      border: 1px solid var(--c-black) !important;
-      background-color: var(--c-black);
-      color: var(--c-white);
+      border: 1px solid var(--ink) !important;
+      background-color: var(--ink);
+      color: var(--paper);
     }
   }
 
@@ -390,7 +390,7 @@ h6,
 
   &--warning {
     input {
-      border: 2px solid var(--c-black);
+      border: 2px solid var(--ink);
     }
   }
 
@@ -413,7 +413,7 @@ h6,
 .Window {
   margin-bottom: 1em;
   padding: 30px;
-  border: 2px solid var(--c-black);
+  border: 2px solid var(--ink);
   border-radius: var(--radius-none);
   width: 100%;
 
@@ -491,7 +491,7 @@ h6,
     align-items: center;
     width: 100%;
     margin-bottom: 1em;
-    background-color: var(--c-black);
+    background-color: var(--ink);
     color: var(--inverse-ink);
     padding: 0.5em;
     font-size: 0.8em;
@@ -610,7 +610,7 @@ h6,
     align-items: center;
     gap: 0.4em;
     padding: 0.8em 1em;
-    border: 2px solid var(--c-black);
+    border: 2px solid var(--ink);
     text-align: right;
 
     &__content {
@@ -656,8 +656,8 @@ h6,
 
     &--active,
     &:hover {
-      background-color: var(--c-black);
-      color: var(--c-white);
+      background-color: var(--ink);
+      color: var(--paper);
     }
 
     &--new {
@@ -677,7 +677,7 @@ h6,
   &__skeleton-bar {
     width: 100%;
     height: 1em;
-    background-color: var(--c-black);
+    background-color: var(--ink);
     opacity: 0.15;
     animation: LogsMenu__memberPulse 1.2s ease-in-out infinite;
   }
@@ -756,7 +756,7 @@ h6,
   &__arrow {
     background: none;
     border: none;
-    color: var(--c-black);
+    color: var(--ink);
     font: inherit;
     cursor: pointer;
     padding: 0 0.2em;
@@ -879,7 +879,7 @@ h6,
       flex-shrink: 0;
       gap: 0.5em;
       padding: 1em;
-      border: 1px solid var(--c-black);
+      border: 1px solid var(--ink);
       background-color: var(--sheet);
       transition: 0.3s ease-in-out;
       max-height: 2400px; // explicitly declare so transition works
@@ -888,7 +888,7 @@ h6,
         img {
           max-height: 70vh;
           box-sizing: border-box;
-          border: 1px solid var(--c-black);
+          border: 1px solid var(--ink);
           outline: 5px solid var(--sheet);
           outline-offset: -6px;
         }
@@ -919,7 +919,7 @@ h6,
       }
 
       &--selected {
-        border: 2px solid var(--c-black);
+        border: 2px solid var(--ink);
         z-index: 51;
         // Use dvh so the editor tracks the *visible* viewport as the mobile
         // URL bar / on-screen keyboard show and hide. Plain vh resolves to the
@@ -1093,9 +1093,9 @@ h6,
 .TutorialTooltip {
   position: absolute;
   z-index: 300;
-  background-color: var(--c-white);
-  color: var(--c-black);
-  border: 1px solid var(--c-black);
+  background-color: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
   padding: 0.5em 0.8em;
   border-radius: var(--radius-none);
   font-size: 0.72em;
@@ -1130,7 +1130,7 @@ h6,
 
     &::after {
       bottom: 100%;
-      border-bottom-color: var(--c-black);
+      border-bottom-color: var(--ink);
     }
   }
 
@@ -1139,7 +1139,7 @@ h6,
 
     &::after {
       top: 100%;
-      border-top-color: var(--c-black);
+      border-top-color: var(--ink);
     }
   }
 
@@ -1217,10 +1217,10 @@ h6,
 
   &__item {
     position: relative;
-    background: var(--c-white);
+    background: var(--paper);
     border-radius: var(--radius-bubble); // sanctioned: speech balloon
     padding: 0.5em;
-    border: var(--c-black) solid 1px;
+    border: var(--ink) solid 1px;
     display: flex;
     flex-direction: column;
     opacity: 1;
@@ -1231,14 +1231,14 @@ h6,
     }
 
     &--notice {
-      background: var(--c-black);
-      color: var(--c-white);
+      background: var(--ink);
+      color: var(--paper);
       justify-content: center;
       align-items: center;
       text-align: center;
 
       .LogPostComments__item__body {
-        color: var(--c-white);
+        color: var(--paper);
         text-align: center;
       }
 
@@ -1263,7 +1263,7 @@ h6,
     }
 
     &--highlight {
-      background: var(--c-black);
+      background: var(--ink);
       color: var(--inverse-ink);
 
       @media (min-width: constants.$breakpoint-md) {
@@ -1275,7 +1275,7 @@ h6,
           z-index: 1;
           border-style: solid;
           border-width: 0 12px 12px 0;
-          border-color: transparent var(--c-black) transparent transparent !important;
+          border-color: transparent var(--ink) transparent transparent !important;
           top: 22%;
           left: -10px;
           margin-top: -10px;
@@ -1287,7 +1287,7 @@ h6,
           z-index: 0;
           border-style: solid;
           border-width: 0 13px 13px 0;
-          border-color: transparent var(--c-black) transparent transparent !important;
+          border-color: transparent var(--ink) transparent transparent !important;
           top: 22%;
           left: -12px;
           margin-top: -11px;
@@ -1296,8 +1296,8 @@ h6,
       }
 
       .wmde-markdown {
-        background-color: var(--c-black);
-        color: var(--c-white);
+        background-color: var(--ink);
+        color: var(--paper);
       }
     }
 
@@ -1310,7 +1310,7 @@ h6,
         z-index: 1;
         border-style: solid;
         border-width: 0 12px 12px 0;
-        border-color: transparent var(--c-white) transparent transparent;
+        border-color: transparent var(--paper) transparent transparent;
         top: 22%;
         left: -10px;
         margin-top: -10px;
@@ -1322,7 +1322,7 @@ h6,
         z-index: 0;
         border-style: solid;
         border-width: 0 13px 13px 0;
-        border-color: transparent var(--c-black) transparent transparent;
+        border-color: transparent var(--ink) transparent transparent;
         top: 22%;
         left: -12px;
         margin-top: -11px;
@@ -1395,10 +1395,10 @@ h6,
     font-size: 0.8em;
     display: flex;
     flex-direction: column;
-    background-color: var(--c-white);
+    background-color: var(--paper);
     z-index: 55;
     cursor: default;
-    border: 2px solid var(--c-black);
+    border: 2px solid var(--ink);
     border-radius: var(--radius-none);
     margin: 1em;
     width: 100%;
@@ -1413,12 +1413,12 @@ h6,
     justify-content: space-between;
     width: 100%;
     padding: 2px 8px;
-    background-color: var(--c-black);
+    background-color: var(--ink);
   }
 
   &__title {
     font-size: 1em;
-    color: var(--c-white);
+    color: var(--paper);
     margin: 0.2em 0;
   }
 
@@ -1428,7 +1428,7 @@ h6,
       border: none;
       padding: 0.4em;
       background-color: transparent;
-      color: var(--c-white);
+      color: var(--paper);
       font-weight: 800;
     }
   }

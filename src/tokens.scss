@@ -19,10 +19,6 @@
   --inverse-ink: var(--paper);
   --focus-ring: var(--ink);
 
-  // Legacy names, kept as aliases while the stylesheets migrate.
-  --c-white: var(--paper);
-  --c-black: var(--ink);
-
   // ---- type: Hack reads, Pixelify presses ----
   --font-mono: Hack, monospace;
   --font-pixel: "Pixelify Sans", Hack, monospace; // button labels only
