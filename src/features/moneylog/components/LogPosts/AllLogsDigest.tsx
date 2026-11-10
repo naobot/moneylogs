@@ -254,6 +254,8 @@ const AllLogsDigest = ({
                   isMyLog={isMyPost}
                   isReadOnly={isReadOnly}
                   isPostingClosed={isPostingClosed}
+                  isSpectator={isSpectator}
+                  isFirst={i === 0}
                   selectedPostId={selectedPost?.id ?? null}
                   setSelectedPost={setSelectedPost}
                   setCurrentlyEditingPostId={setCurrentlyEditingPostId}

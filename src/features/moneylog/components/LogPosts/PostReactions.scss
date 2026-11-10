@@ -1,0 +1,256 @@
+// Reactions in the post header, left of the comment bubble. Applied emoji are bare
+// (no frames): an emoji and its count, in plain weight.
+.PostReactions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6em;
+  // Shrinks before anything else in the header cell. The cell itself is min-width: 0
+  // (see .LogPosts__posts__item__comments), so the applied emoji clip at the cell's
+  // edge rather than widening the column into the centred currency label.
+  flex: 0 1 auto;
+  min-width: 0;
+
+  &__applied {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: var(--border-hairline) dashed var(--ink);
+      outline-offset: 2px;
+    }
+  }
+
+  &__tally {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    flex-shrink: 0;
+  }
+
+  &__emoji {
+    font-size: 1.1em;
+    line-height: 1;
+  }
+
+  &__count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__more {
+    flex-shrink: 0;
+  }
+
+  // Takes .IconText's box like the comment bubble (whose cell cancels .Icon's text
+  // nudge for both), and, like it, no hover treatment beyond the pointer cursor.
+  &__trigger {
+    flex-shrink: 0;
+    padding: 0;
+    font: inherit;
+    line-height: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+
+    &:focus-visible {
+      outline: var(--border-hairline) dashed var(--ink);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Who reacted (hover)
+.ReactionTooltip {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.72em;
+  max-width: min(260px, 80vw);
+  line-height: 1.4;
+}
+
+// The curated row: on hover, and atop the full picker
+.ReactionQuick {
+  padding: var(--space-2);
+}
+
+.ReactionQuick__row {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.ReactionQuick__emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.9em;
+  height: 1.9em;
+  padding: 0;
+  font-size: 1.2em;
+  line-height: 1;
+  background: none;
+  border: var(--border-hairline) solid transparent;
+  border-radius: var(--radius-none);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--ink);
+    outline: none;
+  }
+
+  &--mine {
+    border-color: var(--ink);
+    border-style: dashed;
+  }
+}
+
+// The full palette: a tooltip-like panel, no backdrop
+.ReactionPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 340px;
+  padding: var(--space-3);
+
+  .ReactionQuick__emoji {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  // Eight equal cells that always fit the panel's width.
+  .ReactionQuick__row {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    padding-bottom: var(--space-3);
+    border-bottom: var(--border-hairline) dotted var(--ink);
+  }
+}
+
+// Everything applied, and by whom
+.ReactionDetails {
+  width: 280px;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.8em;
+
+  &__title {
+    font-weight: 700;
+    text-transform: lowercase;
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+    border-bottom: var(--border-hairline) solid var(--ink);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto 2ch 1fr auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+
+    & + & {
+      border-top: var(--border-hairline) dotted var(--ink);
+    }
+  }
+
+  &__emoji {
+    font-size: 1.25em;
+  }
+
+  &__count {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  &__names {
+    overflow-wrap: anywhere;
+  }
+}
+
+// frimousse is headless, so all of the picker is styled here.
+.EmojiPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  height: min(320px, 50vh);
+
+  &__search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__viewport {
+    position: relative;
+    flex: 1;
+    outline: none;
+    overflow-y: auto;
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 6em;
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  &__list {
+    padding-bottom: var(--space-3);
+  }
+
+  &__category {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: lowercase;
+    color: var(--ink);
+    background: var(--sheet);
+    border-bottom: var(--border-hairline) dotted var(--ink);
+  }
+
+  &__row {
+    padding: 0 var(--space-2);
+    scroll-margin-block: var(--space-6);
+  }
+
+  &__emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 1.9em;
+    height: 1.9em;
+    padding: 0;
+    font-size: 1.2em;
+    background: transparent;
+    border: var(--border-hairline) solid transparent;
+    border-radius: var(--radius-none);
+    cursor: pointer;
+
+    &--active {
+      border-color: var(--ink);
+    }
+  }
+}

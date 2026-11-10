@@ -1119,6 +1119,31 @@ h6,
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
+        gap: 0.6em;
+        // A grid item's default min-width is its content, which would let many reactions
+        // widen this column and push the centred amount aside. Clip instead.
+        min-width: 0;
+
+        > .IconText {
+          flex-shrink: 0;
+        }
+
+        // .Icon's -5px nudge is for icons in running text. Here the comment bubble and
+        // the react smiley are flex-centred, so the nudge only dragged them below the
+        // counts beside them. Without it both icons centre on those numbers.
+        .Icon {
+          margin-bottom: 0;
+        }
+      }
+
+      &__reactions {
+        display: flex;
+        justify-content: flex-end;
+        font-size: 0.8em;
+
+        .Icon {
+          margin-bottom: 0;
+        }
       }
 
       &__content {

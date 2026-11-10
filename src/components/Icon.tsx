@@ -28,13 +28,14 @@ export type IconType =
   | "pin"
   | "gear"
   | "sun"
-  | "moon";
+  | "moon"
+  | "smiley";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
   const kyIcons = ["pencil"];
   const bluetipIcons = ["pin"];
-  const moneylogsIcons = ["gear"]; // drawn in-house
+  const moneylogsIcons = ["gear", "smiley"]; // drawn in-house
 
   const iconSet = rkIcons.includes(type)
     ? "reandra-khansa"
