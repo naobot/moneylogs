@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useId, useState } from "react";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
 import { auth } from "@/config/firebase-config";
@@ -8,11 +8,51 @@ import {
   getPasswordChangeErrorMessage,
   validatePasswordChange,
 } from "@/features/auth/accountErrors";
+import { describePasswordRequirements } from "@/features/auth/passwordRequirements";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 
 import Button from "@/components/Button";
-import ControlledInput from "@/components/ControlledInput";
+import Icon from "@/components/Icon";
 import Modal from "@/components/Modal";
+
+type PasswordFieldProps = {
+  label: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  autoComplete: "current-password" | "new-password";
+  error?: string | null;
+};
+
+/** One labelled row of the form grid, with its error (if any) on its own line below. */
+const PasswordField = ({ label, value, onChange, autoComplete, error }: PasswordFieldProps) => {
+  const id = useId();
+  const errorId = `${id}-error`;
+  return (
+    <>
+      <label htmlFor={id} className="ChangePassword__label">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="password"
+        className={
+          error ? "ChangePassword__input ChangePassword__input--error" : "ChangePassword__input"
+        }
+        value={value}
+        onChange={onChange}
+        autoComplete={autoComplete}
+        aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
+      />
+      {error && (
+        <p id={errorId} className="ChangePassword__error">
+          <Icon type="warning" />
+          <span>{error}</span>
+        </p>
+      )}
+    </>
+  );
+};
 
 type ChangePasswordModalProps = {
   isOpen: boolean;
@@ -33,11 +73,18 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const { isValid: meetsPolicy } = useValidatePassword(next);
+  const { isValid: meetsPolicy, status } = useValidatePassword(next);
 
+  // Decides whether the form can be submitted at all.
   const problem = validatePasswordChange({ current, next, confirm, meetsPolicy });
-  // Only nag once the user has started on both new-password fields.
-  const showProblem = !!problem && next.length > 0 && confirm.length > 0;
+
+  // Field-level messages, each shown under its own field once there's something typed.
+  const nextError = !next
+    ? null
+    : current && next === current
+      ? "Must be different from your current password."
+      : describePasswordRequirements(status);
+  const confirmError = confirm && confirm !== next ? "Doesn't match the new password." : null;
 
   const submit = async () => {
     const firebaseUser = auth.currentUser;
@@ -66,8 +113,8 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
     void submit();
   };
 
-  const field = (setter: (value: string) => void) => (e: { target: EventTarget }) => {
-    setter((e.target as HTMLInputElement).value);
+  const field = (setter: (value: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+    setter(e.target.value);
     setError("");
   };
 
@@ -81,27 +128,28 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
       <Modal.Header title="Change password" />
       <form onSubmit={handleSubmit}>
         <Modal.Body className="ChangePassword__body">
-          <ControlledInput
-            type="password"
-            label="Current password"
-            value={current}
-            onChange={field(setCurrent)}
-          />
-          <ControlledInput
-            type="password"
-            label="New password"
-            value={next}
-            onChange={field(setNext)}
-            isError={!!next && !meetsPolicy}
-            errorMessage="doesn't meet the requirements"
-          />
-          <ControlledInput
-            type="password"
-            label="Confirm new password"
-            value={confirm}
-            onChange={field(setConfirm)}
-          />
-          {showProblem && <p className="ChangePassword__hint">{problem}</p>}
+          <div className="ChangePassword__grid">
+            <PasswordField
+              label="Current password"
+              value={current}
+              onChange={field(setCurrent)}
+              autoComplete="current-password"
+            />
+            <PasswordField
+              label="New password"
+              value={next}
+              onChange={field(setNext)}
+              autoComplete="new-password"
+              error={nextError}
+            />
+            <PasswordField
+              label="Confirm new password"
+              value={confirm}
+              onChange={field(setConfirm)}
+              autoComplete="new-password"
+              error={confirmError}
+            />
+          </div>
           <AuthErrorMessage message={error} />
         </Modal.Body>
         <Modal.Actions>

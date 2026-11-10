@@ -1,3 +1,5 @@
+@use "/src/constants.scss";
+
 .AccountSection {
   &__details {
     display: grid;
@@ -43,20 +45,54 @@
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    gap: 0.75em;
     text-align: left;
+  }
 
-    .ControlledInput {
-      justify-content: space-between;
+  // Labels in a right-aligned column, flush against their inputs; each error spans the
+  // input column on its own row so it can wrap instead of overflowing the modal.
+  &__grid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5em 0.6em;
 
-      label {
-        min-width: 11em;
-      }
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25em;
     }
   }
 
-  &__hint {
-    margin: 0;
+  &__label {
+    text-align: right;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      text-align: left;
+      margin-top: 0.4em;
+    }
+  }
+
+  &__input {
+    font: inherit;
+    width: 100%;
+    min-width: 0;
+
+    &--error {
+      border: 2px solid var(--c-black);
+    }
+  }
+
+  &__error {
+    grid-column: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4em;
+    margin: -0.2em 0 0;
     font-size: 0.9em;
+    overflow-wrap: anywhere;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-column: 1;
+    }
   }
 }
