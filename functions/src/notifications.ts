@@ -1,9 +1,9 @@
 /**
  * Notification fan-out: pure helpers. A notification is a doc in
- * `users/{recipientDocId}/notifications/{notificationId}`, written by the comment and
- * reaction triggers for the post's author and everyone subscribed to its comments
- * (commenting subscribes you; reacting doesn't). Nothing reads them yet: an inbox and
- * badges come later, and will use `readAt` (null = unread) and `createdAt`.
+ * `users/{recipientDocId}/notifications/{notificationId}`. Comments notify the post's
+ * author and everyone subscribed to its comments (commenting subscribes you; reacting
+ * doesn't). Reactions notify the author only. The inbox (src/features/notifications)
+ * reads `readAt` (null = unread) and `createdAt`.
  *
  * Dependency-free so they can be unit tested from the root Vitest run; the triggers in
  * index.ts add server timestamps. Mirrored for the client in src/types/notification.ts.
@@ -11,9 +11,13 @@
 
 export type NotificationType = "comment" | "reaction";
 
+/** Why a post notification reached its recipient: shown as "your post" or "a post you follow". */
+export type PostReason = "author" | "subscriber";
+
 /** Everything except the timestamps, which the trigger sets server-side. */
 export type NotificationData = {
   type: NotificationType;
+  logKind: "social";
   postId: string;
   groupId: string;
   groupName: string;
@@ -39,6 +43,17 @@ export type NotifiablePost = {
 
 const refId = (ref: Ref): string | undefined =>
   ref && typeof ref.id === "string" && ref.id ? ref.id : undefined;
+
+export const postAuthorId = (post: NotifiablePost): string | undefined => refId(post.author);
+
+/** The post's author, unless they're the actor: who hears about a reaction. */
+export const postAuthorRecipients = (post: NotifiablePost, actorId: string): string[] => {
+  const author = refId(post.author);
+  return author && author !== actorId ? [author] : [];
+};
+
+export const recipientReason = (post: NotifiablePost, recipientId: string): PostReason =>
+  refId(post.author) === recipientId ? "author" : "subscriber";
 
 /** The post's author and comment subscribers, de-duplicated, never the actor. */
 export const notificationRecipients = (post: NotifiablePost, actorId: string): string[] => {
@@ -118,6 +133,7 @@ export const buildCommentNotification = (args: {
   content: unknown;
 }): NotificationData => ({
   type: "comment",
+  logKind: "social",
   postId: args.postId,
   ...groupFields(args.post),
   actorId: args.actorId,
@@ -134,6 +150,7 @@ export const buildReactionNotification = (args: {
   emoji: string;
 }): NotificationData => ({
   type: "reaction",
+  logKind: "social",
   postId: args.postId,
   ...groupFields(args.post),
   actorId: args.actorId,

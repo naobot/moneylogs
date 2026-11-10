@@ -11,10 +11,15 @@ import {
   where,
   writeBatch,
   doc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
-import { AppNotification } from "@/types/notification";
-import { countUnread, LATEST_NOTIFICATIONS_LIMIT } from "@/utils/notificationTypes";
+import { AppNotification, LogKind, NotificationPrefs } from "@/types/notification";
+import {
+  countUnread,
+  isNotificationEnabled,
+  LATEST_NOTIFICATIONS_LIMIT,
+} from "@/utils/notificationTypes";
 import { useFirebaseCollection } from "./useFirebase";
 
 const notificationsOf = (userDocId: string) => collection(db, "users", userDocId, "notifications");
@@ -151,4 +156,54 @@ export const markAllNotificationsRead = async (userDocId: string) => {
     userDocId,
     unread.docs.map((d) => d.id),
   );
+};
+
+export type SelfNotificationType = "log_created" | "log_joined";
+
+/** One per log and type: rejoining a log you left doesn't stack up duplicates. */
+export const selfNotificationId = (type: SelfNotificationType, groupId: string) =>
+  `${type}_${groupId}`;
+
+/** The fields of a notification the user's own action produced (timestamps aside). */
+export const buildSelfNotification = (args: {
+  type: SelfNotificationType;
+  groupId: string;
+  groupName: string;
+  logKind: LogKind;
+}) => ({
+  type: args.type,
+  groupId: args.groupId,
+  groupName: args.groupName,
+  logKind: args.logKind,
+});
+
+/**
+ * Notify the user of something they just did themselves: starting or joining a log.
+ * The rules allow a client to create only these types, in its own inbox. This is best
+ * effort and never throws, so it can't fail the action it reports. If the notification
+ * already exists (rejoining a log), the rules reject the overwrite and it's skipped.
+ */
+export const writeSelfNotification = async (args: {
+  userDocId: string;
+  prefs: NotificationPrefs | undefined;
+  type: SelfNotificationType;
+  groupId: string;
+  groupName: string;
+  logKind: LogKind;
+}) => {
+  if (!isNotificationEnabled(args.prefs, args.type)) return;
+  try {
+    await setDoc(
+      doc(
+        db,
+        "users",
+        args.userDocId,
+        "notifications",
+        selfNotificationId(args.type, args.groupId),
+      ),
+      { ...buildSelfNotification(args), createdAt: serverTimestamp(), readAt: null },
+    );
+  } catch (error) {
+    console.warn(`Skipped ${args.type} notification:`, error);
+  }
 };

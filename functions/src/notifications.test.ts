@@ -7,7 +7,9 @@ import {
   diffReactions,
   emojiKey,
   notificationRecipients,
+  postAuthorRecipients,
   reactionNotificationId,
+  recipientReason,
   stripMarkdownExcerpt,
 } from "./notifications";
 
@@ -31,6 +33,21 @@ describe("notificationRecipients", () => {
     expect(
       notificationRecipients({ author: null, commentSubscribers: [null, {}, ref("a")] }, "x"),
     ).toEqual(["a"]);
+  });
+});
+
+describe("postAuthorRecipients", () => {
+  it("is just the author, never the actor", () => {
+    expect(postAuthorRecipients(post, "sub1")).toEqual(["author"]);
+    expect(postAuthorRecipients(post, "author")).toEqual([]);
+    expect(postAuthorRecipients({}, "x")).toEqual([]);
+  });
+});
+
+describe("recipientReason", () => {
+  it("tells the author apart from subscribers", () => {
+    expect(recipientReason(post, "author")).toBe("author");
+    expect(recipientReason(post, "sub1")).toBe("subscriber");
   });
 });
 
@@ -107,6 +124,7 @@ describe("builders", () => {
       }),
     ).toEqual({
       type: "comment",
+      logKind: "social",
       postId: "p1",
       groupId: "g1",
       groupName: "Tokyo trip",
@@ -128,6 +146,7 @@ describe("builders", () => {
       }),
     ).toEqual({
       type: "reaction",
+      logKind: "social",
       postId: "p1",
       groupId: "",
       groupName: "",
