@@ -5,6 +5,7 @@ import {
   doc,
   DocumentReference,
   getDoc,
+  runTransaction,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -12,6 +13,12 @@ import { db } from "@/config/firebase-config";
 import { Currency } from "@/types/user";
 import { LedgerCategory } from "@/types/ledger";
 import { DEFAULT_CATEGORIES } from "@/utils/ledger";
+import {
+  PERSONAL_LEDGER_MAX_PARTICIPANTS,
+  PERSONAL_LEDGER_TITLE,
+  personalLedgerId,
+  planPersonalLedger,
+} from "@/utils/personalLedger";
 import { useMutation } from "./useFirebase";
 
 export type LedgerMember = {
@@ -57,6 +64,44 @@ export const buildNewLedgerDoc = <TRef, TTime>({
   categories: categories.map((c) => ({ ...c })),
   createdAt,
 });
+
+// Create the user's solo "personal" ledger unless they've had one before (see
+// utils/personalLedger). Reads the user doc inside the transaction, so a stale cached
+// profile can't resurrect a personal log the user has since deleted.
+export const ensurePersonalLedger = async ({
+  member,
+  defaultCurrency,
+}: {
+  member: LedgerMember;
+  defaultCurrency: Currency;
+}): Promise<string | null> => {
+  const userDocRef = doc(db, "users", member.userDocId);
+  const ledgerId = personalLedgerId(member.uid);
+  const ledgerRef = doc(db, "ledgers", ledgerId);
+  return runTransaction(db, async (tx) => {
+    const userSnap = await tx.get(userDocRef);
+    const ledgerSnap = await tx.get(ledgerRef);
+    const plan = planPersonalLedger({
+      userMarked: !!userSnap.data()?.personalLedgerId,
+      ledgerExists: ledgerSnap.exists(),
+    });
+    if (plan.createLedger) {
+      tx.set(
+        ledgerRef,
+        buildNewLedgerDoc({
+          title: PERSONAL_LEDGER_TITLE,
+          max_participants: PERSONAL_LEDGER_MAX_PARTICIPANTS,
+          defaultCurrency,
+          member,
+          userDocRef,
+          createdAt: serverTimestamp(),
+        }),
+      );
+    }
+    if (plan.markUser) tx.update(userDocRef, { personalLedgerId: ledgerId });
+    return plan.createLedger ? ledgerId : null;
+  });
+};
 
 export const useLedgerQuery = () => {
   const createLedgerFn = async (args: CreateLedgerArgs): Promise<string> => {
