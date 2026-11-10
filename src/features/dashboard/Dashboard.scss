@@ -65,7 +65,7 @@
   gap: 0.4em;
   min-width: 0;
   padding: 0.8em;
-  border: 2px solid var(--ink);
+  border: var(--border-rule) solid var(--ink);
   background-color: var(--paper);
   color: var(--ink);
   text-decoration: none;
@@ -94,7 +94,7 @@
   &--compact {
     gap: 0.2em;
     padding: 0.4em 0.6em;
-    border-width: 1px;
+    border-width: var(--border-hairline);
     font-size: 0.9em;
     opacity: 0.75;
 
@@ -106,7 +106,7 @@
 
   // Something new since your last visit: a heavier frame plus the badge.
   &--fresh {
-    border-width: 4px;
+    border-width: var(--border-fresh);
   }
 
   &__top {

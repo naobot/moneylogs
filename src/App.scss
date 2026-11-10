@@ -64,7 +64,7 @@ html {
     max-width: 450px;
     text-align: center;
     border-radius: var(--radius-none);
-    border: 1px solid var(--ink);
+    border: var(--border-hairline) solid var(--ink);
     padding: 3px;
     opacity: 0.6;
   }
@@ -89,7 +89,7 @@ html {
     padding: 0.5em;
     cursor: pointer;
     text-align: center;
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
   }
 
   &__block {
@@ -185,7 +185,7 @@ html {
   width: 100%;
   padding: 0.6em 1em;
   font-size: 0.75em;
-  border-top: 2px solid var(--ink);
+  border-top: var(--border-rule) solid var(--ink);
   box-sizing: border-box;
 
   a {
@@ -210,7 +210,7 @@ html {
   box-sizing: border-box;
   padding: 0.5em 0.5em 0.5em 1em;
   background-color: var(--paper);
-  border: 2px solid var(--ink);
+  border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
   font-size: 0.85em;
 
@@ -341,11 +341,11 @@ h6,
   &--primary-border {
     background-color: var(--paper);
     color: var(--ink);
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
     font-weight: 700;
 
     &:hover {
-      border: 2px solid var(--ink) !important;
+      border: var(--border-rule) solid var(--ink) !important;
       background-color: var(--ink);
       color: var(--paper);
     }
@@ -354,10 +354,10 @@ h6,
   &--primary-border-lite {
     background-color: var(--paper);
     color: var(--ink);
-    border: 1px solid var(--ink);
+    border: var(--border-hairline) solid var(--ink);
 
     &:hover {
-      border: 1px solid var(--ink) !important;
+      border: var(--border-hairline) solid var(--ink) !important;
       background-color: var(--ink);
       color: var(--paper);
     }
@@ -484,7 +484,7 @@ h6,
 
   &--warning {
     input {
-      border: 2px solid var(--ink);
+      border: var(--border-rule) solid var(--ink);
     }
   }
 
@@ -507,7 +507,7 @@ h6,
 .Window {
   margin-bottom: 1em;
   padding: 30px;
-  border: 2px solid var(--ink);
+  border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
   width: 100%;
 
@@ -702,7 +702,7 @@ h6,
     align-items: center;
     gap: 0.4em;
     padding: 0.8em 1em;
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
     text-align: right;
 
     &__content {
@@ -971,7 +971,7 @@ h6,
       flex-shrink: 0;
       gap: 0.5em;
       padding: 1em;
-      border: 1px solid var(--ink);
+      border: var(--border-hairline) solid var(--ink);
       background-color: var(--sheet);
       transition: 0.3s ease-in-out;
       max-height: 2400px; // explicitly declare so transition works
@@ -980,7 +980,7 @@ h6,
         img {
           max-height: 70vh;
           box-sizing: border-box;
-          border: 1px solid var(--ink);
+          border: var(--border-hairline) solid var(--ink);
           outline: 5px solid var(--sheet);
           outline-offset: -6px;
         }
@@ -1011,7 +1011,7 @@ h6,
       }
 
       &--selected {
-        border: 2px solid var(--ink);
+        border: var(--border-rule) solid var(--ink);
         z-index: 51;
         // Use dvh so the editor tracks the *visible* viewport as the mobile
         // URL bar / on-screen keyboard show and hide. Plain vh resolves to the
@@ -1131,7 +1131,7 @@ h6,
     width: 100%;
     height: 120px;
     background: var(--ink-ghost);
-    border: 1px dashed var(--ink);
+    border: var(--border-hairline) dashed var(--ink);
     position: relative;
 
     &::after {
@@ -1187,7 +1187,7 @@ h6,
   z-index: 300;
   background-color: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--ink);
+  border: var(--border-hairline) solid var(--ink);
   padding: 0.5em 0.8em;
   border-radius: var(--radius-none);
   font-size: 0.72em;
@@ -1312,7 +1312,7 @@ h6,
     background: var(--paper);
     border-radius: var(--radius-bubble); // sanctioned: speech balloon
     padding: 0.5em;
-    border: var(--ink) solid 1px;
+    border: var(--border-hairline) solid var(--ink);
     display: flex;
     flex-direction: column;
     opacity: 1;
@@ -1490,7 +1490,7 @@ h6,
     background-color: var(--paper);
     z-index: 55;
     cursor: default;
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
     border-radius: var(--radius-none);
     margin: 1em;
     width: 100%;

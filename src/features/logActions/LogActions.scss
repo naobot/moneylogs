@@ -26,7 +26,7 @@
     & + & {
       margin-top: 1.25em;
       padding-top: 1em;
-      border-top: 1px dashed var(--ink);
+      border-top: var(--border-hairline) dashed var(--ink);
     }
   }
 }
@@ -51,7 +51,7 @@
       align-items: baseline;
       gap: 1em;
       padding: 0.35em 0;
-      border-bottom: 1px dashed var(--ink);
+      border-bottom: var(--border-hairline) dashed var(--ink);
     }
 
     small {
@@ -78,7 +78,7 @@
     align-items: baseline;
     gap: 0.25em 1em;
     padding: 0.35em 0;
-    border-bottom: 1px dashed var(--ink);
+    border-bottom: var(--border-hairline) dashed var(--ink);
 
     // Push to the right edge, like the other lists' row actions, even when the row
     // wraps and the button lands on its own line.
@@ -90,7 +90,7 @@
 
 // Danger zone: heavier rule above, inverted heading. Monochrome only.
 .LogActions__danger {
-  border-top: 3px solid var(--ink) !important;
+  border-top: var(--border-heavy) solid var(--ink) !important;
 
   h4 {
     padding: 0.1em 0.4em;

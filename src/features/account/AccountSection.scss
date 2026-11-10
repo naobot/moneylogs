@@ -78,7 +78,7 @@
     min-width: 0;
 
     &--error {
-      border: 2px solid var(--ink);
+      border: var(--border-rule) solid var(--ink);
     }
   }
 

@@ -78,7 +78,7 @@
     font-size: 0.85em;
     cursor: pointer;
     padding: 0.35em 1.1em;
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
     border-radius: var(--radius-tab) var(--radius-tab) 0 0; // sanctioned: folder tab
     background: var(--paper);
     color: var(--ink);
@@ -255,7 +255,7 @@
   flex-direction: column;
   color: var(--ink);
   background-color: var(--sheet);
-  border: 1px solid var(--ink);
+  border: var(--border-hairline) solid var(--ink);
   border-radius: var(--radius-none);
   font-size: 0.7em;
   padding: 0.8em;
@@ -334,7 +334,7 @@
     text-align: center;
     gap: 0.4em;
     padding: 0.8em;
-    border: 1px solid var(--ink);
+    border: var(--border-hairline) solid var(--ink);
     border-radius: var(--radius-none);
     min-width: 0;
     // Tiles are links; opt out of the global anchor styling so they keep the

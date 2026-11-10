@@ -15,7 +15,7 @@
     list-style: none;
     margin: 0;
     padding: 0 0 0.75em 0;
-    border-bottom: 1px dashed var(--ink);
+    border-bottom: var(--border-hairline) dashed var(--ink);
     font-size: 0.85em;
 
     &__step {
@@ -71,7 +71,7 @@
     cursor: pointer;
     background: var(--paper);
     color: var(--ink);
-    border: 2px solid var(--ink);
+    border: var(--border-rule) solid var(--ink);
 
     strong {
       font-size: 1.1em;

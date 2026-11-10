@@ -15,7 +15,7 @@
     min-width: 240px;
     z-index: 50;
     background: var(--sheet);
-    border: 1px solid var(--ink);
+    border: var(--border-hairline) solid var(--ink);
 
     &__wrapper {
       overflow: auto;

@@ -1,9 +1,9 @@
 // Collapsible section. Monochrome: a ruled summary bar that inverts while open.
 .Drawer {
-  border-top: 2px solid var(--ink);
+  border-top: var(--border-rule) solid var(--ink);
 
   &:last-of-type {
-    border-bottom: 2px solid var(--ink);
+    border-bottom: var(--border-rule) solid var(--ink);
   }
 
   &__summary {

@@ -32,7 +32,7 @@
     &--success {
       background-color: var(--paper);
       color: var(--ink);
-      border-bottom: 1px solid var(--ink);
+      border-bottom: var(--border-hairline) solid var(--ink);
 
       .Snackbar__close {
         color: var(--ink-muted);
