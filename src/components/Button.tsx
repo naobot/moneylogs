@@ -11,6 +11,8 @@ type ButtonProps = {
   buttonStyle?: "primary" | "primary-border" | "primary-border-lite";
   loading?: boolean;
   to?: string;
+  /** Router state for a `to` link, e.g. `{ view: "register" }` for /login. */
+  state?: unknown;
   className?: string;
   icon?: IconType;
   title?: string;
@@ -27,6 +29,7 @@ const Button = forwardRef(
       buttonStyle = "primary",
       loading = false,
       to,
+      state,
       className = "",
       icon,
       title = text,
@@ -45,7 +48,14 @@ const Button = forwardRef(
 
     if (to) {
       return (
-        <Link to={to} onClick={onClick} className={sharedClassName} title={title} {...props}>
+        <Link
+          to={to}
+          state={state}
+          onClick={onClick}
+          className={sharedClassName}
+          title={title}
+          {...props}
+        >
           {icon && <Icon type={icon} />}
           <strong>{text}</strong>
         </Link>

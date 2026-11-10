@@ -6,6 +6,8 @@ export type LogCardSize = "large" | "small" | "compact";
 
 type LogCardProps = {
   to: string;
+  /** Router state passed along with the link, e.g. which auth view to open. */
+  state?: unknown;
   title: string;
   size: LogCardSize;
   /** Small caps label above the title, e.g. "log group" or "financial · shared". */
@@ -17,9 +19,10 @@ type LogCardProps = {
 };
 
 /** One log on the Home dashboard: a rectangle that links into the log. */
-export const LogCard = ({ to, title, size, kind, details = [], badge }: LogCardProps) => (
+export const LogCard = ({ to, state, title, size, kind, details = [], badge }: LogCardProps) => (
   <Link
     to={to}
+    state={state}
     className={cx("LogCard", `LogCard--${size}`, { "LogCard--fresh": !!badge })}
     aria-label={badge ? `${title} — ${badge}` : title}
   >

@@ -43,6 +43,9 @@ const MainNav = () => {
   return (
     <nav className="MainNav">
       <div className="MainNav__item Menu">
+        {!isLoggedIn && location.pathname !== "/login" && (
+          <Button to="/login" text="Sign in" buttonStyle="primary-border-lite" />
+        )}
         {isLoggedIn && (
           <>
             <Button className="MainNav__item--icon" to="/" title="Home" icon="home" />
@@ -97,7 +100,9 @@ const MainNav = () => {
         {/* Theme toggle and sign-out read as one pair of icons, set close together. */}
         <span className="MainNav__iconPair">
           <ThemeToggle />
-          <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
+          {isLoggedIn && (
+            <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
+          )}
         </span>
       </div>
     </nav>

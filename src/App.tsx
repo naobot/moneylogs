@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -18,6 +18,7 @@ import UpdateBanner from "@/components/UpdateBanner";
 
 import { Auth } from "@/pages/auth";
 import { Home } from "@/pages/home";
+import { Landing } from "@/features/landing/Landing";
 import { UserSettings } from "@/pages/me";
 import { CreateNewLog } from "@/pages/create";
 import { GroupPage } from "@/pages/group";
@@ -31,10 +32,13 @@ import "./App.scss";
 export const CheckAuth = ({
   children,
   auth: requireAuth = true,
+  fallback,
   ...props
 }: PropsWithChildren<
   Partial<NavigateProps> & {
     auth?: boolean;
+    /** Shown to logged-out visitors instead of redirecting them to /login. */
+    fallback?: ReactNode;
   }
 >) => {
   const [user, loading] = useAuthState(auth);
@@ -43,6 +47,7 @@ export const CheckAuth = ({
   if (loading) return <div>Loading...</div>;
 
   if (!user && requireAuth) {
+    if (fallback) return <>{fallback}</>;
     return (
       <Navigate
         to={"/login"}
@@ -80,7 +85,7 @@ const App = () => {
             <Route
               path="/"
               element={
-                <CheckAuth>
+                <CheckAuth fallback={<Landing />}>
                   <Home />
                 </CheckAuth>
               }
