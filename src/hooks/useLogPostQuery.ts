@@ -1,4 +1,5 @@
 import {
+  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -25,6 +26,15 @@ export type LogData = {
   currency: Currency;
   postDate: number;
   timezone?: string;
+};
+
+type ToggleReactionArgs = {
+  logPostId: string;
+  /** The reacting user's users-collection doc id (not the auth uid). */
+  userDocId: string;
+  emoji: string;
+  /** true adds the emoji, false removes it. */
+  add: boolean;
 };
 
 type AddCommentArgs = {
@@ -131,6 +141,21 @@ export const useLogPostQuery = () => {
     return commentRef.id;
   };
 
+  // Reactions live on the post as `reactions.{userDocId}: string[]`, so each toggle is a
+  // single atomic array write scoped to the reacting user (the emoji itself is never a
+  // field-path segment). Reacting does not subscribe the user to the post's comments.
+  const toggleReactionFn = async ({
+    logPostId,
+    userDocId,
+    emoji,
+    add,
+  }: ToggleReactionArgs): Promise<void> => {
+    console.log(`✍️ executing reaction ${add ? "add" : "remove"} on log_posts collection`);
+    await updateDoc(doc(db, "log_posts", logPostId), {
+      [`reactions.${userDocId}`]: add ? arrayUnion(emoji) : arrayRemove(emoji),
+    });
+  };
+
   const deleteCommentFn = async ({ logPostId, commentId }: DeleteCommentArgs): Promise<void> => {
     const batch = writeBatch(db);
     batch.delete(doc(db, "log_posts", logPostId, "comments", commentId));
@@ -148,6 +173,7 @@ export const useLogPostQuery = () => {
   const editLogPostMutation = useMutation(editLogPostFn);
   const deleteCommentMutation = useMutation(deleteCommentFn);
   const deleteLogPostMutation = useMutation(deleteLogPostFn);
+  const toggleReactionMutation = useMutation(toggleReactionFn);
 
   return {
     addNewLogPost: addNewLogPostMutation,
@@ -160,5 +186,7 @@ export const useLogPostQuery = () => {
     deleteLogPostFn,
     editLogPost: editLogPostMutation,
     editLogPostFn,
+    toggleReaction: toggleReactionMutation,
+    toggleReactionFn,
   };
 };

@@ -104,7 +104,7 @@ const HotPosts = ({
         {hotPosts.length !== 1 ? "s" : ""} shown)
       </p>
       <div className="HotPosts LogPosts__posts">
-        {hotPosts.map((post) => {
+        {hotPosts.map((post, i) => {
           const postAuthor = getUserForPost(post);
           return (
             <LogPostItem
@@ -120,6 +120,7 @@ const HotPosts = ({
               onOpenComments={onOpenComments}
               isReadOnly={true}
               isSummaryView={true}
+              isFirst={i === 0}
             />
           );
         })}

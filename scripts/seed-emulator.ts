@@ -510,6 +510,17 @@ async function seedEmulator() {
       }
     }
 
+    // Add some emoji reactions (reactions.{userDocId}: emoji[])
+    console.log("\n🔥 Adding reactions...");
+    const reactionSets = [["🔥", "👍"], ["😂"], ["💸", "🔥"], ["👀"]];
+    for (const [i, postId] of postIds.slice(0, 6).entries()) {
+      const reactions: Record<string, string[]> = {};
+      createdUsers.slice(0, (i % 3) + 1).forEach((user, j) => {
+        reactions[user.uid] = reactionSets[(i + j) % reactionSets.length];
+      });
+      await updateDoc(doc(db, "log_posts", postId), { reactions });
+    }
+
     console.log("\n💰 Creating financial logs...");
     const ledgerIds = await createLedgers(createdUsers);
 

@@ -27,6 +27,7 @@ afterEach(() => {
 describe("Icon", () => {
   it.each<[IconType, string]>([
     ["gear", "/icons/moneylogs-gear.svg"],
+    ["smiley", "/icons/moneylogs-smiley.svg"],
     ["pencil", "/icons/kanyayee-pencil.svg"],
     ["trash", "/icons/nakals-trash.svg"],
   ])("resolves %s to its asset, which exists", (type, src) => {
