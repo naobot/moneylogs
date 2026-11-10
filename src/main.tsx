@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import "./index.css";
+import { initTheme } from "@/utils/theme";
 import App from "@/App";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
@@ -52,6 +53,9 @@ Sentry.init({
   // Enable logs to be sent to Sentry
   enableLogs: true,
 });
+
+// Apply the stored theme before the first paint so Night shift never flashes Paper.
+initTheme();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

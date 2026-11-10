@@ -10,9 +10,11 @@ import { ProfileSection } from "@/features/account/ProfileSection";
 import { AccountSection } from "@/features/account/AccountSection";
 import { AchievementsSection } from "@/features/account/AchievementsSection";
 import { MyLogsSection } from "@/features/account/MyLogsSection";
+import { DisplaySection, THEME_LABELS } from "@/features/account/DisplaySection";
 import { myLogsHint } from "@/features/account/myLogsHint";
 import { partitionArchived } from "@/utils/archivedLogs";
 import { partitionByTime } from "@/utils/groupBoundaries";
+import { useTheme } from "@/utils/theme";
 
 import "./me.scss";
 
@@ -20,6 +22,7 @@ import "./me.scss";
 // to from Home as /me#logs, which opens that drawer.
 export const UserSettings = () => {
   const { user } = useCurrentUser();
+  const theme = useTheme();
   const { allGroups: groups } = useGetCurrentGroups();
   const { ledgers: allLedgers } = useGetMyLedgers();
   const { achievements } = useGetAchievements(user?.id);
@@ -57,6 +60,10 @@ export const UserSettings = () => {
           defaultOpen
         >
           <ProfileSection />
+        </Drawer>
+
+        <Drawer id="display" title="Display" summary={THEME_LABELS[theme]}>
+          <DisplaySection />
         </Drawer>
 
         <Drawer id="account" title="Account" summary={user?.email}>

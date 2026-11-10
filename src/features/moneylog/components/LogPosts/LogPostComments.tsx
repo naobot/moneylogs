@@ -9,6 +9,7 @@ import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
 
 import Button from "@/components/Button";
+import { markdownColorMode, useTheme } from "@/utils/theme";
 
 type LogPostCommentsProps = {
   currentLogAuthorId: string;
@@ -32,6 +33,7 @@ const LogPostComments = ({
   isReadOnly = false,
   isSpectator = false,
 }: LogPostCommentsProps) => {
+  const theme = useTheme();
   const [newCommentContent, newCommentContentSet] = useState<string | null>();
   const { user } = useCurrentUser();
   const { trackUserAction } = useReadTracking();
@@ -122,7 +124,13 @@ const LogPostComments = ({
                 })}
               >
                 <div className="LogPostComments__item__container">
-                  <div className="LogPostComments__item__body" data-color-mode="light">
+                  <div
+                    className="LogPostComments__item__body"
+                    data-color-mode={markdownColorMode(
+                      theme,
+                      comment?.authorId?.id === currentLogAuthorId,
+                    )}
+                  >
                     <MDEditor.Markdown source={comment.content} />
                   </div>
                   <div className="LogPostComments__item__footer">
@@ -151,7 +159,10 @@ const LogPostComments = ({
             }}
           >
             <div className="LogPostComments__item__container">
-              <div className="LogPostComments__item__body container" data-color-mode="light">
+              <div
+                className="LogPostComments__item__body container"
+                data-color-mode={markdownColorMode(theme)}
+              >
                 {!addComment?.isLoading && (
                   <MDEditor
                     value={newCommentContent ?? ""}

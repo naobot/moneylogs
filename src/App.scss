@@ -257,6 +257,13 @@ html {
   }
 }
 
+// Buttons invert when active or hovered; their icons flip with them.
+.Button--active .Icon img,
+.Button--primary-border:hover .Icon img,
+.Button--primary-border-lite:hover .Icon img {
+  filter: var(--icon-filter-inverse);
+}
+
 // Type conventions (terminal style): headings and heading-like labels are lowercase;
 // button labels are small caps-lock. Done in CSS so the source text (and what screen
 // readers announce) stays normal. Wrap user content or codes that must keep their own

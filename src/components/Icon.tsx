@@ -26,7 +26,9 @@ export type IconType =
   | "speech-filled"
   | "calculator"
   | "pin"
-  | "gear";
+  | "gear"
+  | "sun"
+  | "moon";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
