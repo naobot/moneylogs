@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { needsProfileSetup, parseReferenceArray } from "@/utils/helpers";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useGetGroup } from "@/hooks/useGetGroup";
+import { writeSelfNotification } from "@/hooks/useNotifications";
 import { LogNotFound } from "@/features/logActions/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
@@ -43,6 +44,14 @@ export const InvitePage = () => {
         addGroupToMember.mutate({ currentUserId: loggedInUser.userId, groupId }),
         addMemberToGroup.mutate({ currentUserId: loggedInUser.userId, groupId }),
       ]);
+      void writeSelfNotification({
+        userDocId: loggedInUser.id,
+        prefs: loggedInUser.notificationPrefs,
+        type: "log_joined",
+        groupId,
+        groupName: group?.title ?? "",
+        logKind: "social",
+      });
       if (needsProfileSetup(loggedInUser)) {
         setShowInviteModal(false);
         setShowJoinedModal(true);

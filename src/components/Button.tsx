@@ -17,6 +17,8 @@ type ButtonProps = {
   icon?: IconType;
   title?: string;
   isSelected?: boolean;
+  /** For icon-only buttons whose name should differ from `title`. */
+  "aria-label"?: string;
 };
 
 const Button = forwardRef(

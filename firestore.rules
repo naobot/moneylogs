@@ -14,8 +14,29 @@ service cloud.firestore {
     match /log_posts/{path=**} {
       allow read, write: if true;
     }
-    match /users/{path=**} {
+    // User docs and their achievements stay open. Notifications are private to their
+    // owner, so this can't be a users/{path=**} wildcard (rules are OR'd).
+    match /users/{userDocId} {
       allow read, write: if true;
+    }
+    match /users/{userDocId}/achievements/{path=**} {
+      allow read, write: if true;
+    }
+
+    // Cloud Functions write notifications (the Admin SDK bypasses rules). The owner may
+    // read them and stamp readAt, and may create only the ones whose actor is
+    // themselves: starting or joining a log.
+    function ownsUserDoc(userDocId) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(userDocId)).data.userId == request.auth.uid;
+    }
+    match /users/{userDocId}/notifications/{notificationId} {
+      allow read, delete: if ownsUserDoc(userDocId);
+      allow update: if ownsUserDoc(userDocId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["readAt"]);
+      allow create: if ownsUserDoc(userDocId)
+        && request.resource.data.type in ["log_created", "log_joined"]
+        && request.resource.data.readAt == null;
     }
     match /processing/{path=**} {
       allow read, write: if true;

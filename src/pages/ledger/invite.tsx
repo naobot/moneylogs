@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { needsProfileSetup } from "@/utils/helpers";
 import { useGetLedger } from "@/hooks/useGetLedger";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
+import { writeSelfNotification } from "@/hooks/useNotifications";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -35,7 +36,18 @@ export const LedgerInvitePage = () => {
     if (!user || !ledgerId) return;
     setJoinFailed(false);
     try {
-      await joinLedger.mutate({ ledgerId, member: { uid: user.userId, userDocId: user.id } });
+      const title = await joinLedger.mutate({
+        ledgerId,
+        member: { uid: user.userId, userDocId: user.id },
+      });
+      void writeSelfNotification({
+        userDocId: user.id,
+        prefs: user.notificationPrefs,
+        type: "log_joined",
+        groupId: ledgerId,
+        groupName: title,
+        logKind: "ledger",
+      });
       if (needsProfileSetup(user)) {
         setShowJoinedModal(true);
       } else {

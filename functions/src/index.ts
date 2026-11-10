@@ -11,7 +11,9 @@ import {
   commentNotificationId,
   NotifiablePost,
   notificationRecipients,
+  recipientReason,
 } from "./notifications";
+import { isNotificationEnabled } from "./notificationPrefs";
 
 initializeApp();
 const db = getFirestore();
@@ -103,7 +105,14 @@ export const updateCommentMetadata = onDocumentCreated(
     try {
       const postSnap = await db.collection("log_posts").doc(postId).get();
       const post = (postSnap.data() ?? {}) as NotifiablePost;
-      const recipients = notificationRecipients(post, actorId);
+      const candidates = notificationRecipients(post, actorId);
+      if (!candidates.length) return;
+      const recipientSnaps = await db.getAll(
+        ...candidates.map((id) => db.collection("users").doc(id)),
+      );
+      const recipients = recipientSnaps
+        .filter((snap) => isNotificationEnabled(snap.data(), "comment"))
+        .map((snap) => snap.id);
       if (!recipients.length) return;
 
       const notification = buildCommentNotification({
@@ -123,7 +132,12 @@ export const updateCommentMetadata = onDocumentCreated(
               .doc(recipient)
               .collection("notifications")
               .doc(commentNotificationId(commentId)),
-            { ...notification, createdAt: timestamp, readAt: null },
+            {
+              ...notification,
+              reason: recipientReason(post, recipient),
+              createdAt: timestamp,
+              readAt: null,
+            },
           );
         }
         await batch.commit();
@@ -424,3 +438,4 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
 export { recomputeLedgerMonth } from "./ledger";
 export { deleteLog } from "./deleteLog";
 export { notifyOnReaction } from "./notifyOnReaction";
+export { notifyLogTimeline } from "./notifyLogTimeline";

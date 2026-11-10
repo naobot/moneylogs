@@ -10,6 +10,7 @@ import { arrangeDashboard } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
 
 declare const __APP_VERSION__: string;
 
@@ -50,6 +51,7 @@ const MainNav = () => {
           <>
             <Button className="MainNav__item--icon" to="/" title="Home" icon="home" />
             <Button className="MainNav__item--icon" to="/me" title="My Preferences" icon="user" />
+            <NotificationBell />
             <div className="MainNav__list">
               <Button title="New Log" to={"/create"} text="+" buttonStyle="primary-border-lite" />
               {/* Financial logs never end, so they're always listed — independently of

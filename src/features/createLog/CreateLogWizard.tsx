@@ -7,6 +7,7 @@ import { formatDate, formatTime } from "@/utils/dateFormat";
 import { useCurrentUser } from "@/contexts";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
+import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { CURRENCIES, isCurrency, LAST_CURRENCY_KEY } from "@/utils/currency";
 
@@ -100,12 +101,21 @@ export const CreateLogWizard = () => {
     if (!user?.userId || !state.mode || !isStepValid("review", state)) return;
     try {
       if (state.mode === "social") {
-        await addNewLogGroup.mutate({
-          title: state.title.trim(),
+        const title = state.title.trim();
+        const groupId = await addNewLogGroup.mutate({
+          title,
           max_participants: state.maxParticipants,
           startWallClock: `${state.startDate}T${state.startTime}`,
           endWallClock: `${state.endDate}T${state.endTime}`,
           currentUserId: user.userId,
+        });
+        void writeSelfNotification({
+          userDocId: user.id,
+          prefs: user.notificationPrefs,
+          type: "log_created",
+          groupId,
+          groupName: title,
+          logKind: "social",
         });
         void navigate("/", { replace: true });
       } else {
@@ -114,6 +124,14 @@ export const CreateLogWizard = () => {
           max_participants: state.maxParticipants,
           defaultCurrency: state.defaultCurrency,
           member: { uid: user.userId, userDocId: user.id },
+        });
+        void writeSelfNotification({
+          userDocId: user.id,
+          prefs: user.notificationPrefs,
+          type: "log_created",
+          groupId: ledgerId,
+          groupName: state.title.trim(),
+          logKind: "ledger",
         });
         void navigate(`/l/${ledgerId}`, { replace: true });
       }
