@@ -1,217 +1,91 @@
-import cx from "classnames";
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useTimezoneSelect, allTimezones } from "react-timezone-select";
+import { useMemo } from "react";
 
 import { useCurrentUser } from "@/contexts";
-import { useToastContext } from "@/hooks/useToastContext";
-
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
-import { useMutation } from "@/hooks/useFirebase";
-import { useUserQuery } from "@/hooks/useUserQuery";
-import { useReadTracking } from "@/hooks/useReadTracking";
-import {
-  useGetAchievements,
-  sortAchievementsByGroupEnd,
-  ACHIEVEMENT_META,
-} from "@/hooks/useAchievements";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
+import { useGetAchievements, sortAchievementsByGroupEnd } from "@/hooks/useAchievements";
 
-import Button from "@/components/Button";
-import ControlledInput from "@/components/ControlledInput";
-import Icon from "@/components/Icon";
+import Drawer from "@/components/Drawer";
+import { ProfileSection } from "@/features/account/ProfileSection";
+import { AccountSection } from "@/features/account/AccountSection";
+import { AchievementsSection } from "@/features/account/AchievementsSection";
+import { MyLogsSection } from "@/features/account/MyLogsSection";
+import { myLogsHint } from "@/features/account/myLogsHint";
+import { partitionArchived } from "@/utils/archivedLogs";
+import { partitionByTime } from "@/utils/groupBoundaries";
 
 import "./me.scss";
-import "@/features/moneylog/components/LogsSummary/styles.scss";
-import GroupArchive from "@/features/moneylog/components/GroupArchive";
-import { ArchivedLogsList } from "@/features/logActions/ArchivedLogsList";
-import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
-import { partitionArchived } from "@/utils/archivedLogs";
-import dayjs from "dayjs";
-import { absoluteStart, absoluteEnd, bySoonestStarting } from "@/utils/groupBoundaries";
 
+// Personal settings plus everything tied to the account, in drawers. "logs" is linked
+// to from Home as /me#logs, which opens that drawer.
 export const UserSettings = () => {
-  const { allGroups: groups, isSuccess } = useGetCurrentGroups();
-  const { ledgers } = useGetMyLedgers();
-
-  const { showToast } = useToastContext();
-  const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
-  // Archived logs (personal) move out of the lists below into a collapsed "Archived" list.
-  const { active: allGroups, archived: archivedGroups } = partitionArchived(groups, user);
-  const archivedLedgers = partitionArchived(ledgers, user).archived;
+  const { allGroups: groups } = useGetCurrentGroups();
+  const { ledgers: allLedgers } = useGetMyLedgers();
   const { achievements } = useGetAchievements(user?.id);
-  // Same ordering as the Past groups list below — most recently ended group first.
+
+  const { active: activeGroups, archived: archivedGroups } = partitionArchived(groups, user);
+  const { active: ledgers, archived: archivedLedgers } = partitionArchived(allLedgers, user);
+  const { ongoing, upcoming, past } = partitionByTime(activeGroups);
+
+  // Most recently ended group first. All groups (archived too), so archiving doesn't
+  // reshuffle achievements.
   const orderedAchievements = useMemo(
-    // All groups (archived too), so archiving doesn't reshuffle achievements.
     () => sortAchievementsByGroupEnd(achievements, groups),
     [achievements, groups],
   );
-  const { options, parseTimezone } = useTimezoneSelect({
-    labelStyle: "original",
-    timezones: allTimezones,
-  });
 
-  const [newDisplayName, setNewDisplayName] = useState("");
-  const [newDisplayLocation, setNewDisplayLocation] = useState("");
-  const [newTimezone, setNewTimezone] = useState<string>();
-
-  const isSubmittable = useMemo(() => {
-    return !!user?.userId && !!newTimezone;
-  }, [user?.userId, newTimezone]);
-
-  const { updateUserProfile } = useUserQuery();
-
-  const { mutate: updateUserInfo, isLoading: createPending } = useMutation(
-    async (userData: {
-      userId: string;
-      displayName: string;
-      displayLocation?: string;
-      timezone: string;
-    }) => {
-      await updateUserProfile.mutate(userData);
-
-      trackUserAction("update_user_profile", {
-        user_id: user?.id,
-      });
-
-      return;
-    },
-  );
-
-  useEffect(() => {
-    if (user?.displayName) {
-      setNewDisplayName(user?.displayName);
-    }
-    if (user?.displayLocation) {
-      setNewDisplayLocation(user?.displayLocation);
-    }
-    if (user?.timezone) {
-      setNewTimezone(user?.timezone);
-    }
-  }, [user]);
-
-  const handleUpdateUserInfo = async () => {
-    if (!user?.userId || !newTimezone) return;
-
-    try {
-      await updateUserInfo({
-        userId: user?.id,
-        displayName: newDisplayName,
-        displayLocation: newDisplayLocation ?? undefined,
-        timezone: newTimezone,
-      });
-
-      showToast("Profile updated", "success");
-    } catch (err) {
-      console.error("Failed to update user info:", err);
-      showToast("Failed to update profile. Please try again.");
-    }
-  };
+  const archivedCount = archivedGroups.length + archivedLedgers.length;
 
   return (
     <div className="Window UserSettings">
       <div className="Window__heading">{user?.displayName && <h2>hi {user?.displayName}</h2>}</div>
 
-      <div className="UserSettings__form">
-        <ControlledInput
-          onChange={(e) => setNewDisplayName((e.target as HTMLInputElement).value)}
-          label="Display name"
-          value={newDisplayName}
-        />
+      <div className="UserSettings__drawers">
+        <Drawer
+          id="profile"
+          title="Profile"
+          summary={
+            user?.timezone ? `${user.displayName ?? ""} · ${user.timezone}` : "set your timezone"
+          }
+          defaultOpen
+        >
+          <ProfileSection />
+        </Drawer>
 
-        <ControlledInput
-          onChange={(e) => setNewDisplayLocation((e.target as HTMLInputElement).value)}
-          label="Display location"
-          value={newDisplayLocation}
-        />
+        <Drawer id="account" title="Account" summary={user?.email}>
+          <AccountSection />
+        </Drawer>
 
-        {newDisplayName.length > 0 && (
-          <p>
-            Your name will display as{" "}
-            <strong>
-              {newDisplayName} {newDisplayLocation.length > 0 && <>({newDisplayLocation})</>}
-            </strong>
-          </p>
-        )}
+        <Drawer
+          id="achievements"
+          title="Achievements"
+          summary={`${orderedAchievements.length} unlocked`}
+        >
+          <AchievementsSection achievements={orderedAchievements} />
+        </Drawer>
 
-        <div
-          className={cx("ControlledInput", {
-            "ControlledInput--warning": !newTimezone,
+        <Drawer
+          id="logs"
+          title="My logs"
+          summary={myLogsHint({
+            financial: ledgers.length,
+            ongoing: ongoing.length,
+            upcoming: upcoming.length,
+            past: past.length,
+            archived: archivedCount,
           })}
         >
-          <label>My timezone is</label>
-          <select
-            onChange={(e) => {
-              parseTimezone(e.currentTarget.value);
-              setNewTimezone(e.currentTarget.value);
-            }}
-            value={newTimezone}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          <MyLogsSection
+            ledgers={ledgers}
+            ongoing={ongoing}
+            upcoming={upcoming}
+            past={past}
+            archivedGroups={archivedGroups}
+            archivedLedgers={archivedLedgers}
+          />
+        </Drawer>
       </div>
-
-      <div className="Menu">
-        <Button
-          text="Set my user profile"
-          size="lg"
-          buttonStyle="primary-border"
-          disabled={!isSubmittable}
-          loading={createPending}
-          onClick={handleUpdateUserInfo}
-        />
-      </div>
-
-      {orderedAchievements.length > 0 && (
-        <div>
-          <h3>Achievements</h3>
-          <div className="AchievementsList">
-            {orderedAchievements.map((achievement) => {
-              const meta = ACHIEVEMENT_META[achievement.type];
-              return (
-                <Link
-                  key={achievement.id}
-                  to={`/g/${achievement.groupId}`}
-                  className="AchievementsList__item"
-                  aria-label={`${meta.title} — unlocked on ${achievement.groupTitle}`}
-                >
-                  <span className="AchievementsList__item__icon" aria-hidden="true">
-                    <Icon type={meta.icon} />
-                  </span>
-                  <div className="AchievementsList__item__text">
-                    <strong>
-                      {meta.title}
-                      {achievement.currency ? ` · ${achievement.currency}` : ""}
-                    </strong>
-                    <span>{achievement.groupTitle}</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {isSuccess &&
-        allGroups.length > 0 && ( // TODO improve this area lol
-          <div>
-            <h3>Upcoming groups</h3>
-            <GroupArchive
-              groups={allGroups.filter((g) => absoluteStart(g).isAfter(dayjs()))}
-              emptyMessage="You have no upcoming log groups."
-              sort={bySoonestStarting}
-            />
-            <h3>Past groups</h3>
-            <GroupArchive groups={allGroups.filter((g) => absoluteEnd(g).isBefore(dayjs()))} />
-          </div>
-        )}
-
-      <ArchivedLogsList groups={archivedGroups} ledgers={archivedLedgers} />
     </div>
   );
 };

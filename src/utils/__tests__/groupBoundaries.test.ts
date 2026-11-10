@@ -7,6 +7,7 @@ import {
   timeUntilReadOnly,
   byMostRecentlyEnded,
   bySoonestStarting,
+  partitionByTime,
 } from "@/utils/groupBoundaries";
 import dayjs from "@/utils/configuredDayjs";
 import type { Group } from "@/types/user";
@@ -170,5 +171,38 @@ describe("group comparators", () => {
     const a = group("a", "2024-01-01T09:00:00", "2024-01-05T22:00:00.100");
     const b = group("b", "2024-01-01T09:00:00", "2024-01-05T22:00:00.900");
     expect([a, b].sort(byMostRecentlyEnded).map((g) => g.id)).toEqual(["b", "a"]);
+  });
+});
+
+describe("partitionByTime", () => {
+  const group = (id: string, start: string, end: string) =>
+    ({ id, start: ts(start), end: ts(end) }) as unknown as Group;
+
+  const now = dayjs("2024-06-15T12:00:00.000Z");
+  const pastOld = group("pastOld", "2024-01-01T00:00:00Z", "2024-01-10T00:00:00Z");
+  const pastRecent = group("pastRecent", "2024-05-01T00:00:00Z", "2024-06-01T00:00:00Z");
+  const ongoingLate = group("ongoingLate", "2024-06-01T00:00:00Z", "2024-07-30T00:00:00Z");
+  const ongoingSoon = group("ongoingSoon", "2024-06-10T00:00:00Z", "2024-06-20T00:00:00Z");
+  const upcomingLate = group("upcomingLate", "2024-09-01T00:00:00Z", "2024-09-10T00:00:00Z");
+  const upcomingSoon = group("upcomingSoon", "2024-07-01T00:00:00Z", "2024-07-10T00:00:00Z");
+
+  const ids = (gs: Group[]) => gs.map((g) => g.id);
+
+  it("buckets and sorts each part for display", () => {
+    const input = [pastOld, ongoingLate, upcomingLate, pastRecent, ongoingSoon, upcomingSoon];
+    const { ongoing, upcoming, past } = partitionByTime(input, now);
+    expect(ids(ongoing)).toEqual(["ongoingSoon", "ongoingLate"]);
+    expect(ids(upcoming)).toEqual(["upcomingSoon", "upcomingLate"]);
+    expect(ids(past)).toEqual(["pastRecent", "pastOld"]);
+  });
+
+  it("does not mutate the input", () => {
+    const input = [pastOld, pastRecent];
+    partitionByTime(input, now);
+    expect(ids(input)).toEqual(["pastOld", "pastRecent"]);
+  });
+
+  it("returns empty parts for no groups", () => {
+    expect(partitionByTime([], now)).toEqual({ ongoing: [], upcoming: [], past: [] });
   });
 });

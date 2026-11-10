@@ -58,21 +58,49 @@
       opacity: 0.6;
     }
   }
+}
 
-  &__unarchive {
-    font: inherit;
-    font-size: 0.8em;
-    cursor: pointer;
-    background: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-black);
-    border-radius: 0;
-    padding: 0.1em 0.5em;
+.LogRowButton {
+  font: inherit;
+  font-size: 0.8em;
+  cursor: pointer;
+  background: var(--c-white);
+  color: var(--c-black);
+  border: 1px solid var(--c-black);
+  border-radius: 0;
+  padding: 0.1em 0.5em;
 
-    &:hover:not(:disabled),
-    &:focus-visible {
-      background: var(--c-black);
-      color: var(--c-white);
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--c-black);
+    color: var(--c-white);
+  }
+}
+
+// Row actions sit at the end of a list row.
+.LogRowActions {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6em;
+  margin-left: auto;
+}
+
+// GroupArchive rows on pages that can manage logs: title left, actions right.
+.GroupArchive--manageable {
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25em 1em;
+    padding: 0.35em 0;
+    border-bottom: 1px dashed var(--c-black);
+
+    // Push to the right edge, like the other lists' row actions, even when the row
+    // wraps and the button lands on its own line.
+    > .LogRowButton {
+      margin-left: auto;
     }
   }
 }

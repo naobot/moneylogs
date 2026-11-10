@@ -26,6 +26,11 @@ type LogActionsModalProps = {
   kind: LogKind;
   /** Auth uid of the log's creator, when known (see utils/logOwnership). */
   creatorUid?: string;
+  /**
+   * Called after a successful delete. Defaults to leaving for Home, which is right when
+   * managing from inside the log; list pages pass this to stay where they are.
+   */
+  onDeleted?: () => void;
 };
 
 const deleteLogCallable = httpsCallable<{ kind: LogKind; id: string }, { deleted: boolean }>(
@@ -58,6 +63,7 @@ export const LogActionsModal = ({
   logTitle,
   kind,
   creatorUid,
+  onDeleted,
 }: LogActionsModalProps) => {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
@@ -73,7 +79,8 @@ export const LogActionsModal = ({
     try {
       await deletion.mutate(undefined);
       showToast(`Deleted ${logTitle}`, "success");
-      void navigate("/", { replace: true });
+      if (onDeleted) onDeleted();
+      else void navigate("/", { replace: true });
     } catch (err) {
       console.error("Failed to delete log:", err);
       setDeleteError(deleteErrorMessage(err));
