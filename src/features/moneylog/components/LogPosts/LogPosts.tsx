@@ -211,6 +211,7 @@ const LogPostItemComponent = ({
                 {post.amount?.toLocaleString()} {post.currency}
               </div>
               <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
+                <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
                 <IconText
                   type={hasUnreadComments ? "speech-filled" : "speech"}
                   text={(post?.commentCount ?? 0).toLocaleString()}
@@ -264,7 +265,12 @@ const LogPostItemComponent = ({
             </div>
           )}
         </div>
-        <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
+        {isPinned && (
+          // Pinned posts have no header row, so their reactions sit under the body.
+          <div className="LogPosts__posts__item__reactions">
+            <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
+          </div>
+        )}
         {!isPostingClosed && !isReadOnly && isMyLog && (
           <>
             <div className="LogPosts__posts__item__footer">

@@ -12,6 +12,12 @@ export type ReactionSummary = {
   userIds: string[];
 };
 
+/** The curated row shown on hovering the react button, and atop the full picker. */
+export const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "💸", "👀"] as const;
+
+/** Applied emoji shown inline in a post header; the rest are in the details panel. */
+export const MAX_INLINE_REACTIONS = 4;
+
 /** Most emoji one person can leave on a single post. */
 export const MAX_REACTIONS_PER_USER = 20;
 /** Longest string accepted as one emoji (ZWJ sequences with skin tones run long). */
