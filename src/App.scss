@@ -1,5 +1,6 @@
 @use "./constants.scss";
 @use "./tokens.scss";
+@use "./fonts.scss";
 
 :root {
   font-family: var(--font-mono);
@@ -265,19 +266,26 @@ h6,
   text-transform: none;
 }
 
+// Button labels: "Hack reads, Pixelify presses" — press-able app labels are set in
+// the pixel face, so they share the grain of the pixel icons.
 .Button strong,
 .LogRowButton,
 .Ledger__month__today {
+  font-family: var(--font-pixel);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .Button strong {
   font-size: 0.85em;
 }
 
-// The nav's log buttons show log titles (user content), so they keep their case.
+// The nav's log buttons show log titles (user content), so they keep their case
+// and stay in Hack.
 .MainNav__list .Button strong {
+  font-family: var(--font-mono);
+  font-weight: 700;
   text-transform: none;
   letter-spacing: normal;
   font-size: inherit;

@@ -23,8 +23,9 @@
   --c-white: var(--paper);
   --c-black: var(--ink);
 
-  // ---- type ----
-  --font-mono: Terminal, monospace;
+  // ---- type: Hack reads, Pixelify presses ----
+  --font-mono: Hack, monospace;
+  --font-pixel: "Pixelify Sans", Hack, monospace; // button labels only
 
   // ---- spacing (em, so it follows the root's 0.8em on phones) ----
   --space-1: 0.2em;
