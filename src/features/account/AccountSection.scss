@@ -1,0 +1,35 @@
+.AccountSection {
+  &__details {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4em 1.5em;
+    margin: 0;
+
+    dt {
+      font-weight: 700;
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+
+      small {
+        opacity: 0.6;
+      }
+    }
+  }
+
+  &__password {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-top: 0.5em;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+}
