@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import dayjs from "@/utils/configuredDayjs";
 import {
   personalStart,
@@ -20,6 +21,8 @@ import { useGetLogPosts } from "@/hooks/useGetLogPosts";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useNow } from "@/hooks/useNow";
 import { memberHasUnreadPosts } from "@/utils/unread";
+import { readPostLink, resolvePostLink, withoutPostLink } from "@/utils/postLink";
+import { useToastContext } from "@/hooks/useToastContext";
 
 import Icon, { IconText } from "@/components/Icon";
 import LogsSummary from "./LogsSummary/LogsSummary";
@@ -30,6 +33,7 @@ import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { useDateFormat } from "@/utils/dateFormat";
 import { MemberNamesContext } from "./LogPosts/memberNames";
+import type { PostFocus } from "./LogPosts/LogPosts";
 
 export const Group = ({
   group,
@@ -46,6 +50,8 @@ export const Group = ({
   const { trackUserAction } = useReadTracking();
   const { formatShortDate, formatTime, formatDateTime } = useDateFormat();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
+  const { showToast } = useToastContext();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Ticking clock, so the boundary crossings below re-evaluate on their own rather
   // than freezing at whatever they were when the page first rendered.
@@ -61,6 +67,11 @@ export const Group = ({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
+  // A post linked from a notification (?post=&comment=), once it's been found.
+  const [postFocus, setPostFocus] = useState<PostFocus | null>(null);
+  // The group whose default view a followed link replaced, so the reset below leaves
+  // that view alone (the user's profile can land after the link was followed).
+  const linkedGroupRef = useRef<string | null>(null);
 
   const isFutureGroup = useMemo(() => {
     return personalStart(group, loggedInUser?.timezone).isAfter(now);
@@ -128,6 +139,7 @@ export const Group = ({
   );
 
   useEffect(() => {
+    if (linkedGroupRef.current === groupId) return;
     if (isReadOnly) {
       // Completed logs open on the group summary
       setDisplayUser(null);
@@ -150,6 +162,37 @@ export const Group = ({
     isCreateNewEntrySet(false);
     setShowInviteModal(false);
   }, [group]);
+
+  // Follow a post link: page through older posts until it turns up, open its author's
+  // log, and hand the post (and comment) to LogPosts to scroll to. Then drop the params,
+  // so going back or switching members doesn't jump again.
+  const postLink = useMemo(() => readPostLink(searchParams), [searchParams]);
+  const { posts, hasMore, isLoadingMore, loadMore } = logPostRes;
+  useEffect(() => {
+    if (!postLink || !logPostRes.isSuccess || isLoadingMembers) return;
+    const found = resolvePostLink(posts, postLink.postId, { hasMore, isLoadingMore });
+    if (found.status === "waiting") return;
+    if (found.status === "load-more") {
+      loadMore();
+      return;
+    }
+    setSearchParams((prev) => withoutPostLink(prev), { replace: true });
+    if (found.status === "missing") {
+      showToast("That post isn't in this log any more.", "error");
+      return;
+    }
+    const author = members.find((m) => m.id === found.post.author.id);
+    linkedGroupRef.current = groupId;
+    setDisplaySummary(false);
+    if (author) {
+      setDisplayUser(author as unknown as UserData);
+      setDisplayAll(false);
+      setPostFocus({ ...postLink, key: Date.now() });
+    } else {
+      // The author has left the log: their posts still show in the digest.
+      setDisplayAll(true);
+    }
+  }, [postLink, logPostRes.isSuccess, posts, hasMore, isLoadingMore, isLoadingMembers, members]);
 
   useEffect(() => {
     if (
@@ -406,6 +449,7 @@ export const Group = ({
                   hasMorePosts={logPostRes.hasMore}
                   isLoadingMorePosts={logPostRes.isLoadingMore}
                   onLoadMorePosts={logPostRes.loadMore}
+                  postFocus={postFocus}
                 />
               )}
             </>

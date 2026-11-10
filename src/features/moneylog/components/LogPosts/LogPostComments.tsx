@@ -21,7 +21,12 @@ type LogPostCommentsProps = {
   isReadOnly: boolean;
   // Ongoing log, but the viewer can't comment (logged out / not a participant).
   isSpectator?: boolean;
+  /** A comment to scroll to instead of the reply box, from a notification link. */
+  focusCommentId?: string;
 };
+
+/** How long a linked comment keeps its frame. */
+const COMMENT_FOCUS_MS = 2500;
 
 const LogPostComments = ({
   currentLogAuthorId,
@@ -32,6 +37,7 @@ const LogPostComments = ({
   refreshComments,
   isReadOnly = false,
   isSpectator = false,
+  focusCommentId,
 }: LogPostCommentsProps) => {
   const theme = useTheme();
   const [newCommentContent, newCommentContentSet] = useState<string | null>();
@@ -70,8 +76,29 @@ const LogPostComments = ({
     commentRefs.current = new Map();
   }, [postId]);
 
+  // A linked comment is scrolled to once, the first time it has rendered. After that
+  // (or with no link) the panel goes to the reply box as usual.
+  const pendingFocus = useRef(focusCommentId);
+  useEffect(() => {
+    pendingFocus.current = focusCommentId;
+  }, [focusCommentId]);
+
   useLayoutEffect(() => {
     const delay = setTimeout(() => {
+      const linked = pendingFocus.current
+        ? commentRefs.current?.get(pendingFocus.current)
+        : undefined;
+      if (linked) {
+        pendingFocus.current = undefined;
+        linked.classList.add("LogPostComments__item--focused");
+        linked.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Not cleared on re-run: the frame must come off even if comments refresh.
+        setTimeout(
+          () => linked.classList.remove("LogPostComments__item--focused"),
+          COMMENT_FOCUS_MS,
+        );
+        return;
+      }
       commentRefs.current?.get("newComment")?.scrollIntoView({ behavior: "smooth" });
     }, 1000);
     return () => clearTimeout(delay);

@@ -42,7 +42,18 @@ type LogPostsProps = {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
+  /** A post (and comment) to scroll to, from a notification link. */
+  postFocus?: PostFocus | null;
 };
+
+/**
+ * A linked post to bring into view. `key` changes each time a link is followed, so
+ * following the same link twice still scrolls.
+ */
+export type PostFocus = { postId: string; commentId?: string; key: number };
+
+/** How long a linked post keeps its frame after scrolling into view. */
+export const POST_FOCUS_MS = 2500;
 
 type LogPostProps = {
   user: UserData;
@@ -61,6 +72,8 @@ type LogPostProps = {
   isSpectator?: boolean;
   /** The first entry on the page: its hover popovers open below, not off the top. */
   isFirst?: boolean;
+  /** Arrived at from a link: scroll to it and frame it briefly. */
+  isFocused?: boolean;
 };
 
 type DateBanner = {
@@ -96,6 +109,7 @@ const LogPostItemComponent = ({
   isSummaryView = false,
   isSpectator = false,
   isFirst = false,
+  isFocused = false,
 }: LogPostProps) => {
   const theme = useTheme();
   const { prefs, formatTime, formatDateTime } = useDateFormat();
@@ -194,12 +208,17 @@ const LogPostItemComponent = ({
     }
   }, [selectedPostId]);
 
+  useEffect(() => {
+    if (isFocused) scrollPostToTop(postRef, ".LogPosts__posts");
+  }, [isFocused]);
+
   return (
     <>
       <div
         className={cx("LogPosts__posts__item", {
           "LogPosts__posts__item--selected": selectedPostId === post.id,
           "LogPosts__posts__item--pinned": isPinned && !isDigestMode,
+          "LogPosts__posts__item--focused": isFocused,
         })}
         ref={postRef}
       >
@@ -370,6 +389,7 @@ export const arePostItemPropsEqual = (prev: LogPostProps, next: LogPostProps): b
   prev.isSummaryView === next.isSummaryView &&
   prev.isSpectator === next.isSpectator &&
   prev.isFirst === next.isFirst &&
+  prev.isFocused === next.isFocused &&
   (prev.selectedPostId === prev.post.id) === (next.selectedPostId === next.post.id);
 
 export const LogPostItem = memo(LogPostItemComponent, arePostItemPropsEqual);
@@ -389,6 +409,7 @@ const LogPosts = memo(
     hasMore = false,
     isLoadingMore = false,
     onLoadMore,
+    postFocus,
   }: LogPostsProps) => {
     const [isWeeklyView, _isWeeklyViewSet] = useState(false);
     const { markCommentsAsViewedFn } = useUserQuery();
@@ -584,6 +605,29 @@ const LogPosts = memo(
       }
     }, [selectedPost]);
 
+    // A followed link: frame the post briefly, and for a comment open the comments
+    // panel on it. Declared after the userId reset above, so when the link also switched
+    // members, the reset runs first and this selection wins.
+    const [focusedPostId, setFocusedPostId] = useState<string | null>(null);
+    const [focusCommentId, setFocusCommentId] = useState<string | undefined>();
+    const handledFocusKey = useRef<number>();
+    useEffect(() => {
+      if (!postFocus || handledFocusKey.current === postFocus.key) return;
+      const post = logs.find((p) => p.id === postFocus.postId);
+      if (!post) return;
+      handledFocusKey.current = postFocus.key;
+      setFocusedPostId(post.id);
+      if (postFocus.commentId) {
+        setFocusCommentId(postFocus.commentId);
+        handleOpenComments(post, true);
+      }
+    }, [postFocus, logs, handleOpenComments]);
+    useEffect(() => {
+      if (!focusedPostId) return;
+      const timer = setTimeout(() => setFocusedPostId(null), POST_FOCUS_MS);
+      return () => clearTimeout(timer);
+    }, [focusedPostId]);
+
     useEffect(() => {
       // Not gated on isReadOnly: opening a post on a completed group must still be
       // able to clear a stuck comment notification. The commentsAreUnseen guard makes
@@ -717,6 +761,7 @@ const LogPosts = memo(
                         isPostingClosed={isPostingClosed}
                         isSpectator={isSpectator}
                         isFirst={(item as LogPost).id === firstPostId}
+                        isFocused={(item as LogPost).id === focusedPostId}
                         isDigestMode={false}
                         selectedPostId={selectedPost?.id ?? null}
                         setSelectedPost={setSelectedPost}
@@ -766,6 +811,7 @@ const LogPosts = memo(
               refreshComments={refreshComments}
               isReadOnly={isReadOnly}
               isSpectator={isSpectator}
+              focusCommentId={focusCommentId}
             />
           )}
         </div>

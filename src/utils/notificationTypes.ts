@@ -2,6 +2,7 @@ import dayjs from "@/utils/configuredDayjs";
 import type { IconType } from "@/components/Icon";
 import { Currency } from "@/types/user";
 import { formatAmount } from "@/utils/ledgerEntries";
+import { postLinkHref } from "@/utils/postLink";
 import {
   AppNotification,
   BudgetNotification,
@@ -60,7 +61,7 @@ export const NOTIFICATION_TYPES: Specs = {
       { keep: n.groupName },
     ],
     detail: (n) => n.excerpt,
-    href: (n) => `/g/${n.groupId}`,
+    href: (n) => postLinkHref(n.groupId, n.postId, n.commentId),
   },
   reaction: {
     label: "Reactions to your posts",
@@ -73,7 +74,7 @@ export const NOTIFICATION_TYPES: Specs = {
       " in ",
       { keep: n.groupName },
     ],
-    href: (n) => `/g/${n.groupId}`,
+    href: (n) => postLinkHref(n.groupId, n.postId),
   },
   log_created: {
     label: "Logs you start",

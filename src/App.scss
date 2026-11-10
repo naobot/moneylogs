@@ -1047,6 +1047,13 @@ h6,
         }
       }
 
+      // Arrived at from a notification link: the 4px "new activity" frame, briefly.
+      // An outline, so the frame doesn't shift the layout as it comes and goes.
+      &--focused {
+        outline: var(--border-fresh) solid var(--ink);
+        outline-offset: calc(-1 * var(--border-fresh));
+      }
+
       &--selected {
         border: var(--border-rule) solid var(--ink);
         z-index: 51;
@@ -1372,6 +1379,12 @@ h6,
 
     &--hidden {
       opacity: 0 !important;
+    }
+
+    // A comment linked from a notification, framed briefly.
+    &--focused {
+      outline: var(--border-fresh) solid var(--ink);
+      outline-offset: 2px;
     }
 
     &--notice {

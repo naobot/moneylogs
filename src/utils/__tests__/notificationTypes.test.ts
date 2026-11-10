@@ -150,6 +150,19 @@ describe("notificationHref", () => {
     ).toBe("/l/g1");
   });
 
+  it("links comments and reactions to the post itself", () => {
+    expect(notificationHref(comment("author"))).toBe("/g/g1?post=p1&comment=c1");
+    const reaction = {
+      ...base,
+      type: "reaction",
+      postId: "p1",
+      actorId: "u2",
+      actorName: "Ben",
+      emoji: "🎉",
+    } as AppNotification;
+    expect(notificationHref(reaction)).toBe("/g/g1?post=p1");
+  });
+
   it("links budget alerts to that month's stats", () => {
     expect(notificationHref(budget())).toBe("/l/l1/stats?month=2026-11");
   });

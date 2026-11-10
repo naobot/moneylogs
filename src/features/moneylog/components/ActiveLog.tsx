@@ -4,7 +4,7 @@ import { Group, LogPost } from "@/types/user";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 
-import LogPosts from "./LogPosts/LogPosts";
+import LogPosts, { PostFocus } from "./LogPosts/LogPosts";
 import AllLogsDigest from "./LogPosts/AllLogsDigest";
 
 type ActiveLogProps = {
@@ -26,6 +26,8 @@ type ActiveLogProps = {
   hasMorePosts?: boolean;
   isLoadingMorePosts?: boolean;
   onLoadMorePosts?: () => void;
+  /** A post (and comment) to scroll to, from a notification link. */
+  postFocus?: PostFocus | null;
 };
 
 export const ActiveLog = ({
@@ -45,6 +47,7 @@ export const ActiveLog = ({
   hasMorePosts = false,
   isLoadingMorePosts = false,
   onLoadMorePosts,
+  postFocus,
 }: ActiveLogProps) => {
   useEffect(() => {
     isCreateNewEntrySet(false);
@@ -67,6 +70,7 @@ export const ActiveLog = ({
           hasMore={hasMorePosts}
           isLoadingMore={isLoadingMorePosts}
           onLoadMore={onLoadMorePosts}
+          postFocus={postFocus}
         />
       )}
       {displayAll && (
