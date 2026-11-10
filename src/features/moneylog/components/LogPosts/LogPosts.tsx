@@ -58,6 +58,8 @@ type LogPostProps = {
   isSummaryView?: boolean;
   /** Logged-in non-members watching the log: they can read but not react. */
   isSpectator?: boolean;
+  /** The first entry on the page: its hover popovers open below, not off the top. */
+  isFirst?: boolean;
 };
 
 type DateBanner = {
@@ -92,6 +94,7 @@ const LogPostItemComponent = ({
   isPostingClosed = false,
   isSummaryView = false,
   isSpectator = false,
+  isFirst = false,
 }: LogPostProps) => {
   const theme = useTheme();
   const postRef = useRef<HTMLDivElement>(null);
@@ -211,7 +214,11 @@ const LogPostItemComponent = ({
                 {post.amount?.toLocaleString()} {post.currency}
               </div>
               <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
-                <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
+                <PostReactions
+                  post={post}
+                  canReact={!isReadOnly && !isSpectator}
+                  isFirst={isFirst}
+                />
                 <IconText
                   type={hasUnreadComments ? "speech-filled" : "speech"}
                   text={(post?.commentCount ?? 0).toLocaleString()}
@@ -268,7 +275,7 @@ const LogPostItemComponent = ({
         {isPinned && (
           // Pinned posts have no header row, so their reactions sit under the body.
           <div className="LogPosts__posts__item__reactions">
-            <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
+            <PostReactions post={post} canReact={!isReadOnly && !isSpectator} isFirst={isFirst} />
           </div>
         )}
         {!isPostingClosed && !isReadOnly && isMyLog && (
@@ -360,6 +367,7 @@ export const arePostItemPropsEqual = (prev: LogPostProps, next: LogPostProps): b
   prev.isPostingClosed === next.isPostingClosed &&
   prev.isSummaryView === next.isSummaryView &&
   prev.isSpectator === next.isSpectator &&
+  prev.isFirst === next.isFirst &&
   (prev.selectedPostId === prev.post.id) === (next.selectedPostId === next.post.id);
 
 export const LogPostItem = memo(LogPostItemComponent, arePostItemPropsEqual);
@@ -470,6 +478,11 @@ const LogPosts = memo(
 
       return displayRows;
     }, [logs]);
+
+    const firstPostId = useMemo(
+      () => (calendarMarkedPosts.find((row) => !("_isBanner" in row)) as LogPost | undefined)?.id,
+      [calendarMarkedPosts],
+    );
 
     const [selectedPost, setSelectedPost] = useState<LogPost | null>(null);
     const [currentlyEditingPostId, setCurrentlyEditingPostId] = useState<string | null>(null);
@@ -700,6 +713,7 @@ const LogPosts = memo(
                         isReadOnly={isReadOnly}
                         isPostingClosed={isPostingClosed}
                         isSpectator={isSpectator}
+                        isFirst={(item as LogPost).id === firstPostId}
                         isDigestMode={false}
                         selectedPostId={selectedPost?.id ?? null}
                         setSelectedPost={setSelectedPost}

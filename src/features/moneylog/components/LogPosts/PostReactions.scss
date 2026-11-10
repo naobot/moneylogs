@@ -1,5 +1,5 @@
 // Reactions in the post header, left of the comment bubble. Applied emoji are bare
-// (no frames): an emoji and its count. Your own count is underlined; nothing adds a colour.
+// (no frames): an emoji and its count, in plain weight.
 .PostReactions {
   display: inline-flex;
   align-items: center;
@@ -34,7 +34,7 @@
   &__tally {
     display: inline-flex;
     align-items: center;
-    gap: 0.15em;
+    gap: 0.3em;
     flex-shrink: 0;
   }
 
@@ -44,41 +44,23 @@
   }
 
   &__count {
-    font-weight: 700;
     font-variant-numeric: tabular-nums;
-  }
-
-  &__tally--mine &__count {
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
 
   &__more {
     flex-shrink: 0;
-    font-weight: 700;
   }
 
+  // Takes .IconText's box (and .Icon's baseline nudge) like the comment bubble, and,
+  // like it, no hover treatment beyond the pointer cursor.
   &__trigger {
-    display: inline-flex;
-    align-items: center;
     flex-shrink: 0;
     padding: 0;
+    font: inherit;
+    line-height: inherit;
+    color: inherit;
     background: none;
     border: none;
-    cursor: pointer;
-
-    // Same nudge the comment bubble gets inside IconText, so the two share a line.
-    .Icon {
-      margin-bottom: 0;
-    }
-
-    &:hover,
-    &--open {
-      .Icon img {
-        filter: var(--icon-filter-inverse);
-      }
-      background: var(--inverse-surface);
-    }
 
     &:focus-visible {
       outline: var(--border-hairline) dashed var(--ink);
@@ -109,8 +91,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 1.9em;
   height: 1.9em;
+  padding: 0;
   font-size: 1.2em;
   line-height: 1;
   background: none;
@@ -138,8 +122,16 @@
   width: 340px;
   padding: var(--space-3);
 
+  .ReactionQuick__emoji {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  // Eight equal cells that always fit the panel's width.
   .ReactionQuick__row {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     padding-bottom: var(--space-3);
     border-bottom: var(--border-hairline) dotted var(--ink);
   }
@@ -247,8 +239,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
     width: 1.9em;
     height: 1.9em;
+    padding: 0;
     font-size: 1.2em;
     background: transparent;
     border: var(--border-hairline) solid transparent;
