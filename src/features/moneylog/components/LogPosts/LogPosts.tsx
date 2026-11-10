@@ -24,6 +24,7 @@ import LogPostEditor from "./LogPostEditor";
 import LogPostComments from "./LogPostComments";
 import PostReactions from "./PostReactions";
 import { markdownColorMode, useTheme } from "@/utils/theme";
+import { useDateFormat } from "@/utils/dateFormat";
 
 type LogPostsProps = {
   user: UserData;
@@ -97,6 +98,7 @@ const LogPostItemComponent = ({
   isFirst = false,
 }: LogPostProps) => {
   const theme = useTheme();
+  const { prefs, formatTime, formatDateTime } = useDateFormat();
   const postRef = useRef<HTMLDivElement>(null);
   const { user: loggedInUser } = useCurrentUser();
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false);
@@ -124,24 +126,24 @@ const LogPostItemComponent = ({
   const postTime = useMemo(() => {
     if (!isDigestMode) {
       if (post.timezone) {
-        return toTz(post.postDate?.seconds * 1000, post.timezone).format("HH:mm");
+        return formatTime(toTz(post.postDate?.seconds * 1000, post.timezone));
       } else {
-        return toTz(post.postDate?.seconds * 1000, user?.timezone).format("HH:mm");
+        return formatTime(toTz(post.postDate?.seconds * 1000, user?.timezone));
       }
     } else {
       // use relative time 'X ago'
       return dayjs().to(dayjs(post.postDate?.seconds * 1000));
     }
-  }, [post]);
+  }, [post, prefs]);
   const hoverTimeInfo = useMemo(() => {
     if (!isDigestMode) {
-      return `Posted on ${toTz(post.createdAt?.seconds * 1000, user?.timezone).format("ddd D MMM YYYY HH:mm")}`;
+      return `Posted on ${formatDateTime(toTz(post.createdAt?.seconds * 1000, user?.timezone))}`;
     } else {
       const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess();
 
-      return `${toTz(post.postDate?.seconds * 1000, timezone).format("HH:mm")} (${parseTimezone(timezone).abbrev})`;
+      return `${formatTime(toTz(post.postDate?.seconds * 1000, timezone))} (${parseTimezone(timezone).abbrev})`;
     }
-  }, [post, user]);
+  }, [post, user, prefs]);
 
   const { deleteLogPost } = useLogPostQuery();
   const { updatePinnedPost } = useUserQuery();
@@ -392,6 +394,7 @@ const LogPosts = memo(
     const { markCommentsAsViewedFn } = useUserQuery();
     const { user: loggedInUser } = useCurrentUser();
     const { trackUserAction } = useReadTracking();
+    const { prefs, formatDate } = useDateFormat();
 
     const calendarMarkedPosts = useMemo(() => {
       // console.log('calendarMarkedPosts updating')
@@ -457,7 +460,7 @@ const LogPosts = memo(
             dailyTotals = {};
 
             displayRows.push({
-              text: logPostDate.format("ddd D MMM YYYY"),
+              text: formatDate(logPostDate),
               type: "day",
               _isBanner: true,
               runningTotal: runningTotals,
@@ -477,7 +480,7 @@ const LogPosts = memo(
       });
 
       return displayRows;
-    }, [logs]);
+    }, [logs, prefs]);
 
     const firstPostId = useMemo(
       () => (calendarMarkedPosts.find((row) => !("_isBanner" in row)) as LogPost | undefined)?.id,

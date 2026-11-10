@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import cx from "classnames";
 import type dayjs from "dayjs";
 import { Currency } from "@/types/user";
+import { useDateFormat } from "@/utils/dateFormat";
 
 type ChartMode = "bars" | "cumulative";
 
@@ -26,8 +27,8 @@ interface SpendingChartProps<P extends ChartPoint> {
   barRadius?: number;
   /** Noun for the per-bar item count in the tooltip, e.g. ["post", "posts"]. */
   itemNoun?: [string, string];
-  /** Axis label format for the first/last points. */
-  axisFormat?: string;
+  /** Axis labels for the first/last points: a short date, or a month for monthly series. */
+  axisFormat?: "day" | "month";
 }
 
 // Fixed viewBox; CSS scales the SVG responsively (uniform, so strokes stay crisp).
@@ -64,8 +65,9 @@ const SpendingChart = <P extends ChartPoint>({
   selectedKey,
   barRadius = 4,
   itemNoun = ["post", "posts"],
-  axisFormat = "D MMM",
+  axisFormat = "day",
 }: SpendingChartProps<P>) => {
+  const { formatShortDate, formatMonth } = useDateFormat();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
@@ -192,7 +194,10 @@ const SpendingChart = <P extends ChartPoint>({
             y={BASELINE + 16}
             textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
           >
-            {series[i]?.date.format(axisFormat)}
+            {series[i] &&
+              (axisFormat === "month"
+                ? formatMonth(series[i].date, { short: true })
+                : formatShortDate(series[i].date))}
           </text>
         ))}
 

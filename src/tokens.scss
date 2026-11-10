@@ -28,6 +28,10 @@
   // ---- type: one face, Hack, throughout ----
   --font-mono: Hack, monospace;
 
+  // Entry text: set per device in the /me Display drawer (src/utils/displayPrefs.ts).
+  --entry-font-size: 1em;
+  --entry-text-align: left;
+
   // ---- spacing (em, so it follows the root's 0.8em on phones) ----
   --space-1: 0.2em;
   --space-2: 0.4em;
@@ -71,6 +75,23 @@
   --z-snackbar: 1100;
 
   color-scheme: light;
+}
+
+// Display prefs for entry text, written to <html> by src/utils/displayPrefs.ts.
+:root[data-entry-size="s"] {
+  --entry-font-size: 0.85em;
+}
+:root[data-entry-size="l"] {
+  --entry-font-size: 1.15em;
+}
+:root[data-entry-size="xl"] {
+  --entry-font-size: 1.3em;
+}
+:root[data-entry-align="center"] {
+  --entry-text-align: center;
+}
+:root[data-entry-align="justify"] {
+  --entry-text-align: justify;
 }
 
 // Night shift: the same two inks, swapped.

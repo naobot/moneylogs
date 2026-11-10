@@ -46,6 +46,26 @@ html {
   font-size: 1em !important;
 }
 
+// Entry text follows the viewer's display prefs (the --entry-* tokens). Images are
+// always centred whatever the alignment; code keeps its own left edge.
+.LogPosts__posts__item__content,
+.PostPreview,
+.DisplaySample {
+  .wmde-markdown {
+    font-size: var(--entry-font-size) !important;
+    text-align: var(--entry-text-align);
+
+    img {
+      display: block;
+      margin-inline: auto;
+    }
+
+    pre {
+      text-align: left;
+    }
+  }
+}
+
 .handler {
   cursor: pointer;
 }
@@ -1148,6 +1168,7 @@ h6,
 .LogPost__images {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5em;
   margin: 0.5em 0;
 

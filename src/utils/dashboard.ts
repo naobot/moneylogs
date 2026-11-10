@@ -13,6 +13,7 @@ import type { Dayjs } from "dayjs";
 import dayjs from "./configuredDayjs";
 import { partitionByTime, personalEnd, personalStart } from "./groupBoundaries";
 import { ArchivedLogsMap, partitionArchived } from "./archivedLogs";
+import { formatDate } from "./dateFormat";
 import type { Group } from "@/types/user";
 import type { Ledger } from "@/types/ledger";
 
@@ -68,7 +69,8 @@ export const groupTiming = (
   now: Dayjs = dayjs(),
 ): string => {
   if (stage === "upcoming") return `starts ${personalStart(group, timezone).from(now)}`;
-  if (stage === "past") return `ended ${personalEnd(group, timezone).format("D MMM YYYY")}`;
+  if (stage === "past")
+    return `ended ${formatDate(personalEnd(group, timezone), { weekday: false })}`;
   const end = personalEnd(group, timezone);
   return end.isAfter(now) ? `ends ${end.from(now)}` : "posting closed";
 };

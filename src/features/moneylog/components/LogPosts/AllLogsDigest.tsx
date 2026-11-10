@@ -15,6 +15,7 @@ import dayjs from "@/utils/configuredDayjs";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { commentsAreUnseen } from "@/utils/unread";
+import { formatDate } from "@/utils/dateFormat";
 
 const AllLogsDigest = ({
   groupId,
@@ -207,7 +208,7 @@ const AllLogsDigest = ({
                 >
                   ←
                 </button>
-                <span>Posts from {dayjs(currentDay).format("ddd D MMM YYYY")}</span>
+                <span>Posts from {formatDate(dayjs(currentDay))}</span>
                 <button
                   className="DigestNav__arrow"
                   onClick={() => goToDay(1)}
