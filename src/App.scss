@@ -151,6 +151,12 @@ html {
     padding-left: 0.1em;
     padding-right: 0.1em;
   }
+
+  // .Icon's -5px baseline nudge is for icons in running text; inside a centred button
+  // it drags the icon 2.5px below the neighbouring "moneylogs" text. Cancel it here.
+  .Icon {
+    margin-bottom: 0;
+  }
 }
 
 .Menu {
