@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useGetLedger } from "@/hooks/useGetLedger";
+import { useStampLogVisit } from "@/hooks/useStampLogVisit";
 import { Ledger as LedgerType } from "@/types/ledger";
 import { Ledger } from "@/features/ledger/components/Ledger";
 import { LedgerStatsView } from "@/features/ledger/components/LedgerStatsView";
@@ -10,6 +11,8 @@ import { LedgerStatsView } from "@/features/ledger/components/LedgerStatsView";
 const LedgerRoute = ({ render }: { render: (ledger: LedgerType) => ReactNode }) => {
   const { ledgerId } = useParams();
   const { ledger, isLoading, isSuccess, isDenied, isNotFound, isError } = useGetLedger(ledgerId);
+  // Only members can read a ledger, so a loaded ledger means a member is looking at it.
+  useStampLogVisit(isSuccess && ledger ? ledgerId : undefined);
 
   if (isLoading) return <div className="InfoBox">...</div>;
 

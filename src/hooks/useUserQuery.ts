@@ -87,6 +87,13 @@ export const useUserQuery = () => {
     await updateDoc(doc(db, "users", userId), { [`archivedLogs.${logId}`]: deleteField() });
   };
 
+  /** Remember when this user last looked at a log (see utils/logActivity). */
+  const stampLogVisitFn = async ({ userId, logId }: { userId: string; logId: string }) => {
+    await updateDoc(doc(db, "users", userId), {
+      [`logLastViewedAt.${logId}`]: serverTimestamp(),
+    });
+  };
+
   // Mutations
   const updateViewTrackingMutation = useMutation(updateViewTrackingFn);
   const updateUserProfileMutation = useMutation(updateUserProfileFn);
@@ -104,5 +111,6 @@ export const useUserQuery = () => {
     updatePinnedPostFn,
     archiveLog: archiveLogMutation,
     unarchiveLog: unarchiveLogMutation,
+    stampLogVisitFn,
   };
 };
