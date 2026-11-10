@@ -22,6 +22,7 @@ const baseProps = () =>
     isReadOnly: false,
     isPostingClosed: false,
     isSummaryView: false,
+    isSpectator: false,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any;
 
@@ -55,6 +56,7 @@ describe("arePostItemPropsEqual", () => {
   it("re-renders when a display flag changes", () => {
     const prev = baseProps();
     expect(arePostItemPropsEqual(prev, { ...prev, isReadOnly: true })).toBe(false);
+    expect(arePostItemPropsEqual(prev, { ...prev, isSpectator: true })).toBe(false);
   });
 
   it("re-renders when a callback identity changes (guards against stale closures)", () => {

@@ -119,6 +119,8 @@ export type LogPost = {
   images?: string[];
   imagesProcessing?: boolean;
   pendingImageCount?: number;
+  /** Emoji reactions: users-collection doc id → the distinct emoji that user added. */
+  reactions?: Record<string, string[]>;
 };
 
 export type Comment = {

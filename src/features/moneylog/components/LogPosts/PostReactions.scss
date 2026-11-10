@@ -1,0 +1,126 @@
+// Reaction chips under a post: hairline-framed tallies. Your own reaction is shown by
+// inversion, never by a new colour. Disabled chips (read-only, spectators) stay full
+// strength: they are a record, not an unavailable control.
+.PostReactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 var(--space-2);
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font: inherit;
+    font-size: 0.8em;
+    line-height: 1.4;
+    color: var(--ink);
+    background: var(--paper);
+    border: var(--border-hairline) solid var(--ink);
+    border-radius: var(--radius-none);
+    padding: 0 var(--space-3);
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      outline: var(--border-hairline) solid var(--ink);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &--mine {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  &__emoji {
+    font-size: 1.15em;
+  }
+
+  &__count {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__add {
+    line-height: 1.4;
+  }
+}
+
+// The picker lives in a striped tool modal; frimousse is headless, so all of it is here.
+.PostReactions__modal {
+  max-width: min(var(--modal-width), calc(100vw - 2 * var(--space-5)));
+}
+
+.EmojiPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  height: min(360px, 60vh);
+  // frimousse sizes rows from these
+  --frimousse-viewport-width: 100%;
+
+  &__search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__viewport {
+    position: relative;
+    flex: 1;
+    outline: none;
+    overflow-y: auto;
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 6em;
+    color: var(--ink-muted);
+  }
+
+  &__list {
+    padding-bottom: var(--space-3);
+  }
+
+  &__category {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: lowercase;
+    color: var(--ink);
+    background: var(--sheet);
+    border-bottom: var(--border-hairline) dotted var(--ink);
+  }
+
+  &__row {
+    padding: 0 var(--space-2);
+    scroll-margin-block: var(--space-6);
+  }
+
+  &__emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    font-size: 1.3em;
+    background: transparent;
+    border: var(--border-hairline) solid transparent;
+    border-radius: var(--radius-none);
+    cursor: pointer;
+
+    &--active {
+      border-color: var(--ink);
+    }
+  }
+}

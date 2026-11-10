@@ -28,6 +28,7 @@ import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
+import { MemberNamesContext } from "./LogPosts/memberNames";
 
 export const Group = ({
   group,
@@ -86,6 +87,11 @@ export const Group = ({
     isLoading: isLoadingMembers,
     userIdToDocRefMap,
   } = useGetGroupUsers(groupId);
+
+  const memberNames = useMemo(
+    () => new Map(members.map((member) => [member.id, member.displayName])),
+    [members],
+  );
 
   // Personal end: this user's posting window has closed
   const isPostingClosed = useMemo(() => {
@@ -264,7 +270,7 @@ export const Group = ({
   };
 
   return (
-    <>
+    <MemberNamesContext.Provider value={memberNames}>
       <div className="Group">
         <div className="Group__header">
           <div className="Group__header__left">
@@ -448,6 +454,6 @@ export const Group = ({
           </Modal.Actions>
         </Modal>
       )}
-    </>
+    </MemberNamesContext.Provider>
   );
 };

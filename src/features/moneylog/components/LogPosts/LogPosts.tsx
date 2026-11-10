@@ -22,6 +22,7 @@ import Button from "@/components/Button";
 import Icon, { IconText } from "@/components/Icon";
 import LogPostEditor from "./LogPostEditor";
 import LogPostComments from "./LogPostComments";
+import PostReactions from "./PostReactions";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 
 type LogPostsProps = {
@@ -55,6 +56,8 @@ type LogPostProps = {
   isReadOnly: boolean;
   isPostingClosed?: boolean;
   isSummaryView?: boolean;
+  /** Logged-in non-members watching the log: they can read but not react. */
+  isSpectator?: boolean;
 };
 
 type DateBanner = {
@@ -88,6 +91,7 @@ const LogPostItemComponent = ({
   isReadOnly = false,
   isPostingClosed = false,
   isSummaryView = false,
+  isSpectator = false,
 }: LogPostProps) => {
   const theme = useTheme();
   const postRef = useRef<HTMLDivElement>(null);
@@ -260,6 +264,7 @@ const LogPostItemComponent = ({
             </div>
           )}
         </div>
+        <PostReactions post={post} canReact={!isReadOnly && !isSpectator} />
         {!isPostingClosed && !isReadOnly && isMyLog && (
           <>
             <div className="LogPosts__posts__item__footer">
@@ -348,6 +353,7 @@ export const arePostItemPropsEqual = (prev: LogPostProps, next: LogPostProps): b
   prev.isReadOnly === next.isReadOnly &&
   prev.isPostingClosed === next.isPostingClosed &&
   prev.isSummaryView === next.isSummaryView &&
+  prev.isSpectator === next.isSpectator &&
   (prev.selectedPostId === prev.post.id) === (next.selectedPostId === next.post.id);
 
 export const LogPostItem = memo(LogPostItemComponent, arePostItemPropsEqual);
@@ -687,6 +693,7 @@ const LogPosts = memo(
                         isMyLog={isMyLog}
                         isReadOnly={isReadOnly}
                         isPostingClosed={isPostingClosed}
+                        isSpectator={isSpectator}
                         isDigestMode={false}
                         selectedPostId={selectedPost?.id ?? null}
                         setSelectedPost={setSelectedPost}
