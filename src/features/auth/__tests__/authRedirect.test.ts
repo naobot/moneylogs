@@ -10,6 +10,10 @@ describe("sanitizeRedirect", () => {
     expect(sanitizeRedirect("/g/abc123/invite?ref=email")).toBe("/g/abc123/invite?ref=email");
   });
 
+  it("preserves the hash, so linked drawers still open after signing in", () => {
+    expect(sanitizeRedirect("/me#logs")).toBe("/me#logs");
+  });
+
   it("returns undefined when no destination is given", () => {
     expect(sanitizeRedirect(undefined)).toBeUndefined();
     expect(sanitizeRedirect("")).toBeUndefined();

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import { act } from "react";
+import { ReactNode } from "react";
 import { createRoot, Root } from "react-dom/client";
+import { MemoryRouter, NavigateFunction, useNavigate } from "react-router-dom";
 import Drawer from "@/components/Drawer";
 import { readDrawerOpen } from "@/utils/drawerState";
 
@@ -9,10 +11,23 @@ import { readDrawerOpen } from "@/utils/drawerState";
 describe("Drawer", () => {
   let container: HTMLDivElement;
   let root: Root;
+  let navigate: NavigateFunction;
+
+  const CaptureNavigate = () => {
+    navigate = useNavigate();
+    return null;
+  };
+
+  // Drawers follow the router location, so render them inside one.
+  const inRouter = (ui: ReactNode, at = "/me") => (
+    <MemoryRouter initialEntries={[at]}>
+      <CaptureNavigate />
+      {ui}
+    </MemoryRouter>
+  );
 
   beforeEach(() => {
     window.localStorage.clear();
-    window.history.replaceState(null, "", "/me");
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -35,9 +50,11 @@ describe("Drawer", () => {
   it("renders the title, hint and body, closed by default", () => {
     act(() =>
       root.render(
-        <Drawer id="profile" title="Profile" summary="3 unlocked">
-          <p>body</p>
-        </Drawer>,
+        inRouter(
+          <Drawer id="profile" title="Profile" summary="3 unlocked">
+            <p>body</p>
+          </Drawer>,
+        ),
       ),
     );
 
@@ -51,9 +68,11 @@ describe("Drawer", () => {
   it("respects defaultOpen", () => {
     act(() =>
       root.render(
-        <Drawer id="profile" title="Profile" defaultOpen>
-          body
-        </Drawer>,
+        inRouter(
+          <Drawer id="profile" title="Profile" defaultOpen>
+            body
+          </Drawer>,
+        ),
       ),
     );
     expect(details().open).toBe(true);
@@ -61,40 +80,82 @@ describe("Drawer", () => {
   });
 
   it("remembers the open state across mounts", () => {
-    act(() => root.render(<Drawer id="logs" title="Logs" children="body" />));
+    act(() => root.render(inRouter(<Drawer id="logs" title="Logs" children="body" />)));
     toggle();
     expect(details().open).toBe(true);
     expect(readDrawerOpen("logs")).toBe(true);
 
     act(() => root.unmount());
     root = createRoot(container);
-    act(() => root.render(<Drawer id="logs" title="Logs" children="body" />));
+    act(() => root.render(inRouter(<Drawer id="logs" title="Logs" children="body" />)));
     expect(details().open).toBe(true);
   });
 
   it("a remembered closed state overrides defaultOpen", () => {
-    act(() => root.render(<Drawer id="profile" title="Profile" defaultOpen children="body" />));
+    act(() =>
+      root.render(inRouter(<Drawer id="profile" title="Profile" defaultOpen children="body" />)),
+    );
     toggle();
     expect(readDrawerOpen("profile")).toBe(false);
 
     act(() => root.unmount());
     root = createRoot(container);
-    act(() => root.render(<Drawer id="profile" title="Profile" defaultOpen children="body" />));
+    act(() =>
+      root.render(inRouter(<Drawer id="profile" title="Profile" defaultOpen children="body" />)),
+    );
     expect(details().open).toBe(false);
   });
 
   it("opens when the URL hash names it", () => {
-    window.history.replaceState(null, "", "/me#logs");
     act(() =>
       root.render(
-        <>
-          <Drawer id="profile" title="Profile" children="a" />
-          <Drawer id="logs" title="Logs" children="b" />
-        </>,
+        inRouter(
+          <>
+            <Drawer id="profile" title="Profile" children="a" />
+            <Drawer id="logs" title="Logs" children="b" />
+          </>,
+          "/me#logs",
+        ),
       ),
     );
     const [profile, logs] = Array.from(container.querySelectorAll("details"));
     expect(profile.open).toBe(false);
     expect(logs.open).toBe(true);
+  });
+
+  it("opens when navigated to its hash while already on the page", () => {
+    act(() =>
+      root.render(
+        inRouter(
+          <>
+            <Drawer id="profile" title="Profile" defaultOpen children="a" />
+            <Drawer id="logs" title="Logs" children="b" />
+          </>,
+        ),
+      ),
+    );
+    const logs = () => container.querySelectorAll("details")[1];
+    expect(logs().open).toBe(false);
+
+    act(() => void navigate("/me#logs"));
+    expect(logs().open).toBe(true);
+    expect(readDrawerOpen("logs")).toBe(true);
+  });
+
+  it("reopens when the same hash link is followed again after closing it", () => {
+    act(() => root.render(inRouter(<Drawer id="logs" title="Logs" children="b" />, "/me#logs")));
+    expect(details().open).toBe(true);
+
+    toggle();
+    expect(details().open).toBe(false);
+
+    act(() => void navigate("/me#logs"));
+    expect(details().open).toBe(true);
+  });
+
+  it("overrides a remembered closed state when linked", () => {
+    window.localStorage.setItem("ML__drawer_logs", "0");
+    act(() => root.render(inRouter(<Drawer id="logs" title="Logs" children="b" />, "/me#logs")));
+    expect(details().open).toBe(true);
   });
 });
