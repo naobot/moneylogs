@@ -1,104 +1,125 @@
-import { Currency } from "@/types/user";
-import { formatAmount } from "@/utils/ledgerEntries";
 import { BuddyFacts, BuddyState } from "./buddyMood";
 import { BuddyMood } from "./faces";
+
+/**
+ * What the buddy says when clicked. Chatty and a bit vague on purpose: it rounds the
+ * month into words ("about half the budget", "a couple of weeks left") rather than
+ * quoting numbers.
+ */
 
 /** A line, or nothing when the facts it needs aren't there. */
 type Line = (f: BuddyFacts) => string | null;
 
-const money = (f: BuddyFacts, value?: number | null) =>
-  f.currency !== undefined && typeof value === "number"
-    ? formatAmount(Math.round(value), f.currency as Currency)
-    : null;
-
-const pct = (n?: number | null) => (typeof n === "number" ? `${Math.round(n * 100)}%` : null);
-
-const days = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
-
-const budgetUsed: Line = (f) =>
-  f.hasBudget && pct(f.used)
-    ? `${pct(f.used)} of the ${f.currency} budget gone, ${days(f.daysLeft)} to go.`
-    : null;
-
-const pace: Line = (f) =>
-  f.hasBudget && money(f, f.projected) && money(f, f.budget)
-    ? `at this pace: about ${money(f, f.projected)} by month end, against ${money(f, f.budget)}.`
-    : null;
-
-const vsLast: Line = (f) => {
-  if (typeof f.change !== "number") return null;
-  const change = Math.round(Math.abs(f.change) * 100);
-  if (change < 5) return "about the same as this point last month. steady paws.";
-  return f.change > 0
-    ? `spending's up ${change}% on this point last month.`
-    : `spending's down ${change}% on this point last month ♡`;
+/** How much of the budget is gone, in words. */
+export const shareInWords = (used: number): string => {
+  if (used < 0.1) return "barely a nibble of";
+  if (used < 0.2) return "a little bit of";
+  if (used < 0.3) return "about a quarter of";
+  if (used < 0.42) return "about a third of";
+  if (used < 0.58) return "about half of";
+  if (used < 0.72) return "a good chunk of";
+  if (used < 0.9) return "most of";
+  if (used <= 1) return "nearly all of";
+  return "more than all of";
 };
 
-const streak: Line = (f) =>
-  f.noSpendDays >= 2 ? `${days(f.noSpendDays)} without spending. very zen.` : null;
+/** How much of the month is left, as a clause. */
+export const daysLeftInWords = (days: number): string => {
+  if (days <= 1) return "it's the last day of the month";
+  if (days <= 4) return "there are just a few days left";
+  if (days <= 9) return "there's about a week left";
+  if (days <= 17) return "there are a couple of weeks left";
+  return "there's lots of month left";
+};
 
-const top: Line = (f) => (f.topCategory ? `most of it's going on ${f.topCategory}.` : null);
+const used: Line = (f) =>
+  f.hasBudget && typeof f.used === "number"
+    ? `we've used ${shareInWords(f.used)} the budget, and ${daysLeftInWords(f.daysLeft)}.`
+    : null;
+
+const vsLastMonth: Line = (f) => {
+  if (typeof f.change !== "number") return null;
+  if (Math.abs(f.change) < 0.1) return "we're spending about the same as this time last month~";
+  if (f.change > 0.3) return "we're spending quite a bit more than this time last month…";
+  if (f.change > 0) return "a teeny bit more than this time last month, hmm.";
+  if (f.change < -0.3) return "way less than this time last month!! so proud of us ♡";
+  return "a little less than this time last month. nice!";
+};
+
+const overPace: Line = (f) =>
+  f.hasBudget &&
+  typeof f.projected === "number" &&
+  typeof f.budget === "number" &&
+  f.projected > f.budget
+    ? "if we keep going like this, we'll run past the budget before the month's out…"
+    : null;
+
+const streak: Line = (f) =>
+  f.noSpendDays >= 2 ? `${f.noSpendDays} whole days without spending! so zen ♡` : null;
+
+const favourite: Line = (f) =>
+  f.topCategory ? `${f.topCategory} seems to be our favourite thing this month, huh?` : null;
 
 const noBudget: Line = (f) =>
-  f.hasBudget ? null : "no budget yet… want to set one in categories?";
+  f.hasBudget ? null : "psst… we could set a budget in categories. i'd keep an eye on it for you!";
 
 const LINES: Record<BuddyMood, Line[]> = {
   delighted: [
-    (f) => `${budgetUsed(f) ?? vsLast(f) ?? "look at you go."} purr purr ♡`,
+    (f) => (used(f) ? `${used(f)} we're doing amazing!!` : "we're doing amazing this month!!"),
     streak,
-    () => "this month is going beautifully. i might nap on the receipts.",
-    pace,
+    vsLastMonth,
+    () => "you're the best human. i might nap on the receipts out of sheer joy~",
   ],
   happy: [
-    (f) => `${budgetUsed(f) ?? vsLast(f) ?? "things look good."} purr.`,
+    (f) => (used(f) ? `${used(f)} right on track ♪` : "things are looking good this month ♪"),
     streak,
-    () => "comfortably on track. carry on.",
-    top,
+    vsLastMonth,
+    () => "nice and steady. i approve! *purrs*",
   ],
   content: [
-    (f) => budgetUsed(f) ?? vsLast(f) ?? "all quiet on the money front.",
-    top,
-    () => "right about where we should be. mrrp.",
+    used,
+    vsLastMonth,
+    () => "everything's about where it should be. mrrp~",
+    favourite,
     noBudget,
   ],
   wary: [
-    (f) => pace(f) ?? vsLast(f),
-    (f) => (budgetUsed(f) ? `${budgetUsed(f)} hmm.` : null),
-    top,
-    () => "a little quick this month. i'm keeping an eye on it.",
+    (f) => (used(f) ? `hmm… ${used(f)}` : "hmm… things are moving a little quick."),
+    overPace,
+    favourite,
+    () => "we're going a tiny bit fast. i'm watching… very closely.",
     noBudget,
   ],
   worried: [
-    (f) => (pace(f) ? `${pace(f)} hiss.` : vsLast(f)),
-    (f) => (budgetUsed(f) ? `${budgetUsed(f)} ...that's a lot.` : null),
-    top,
-    () => "maybe a quiet week or two? for me?",
+    overPace,
+    (f) => (used(f) ? `${used(f)} that's a lot…` : vsLastMonth(f)),
+    favourite,
+    () => "maybe a quiet week or two? for me? (´・ω・`)",
   ],
   alarmed: [
+    () => "we've gone over the budget!! my fur is standing on end!",
     (f) =>
-      money(f, f.spent) && money(f, f.budget)
-        ? `${money(f, f.spent)} spent against a ${money(f, f.budget)} budget. shaaa!`
-        : "we're over budget!!",
-    (f) =>
-      f.daysLeft > 1 ? `over budget with ${days(f.daysLeft)} still to go. fur on end.` : null,
-    top,
-    () => "the budget has been knocked off the table.",
+      f.daysLeft > 1
+        ? `over budget, and ${daysLeftInWords(f.daysLeft)}… we need a plan!`
+        : "over budget… but the month's nearly over. fresh start soon?",
+    favourite,
+    () => "the budget got knocked right off the table. *hiss*",
   ],
   idle: [
-    () => "nothing logged this month yet. i'm watching. ｼﾞｰ",
+    () => "nothing logged this month yet. i'm just waiting here… patiently. ｼﾞｰ",
     noBudget,
-    () => "a fresh month. no crumbs to chase yet.",
+    () => "a brand new month! no crumbs to chase yet~",
   ],
 };
 
-const SLEEPY = ["zzz… mrrp? oh.", "five more minutes…", "*yawn* …you again."];
+const SLEEPY = ["zzz… mrrp? oh, it's you.", "five more minutes…", "*yawn* …you're up late."];
 
 /**
- * What the buddy says when clicked. Stable for the day (seed), and moves to the next line
- * on each click (nth). Lines whose facts are missing are skipped.
+ * Stable for the day (seed), and moves to the next line on each click (nth). Lines
+ * whose facts are missing are skipped.
  */
 export const buddyComment = ({ mood, asleep, facts, seed }: BuddyState, nth = 0): string => {
   const lines = LINES[mood].map((line) => line(facts)).filter((line): line is string => !!line);
-  const said = lines.length ? lines[(seed + nth) % lines.length] : "mrrp.";
+  const said = lines.length ? lines[(seed + nth) % lines.length] : "mrrp?";
   return asleep ? `${SLEEPY[(seed + nth) % SLEEPY.length]} ${said}` : said;
 };

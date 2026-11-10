@@ -1,5 +1,5 @@
 /**
- * The budget buddy's faces: cat kaomoji from kaomoji-memorial.jp/cat-emoticons-free
+ * The budget buddy's faces: cat kaomoji, mostly from kaomoji-memorial.jp/cat-emoticons-free
  * (free to copy). Text only, so they follow the theme's ink like any other text.
  */
 
@@ -12,19 +12,49 @@ export type BuddyMood = ScaleMood | "idle";
 type FaceSet = {
   /** One is picked per day. */
   resting: readonly string[];
-  /** While a mouse pointer is over it. */
-  hover: string;
-  /** For a moment after a click. */
-  click: string;
+  /** Shown while the speech bubble is open. One is picked per day. */
+  click: readonly string[];
 };
 
 export const FACES: Record<BuddyMood | "asleep", FaceSet> = {
-  delighted: { resting: ["ฅ(=✧ω✧=)ฅ", "^˵◕ω◕˵^"], hover: "ฅ^>ω<^ฅ", click: "ฅ^ơωơ^ฅ♡" },
-  happy: { resting: ["ฅ^•ω•^ฅ", "(=^･ω･^)b"], hover: "ฅ^>ω<^ฅ", click: "d(=^･ω･^=)b" },
-  content: { resting: ["≽^- ˕ -^≼", "(=´ﻌ｀=)"], hover: "(^･o･^)ﾉ", click: "(=^･ω･^)b" },
-  wary: { resting: ["( Φ ω Φ )", "(=ёェё=)"], hover: "｜ωФ)", click: "^ಠ_ಠ^" },
-  worried: { resting: ["(=ච ﻌ ච=)", "(=-“-=)"], hover: "(=｀ェ´=)", click: "(=｀ω´=)" },
-  alarmed: { resting: ["(｢ФДФ)｢ｼｬｰ", "(○｀ω´○)ｼｬｰ!"], hover: "Σ(ﾉ｀□´)ノ", click: "(=｀ω´=) ｼｬｰ!" },
-  idle: { resting: ["｜ωФ)"], hover: "( Φ ω Φ )", click: "(^･o･^)ﾉ" },
-  asleep: { resting: ["(= ^υ_υ^)..zZ"], hover: "(=-ω-=)..z", click: "(=ёェё=)" },
+  delighted: {
+    resting: ["ฅ(=✧ω✧=)ฅ", "^˵◕ω◕˵^", "ヽ(•̀ω•́ )ゝ✧"],
+    click: ["ฅ^ơωơ^ฅ♡", "(●ↀωↀ●)✧"],
+  },
+  happy: {
+    resting: ["ฅ^•ω•^ฅ", "ฅ^>ω<^ฅ", "(=^･ω･^)b"],
+    click: ["d(=^･ω･^=)b", "ヾ(э^・ｪ・^)э"],
+  },
+  content: {
+    resting: ["≽^- ˕ -^≼", "ฅ(ﾐ・ﻌ・ﾐ)ฅ", "(=´ﻌ｀=)"],
+    click: ["(=^･ω･^)b", "(^･o･^)ﾉ"],
+  },
+  wary: {
+    resting: ["( Φ ω Φ )", "ฅ(◍ •̀ω• ́◍)ฅ", "(=ёェё=)"],
+    click: ["^ಠ_ಠ^", "｜ωФ)ｼﾞｰ"],
+  },
+  worried: {
+    resting: ["(=ච ﻌ ච=)", "(=`･∧･´=)", "(^ ｰ̀дｰ́ ^)"],
+    click: ["(=｀ω´=)", "(=｀ェ´=)ｼｬｯ"],
+  },
+  alarmed: {
+    resting: ["(｢ФДФ)｢ｼｬｰ", "(^ ; ᯅ ; ^)", "☜(ΦωΦ )へ"],
+    click: ["(○｀ω´○)ｼｬｰ!", "Σ(ﾉ｀□´)ノｼｬｰｰ"],
+  },
+  idle: {
+    resting: ["=• · • =", "ヾ(⌒(_´,,−﹃−,,`)_ｺﾞﾛｺﾞﾛ"],
+    click: ["( Φ ω Φ )", "(^･o･^)ﾉ"],
+  },
+  asleep: {
+    resting: ["(= ^υ_υ^)..zZ", "(^-人-^)..zZ"],
+    click: ["(=ёェё=)"],
+  },
 };
+
+/** Awake, after a moment's hover: the cat notices you. Cycles through on each hover. */
+export const HOVER_FACES = ["(ฅ✧ω✧ฅ)ﾆｬｰ", "ฅ(ↀᴥↀ)ฅ ﾆｬｰ", "ฅ(^ •ω•*^ฅ♡ﾆｬｰ", "(=^. .^=)ﾆｬｰ"] as const;
+
+/** Asleep, it only stirs. */
+export const ASLEEP_HOVER_FACE = "(=-ω-=)..z";
+
+export const pick = <T>(list: readonly T[], n: number): T => list[n % list.length];

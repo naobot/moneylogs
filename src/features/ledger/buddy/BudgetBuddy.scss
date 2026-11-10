@@ -8,55 +8,41 @@
   white-space: nowrap;
   color: var(--ink);
   background: none;
-  border: var(--border-hairline) dashed transparent;
+  border: none;
   border-radius: var(--radius-none);
   cursor: pointer;
 
-  &:hover,
+  // No hover styling: the cat reacts by itself. Keyboard focus still shows.
   &:focus-visible {
-    border-color: var(--ink);
+    outline: var(--border-hairline) dashed var(--ink);
   }
 
-  // Breathing: a 1px rise and fall every few seconds.
   &__face {
     display: inline-block;
-    animation: buddy-breathe 4s ease-in-out infinite;
-  }
 
-  &--asleep &__face {
-    animation-duration: 6s;
-    opacity: 0.85;
-  }
-
-  &--alarmed &__face {
-    animation: buddy-bristle 0.6s steps(2) 3;
+    // A new expression hops once as it appears.
+    &--react {
+      animation: buddy-bounce 0.45s ease-out 1;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    &__face,
-    &--asleep &__face,
-    &--alarmed &__face {
+    &__face--react {
       animation: none;
     }
   }
 }
 
-@keyframes buddy-breathe {
+@keyframes buddy-bounce {
   0%,
   100% {
     transform: translateY(0);
   }
-  50% {
-    transform: translateY(-1px);
+  40% {
+    transform: translateY(-4px);
   }
-}
-
-@keyframes buddy-bristle {
-  0% {
-    transform: translateX(-1px);
-  }
-  100% {
-    transform: translateX(1px);
+  70% {
+    transform: translateY(1px);
   }
 }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
-import { buddyComment } from "../buddyComments";
+import { buddyComment, daysLeftInWords, shareInWords } from "../buddyComments";
 import type { BuddyFacts, BuddyState } from "../buddyMood";
-import { FACES, MOOD_SCALE } from "../faces";
+import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, MOOD_SCALE } from "../faces";
 
 const budgetFacts: BuddyFacts = {
   currency: "CAD",
@@ -33,11 +33,24 @@ describe("buddyComment", () => {
     }
   });
 
-  it("talks about the actual numbers", () => {
-    const lines = Array.from({ length: 4 }, (_, nth) => say("content", budgetFacts, nth));
-    expect(lines).toContain("38% of the CAD budget gone, 19 days to go.");
+  it("talks about the month in words, not exact numbers", () => {
+    const lines = Array.from({ length: 5 }, (_, nth) => say("content", budgetFacts, nth));
+    expect(lines).toContain(
+      "we've used about a third of the budget, and there's lots of month left.",
+    );
+    for (const line of lines) expect(line).not.toMatch(/\d+%|CAD/);
     const worried = Array.from({ length: 4 }, (_, nth) => say("worried", budgetFacts, nth));
-    expect(worried.some((l) => l.includes("about 1,400 CAD by month end"))).toBe(true);
+    expect(worried.some((l) => l.includes("run past the budget"))).toBe(true);
+  });
+
+  it("rounds shares and days into words", () => {
+    expect(shareInWords(0.05)).toBe("barely a nibble of");
+    expect(shareInWords(0.5)).toBe("about half of");
+    expect(shareInWords(0.95)).toBe("nearly all of");
+    expect(shareInWords(1.2)).toBe("more than all of");
+    expect(daysLeftInWords(1)).toBe("it's the last day of the month");
+    expect(daysLeftInWords(7)).toBe("there's about a week left");
+    expect(daysLeftInWords(25)).toBe("there's lots of month left");
   });
 
   it("moves on to another line when clicked again", () => {
@@ -46,7 +59,16 @@ describe("buddyComment", () => {
 
   it("suggests a budget when there isn't one", () => {
     const lines = Array.from({ length: 3 }, (_, nth) => say("content", bareFacts, nth));
-    expect(lines.some((l) => l.includes("set one in categories"))).toBe(true);
+    expect(lines.some((l) => l.includes("set a budget in categories"))).toBe(true);
+  });
+
+  it("includes the requested faces", () => {
+    expect(FACES.asleep.resting).toContain("(^-人-^)..zZ");
+    expect(FACES.happy.resting).toContain("ฅ^>ω<^ฅ");
+    expect(FACES.content.resting).toContain("ฅ(ﾐ・ﻌ・ﾐ)ฅ");
+    expect(FACES.alarmed.resting).toEqual(expect.arrayContaining(["(^ ; ᯅ ; ^)", "☜(ΦωΦ )へ"]));
+    expect(FACES.wary.resting).toContain("ฅ(◍ •̀ω• ́◍)ฅ");
+    expect(FACES.idle.resting).toEqual(["=• · • =", "ヾ(⌒(_´,,−﹃−,,`)_ｺﾞﾛｺﾞﾛ"]);
   });
 
   it("wakes up groggy", () => {
@@ -59,11 +81,14 @@ describe("buddyComment", () => {
 
 describe("faces", () => {
   it("are single short lines, so the header row never wraps oddly", () => {
-    for (const set of Object.values(FACES)) {
-      for (const face of [...set.resting, set.hover, set.click]) {
-        expect(face).not.toMatch(/\n/);
-        expect(Array.from(face).length).toBeLessThanOrEqual(16);
-      }
+    const all = [
+      ...Object.values(FACES).flatMap((set) => [...set.resting, ...set.click]),
+      ...HOVER_FACES,
+      ASLEEP_HOVER_FACE,
+    ];
+    for (const face of all) {
+      expect(face).not.toMatch(/\n/);
+      expect(Array.from(face).length).toBeLessThanOrEqual(24);
     }
   });
 });

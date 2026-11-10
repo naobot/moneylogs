@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import cx from "classnames";
 
 import dayjs from "@/utils/configuredDayjs";
 import Popover from "@/components/Popover";
 import { useCurrentUser } from "@/contexts";
-import { isMousePointer } from "@/hooks/useHoverIntent";
+import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
 import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
 import { shiftMonth, todayInTz } from "@/utils/ledger";
 import { buddyMood } from "./buddyMood";
 import { buddyComment } from "./buddyComments";
-import { FACES } from "./faces";
+import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
 
 import "./BudgetBuddy.scss";
 
-/** How long the click face shows before it settles back. */
-export const CLICK_FACE_MS = 1200;
+/** How long the pointer has to linger before the cat notices it. */
+export const BUDDY_HOVER_DELAY = 700;
 
 const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
   try {
@@ -28,9 +28,11 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
 
 /**
  * A kaomoji cat whose face reflects how this month's spending is going. It always shows
- * the current month, whatever month is being browsed. It sleeps at night in the
- * viewer's timezone, perks up on hover, and on click says something about the month in
- * a speech bubble.
+ * the current month, whatever month is being browsed.
+ * - It sleeps at night in the viewer's timezone.
+ * - Lingering over it with a mouse makes it notice you (ﾆｬｰ).
+ * - A click opens a speech bubble with a comment on the month. Its face holds still
+ *   until the bubble closes.
  */
 export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categories"> }) => {
   const { user } = useCurrentUser();
@@ -56,27 +58,36 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   });
 
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
-  const [hovered, setHovered] = useState(false);
-  const [poked, setPoked] = useState(false);
+  const [hoverFace, setHoverFace] = useState<string | null>(null);
   const [bubble, setBubble] = useState<string | null>(null);
+  const hovers = useRef(0);
   const clicks = useRef(0);
-  const pokeTimer = useRef<ReturnType<typeof setTimeout>>();
-  useEffect(() => () => clearTimeout(pokeTimer.current), []);
+  const { openAfterDelay, cancelOpen } = useHoverIntent({ openDelay: BUDDY_HOVER_DELAY });
 
   // Nothing until the month docs arrive, so the face doesn't flash from idle.
   if (!isSuccess) return null;
 
   const faces = FACES[state.asleep ? "asleep" : state.mood];
-  const face = poked
-    ? faces.click
-    : hovered
-      ? faces.hover
-      : faces.resting[state.seed % faces.resting.length];
+  const resting = pick(faces.resting, state.seed);
+  // While the bubble is open, it keeps the face it reacted with.
+  const face = bubble ? pick(faces.click, state.seed) : (hoverFace ?? resting);
+
+  const notice = () => {
+    if (bubble) return;
+    openAfterDelay(() => {
+      setHoverFace(state.asleep ? ASLEEP_HOVER_FACE : pick(HOVER_FACES, hovers.current));
+      hovers.current += 1;
+    });
+  };
+
+  const ignore = () => {
+    cancelOpen();
+    setHoverFace(null);
+  };
 
   const poke = () => {
-    clearTimeout(pokeTimer.current);
-    setPoked(true);
-    pokeTimer.current = setTimeout(() => setPoked(false), CLICK_FACE_MS);
+    cancelOpen();
+    setHoverFace(null);
     if (bubble) {
       setBubble(null);
       return;
@@ -96,11 +107,16 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         aria-label={`Budget buddy: ${feeling}. Click to hear how the month is going.`}
         aria-haspopup="dialog"
         aria-expanded={!!bubble}
-        onPointerEnter={(e) => isMousePointer(e) && setHovered(true)}
-        onPointerLeave={(e) => isMousePointer(e) && setHovered(false)}
+        onPointerEnter={(e) => isMousePointer(e) && notice()}
+        onPointerLeave={(e) => isMousePointer(e) && ignore()}
         onClick={poke}
       >
-        <span className="BudgetBuddy__face" aria-hidden="true">
+        {/* Keyed by face, so each new expression bounces once as it appears. */}
+        <span
+          key={face}
+          className={cx("BudgetBuddy__face", { "BudgetBuddy__face--react": face !== resting })}
+          aria-hidden="true"
+        >
           {face}
         </span>
       </button>
