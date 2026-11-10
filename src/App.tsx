@@ -47,7 +47,8 @@ export const CheckAuth = ({
       <Navigate
         to={"/login"}
         replace
-        state={{ from: location.pathname + location.search }}
+        // Keep the hash too, so e.g. /me#logs still opens that drawer after signing in.
+        state={{ from: location.pathname + location.search + location.hash }}
         {...props}
       />
     );
