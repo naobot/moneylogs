@@ -21,6 +21,7 @@ import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
+import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 
 import "./Ledger.scss";
 
@@ -99,20 +100,30 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
 
         <div className="Ledger__body">
           <nav className="Ledger__month" aria-label="Month">
-            <RowButton
-              glyph
-              aria-label="Previous month"
-              onClick={() => setMonth(shiftMonth(month, -1))}
-            >
-              ‹
-            </RowButton>
-            <strong className="Ledger__month__label">{formatMonth(month)}</strong>
-            <RowButton glyph aria-label="Next month" onClick={() => setMonth(shiftMonth(month, 1))}>
-              ›
-            </RowButton>
-            {month !== currentMonth && (
-              <RowButton onClick={() => setMonth(currentMonth)}>this month</RowButton>
-            )}
+            <div className="Ledger__month__controls">
+              <RowButton
+                glyph
+                aria-label="Previous month"
+                onClick={() => setMonth(shiftMonth(month, -1))}
+              >
+                ‹
+              </RowButton>
+              <strong className="Ledger__month__label">{formatMonth(month)}</strong>
+              <RowButton
+                glyph
+                aria-label="Next month"
+                onClick={() => setMonth(shiftMonth(month, 1))}
+              >
+                ›
+              </RowButton>
+              {month !== currentMonth && (
+                <RowButton onClick={() => setMonth(currentMonth)}>this month</RowButton>
+              )}
+            </div>
+            {/* Always about this month, whichever month is being browsed. */}
+            <div className="Ledger__month__buddy">
+              <BudgetBuddy ledger={ledger} />
+            </div>
             <Link
               className="Ledger__month__view"
               to={ledgerViewPath(ledger.id, otherView, month, currentMonth)}

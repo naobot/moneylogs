@@ -22,16 +22,43 @@
     text-align: center;
   }
 
+  // Month controls on the left, the budget buddy dead centre, the view switch on the
+  // right. On phones the buddy gets its own row on top.
   &__month {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-areas: "controls buddy view";
     align-items: center;
     gap: 0.5em 0.75em;
     padding-bottom: 0.5em;
     border-bottom: var(--border-rule) solid var(--ink);
 
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "buddy buddy"
+        "controls view";
+    }
+
+    &__controls {
+      grid-area: controls;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5em 0.75em;
+      min-width: 0;
+    }
+
+    &__buddy {
+      grid-area: buddy;
+      justify-self: center;
+      min-height: 1.6em;
+    }
+
     // Switch between the entries and stats views (pushed to the right).
     &__view {
+      grid-area: view;
+      justify-self: end;
       margin-left: auto;
       padding: 0.1em 0.75em;
       font-weight: 700;
