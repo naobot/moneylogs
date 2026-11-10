@@ -3,6 +3,7 @@ import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerCategory, LedgerEntry, LedgerMonth } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import { formatMonth, resolveCategory, shiftMonth } from "@/utils/ledger";
+import { formatDate } from "@/utils/dateFormat";
 // Single source of truth for monthly aggregation, shared with the Cloud Function.
 import { aggregateMonth, MonthAggregate } from "../../functions/src/ledgerAggregate";
 
@@ -120,7 +121,13 @@ export const dailySeries = (
     const date = dayjs(`${month}-${dd}`);
     const amount = byDay[dd]?.[currency] ?? 0;
     cumulative = Math.round((cumulative + amount) * 100) / 100;
-    return { key: `${month}-${dd}`, date, label: date.format("ddd D MMM"), amount, cumulative };
+    return {
+      key: `${month}-${dd}`,
+      date,
+      label: formatDate(date, { year: false }),
+      amount,
+      cumulative,
+    };
   });
 };
 

@@ -1,5 +1,6 @@
 import dayjs from "@/utils/configuredDayjs";
 import { isCurrency } from "@/utils/currency";
+import { formatMonth as formatMonthLabel } from "@/utils/dateFormat";
 import { Ledger, LedgerCategory, LedgerEntryInput } from "@/types/ledger";
 
 export const MAX_CATEGORY_NAME_LENGTH = 20;
@@ -51,7 +52,7 @@ export const shiftMonth = (month: string, delta: number): string =>
 export const trailingMonths = (month: string, count: number): string[] =>
   Array.from({ length: count }, (_, i) => shiftMonth(month, i - (count - 1)));
 
-export const formatMonth = (month: string): string => dayjs(`${month}-01`).format("MMM YYYY");
+export const formatMonth = (month: string): string => formatMonthLabel(dayjs(`${month}-01`));
 
 /** Trim and collapse internal whitespace. */
 export const normaliseCategoryName = (name: string): string => name.trim().replace(/\s+/g, " ");

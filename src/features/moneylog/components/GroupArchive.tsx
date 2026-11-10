@@ -6,6 +6,7 @@ import { byMostRecentlyEnded } from "@/utils/groupBoundaries";
 import { ManageLogButton } from "@/features/logActions/ManageLogButton";
 import { ManageTarget, manageTargetForGroup } from "@/features/logActions/manageTarget";
 import dayjs from "dayjs";
+import { formatDate } from "@/utils/dateFormat";
 
 type GroupArchiveProps = {
   groups: Array<Group>;
@@ -37,8 +38,8 @@ const GroupArchive = ({
             <span>
               <Link to={`/g/${group.id}`}>{group.title}</Link>{" "}
               <small>
-                ({dayjs(group.start.toDate()).format("ddd D MMM YYYY")} to{" "}
-                {dayjs(group.end.toDate()).format("ddd D MMM YYYY")})
+                ({formatDate(dayjs(group.start.toDate()))} to{" "}
+                {formatDate(dayjs(group.end.toDate()))})
               </small>
             </span>
             {onManage && (

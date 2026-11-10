@@ -2,6 +2,7 @@ import { FormEvent, KeyboardEvent, ReactNode, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
+import { formatDate, formatTime } from "@/utils/dateFormat";
 
 import { useCurrentUser } from "@/contexts";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
@@ -66,8 +67,10 @@ const MODE_OPTIONS: Array<{ mode: LogMode; title: string; lines: string[] }> = [
   },
 ];
 
-const fmtDateTime = (date: string, time: string) =>
-  `${dayjs(date).format("ddd D MMM YYYY")} ${time}`;
+const fmtDateTime = (date: string, time: string) => {
+  const at = dayjs(`${date}T${time}`);
+  return `${formatDate(dayjs(date))} ${at.isValid() ? formatTime(at) : time}`;
+};
 
 export const CreateLogWizard = () => {
   const navigate = useNavigate();

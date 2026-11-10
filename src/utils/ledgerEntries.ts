@@ -3,6 +3,7 @@ import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerEntry, LedgerEntryInput } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import { monthKeyOf } from "@/utils/ledger";
+import { formatDate } from "@/utils/dateFormat";
 
 type Timestamped = { createdAt?: { toMillis?: () => number } | null };
 
@@ -58,7 +59,7 @@ export const groupEntriesByDay = <T extends LedgerEntry>(
     if (!day || day.date !== entry.date) {
       day = {
         date: entry.date,
-        label: dayjs(entry.date).format("ddd D MMM"),
+        label: formatDate(dayjs(entry.date), { year: false }),
         entries: [],
         subtotals: {},
       };

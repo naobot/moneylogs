@@ -1,6 +1,7 @@
 import dayjs from "@/utils/configuredDayjs";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
+import { formatShortDate } from "@/utils/dateFormat";
 
 export type Granularity = "day" | "week";
 
@@ -48,7 +49,7 @@ const keyOf = (d: dayjs.Dayjs, granularity: Granularity): string =>
   bucketDateOf(d, granularity).format("YYYY-MM-DD");
 
 const labelOf = (d: dayjs.Dayjs, granularity: Granularity): string =>
-  granularity === "week" ? `wk of ${d.format("D MMM")}` : d.format("D MMM");
+  granularity === "week" ? `wk of ${formatShortDate(d)}` : formatShortDate(d);
 
 /**
  * Bucket a set of posts into a dense, zero-filled time series per currency.

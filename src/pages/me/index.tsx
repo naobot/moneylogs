@@ -10,11 +10,12 @@ import { ProfileSection } from "@/features/account/ProfileSection";
 import { AccountSection } from "@/features/account/AccountSection";
 import { AchievementsSection } from "@/features/account/AchievementsSection";
 import { MyLogsSection } from "@/features/account/MyLogsSection";
-import { DisplaySection, THEME_LABELS } from "@/features/account/DisplaySection";
+import { DisplaySection, displaySummary } from "@/features/account/DisplaySection";
 import { myLogsHint } from "@/features/account/myLogsHint";
 import { partitionArchived } from "@/utils/archivedLogs";
 import { partitionByTime } from "@/utils/groupBoundaries";
 import { useTheme } from "@/utils/theme";
+import { useDisplayPrefs } from "@/utils/displayPrefs";
 
 import "./me.scss";
 
@@ -23,6 +24,7 @@ import "./me.scss";
 export const UserSettings = () => {
   const { user } = useCurrentUser();
   const theme = useTheme();
+  const displayPrefs = useDisplayPrefs();
   const { allGroups: groups } = useGetCurrentGroups();
   const { ledgers: allLedgers } = useGetMyLedgers();
   const { achievements } = useGetAchievements(user?.id);
@@ -62,7 +64,7 @@ export const UserSettings = () => {
           <ProfileSection />
         </Drawer>
 
-        <Drawer id="display" title="Display" summary={THEME_LABELS[theme]}>
+        <Drawer id="display" title="Display" summary={displaySummary(theme, displayPrefs)}>
           <DisplaySection />
         </Drawer>
 

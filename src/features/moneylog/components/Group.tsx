@@ -28,6 +28,7 @@ import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
+import { useDateFormat } from "@/utils/dateFormat";
 
 export const Group = ({
   group,
@@ -42,6 +43,7 @@ export const Group = ({
   // const { pathname } = useLocation()
   const { updateViewTrackingFn } = useUserQuery();
   const { trackUserAction } = useReadTracking();
+  const { formatShortDate, formatTime, formatDateTime } = useDateFormat();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
 
   // Ticking clock, so the boundary crossings below re-evaluate on their own rather
@@ -271,8 +273,8 @@ export const Group = ({
             <div className="GroupInterval Group__header__item">
               {group && (
                 <div className="Group__header__item__time">
-                  {displayStart.format("D MMM")} <small>({displayStart.format("H:mm")})</small> to{" "}
-                  {displayEnd.format("D MMM")} <small>({displayEnd.format("H:mm")})</small>
+                  {formatShortDate(displayStart)} <small>({formatTime(displayStart)})</small> to{" "}
+                  {formatShortDate(displayEnd)} <small>({formatTime(displayEnd)})</small>
                 </div>
               )}
               {!isPostingClosed && endingSoon && (
@@ -433,8 +435,7 @@ export const Group = ({
           <Modal.Body>
             <p>This moneylog group is ending soon!</p>
             <p>
-              Your posting window closes at{" "}
-              <strong>{displayEnd.format("ddd D MMM YYYY HH:mm")}</strong>.
+              Your posting window closes at <strong>{formatDateTime(displayEnd)}</strong>.
             </p>
             <p>You can still read and comment for a period after that.</p>
           </Modal.Body>
