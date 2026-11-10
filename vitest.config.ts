@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}", "functions/src/**/*.test.ts"],
+    // @uiw/react-markdown-preview imports .css from its ESM build; inline it so
+    // Vite handles the CSS instead of Node's loader.
+    server: { deps: { inline: [/@uiw\//] } },
   },
   resolve: {
     alias: {
