@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
 import { useUserQuery } from "@/hooks/useUserQuery";
+import { useToastContext } from "@/hooks/useToastContext";
 import { Group } from "@/types/user";
 import { Ledger } from "@/types/ledger";
 import { archivedAtMillis } from "@/utils/archivedLogs";
@@ -20,6 +21,7 @@ type Row = { id: string; title: string; href: string; kind: string };
 export const ArchivedLogsList = ({ groups, ledgers }: ArchivedLogsListProps) => {
   const { user } = useCurrentUser();
   const { unarchiveLog } = useUserQuery();
+  const { showToast } = useToastContext();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   const rows: Row[] = [
@@ -36,6 +38,7 @@ export const ArchivedLogsList = ({ groups, ledgers }: ArchivedLogsListProps) => 
       await unarchiveLog.mutate({ userId: user.id, logId });
     } catch (err) {
       console.error("Failed to unarchive:", err);
+      showToast("Failed to unarchive. Please try again.");
     } finally {
       setPendingId(null);
     }

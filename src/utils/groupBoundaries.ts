@@ -48,6 +48,9 @@ export const byMostRecentlyEnded = (a: Group, b: Group): number =>
 export const bySoonestStarting = (a: Group, b: Group): number =>
   absoluteStart(a).valueOf() - absoluteStart(b).valueOf();
 
+export const bySoonestEnding = (a: Group, b: Group): number =>
+  absoluteEnd(a).valueOf() - absoluteEnd(b).valueOf();
+
 /**
  * How long until the group closes for everyone, phrased as a suffix — e.g. "in 5 hours".
  * Shown to users whose own posting window has ended while later timezones are still
@@ -57,4 +60,27 @@ export const timeUntilReadOnly = (group: Group, now: Dayjs = dayjs()): string =>
   const hours = absoluteEnd(group).diff(now, "hour");
   if (hours < 1) return "soon";
   return `in ${hours} hour${hours === 1 ? "" : "s"}`;
+};
+
+/**
+ * Split groups by where `now` falls in their absolute window, each part sorted the way
+ * it is listed: ongoing soonest-ending first, upcoming soonest-starting first, past most
+ * recently ended first. Does not mutate the input.
+ */
+export const partitionByTime = (
+  groups: ReadonlyArray<Group>,
+  now: Dayjs = dayjs(),
+): { ongoing: Group[]; upcoming: Group[]; past: Group[] } => {
+  const ongoing: Group[] = [];
+  const upcoming: Group[] = [];
+  const past: Group[] = [];
+  for (const group of groups) {
+    if (absoluteStart(group).isAfter(now)) upcoming.push(group);
+    else if (absoluteEnd(group).isBefore(now)) past.push(group);
+    else ongoing.push(group);
+  }
+  ongoing.sort(bySoonestEnding);
+  upcoming.sort(bySoonestStarting);
+  past.sort(byMostRecentlyEnded);
+  return { ongoing, upcoming, past };
 };
