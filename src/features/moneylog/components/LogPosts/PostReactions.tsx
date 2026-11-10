@@ -1,4 +1,4 @@
-import { lazy, PointerEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import cx from "classnames";
 
 import { LogPost } from "@/types/user";
@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/contexts";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useReadTracking } from "@/hooks/useReadTracking";
+import { isMousePointer as isMouse, useHoverIntent } from "@/hooks/useHoverIntent";
 import Icon from "@/components/Icon";
 import Popover from "@/components/Popover";
 import RowButton from "@/components/RowButton";
@@ -24,12 +25,6 @@ import { useMemberNames } from "./memberNames";
 import "./PostReactions.scss";
 
 const EmojiPickerPanel = lazy(() => import("./EmojiPickerPanel"));
-
-// Hover-to-preview only makes sense with a real pointer; touch goes straight to click.
-const isMouse = (e: PointerEvent) => e.pointerType === "mouse";
-// Hover popovers wait a beat before opening, so passing the pointer over doesn't flash them.
-const HOVER_OPEN_DELAY = 350;
-const HOVER_CLOSE_DELAY = 200;
 
 type Panel = "quick" | "picker" | "details" | null;
 
@@ -62,16 +57,7 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
   // Elements in state (callback refs) so the popovers re-render once their anchor exists.
   const [appliedEl, setAppliedEl] = useState<HTMLButtonElement | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLButtonElement | null>(null);
-  const openTimer = useRef<ReturnType<typeof setTimeout>>();
-  const closeTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(
-    () => () => {
-      clearTimeout(openTimer.current);
-      clearTimeout(closeTimer.current);
-    },
-    [],
-  );
+  const { openAfterDelay, cancelOpen, closeAfterDelay, cancelClose } = useHoverIntent();
 
   const viewerId = viewer?.id;
   const tallies = useMemo(
@@ -85,11 +71,6 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
   const nameOf = (id: string) => memberNames.get(id);
   const hoverPlacement = isFirst ? "bottom" : "top";
 
-  const openAfterDelay = (open: () => void) => {
-    clearTimeout(openTimer.current);
-    openTimer.current = setTimeout(open, HOVER_OPEN_DELAY);
-  };
-  const cancelOpen = () => clearTimeout(openTimer.current);
   const close = () => setPanel(null);
 
   const toggle = async (emoji: string) => {
@@ -116,14 +97,9 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
   };
 
   // The quick row stays open while the pointer moves between the smiley and the row.
-  const holdQuick = () => clearTimeout(closeTimer.current);
-  const releaseQuick = () => {
-    clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(
-      () => setPanel((current) => (current === "quick" ? null : current)),
-      HOVER_CLOSE_DELAY,
-    );
-  };
+  const holdQuick = cancelClose;
+  const releaseQuick = () =>
+    closeAfterDelay(() => setPanel((current) => (current === "quick" ? null : current)));
 
   const quickRow = (
     <div className="ReactionQuick__row" role="group" aria-label="Quick reactions">
@@ -214,7 +190,7 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
           }}
           onClick={() => {
             cancelOpen();
-            clearTimeout(closeTimer.current);
+            cancelClose();
             setPanel(panel === "picker" ? null : "picker");
           }}
         >

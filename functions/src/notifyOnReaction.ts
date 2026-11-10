@@ -6,14 +6,18 @@ import {
   diffReactions,
   NotifiablePost,
   notificationRecipients,
+  postAuthorId,
+  postAuthorRecipients,
   reactionNotificationId,
 } from "./notifications";
+import { isNotificationEnabled } from "./notificationPrefs";
 
 /**
  * Fan out reaction notifications. Fires on every post update (comment counts, image
  * processing, edits too), so it exits before any reads unless `reactions` changed.
- * Added reactions notify the post's author and comment subscribers; removed ones delete
- * the matching notifications by their deterministic id.
+ * Added reactions notify the post's author (unless they've switched reactions off).
+ * Removed ones delete the matching notifications by their deterministic id, from
+ * subscribers too: older builds notified them as well.
  */
 export const notifyOnReaction = onDocumentUpdated("log_posts/{postId}", async (event) => {
   const before = event.data?.before.data();
@@ -29,15 +33,21 @@ export const notifyOnReaction = onDocumentUpdated("log_posts/{postId}", async (e
   const notificationsOf = (userId: string) =>
     db.collection("users").doc(userId).collection("notifications");
 
-  // Display names for everyone who just reacted (usually one person).
+  // Display names for everyone who just reacted (usually one person), and the author's
+  // preferences.
   const actorIds = [...new Set(added.map((change) => change.userId))];
   const actorNames = new Map<string, string>();
-  await Promise.all(
-    actorIds.map(async (id) => {
-      const snap = await db.collection("users").doc(id).get();
-      actorNames.set(id, (snap.data()?.displayName as string | undefined) ?? "Someone");
-    }),
-  );
+  const authorId = postAuthorId(post);
+  let authorWantsReactions = false;
+  if (added.length) {
+    const ids = [...new Set([...actorIds, ...(authorId ? [authorId] : [])])];
+    const snaps = await db.getAll(...ids.map((id) => db.collection("users").doc(id)));
+    for (const snap of snaps) {
+      const data = snap.data();
+      actorNames.set(snap.id, (data?.displayName as string | undefined) ?? "Someone");
+      if (snap.id === authorId) authorWantsReactions = isNotificationEnabled(data, "reaction");
+    }
+  }
 
   const writes: Array<(batch: WriteBatch) => void> = [];
   const createdAt = FieldValue.serverTimestamp();
@@ -51,9 +61,15 @@ export const notifyOnReaction = onDocumentUpdated("log_posts/{postId}", async (e
       emoji,
     });
     const id = reactionNotificationId(postId, userId, emoji);
-    for (const recipient of notificationRecipients(post, userId)) {
+    if (!authorWantsReactions) continue;
+    for (const recipient of postAuthorRecipients(post, userId)) {
       writes.push((batch) =>
-        batch.set(notificationsOf(recipient).doc(id), { ...data, createdAt, readAt: null }),
+        batch.set(notificationsOf(recipient).doc(id), {
+          ...data,
+          reason: "author",
+          createdAt,
+          readAt: null,
+        }),
       );
     }
   }

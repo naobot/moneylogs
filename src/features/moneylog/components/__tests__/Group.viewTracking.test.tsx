@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
 import { act, useMemo } from "react";
 import { createRoot, Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 
 import type { Group as GroupType } from "@/types/user";
 
@@ -10,6 +11,11 @@ const state = vi.hoisted(() => ({
   users: [] as Array<Record<string, unknown>>,
   viewTracking: undefined as unknown,
   updateViewTrackingFn: vi.fn(() => Promise.resolve()),
+  posts: [] as Array<Record<string, unknown>>,
+  hasMore: false,
+  loadMore: vi.fn(),
+  activeLog: vi.fn(),
+  showToast: vi.fn(),
 }));
 
 vi.mock("@/contexts", () => ({
@@ -31,7 +37,18 @@ vi.mock("@/hooks/useUserQuery", () => ({
   useUserQuery: () => ({ updateViewTrackingFn: state.updateViewTrackingFn }),
 }));
 vi.mock("@/hooks/useGetLogPosts", () => ({
-  useGetLogPosts: () => ({ posts: [], isLoading: false, isSuccess: true, isError: false }),
+  useGetLogPosts: () => ({
+    posts: state.posts,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    hasMore: state.hasMore,
+    isLoadingMore: false,
+    loadMore: state.loadMore,
+  }),
+}));
+vi.mock("@/hooks/useToastContext", () => ({
+  useToastContext: () => ({ showToast: state.showToast }),
 }));
 vi.mock("@/hooks/useGetGroupUsers", () => ({
   useGetGroupUsers: () => {
@@ -65,7 +82,13 @@ vi.mock("@/features/moneylog/components/LogsMenu", () => ({
   ),
 }));
 
-vi.mock("@/features/moneylog/components/ActiveLog", () => ({ ActiveLog: () => null }));
+// Records what Group asks the log view to show, e.g. after following a post link.
+vi.mock("@/features/moneylog/components/ActiveLog", () => ({
+  ActiveLog: (props: unknown) => {
+    state.activeLog(props);
+    return null;
+  },
+}));
 vi.mock("@/features/moneylog/components/LogsSummary/LogsSummary", () => ({ default: () => null }));
 vi.mock("@/components/Modal", () => ({ default: () => null }));
 // Rendered by Group for members; it calls useNavigate, and these tests have no router.
@@ -108,9 +131,13 @@ describe("Group — view tracking writes", () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  const render = () =>
+  const render = (path = `/g/${GROUP_ID}`) =>
     act(() => {
-      root.render(<Group group={group} groupId={GROUP_ID} isSpectator={false} />);
+      root.render(
+        <MemoryRouter initialEntries={[path]}>
+          <Group group={group} groupId={GROUP_ID} isSpectator={false} />
+        </MemoryRouter>,
+      );
     });
 
   const clickMember2 = () =>
@@ -124,6 +151,8 @@ describe("Group — view tracking writes", () => {
     state.updateViewTrackingFn = vi.fn(() => Promise.resolve());
     state.viewTracking = {};
     state.users = [me, freshMember2];
+    state.posts = [];
+    state.hasMore = false;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -198,5 +227,68 @@ describe("Group — view tracking writes", () => {
       logGroupId: GROUP_ID,
       viewedUserId: "m2Doc",
     });
+  });
+});
+
+describe("Group — following a post link", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  const render = (path: string) =>
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={[path]}>
+          <Group group={group} groupId={GROUP_ID} isSpectator={false} />
+        </MemoryRouter>,
+      );
+    });
+  const lastActiveLog = () =>
+    state.activeLog.mock.calls[state.activeLog.mock.calls.length - 1]![0] as {
+      displayAll: boolean;
+      displayUser: { id: string } | null;
+      postFocus: { postId: string; commentId?: string } | null;
+    };
+
+  beforeEach(() => {
+    state.viewTracking = {};
+    state.users = [me, freshMember2];
+    state.posts = [{ id: "p2", author: { id: "m2Doc" } }];
+    state.hasMore = false;
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    vi.clearAllMocks();
+  });
+
+  it("opens the author's log focused on the post and comment", () => {
+    render(`/g/${GROUP_ID}?post=p2&comment=c9`);
+    const view = lastActiveLog();
+    expect(view.displayAll).toBe(false);
+    expect(view.displayUser?.id).toBe("m2Doc");
+    expect(view.postFocus).toMatchObject({ postId: "p2", commentId: "c9" });
+  });
+
+  it("opens the default digest when there's no link", () => {
+    render(`/g/${GROUP_ID}`);
+    expect(lastActiveLog().displayAll).toBe(true);
+    expect(lastActiveLog().postFocus).toBeNull();
+  });
+
+  it("loads older posts until the linked one turns up", () => {
+    state.hasMore = true;
+    render(`/g/${GROUP_ID}?post=old`);
+    expect(state.loadMore).toHaveBeenCalled();
+    expect(state.showToast).not.toHaveBeenCalled();
+  });
+
+  it("says so when the post is gone", () => {
+    render(`/g/${GROUP_ID}?post=gone`);
+    expect(state.showToast).toHaveBeenCalledWith(expect.stringContaining("isn't"), "error");
+    expect(lastActiveLog().displayAll).toBe(true);
   });
 });

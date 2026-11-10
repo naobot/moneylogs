@@ -1,0 +1,158 @@
+// The nav bell, its hover pop-up, and the /notifications page.
+
+.NotificationBell {
+  position: relative;
+  display: inline-flex;
+
+  // Unread count: an inverted tab hung off the bell's top-right corner.
+  &__badge {
+    position: absolute;
+    top: 0;
+    right: -0.3em;
+    min-width: 1.4em;
+    padding: 0 0.2em;
+    box-sizing: border-box;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1.4em;
+    text-align: center;
+    color: var(--inverse-ink);
+    background-color: var(--inverse-surface);
+    pointer-events: none;
+  }
+}
+
+.NotificationPopup {
+  width: 22em;
+  padding: var(--space-3);
+  font-size: 0.85em;
+
+  &__title {
+    padding: 0 var(--space-2) var(--space-2);
+    font-weight: 700;
+    border-bottom: var(--border-hairline) solid var(--ink);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__empty {
+    margin: var(--space-4) var(--space-2);
+    color: var(--ink-muted);
+  }
+
+  &__all {
+    display: block;
+    padding: var(--space-2);
+    border-top: var(--border-hairline) dotted var(--ink);
+    color: var(--ink);
+    font-size: 0.85em;
+    font-weight: 700;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--inverse-ink);
+      background-color: var(--inverse-surface);
+    }
+  }
+}
+
+// One notification. New ones carry the 4px "new activity" rule on the left; read
+// ones keep a transparent rule of the same width so text doesn't shift when it clears.
+.NotificationItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-2);
+  border-left: var(--border-fresh) solid transparent;
+  color: var(--ink);
+  text-decoration: none;
+
+  .Icon {
+    flex-shrink: 0;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--inverse-ink);
+    background-color: var(--inverse-surface);
+
+    .Icon img {
+      filter: var(--icon-filter-inverse);
+    }
+  }
+
+  &--fresh {
+    border-left-color: var(--ink);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  &__text {
+    overflow-wrap: anywhere;
+  }
+
+  &__name {
+    font-weight: 700;
+  }
+
+  &__detail {
+    font-size: 0.9em;
+    color: inherit;
+    opacity: 0.7; // muted text floor
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__time {
+    font-size: 0.8em;
+    opacity: 0.7; // muted text floor
+  }
+
+  &--compact {
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+}
+
+li + li > .NotificationItem {
+  border-top: var(--border-hairline) dotted var(--ink);
+}
+
+.Notifications {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 1em;
+  max-width: var(--main-width);
+  // A direct child of .Content: scroll inside so the Window frame stays put.
+  min-height: 0;
+  overflow-y: auto;
+
+  &__status {
+    color: var(--ink-muted);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__more {
+    display: flex;
+    justify-content: center;
+  }
+}

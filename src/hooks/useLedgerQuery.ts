@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   DocumentReference,
+  getDoc,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -69,14 +70,20 @@ export const useLedgerQuery = () => {
   };
 
   // A non-member can't read the ledger (rules), so joining is a blind arrayUnion that the
-  // rules accept only if it adds exactly the caller and there's still room.
-  const joinLedgerFn = async ({ ledgerId, member }: JoinLedgerArgs): Promise<boolean> => {
+  // rules accept only if it adds exactly the caller and there's still room. Once in, the
+  // title is readable; it's returned for the "you joined" notification.
+  const joinLedgerFn = async ({ ledgerId, member }: JoinLedgerArgs): Promise<string> => {
     const userDocRef: DocumentReference = doc(db, "users", member.userDocId);
     await updateDoc(doc(db, "ledgers", ledgerId), {
       members: arrayUnion(userDocRef),
       memberUids: arrayUnion(member.uid),
     });
-    return true;
+    try {
+      const snap = await getDoc(doc(db, "ledgers", ledgerId));
+      return (snap.data()?.title as string | undefined) ?? "";
+    } catch {
+      return "";
+    }
   };
 
   const updateLedgerTitleFn = async ({

@@ -26,6 +26,7 @@ import { InvitePage } from "@/pages/group/invite";
 import { LedgerPage, LedgerStatsPage } from "@/pages/ledger";
 import { LedgerInvitePage } from "@/pages/ledger/invite";
 import { About } from "@/pages/about";
+import { Notifications } from "@/pages/notifications";
 
 import "./App.scss";
 
@@ -95,6 +96,14 @@ const App = () => {
               element={
                 <CheckAuth>
                   <UserSettings />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <CheckAuth>
+                  <Notifications />
                 </CheckAuth>
               }
             />

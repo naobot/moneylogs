@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
+import type { NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
 
 export type MoneyLog = {
@@ -44,6 +45,8 @@ export type UserData = {
   archivedLogs?: ArchivedLogsMap;
   /** When this user last opened each log (see utils/logActivity). */
   logLastViewedAt?: LogLastViewedAtMap;
+  /** Per-type notification switches; unset keys use the defaults in utils/notificationTypes. */
+  notificationPrefs?: NotificationPrefs;
 };
 
 export interface CacheableUserData {

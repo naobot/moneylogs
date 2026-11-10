@@ -6,6 +6,8 @@ import {
   aggregateMonth,
   AggregatableEntry,
 } from "./ledgerAggregate";
+import { isCurrentMonth } from "./ledgerBudget";
+import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
 
 /**
  * Keep ledgers/{ledgerId}/months/{YYYY-MM} in sync with its entries.
@@ -14,6 +16,9 @@ import {
  * adjusted with increments: that makes the trigger idempotent (Firestore triggers are
  * at-least-once, so duplicate or retried events can't double-count) and self-healing.
  * Entries remain the single source of truth; month docs are a derived cache.
+ *
+ * For the current month it then sends any budget alerts that are newly due
+ * (ledgerBudget.ts).
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -40,15 +45,30 @@ export const recomputeLedgerMonth = onDocumentWritten(
       const monthRef = ledgerRef.collection("months").doc(month);
       const entriesQuery = ledgerRef.collection("entries").where("month", "==", month);
 
-      await db.runTransaction(async (tx) => {
+      const aggregate = await db.runTransaction(async (tx) => {
         const snap = await tx.get(entriesQuery);
-        const aggregate = aggregateMonth(snap.docs.map((d) => d.data()));
-        if (aggregate.entryCount === 0) {
+        const result = aggregateMonth(snap.docs.map((d) => d.data()));
+        if (result.entryCount === 0) {
           tx.delete(monthRef);
         } else {
-          tx.set(monthRef, { month, ...aggregate, computedAt: FieldValue.serverTimestamp() });
+          tx.set(monthRef, { month, ...result, computedAt: FieldValue.serverTimestamp() });
         }
+        return result;
       });
+
+      if (!isCurrentMonth(month, Date.now())) continue;
+      // Separately, so a failure here never holds up the summary above.
+      try {
+        await notifyLedgerBudgets({
+          db,
+          ledgerRef,
+          ledger: ledgerSnap.data() ?? {},
+          month,
+          byCategory: aggregate.byCategory,
+        });
+      } catch (error) {
+        console.error(`recomputeLedgerMonth: budget alerts for ${ledgerId}/${month}:`, error);
+      }
     }
   },
 );
