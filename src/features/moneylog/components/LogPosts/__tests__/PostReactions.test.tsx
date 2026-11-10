@@ -22,6 +22,17 @@ vi.mock("@/features/moneylog/components/LogPosts/EmojiPickerPanel", () => ({
   default: () => <div className="EmojiPickerStub" />,
 }));
 
+// Record where each panel is asked to open, while still rendering the real Popover.
+const placements = new Map<string, string | undefined>();
+vi.mock("@/components/Popover", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/components/Popover")>();
+  const Recording = (props: Parameters<typeof actual.default>[0]) => {
+    if (props.open && props.className) placements.set(props.className, props.placement);
+    return actual.default(props);
+  };
+  return { ...actual, default: Recording, Popover: Recording };
+});
+
 import PostReactions from "@/features/moneylog/components/LogPosts/PostReactions";
 import { MemberNamesContext } from "@/features/moneylog/components/LogPosts/memberNames";
 import type { LogPost } from "@/types/user";
@@ -40,6 +51,7 @@ describe("PostReactions", () => {
   let root: Root;
 
   beforeEach(() => {
+    placements.clear();
     toggleReactionFn.mockClear();
     showToast.mockClear();
     container = document.createElement("div");
@@ -50,16 +62,22 @@ describe("PostReactions", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.useRealTimers();
   });
 
-  const render = (p: LogPost, canReact: boolean) =>
+  const render = (p: LogPost, canReact: boolean, isFirst = false) =>
     act(() =>
       root.render(
         <MemberNamesContext.Provider value={names}>
-          <PostReactions post={p} canReact={canReact} />
+          <PostReactions post={p} canReact={canReact} isFirst={isFirst} />
         </MemberNamesContext.Provider>,
       ),
     );
+  const hover = (el: Element) =>
+    act(() => {
+      el.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }));
+    });
+  const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
   const tallies = () => Array.from(container.querySelectorAll(".PostReactions__tally"));
   const applied = () => container.querySelector<HTMLButtonElement>(".PostReactions__applied");
   const trigger = () => container.querySelector<HTMLButtonElement>(".PostReactions__trigger");
@@ -85,27 +103,29 @@ describe("PostReactions", () => {
     expect(tallies().map((t) => t.textContent)).toEqual(["🔥2", "👍1"]);
   });
 
-  it("underlines (marks) the viewer's own tallies", () => {
-    render(post({ u1: ["🔥"], u2: ["👍"] }), true);
-    const [fire, thumbs] = tallies();
-    expect(fire.classList.contains("PostReactions__tally--mine")).toBe(true);
-    expect(thumbs.classList.contains("PostReactions__tally--mine")).toBe(false);
-  });
-
   it("shows at most four applied emoji inline and marks the overflow", () => {
     render(post({ u2: ["1", "2", "3", "4", "5", "6"] }), true);
     expect(tallies()).toHaveLength(4);
     expect(container.querySelector(".PostReactions__more")).not.toBeNull();
   });
 
-  it("names who reacted on hovering a tally", () => {
+  it("names who reacted after a short hover over a tally, above the entry", () => {
+    vi.useFakeTimers();
     render(post({ u1: ["🔥"], u2: ["🔥"] }), false);
-    act(() => {
-      tallies()[0].dispatchEvent(
-        new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }),
-      );
-    });
+    hover(tallies()[0]);
+    wait(100);
+    expect(panel("ReactionTooltip")).toBeNull(); // not instantly
+    wait(400);
     expect(panel("ReactionTooltip")?.textContent).toBe("🔥 you and ben");
+    expect(placements.get("ReactionTooltip")).toBe("top");
+  });
+
+  it("opens hover popovers below on the first entry of the page", () => {
+    vi.useFakeTimers();
+    render(post({ u2: ["🔥"] }), true, true);
+    hover(tallies()[0]);
+    wait(500);
+    expect(placements.get("ReactionTooltip")).toBe("bottom");
   });
 
   it("opens a details panel listing every reaction and everyone who left it", () => {
@@ -134,14 +154,33 @@ describe("PostReactions", () => {
     });
   });
 
-  it("shows the curated row on hovering the smiley", () => {
+  it("shows the curated row after a short hover over the smiley", () => {
+    vi.useFakeTimers();
     render(post(), true);
+    hover(trigger()!);
+    expect(panel("ReactionQuick")).toBeNull();
+    wait(500);
+    expect(panel("ReactionQuick")?.querySelectorAll(".ReactionQuick__emoji")).toHaveLength(8);
+    expect(placements.get("ReactionQuick")).toBe("top");
+  });
+
+  it("doesn't open the curated row if the pointer just passes over", () => {
+    vi.useFakeTimers();
+    render(post(), true);
+    hover(trigger()!);
     act(() => {
       trigger()!.dispatchEvent(
-        new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }),
+        new PointerEvent("pointerout", { bubbles: true, pointerType: "mouse" }),
       );
     });
-    expect(panel("ReactionQuick")?.querySelectorAll(".ReactionQuick__emoji")).toHaveLength(8);
+    wait(1000);
+    expect(panel("ReactionQuick")).toBeNull();
+  });
+
+  it("shares the comment bubble's IconText box, with no hover styling of its own", () => {
+    render(post(), true);
+    expect(trigger()!.classList.contains("IconText")).toBe(true);
+    expect(trigger()!.classList.contains("handler")).toBe(true);
   });
 
   it("opens the full palette as a panel (no backdrop) on clicking the smiley", async () => {

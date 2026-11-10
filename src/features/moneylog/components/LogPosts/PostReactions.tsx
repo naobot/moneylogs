@@ -27,6 +27,8 @@ const EmojiPickerPanel = lazy(() => import("./EmojiPickerPanel"));
 
 // Hover-to-preview only makes sense with a real pointer; touch goes straight to click.
 const isMouse = (e: PointerEvent) => e.pointerType === "mouse";
+// Hover popovers wait a beat before opening, so passing the pointer over doesn't flash them.
+const HOVER_OPEN_DELAY = 350;
 const HOVER_CLOSE_DELAY = 200;
 
 type Panel = "quick" | "picker" | "details" | null;
@@ -35,6 +37,8 @@ type PostReactionsProps = {
   post: LogPost;
   /** Members may react while the log is still writable, exactly as with comments. */
   canReact: boolean;
+  /** The first entry on the page: hover popovers open below rather than above. */
+  isFirst?: boolean;
 };
 
 /**
@@ -46,7 +50,7 @@ type PostReactionsProps = {
  * - Hovering the smiley offers a curated row; clicking it opens the full picker.
  * - Read-only logs and spectators see the applied emoji and the details panel only.
  */
-export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
+export const PostReactions = ({ post, canReact, isFirst = false }: PostReactionsProps) => {
   const { user: viewer } = useCurrentUser();
   const { toggleReactionFn } = useLogPostQuery();
   const { showToast } = useToastContext();
@@ -58,9 +62,16 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
   // Elements in state (callback refs) so the popovers re-render once their anchor exists.
   const [appliedEl, setAppliedEl] = useState<HTMLButtonElement | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLButtonElement | null>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout>>();
   const closeTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(openTimer.current);
+      clearTimeout(closeTimer.current);
+    },
+    [],
+  );
 
   const viewerId = viewer?.id;
   const tallies = useMemo(
@@ -72,6 +83,13 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
   if (!tallies.length && !interactive) return null;
 
   const nameOf = (id: string) => memberNames.get(id);
+  const hoverPlacement = isFirst ? "bottom" : "top";
+
+  const openAfterDelay = (open: () => void) => {
+    clearTimeout(openTimer.current);
+    openTimer.current = setTimeout(open, HOVER_OPEN_DELAY);
+  };
+  const cancelOpen = () => clearTimeout(openTimer.current);
   const close = () => setPanel(null);
 
   const toggle = async (emoji: string) => {
@@ -142,6 +160,7 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
           aria-label={`Reactions: ${tallies.map((t) => `${t.emoji} ${t.count}`).join(", ")}. Show who reacted`}
           aria-expanded={panel === "details"}
           onClick={() => {
+            cancelOpen();
             setHovered(null);
             setPanel(panel === "details" ? null : "details");
           }}
@@ -149,13 +168,16 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
           {inline.map(({ emoji, count }) => (
             <span
               key={emoji}
-              className={cx("PostReactions__tally", {
-                "PostReactions__tally--mine": hasReacted(post.reactions, viewerId ?? "", emoji),
-              })}
-              onPointerEnter={(e) =>
-                isMouse(e) && panel !== "details" && setHovered({ emoji, el: e.currentTarget })
-              }
-              onPointerLeave={() => setHovered(null)}
+              className="PostReactions__tally"
+              onPointerEnter={(e) => {
+                if (!isMouse(e) || panel === "details") return;
+                const el = e.currentTarget;
+                openAfterDelay(() => setHovered({ emoji, el }));
+              }}
+              onPointerLeave={() => {
+                cancelOpen();
+                setHovered(null);
+              }}
             >
               <span className="PostReactions__emoji">{emoji}</span>
               <span className="PostReactions__count">{count}</span>
@@ -173,19 +195,25 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
         <button
           ref={setTriggerEl}
           type="button"
-          className={cx("PostReactions__trigger", {
-            "PostReactions__trigger--open": panel === "quick" || panel === "picker",
-          })}
+          // IconText + handler: the same box and baseline nudge as the comment bubble beside it.
+          className="IconText handler PostReactions__trigger"
           aria-label="React"
           aria-haspopup="dialog"
           aria-expanded={panel === "picker"}
           onPointerEnter={(e) => {
             if (!isMouse(e)) return;
             holdQuick();
-            if (!panel) setPanel("quick");
+            if (!panel) {
+              openAfterDelay(() => setPanel((current) => current ?? "quick"));
+            }
           }}
-          onPointerLeave={(e) => isMouse(e) && releaseQuick()}
+          onPointerLeave={(e) => {
+            if (!isMouse(e)) return;
+            cancelOpen();
+            releaseQuick();
+          }}
           onClick={() => {
+            cancelOpen();
             clearTimeout(closeTimer.current);
             setPanel(panel === "picker" ? null : "picker");
           }}
@@ -198,7 +226,7 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
       <Popover
         anchor={hovered?.el ?? null}
         open={!!hovered && panel !== "details"}
-        placement="top"
+        placement={hoverPlacement}
         interactive={false}
         className="ReactionTooltip"
         role="tooltip"
@@ -217,7 +245,7 @@ export const PostReactions = ({ post, canReact }: PostReactionsProps) => {
         anchor={triggerEl}
         open={panel === "quick"}
         onClose={close}
-        placement="top"
+        placement={hoverPlacement}
         align="end"
         className="ReactionQuick"
         onPointerEnter={holdQuick}
