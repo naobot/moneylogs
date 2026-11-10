@@ -12,6 +12,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import SharedRowButton from "@/components/RowButton";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { CURRENCIES } from "@/utils/currency";
@@ -147,7 +148,9 @@ const CategoryManagerDialog = ({
 
   return (
     <Modal isOpen onClose={isSaving ? undefined : onClose} className="CategoryManager">
-      <Modal.Header title="Categories">Categories</Modal.Header>
+      <Modal.Header striped title="Categories">
+        Categories
+      </Modal.Header>
       <Modal.Body>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
@@ -197,6 +200,7 @@ const CategoryManagerDialog = ({
                   )}
                   <span className="CategoryManager__actions">
                     <RowButton
+                      glyph
                       label={`Move ${category.name} up`}
                       disabled={index === 0}
                       onClick={() => move(category.id, index - 1)}
@@ -204,6 +208,7 @@ const CategoryManagerDialog = ({
                       ↑
                     </RowButton>
                     <RowButton
+                      glyph
                       label={`Move ${category.name} down`}
                       disabled={index === active.length - 1}
                       onClick={() => move(category.id, index + 1)}
@@ -250,6 +255,7 @@ const CategoryManagerDialog = ({
           }}
         >
           <input
+            className="LineInput"
             aria-label="New category name"
             placeholder={atCap ? `Limit of ${MAX_CATEGORIES} reached` : "New category"}
             value={newName}
@@ -365,6 +371,7 @@ const BudgetEditor = ({
             <li key={c}>
               {formatAmount(category.budget![c]!, c)} / month
               <RowButton
+                glyph
                 label={`Remove ${c} budget for ${category.name}`}
                 onClick={() => onSet(c, null)}
               >
@@ -382,6 +389,7 @@ const BudgetEditor = ({
         }}
       >
         <input
+          className="LineInput"
           aria-label={`Monthly budget for ${category.name}`}
           inputMode="decimal"
           placeholder="Monthly budget"
@@ -418,24 +426,25 @@ const RowButton = ({
   title,
   disabled,
   onClick,
+  glyph,
   children,
 }: {
   label: string;
   title?: string;
   disabled?: boolean;
   onClick: () => void;
+  glyph?: boolean;
   children: ReactNode;
 }) => (
-  <button
-    type="button"
-    className="CategoryManager__rowButton"
+  <SharedRowButton
+    glyph={glyph}
     aria-label={label}
     title={title ?? label}
     disabled={disabled}
     onClick={onClick}
   >
     {children}
-  </button>
+  </SharedRowButton>
 );
 
 const SortableRow = ({

@@ -1,16 +1,13 @@
 @use "./constants.scss";
+@use "./tokens.scss";
+@use "./fonts.scss";
+@use "./texture.scss";
+@use "./surfaces.scss";
 
 :root {
-  --c-white: #f5f3f0;
-  --c-black: #242424;
-
-  font-family: Terminal, monospace;
-  color-scheme: light;
-  background-color: var(--c-white);
-  color: var(--c-black);
-
-  --sidebar-width: 420px;
-  --main-width: 800px;
+  font-family: var(--font-mono);
+  background-color: var(--paper);
+  color: var(--ink);
 }
 
 #root {
@@ -45,7 +42,7 @@ html {
 
 .wmde-markdown {
   background-color: transparent;
-  font-family: Terminal, monospace !important;
+  font-family: var(--font-mono) !important;
   font-size: 1em !important;
 }
 
@@ -66,19 +63,19 @@ html {
     min-width: 120px;
     max-width: 450px;
     text-align: center;
-    border-radius: 3px;
-    border: 1px solid var(--c-black);
+    border-radius: var(--radius-none);
+    border: var(--border-hairline) solid var(--ink);
     padding: 3px;
     opacity: 0.6;
   }
 }
 
 .LoadingBar {
-  color: var(--c-black);
-  background-color: var(--c-black);
+  color: var(--ink);
+  background-color: var(--ink);
   width: var(--progress);
   height: 100%;
-  border-radius: 3px;
+  border-radius: var(--radius-none);
   transition: width 1s ease-in-out;
 }
 
@@ -92,7 +89,7 @@ html {
     padding: 0.5em;
     cursor: pointer;
     text-align: center;
-    border: 2px solid var(--c-black);
+    border: var(--border-rule) solid var(--ink);
   }
 
   &__block {
@@ -144,6 +141,24 @@ html {
   }
 }
 
+// Adjacent icon-only buttons in the nav (theme toggle + sign out): no gap between them
+// and slimmer side padding, so the two icons sit close and share a centre line.
+.MainNav__iconPair {
+  display: inline-flex;
+  align-items: center;
+
+  > .Button {
+    padding-left: 0.1em;
+    padding-right: 0.1em;
+  }
+
+  // .Icon's -5px baseline nudge is for icons in running text; inside a centred button
+  // it drags the icon 2.5px below the neighbouring "moneylogs" text. Cancel it here.
+  .Icon {
+    margin-bottom: 0;
+  }
+}
+
 .Menu {
   display: inline-flex;
   grid-gap: 0.4em;
@@ -188,11 +203,11 @@ html {
   width: 100%;
   padding: 0.6em 1em;
   font-size: 0.75em;
-  border-top: 2px solid var(--c-black);
+  border-top: var(--border-rule) solid var(--ink);
   box-sizing: border-box;
 
   a {
-    color: var(--c-black);
+    color: var(--ink);
   }
 
   &__sep {
@@ -212,9 +227,9 @@ html {
   max-width: calc(100vw - 2em);
   box-sizing: border-box;
   padding: 0.5em 0.5em 0.5em 1em;
-  background-color: var(--c-white);
-  border: 2px solid var(--c-black);
-  border-radius: 4px;
+  background-color: var(--paper);
+  border: var(--border-rule) solid var(--ink);
+  border-radius: var(--radius-none);
   font-size: 0.85em;
 
   &__text {
@@ -228,7 +243,7 @@ html {
     font-size: 1.2em;
     line-height: 1;
     padding: 0 0.25em;
-    color: var(--c-black);
+    color: var(--ink);
   }
 }
 
@@ -250,6 +265,22 @@ html {
     width: 16px;
     height: 16px;
   }
+
+  img {
+    filter: var(--icon-filter);
+  }
+
+  // On an inverted block (fill="white").
+  &--inverse img {
+    filter: var(--icon-filter-inverse);
+  }
+}
+
+// Buttons invert when active or hovered; their icons flip with them.
+.Button--active .Icon img,
+.Button--primary-border:hover .Icon img,
+.Button--primary-border-lite:hover .Icon img {
+  filter: var(--icon-filter-inverse);
 }
 
 // Type conventions (terminal style): headings and heading-like labels are lowercase;
@@ -271,9 +302,9 @@ h6,
   text-transform: none;
 }
 
+// Button labels are small caps-lock.
 .Button strong,
-.LogRowButton,
-.Ledger__month__today {
+.RowButton {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -293,7 +324,7 @@ h6,
   display: inline-flex;
   grid-gap: 0.2em;
   align-items: center;
-  border-radius: 1px;
+  border-radius: var(--radius-none);
   border: none;
   padding: 0.4em;
 
@@ -309,38 +340,38 @@ h6,
   }
 
   &--active {
-    background-color: var(--c-black) !important;
-    color: var(--c-white) !important;
+    background-color: var(--ink) !important;
+    color: var(--paper) !important;
     cursor: default;
   }
 
   &--primary {
-    background-color: var(--c-white);
-    color: var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
   }
 
   &--primary-border {
-    background-color: var(--c-white);
-    color: var(--c-black);
-    border: 2px solid var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
+    border: var(--border-rule) solid var(--ink);
     font-weight: 700;
 
     &:hover {
-      border: 2px solid var(--c-black) !important;
-      background-color: var(--c-black);
-      color: var(--c-white);
+      border: var(--border-rule) solid var(--ink) !important;
+      background-color: var(--ink);
+      color: var(--paper);
     }
   }
 
   &--primary-border-lite {
-    background-color: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
+    border: var(--border-hairline) solid var(--ink);
 
     &:hover {
-      border: 1px solid var(--c-black) !important;
-      background-color: var(--c-black);
-      color: var(--c-white);
+      border: var(--border-hairline) solid var(--ink) !important;
+      background-color: var(--ink);
+      color: var(--paper);
     }
   }
 
@@ -375,6 +406,81 @@ h6,
   }
 }
 
+// Small hairline-framed action at the end of a list row or beside a stepper.
+// Words are caps-lock (see the label rule above); glyphs (‹ › ↑ ↓ ×) keep their own form.
+.RowButton {
+  font-size: 0.75em;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--border-hairline) solid var(--ink);
+  border-radius: var(--radius-none);
+  padding: 0.1em 0.5em;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+  }
+
+  &:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  &--glyph {
+    font-size: 0.9em;
+    text-transform: none;
+    letter-spacing: normal;
+    padding: 0 0.5em;
+  }
+}
+
+// Inline, in-place text input: a dashed underline that turns solid on focus.
+// Dashed means "you can write here".
+.LineInput {
+  font: inherit;
+  color: inherit;
+  border: none;
+  border-bottom: var(--border-hairline) dashed var(--ink);
+  border-radius: var(--radius-none);
+  background: transparent;
+  padding: 0.2em 0;
+
+  &::placeholder {
+    color: var(--ink);
+    opacity: 0.7;
+  }
+
+  &:focus {
+    outline: none;
+    border-bottom-style: solid;
+  }
+}
+
+// A horizontal meter: hairline track, solid ink fill. A dashed track is a target
+// (budget progress) rather than a measurement; over budget, the track goes heavy and
+// solid. Size and layout come from the component.
+.Meter__track {
+  display: block;
+  border: var(--border-hairline) solid var(--ink);
+
+  &--budget {
+    border-style: dashed;
+  }
+
+  &--over {
+    border-width: var(--border-heavy);
+    border-style: solid;
+  }
+}
+
+.Meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
 .ControlledInput {
   display: flex;
   grid-gap: 0.4em;
@@ -388,7 +494,7 @@ h6,
 
   &--warning {
     input {
-      border: 2px solid var(--c-black);
+      border: var(--border-rule) solid var(--ink);
     }
   }
 
@@ -411,8 +517,8 @@ h6,
 .Window {
   margin-bottom: 1em;
   padding: 30px;
-  border: 2px solid var(--c-black);
-  border-radius: 4px;
+  border: var(--border-rule) solid var(--ink);
+  border-radius: var(--radius-none);
   width: 100%;
 
   .Menu {
@@ -429,7 +535,7 @@ h6,
 }
 
 .GroupArchive__empty {
-  opacity: 0.6;
+  opacity: 0.7; // muted text floor (5.5:1)
   font-size: 0.9em;
 }
 
@@ -489,9 +595,7 @@ h6,
     align-items: center;
     width: 100%;
     margin-bottom: 1em;
-    background-color: var(--c-black);
-    color: #e8e6e3;
-    padding: 0.5em;
+    @include surfaces.strip(0.5em);
     font-size: 0.8em;
     flex-shrink: 0;
 
@@ -608,7 +712,7 @@ h6,
     align-items: center;
     gap: 0.4em;
     padding: 0.8em 1em;
-    border: 2px solid var(--c-black);
+    border: var(--border-rule) solid var(--ink);
     text-align: right;
 
     &__content {
@@ -654,8 +758,8 @@ h6,
 
     &--active,
     &:hover {
-      background-color: var(--c-black);
-      color: var(--c-white);
+      background-color: var(--ink);
+      color: var(--paper);
     }
 
     &--new {
@@ -675,7 +779,7 @@ h6,
   &__skeleton-bar {
     width: 100%;
     height: 1em;
-    background-color: var(--c-black);
+    background-color: var(--ink);
     opacity: 0.15;
     animation: LogsMenu__memberPulse 1.2s ease-in-out infinite;
   }
@@ -754,7 +858,7 @@ h6,
   &__arrow {
     background: none;
     border: none;
-    color: var(--c-black);
+    color: var(--ink);
     font: inherit;
     cursor: pointer;
     padding: 0 0.2em;
@@ -857,7 +961,7 @@ h6,
       align-items: center;
 
       &--week {
-        font-weight: 800;
+        font-weight: 700;
         margin-bottom: -0.5em;
       }
 
@@ -877,8 +981,8 @@ h6,
       flex-shrink: 0;
       gap: 0.5em;
       padding: 1em;
-      border: 1px solid var(--c-black);
-      background-color: #fff;
+      border: var(--border-hairline) solid var(--ink);
+      background-color: var(--sheet);
       transition: 0.3s ease-in-out;
       max-height: 2400px; // explicitly declare so transition works
 
@@ -886,8 +990,8 @@ h6,
         img {
           max-height: 70vh;
           box-sizing: border-box;
-          border: 1px solid var(--c-black);
-          outline: 5px solid #fff;
+          border: var(--border-hairline) solid var(--ink);
+          outline: 5px solid var(--sheet);
           outline-offset: -6px;
         }
       }
@@ -903,8 +1007,8 @@ h6,
 
       &--pinned {
         order: -1;
-        color: #fff;
-        background-color: var(--c-black);
+        color: var(--inverse-ink);
+        background-color: var(--inverse-surface);
         font-size: 0.8em;
 
         .LogPostMenu__item {
@@ -912,12 +1016,12 @@ h6,
         }
 
         .wmde-markdown {
-          color: #fff !important;
+          color: var(--inverse-ink) !important;
         }
       }
 
       &--selected {
-        border: 2px solid var(--c-black);
+        border: var(--border-rule) solid var(--ink);
         z-index: 51;
         // Use dvh so the editor tracks the *visible* viewport as the mobile
         // URL bar / on-screen keyboard show and hide. Plain vh resolves to the
@@ -1026,7 +1130,7 @@ h6,
     max-width: 100%;
     max-height: 400px;
     object-fit: contain;
-    border-radius: 4px;
+    border-radius: var(--radius-none);
   }
 
   &--processing {
@@ -1036,8 +1140,8 @@ h6,
   &__skeleton {
     width: 100%;
     height: 120px;
-    background: #f4f4f4;
-    border: 2px dashed #ccc;
+    background: var(--ink-ghost);
+    border: var(--border-hairline) dashed var(--ink);
     position: relative;
 
     &::after {
@@ -1047,9 +1151,8 @@ h6,
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 0.72em;
-      color: #aaa;
+      color: var(--ink-muted);
       letter-spacing: 0.08em;
-      font-weight: 500;
     }
   }
 }
@@ -1092,13 +1195,13 @@ h6,
 .TutorialTooltip {
   position: absolute;
   z-index: 300;
-  background-color: var(--c-white);
-  color: var(--c-black);
-  border: 1px solid var(--c-black);
+  background-color: var(--paper);
+  color: var(--ink);
+  border: var(--border-hairline) solid var(--ink);
   padding: 0.5em 0.8em;
-  border-radius: 4px;
+  border-radius: var(--radius-none);
   font-size: 0.72em;
-  font-weight: 500;
+  font-weight: 400;
   width: max-content;
   max-width: min(240px, 80vw);
   text-align: center;
@@ -1112,7 +1215,7 @@ h6,
 
   small {
     font-size: 0.78em;
-    opacity: 0.65;
+    opacity: 0.7; // muted text floor (5.5:1)
     font-weight: 400;
   }
 
@@ -1129,7 +1232,7 @@ h6,
 
     &::after {
       bottom: 100%;
-      border-bottom-color: var(--c-black);
+      border-bottom-color: var(--ink);
     }
   }
 
@@ -1138,14 +1241,14 @@ h6,
 
     &::after {
       top: 100%;
-      border-top-color: var(--c-black);
+      border-top-color: var(--ink);
     }
   }
 
   &--center {
     top: 50%;
     transform: translateX(-50%) translateY(-50%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-width: var(--border-rule);
 
     &::after {
       display: none;
@@ -1155,7 +1258,7 @@ h6,
 
 .TimezoneSetter {
   font-size: 0.6rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .LogPostComments {
@@ -1171,7 +1274,7 @@ h6,
     height: 100vh;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--scrim);
     z-index: 49;
   }
 
@@ -1216,10 +1319,10 @@ h6,
 
   &__item {
     position: relative;
-    background: var(--c-white);
-    border-radius: 10px;
+    background: var(--paper);
+    border-radius: var(--radius-bubble); // sanctioned: speech balloon
     padding: 0.5em;
-    border: var(--c-black) solid 1px;
+    border: var(--border-hairline) solid var(--ink);
     display: flex;
     flex-direction: column;
     opacity: 1;
@@ -1230,14 +1333,14 @@ h6,
     }
 
     &--notice {
-      background: var(--c-black);
-      color: var(--c-white);
+      background: var(--ink);
+      color: var(--paper);
       justify-content: center;
       align-items: center;
       text-align: center;
 
       .LogPostComments__item__body {
-        color: var(--c-white);
+        color: var(--paper);
         text-align: center;
       }
 
@@ -1262,8 +1365,8 @@ h6,
     }
 
     &--highlight {
-      background: var(--c-black);
-      color: #fff;
+      background: var(--ink);
+      color: var(--inverse-ink);
 
       @media (min-width: constants.$breakpoint-md) {
         &::after {
@@ -1274,7 +1377,7 @@ h6,
           z-index: 1;
           border-style: solid;
           border-width: 0 12px 12px 0;
-          border-color: transparent var(--c-black) transparent transparent !important;
+          border-color: transparent var(--ink) transparent transparent !important;
           top: 22%;
           left: -10px;
           margin-top: -10px;
@@ -1286,7 +1389,7 @@ h6,
           z-index: 0;
           border-style: solid;
           border-width: 0 13px 13px 0;
-          border-color: transparent var(--c-black) transparent transparent !important;
+          border-color: transparent var(--ink) transparent transparent !important;
           top: 22%;
           left: -12px;
           margin-top: -11px;
@@ -1295,8 +1398,8 @@ h6,
       }
 
       .wmde-markdown {
-        background-color: var(--c-black);
-        color: var(--c-white);
+        background-color: var(--ink);
+        color: var(--paper);
       }
     }
 
@@ -1309,7 +1412,7 @@ h6,
         z-index: 1;
         border-style: solid;
         border-width: 0 12px 12px 0;
-        border-color: transparent var(--c-white) transparent transparent;
+        border-color: transparent var(--paper) transparent transparent;
         top: 22%;
         left: -10px;
         margin-top: -10px;
@@ -1321,7 +1424,7 @@ h6,
         z-index: 0;
         border-style: solid;
         border-width: 0 13px 13px 0;
-        border-color: transparent var(--c-black) transparent transparent;
+        border-color: transparent var(--ink) transparent transparent;
         top: 22%;
         left: -12px;
         margin-top: -11px;
@@ -1385,7 +1488,7 @@ h6,
     z-index: 50;
     display: flex;
     cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--scrim);
     align-items: center;
     justify-content: center;
   }
@@ -1394,11 +1497,11 @@ h6,
     font-size: 0.8em;
     display: flex;
     flex-direction: column;
-    background-color: var(--c-white);
+    background-color: var(--paper);
     z-index: 55;
     cursor: default;
-    border: 2px solid var(--c-black);
-    border-radius: 4px;
+    border: var(--border-rule) solid var(--ink);
+    border-radius: var(--radius-none);
     margin: 1em;
     width: 100%;
 
@@ -1411,24 +1514,44 @@ h6,
     display: flex;
     justify-content: space-between;
     width: 100%;
-    padding: 2px 8px;
-    background-color: var(--c-black);
+    @include surfaces.strip(2px 8px);
+  }
+
+  // Striped window chrome for tool modals: the title and close sit on paper labels
+  // over a field of horizontal 1-bit stripes.
+  &__header--striped {
+    align-items: center;
+    gap: 8px;
+    background-color: var(--paper);
+    border-bottom: var(--border-rule) solid var(--ink);
+
+    .Modal__title,
+    .Modal__button--close {
+      color: var(--ink);
+      padding: 0 6px;
+    }
+  }
+
+  &__header__fill {
+    flex: 1;
+    align-self: stretch;
+    margin: 5px 0;
   }
 
   &__title {
     font-size: 1em;
-    color: var(--c-white);
+    color: var(--paper);
     margin: 0.2em 0;
   }
 
   &__button {
     &--close {
-      border-radius: 1px;
+      border-radius: var(--radius-none);
       border: none;
       padding: 0.4em;
       background-color: transparent;
-      color: var(--c-white);
-      font-weight: 800;
+      color: var(--paper);
+      font-weight: 700;
     }
   }
 

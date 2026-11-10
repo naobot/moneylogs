@@ -17,7 +17,7 @@
       overflow-wrap: anywhere;
 
       small {
-        opacity: 0.6;
+        opacity: 0.7; // muted text floor (5.5:1)
       }
     }
   }
@@ -32,12 +32,12 @@
 // Sign out is the highlighted action: inverted, flipping back on hover. Two classes so
 // it wins over .Button--primary-border.
 .Button.AccountSection__signOut {
-  background-color: var(--c-black);
-  color: var(--c-white);
+  background-color: var(--ink);
+  color: var(--paper);
 
   &:hover {
-    background-color: var(--c-white);
-    color: var(--c-black);
+    background-color: var(--paper);
+    color: var(--ink);
   }
 }
 
@@ -78,7 +78,7 @@
     min-width: 0;
 
     &--error {
-      border: 2px solid var(--c-black);
+      border: var(--border-rule) solid var(--ink);
     }
   }
 

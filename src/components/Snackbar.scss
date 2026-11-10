@@ -25,20 +25,20 @@
     gap: 1em;
     width: 100%;
     padding: 0.5em 1em;
-    background-color: var(--c-black);
-    color: #fff;
+    background-color: var(--inverse-surface);
+    color: var(--inverse-ink);
     animation: snackbar-enter 0.2s ease-out;
 
     &--success {
-      background-color: var(--c-white);
-      color: var(--c-black);
-      border-bottom: 1px solid var(--c-black);
+      background-color: var(--paper);
+      color: var(--ink);
+      border-bottom: var(--border-hairline) solid var(--ink);
 
       .Snackbar__close {
-        color: var(--c-border);
+        color: var(--ink-muted);
 
         &:hover {
-          color: var(--c-black);
+          color: var(--ink);
         }
       }
     }
@@ -52,7 +52,8 @@
   &__close {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--inverse-ink);
+    opacity: 0.7;
     cursor: pointer;
     font-size: 0.9rem;
     padding: 0;
@@ -60,7 +61,7 @@
     flex-shrink: 0;
 
     &:hover {
-      color: #fff;
+      opacity: 1;
     }
   }
 }

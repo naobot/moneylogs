@@ -58,6 +58,30 @@ export const inCategoryOrder = <T extends { id: string }>(
     return diff || 0; // Infinity - Infinity is NaN: two unknown ids keep their order
   });
 
+/** How many top categories the stacked category bar draws individually. */
+export const BAR_SEGMENTS = 4;
+
+/** A category's fill in the stacked bar: its index among the drawn ones, or "rest". */
+export type BarSegment = number | "rest";
+
+/**
+ * The stacked category bar: the largest `BAR_SEGMENTS` categories, shown in
+ * Categories-panel order, then everything else grouped as "rest". `segmentOf` gives
+ * each category id its fill, so other views (the share rows) can show the same key.
+ */
+export const categoryBarSegments = (
+  shares: ReadonlyArray<Share>,
+  categories: ReadonlyArray<LedgerCategory>,
+) => {
+  const top = inCategoryOrder(shares.slice(0, BAR_SEGMENTS), categories);
+  const restShares = shares.slice(BAR_SEGMENTS);
+  const rest = restShares.reduce((sum, s) => sum + s.share, 0);
+  const segmentOf = new Map<string, BarSegment>();
+  top.forEach((s, i) => segmentOf.set(s.id, i));
+  restShares.forEach((s) => segmentOf.set(s.id, "rest"));
+  return { top, rest, segmentOf };
+};
+
 export const memberShares = (
   agg: Pick<MonthAggregate, "byMember">,
   currency: Currency,

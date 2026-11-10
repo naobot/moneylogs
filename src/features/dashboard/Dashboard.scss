@@ -65,20 +65,20 @@
   gap: 0.4em;
   min-width: 0;
   padding: 0.8em;
-  border: 2px solid var(--c-black);
-  background-color: var(--c-white);
-  color: var(--c-black);
+  border: var(--border-rule) solid var(--ink);
+  background-color: var(--paper);
+  color: var(--ink);
   text-decoration: none;
 
   &:hover,
   &:focus-visible {
-    background-color: var(--c-black);
-    color: var(--c-white);
+    background-color: var(--ink);
+    color: var(--paper);
     outline: none;
 
     .LogCard__badge {
-      background-color: var(--c-white);
-      color: var(--c-black);
+      background-color: var(--paper);
+      color: var(--ink);
     }
   }
 
@@ -94,7 +94,7 @@
   &--compact {
     gap: 0.2em;
     padding: 0.4em 0.6em;
-    border-width: 1px;
+    border-width: var(--border-hairline);
     font-size: 0.9em;
     opacity: 0.75;
 
@@ -106,7 +106,7 @@
 
   // Something new since your last visit: a heavier frame plus the badge.
   &--fresh {
-    border-width: 4px;
+    border-width: var(--border-fresh);
   }
 
   &__top {
@@ -128,8 +128,8 @@
     padding: 0.1em 0.4em;
     font-size: 0.8em;
     font-weight: 700;
-    background-color: var(--c-black);
-    color: var(--c-white);
+    background-color: var(--ink);
+    color: var(--paper);
     white-space: nowrap;
   }
 

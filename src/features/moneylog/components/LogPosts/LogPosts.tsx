@@ -22,6 +22,7 @@ import Button from "@/components/Button";
 import Icon, { IconText } from "@/components/Icon";
 import LogPostEditor from "./LogPostEditor";
 import LogPostComments from "./LogPostComments";
+import { markdownColorMode, useTheme } from "@/utils/theme";
 
 type LogPostsProps = {
   user: UserData;
@@ -88,6 +89,7 @@ const LogPostItemComponent = ({
   isPostingClosed = false,
   isSummaryView = false,
 }: LogPostProps) => {
+  const theme = useTheme();
   const postRef = useRef<HTMLDivElement>(null);
   const { user: loggedInUser } = useCurrentUser();
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false);
@@ -234,7 +236,7 @@ const LogPostItemComponent = ({
         <div className="LogPosts__posts__item__body">
           <div
             className="LogPosts__posts__item__content"
-            data-color-mode={isPinned && !isDigestMode ? "dark" : "light"}
+            data-color-mode={markdownColorMode(theme, isPinned && !isDigestMode)}
           >
             <MDEditor.Markdown source={post.content} />
           </div>

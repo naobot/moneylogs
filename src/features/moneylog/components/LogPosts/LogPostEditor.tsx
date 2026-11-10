@@ -28,6 +28,7 @@ import Icon from "@/components/Icon";
 
 import { CURRENCIES, LAST_CURRENCY_KEY } from "@/utils/currency";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
+import { markdownColorMode, useTheme } from "@/utils/theme";
 
 const DRAFT_KEY = "ML__logPostDraft";
 
@@ -64,6 +65,7 @@ const LogPostEditor = forwardRef(
   ) => {
     const { user } = useCurrentUser();
 
+    const theme = useTheme();
     const [newEntryContent, newEntryContentSet] = useState<string | null>(() => {
       if (type === "new") {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
@@ -394,7 +396,10 @@ const LogPostEditor = forwardRef(
               position="center"
             />
           )}
-          <div className="LogPosts__posts__item__content container" data-color-mode="light">
+          <div
+            className="LogPosts__posts__item__content container"
+            data-color-mode={markdownColorMode(theme)}
+          >
             <div className="LogPosts__posts__item__content__editor">
               <MDEditor
                 value={newEntryContent ?? ""}

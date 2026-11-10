@@ -43,14 +43,14 @@ describe("GroupArchive", () => {
 
   it("has no manage button unless asked for one", () => {
     render();
-    expect(container.querySelector(".LogRowButton")).toBeNull();
+    expect(container.querySelector(".RowButton")).toBeNull();
     expect(container.textContent).toContain("Tokyo");
   });
 
   it("calls onManage with the group's target", () => {
     const onManage = vi.fn();
     render(onManage);
-    const button = container.querySelector<HTMLButtonElement>(".LogRowButton")!;
+    const button = container.querySelector<HTMLButtonElement>(".RowButton")!;
     expect(button.getAttribute("aria-label")).toBe("Manage Tokyo");
     act(() => button.click());
     expect(onManage).toHaveBeenCalledWith({

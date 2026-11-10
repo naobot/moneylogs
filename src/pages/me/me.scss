@@ -27,6 +27,12 @@
   }
 }
 
+.DisplaySection__hint {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
 .UserSettings__drawers {
   display: flex;
   flex-direction: column;

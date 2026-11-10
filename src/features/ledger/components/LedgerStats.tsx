@@ -20,8 +20,9 @@ import {
   budgetSummary,
   buildInsights,
   categoryBudgetRows,
+  BarSegment,
+  categoryBarSegments,
   categoryShares,
-  inCategoryOrder,
   currenciesByUse,
   dailySeries,
   memberShares,
@@ -33,7 +34,6 @@ import Button from "@/components/Button";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 
 const TREND_MONTHS = 6;
-const BAR_SEGMENTS = 4; // top categories drawn individually; the rest are grouped
 
 type LedgerStatsProps = {
   ledger: Ledger;
@@ -199,7 +199,12 @@ export const LedgerStatsPanel = ({
               spending.
             </p>
           )}
-          <ShareRows rows={catRows} currency={currency} label="Spending by category" />
+          <ShareRows
+            rows={catRows}
+            currency={currency}
+            label="Spending by category"
+            segmentOf={categoryBarSegments(catShares, categories).segmentOf}
+          />
         </>
       )}
 
@@ -268,10 +273,13 @@ const ShareRows = ({
   rows,
   currency,
   label,
+  segmentOf,
 }: {
   rows: Array<Share & Partial<Pick<BudgetRow, "budget" | "over">>>;
   currency: Currency;
   label: string;
+  /** Category rows: each row's fill in the stacked bar, shown as a key swatch. */
+  segmentOf?: ReadonlyMap<string, BarSegment>;
 }) => (
   <ul className="LedgerStats__shares" aria-label={label}>
     {rows.map((row) => {
@@ -279,17 +287,23 @@ const ShareRows = ({
       const ratio = budgeted ? row.amount / row.budget! : row.share;
       return (
         <li key={row.id} className={cx({ "LedgerStats__shares--over": row.over })}>
-          <span className="LedgerStats__shares__name">{row.name}</span>
+          <span className="LedgerStats__shares__name">
+            {segmentOf?.has(row.id) && (
+              <span
+                className={`LedgerStats__swatch LedgerStats__bar__seg--${segmentOf.get(row.id)}`}
+                aria-hidden="true"
+              />
+            )}
+            <span className="LedgerStats__shares__label">{row.name}</span>
+          </span>
           <span
-            className={cx("LedgerStats__shares__track", {
-              "LedgerStats__shares__track--budget": budgeted,
+            className={cx("Meter__track LedgerStats__shares__track", {
+              "Meter__track--budget": budgeted,
+              "Meter__track--over": row.over,
             })}
             aria-hidden="true"
           >
-            <span
-              className="LedgerStats__shares__fill"
-              style={{ width: pct(Math.min(ratio, 1)) }}
-            />
+            <span className="Meter__fill" style={{ width: pct(Math.min(ratio, 1)) }} />
           </span>
           <span className="LedgerStats__shares__amount">
             {formatAmount(row.amount, currency)}
@@ -335,17 +349,16 @@ const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: 
       </h4>
       <div className="LedgerStats__budget__meter">
         <span
-          className="LedgerStats__budget__track"
+          className={cx("Meter__track Meter__track--budget LedgerStats__budget__track", {
+            "Meter__track--over": budget.over,
+          })}
           role="meter"
           aria-label={`${currency} budget used`}
           aria-valuemin={0}
           aria-valuemax={budget.budget}
           aria-valuenow={budget.spent}
         >
-          <span
-            className="LedgerStats__budget__fill"
-            style={{ width: pct(Math.min(budget.used, 1)) }}
-          />
+          <span className="Meter__fill" style={{ width: pct(Math.min(budget.used, 1)) }} />
         </span>
         <strong>
           {formatAmount(budget.spent, currency)} / {formatAmount(budget.budget, currency)} (
@@ -377,8 +390,7 @@ const CategoryBar = ({
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
 }) => {
-  const top = inCategoryOrder(shares.slice(0, BAR_SEGMENTS), categories);
-  const rest = shares.slice(BAR_SEGMENTS).reduce((sum, s) => sum + s.share, 0);
+  const { top, rest } = categoryBarSegments(shares, categories);
   const segments =
     rest > 0 ? [...top, { id: "__rest", name: "Other", share: rest, amount: 0 }] : top;
   const summary = top.map((s) => `${s.name} ${pct(s.share)}`).join(", ");

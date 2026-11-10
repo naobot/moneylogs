@@ -5,6 +5,7 @@ import {
   budgetSummary,
   categoryBudgetRows,
   buildInsights,
+  categoryBarSegments,
   categoryShares,
   currenciesByUse,
   dailySeries,
@@ -255,5 +256,47 @@ describe("budgets", () => {
         categories: BUDGETED,
       }),
     ).toBeNull();
+  });
+});
+
+describe("categoryBarSegments", () => {
+  const cats: LedgerCategory[] = ["a", "b", "c", "d", "e", "f"].map((id, order) => ({
+    id,
+    name: id.toUpperCase(),
+    order,
+  }));
+  // Largest first, as categoryShares returns them.
+  const shares = [
+    { id: "d", name: "D", amount: 40, share: 0.4 },
+    { id: "b", name: "B", amount: 25, share: 0.25 },
+    { id: "f", name: "F", amount: 15, share: 0.15 },
+    { id: "a", name: "A", amount: 10, share: 0.1 },
+    { id: "c", name: "C", amount: 6, share: 0.06 },
+    { id: "e", name: "E", amount: 4, share: 0.04 },
+  ];
+
+  it("draws the four largest in category order and groups the rest", () => {
+    const { top, rest } = categoryBarSegments(shares, cats);
+    expect(top.map((s) => s.id)).toEqual(["a", "b", "d", "f"]);
+    expect(rest).toBeCloseTo(0.1);
+  });
+
+  it("maps each category to its segment fill", () => {
+    const { segmentOf } = categoryBarSegments(shares, cats);
+    expect(Object.fromEntries(segmentOf)).toEqual({
+      a: 0,
+      b: 1,
+      d: 2,
+      f: 3,
+      c: "rest",
+      e: "rest",
+    });
+  });
+
+  it("has no rest when there are four or fewer categories", () => {
+    const { top, rest, segmentOf } = categoryBarSegments(shares.slice(0, 2), cats);
+    expect(top.map((s) => s.id)).toEqual(["b", "d"]);
+    expect(rest).toBe(0);
+    expect(segmentOf.size).toBe(2);
   });
 });

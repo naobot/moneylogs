@@ -1,0 +1,90 @@
+// Design tokens — the single source for colour, type, spacing, borders and layering.
+// Mirrors the moneylogs design system (tokens.json). Components read these custom
+// properties; nothing else should hard-code a colour, radius or font.
+//
+// Two inks only: `ink` on `paper`. Night shift swaps them (and nothing else), so any
+// component written against these tokens gets the second theme for free.
+
+:root {
+  // ---- colour (Paper theme) ----
+  --paper: #f5f3f0;
+  --sheet: #ffffff;
+  --ink: #242424;
+  --ink-muted: rgba(36, 36, 36, 0.7); // lightest ink allowed for text (5.5:1)
+  --ink-faint: rgba(36, 36, 36, 0.3); // non-text only: disabled, drag handles
+  --ink-ghost: rgba(36, 36, 36, 0.15); // chart grid, image placeholder
+  --ink-wash: rgba(36, 36, 36, 0.07); // chart area
+  --scrim: rgba(0, 0, 0, 0.2);
+  --inverse-surface: var(--ink);
+  --inverse-ink: var(--paper);
+  --focus-ring: var(--ink);
+
+  // Icons are black single-ink <img>s and can't inherit colour, so they are flipped
+  // with a filter: --icon-filter on the ground, --icon-filter-inverse on an
+  // inverted block. Night shift swaps the two.
+  --icon-filter: none;
+  --icon-filter-inverse: invert(1);
+
+  // ---- type: one face, Hack, throughout ----
+  --font-mono: Hack, monospace;
+
+  // ---- spacing (em, so it follows the root's 0.8em on phones) ----
+  --space-1: 0.2em;
+  --space-2: 0.4em;
+  --space-3: 0.5em;
+  --space-4: 0.75em;
+  --space-5: 1em;
+  --space-6: 1.5em;
+  --space-7: 2em;
+  --window-pad: 30px;
+  --column-gap: 20px;
+
+  // ---- corners: square by default; each rounded corner is a named exception ----
+  --radius-none: 0;
+  --radius-tab: 6px; // filing-folder tabs (top corners only)
+  --radius-bubble: 10px; // comment speech bubbles
+
+  // ---- frame weights ----
+  --border-hairline: 1px;
+  --border-rule: 2px;
+  --border-heavy: 3px;
+  --border-fresh: 4px;
+
+  // ---- opacity ----
+  --opacity-disabled: 0.3;
+  --opacity-dragging: 0.5;
+  --opacity-blink: 0.15;
+
+  // ---- sizes ----
+  --icon-sm: 16px;
+  --icon-md: 21px;
+  --icon-lg: 24px;
+  --sidebar-width: 420px;
+  --main-width: 800px;
+  --modal-width: 450px;
+
+  // ---- layering ----
+  --z-overlay: 50;
+  --z-selected: 51;
+  --z-tooltip: 300;
+  --z-modal: 1000;
+  --z-snackbar: 1100;
+
+  color-scheme: light;
+}
+
+// Night shift: the same two inks, swapped.
+:root[data-theme="night"] {
+  --paper: #242424;
+  --sheet: #242424;
+  --ink: #f5f3f0;
+  --ink-muted: rgba(245, 243, 240, 0.7);
+  --ink-faint: rgba(245, 243, 240, 0.3);
+  --ink-ghost: rgba(245, 243, 240, 0.15);
+  --ink-wash: rgba(245, 243, 240, 0.07);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --icon-filter: invert(1);
+  --icon-filter-inverse: none;
+
+  color-scheme: dark;
+}

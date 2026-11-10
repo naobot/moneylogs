@@ -34,3 +34,24 @@ describe("Icon", () => {
     expect(ASSETS).toContain(`/public${src}`);
   });
 });
+
+describe("Icon fill", () => {
+  const render = (fill?: string) => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() => root!.render(<Icon type="gear" fill={fill} />));
+    return container.querySelector<HTMLDivElement>(".Icon")!;
+  };
+
+  it('marks fill="white" icons as sitting on an inverted block', () => {
+    const icon = render("white");
+    expect(icon.classList.contains("Icon--inverse")).toBe(true);
+    // The flip is a theme-aware CSS filter, not an inline style.
+    expect(icon.querySelector("img")!.style.filter).toBe("");
+  });
+
+  it("leaves other icons on the ground style", () => {
+    expect(render().classList.contains("Icon--inverse")).toBe(false);
+  });
+});

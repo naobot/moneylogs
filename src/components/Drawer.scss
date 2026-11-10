@@ -1,9 +1,9 @@
 // Collapsible section. Monochrome: a ruled summary bar that inverts while open.
 .Drawer {
-  border-top: 2px solid var(--c-black);
+  border-top: var(--border-rule) solid var(--ink);
 
   &:last-of-type {
-    border-bottom: 2px solid var(--c-black);
+    border-bottom: var(--border-rule) solid var(--ink);
   }
 
   &__summary {
@@ -22,8 +22,8 @@
 
     &:hover,
     &:focus-visible {
-      background-color: var(--c-black);
-      color: var(--c-white);
+      background-color: var(--ink);
+      color: var(--paper);
       outline: none;
     }
   }
@@ -37,7 +37,7 @@
     flex: 1;
     min-width: 0;
     font-size: 0.85em;
-    opacity: 0.6;
+    opacity: 0.7; // muted text floor (5.5:1)
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -48,8 +48,8 @@
   }
 
   &--open > &__summary {
-    background-color: var(--c-black);
-    color: var(--c-white);
+    background-color: var(--ink);
+    color: var(--paper);
 
     .Drawer__hint {
       opacity: 0.8;

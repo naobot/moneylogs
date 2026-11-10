@@ -26,7 +26,9 @@ export type IconType =
   | "speech-filled"
   | "calculator"
   | "pin"
-  | "gear";
+  | "gear"
+  | "sun"
+  | "moon";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
@@ -43,21 +45,19 @@ const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
         : moneylogsIcons.includes(type)
           ? "moneylogs"
           : "nakals";
-  const whiteFilter =
-    "invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%) contrast(100%)";
-
   const cssStyles = useMemo(
     () => ({
       height: size ?? undefined,
       width: size ?? undefined,
-      filter: fill == "white" ? whiteFilter : undefined,
     }),
-    [size, fill],
+    [size],
   );
 
+  // fill="white" means "this icon sits on an inverted block". The colour flip itself
+  // is a theme-aware CSS filter (see .Icon--inverse and --icon-filter-inverse).
   return (
     <div
-      className={cx("Icon", { handler: onClick })}
+      className={cx("Icon", { handler: onClick, "Icon--inverse": fill === "white" })}
       style={size ? { height: size, width: size } : undefined}
       onClick={onClick}
     >

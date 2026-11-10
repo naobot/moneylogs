@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { useLedgerCategoryQuery } from "@/hooks/useLedgerCategoryQuery";
 import { Ledger } from "@/types/ledger";
@@ -98,31 +99,19 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
 
         <div className="Ledger__body">
           <nav className="Ledger__month" aria-label="Month">
-            <button
-              type="button"
-              className="Ledger__month__step"
+            <RowButton
+              glyph
               aria-label="Previous month"
               onClick={() => setMonth(shiftMonth(month, -1))}
             >
               ‹
-            </button>
+            </RowButton>
             <strong className="Ledger__month__label">{formatMonth(month)}</strong>
-            <button
-              type="button"
-              className="Ledger__month__step"
-              aria-label="Next month"
-              onClick={() => setMonth(shiftMonth(month, 1))}
-            >
+            <RowButton glyph aria-label="Next month" onClick={() => setMonth(shiftMonth(month, 1))}>
               ›
-            </button>
+            </RowButton>
             {month !== currentMonth && (
-              <button
-                type="button"
-                className="Ledger__month__today"
-                onClick={() => setMonth(currentMonth)}
-              >
-                this month
-              </button>
+              <RowButton onClick={() => setMonth(currentMonth)}>this month</RowButton>
             )}
             <Link
               className="Ledger__month__view"

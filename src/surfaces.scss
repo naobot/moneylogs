@@ -1,0 +1,31 @@
+// Shared surface treatments. Inversion is the system's one emphasis "colour", so the
+// inverted block is defined once here and every strip, bar and header includes it.
+
+/// An inverted block: inverse ink on the inverse surface, with icons and links
+/// flipping along with it, and an inset focus ring that stays visible on it.
+@mixin inverted {
+  background-color: var(--inverse-surface);
+  color: var(--inverse-ink);
+
+  a {
+    color: inherit;
+  }
+
+  .Icon img {
+    filter: var(--icon-filter-inverse);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--inverse-ink);
+    outline-offset: -4px;
+  }
+}
+
+/// A full-width inverted strip: page, modal and day headers, the stats strip.
+/// Layout (flex vs grid, gaps) stays with each component.
+@mixin strip($padding: 0.25em 0.5em) {
+  @include inverted;
+  padding: $padding;
+  border: none;
+  border-radius: var(--radius-none);
+}

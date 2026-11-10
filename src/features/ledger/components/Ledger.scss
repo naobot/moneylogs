@@ -1,4 +1,6 @@
 @use "@/constants.scss";
+@use "@/texture.scss" as tex;
+@use "@/surfaces.scss";
 
 .Ledger {
   &__body {
@@ -15,7 +17,7 @@
   }
 
   &__empty {
-    opacity: 0.6;
+    opacity: 0.7; // muted text floor (5.5:1)
     font-size: 0.9em;
     text-align: center;
   }
@@ -26,43 +28,22 @@
     align-items: center;
     gap: 0.5em 0.75em;
     padding-bottom: 0.5em;
-    border-bottom: 2px solid var(--c-black);
-
-    &__step,
-    &__today {
-      font: inherit;
-      cursor: pointer;
-      background: var(--c-white);
-      color: var(--c-black);
-      border: 1px solid var(--c-black);
-      border-radius: 0;
-      padding: 0 0.5em;
-
-      &:hover,
-      &:focus-visible {
-        background: var(--c-black);
-        color: var(--c-white);
-      }
-    }
-
-    &__today {
-      font-size: 0.8em;
-    }
+    border-bottom: var(--border-rule) solid var(--ink);
 
     // Switch between the entries and stats views (pushed to the right).
     &__view {
       margin-left: auto;
       padding: 0.1em 0.75em;
       font-weight: 700;
-      color: var(--c-white);
-      background: var(--c-black);
-      border: 1px solid var(--c-black);
+      color: var(--paper);
+      background: var(--ink);
+      border: var(--border-hairline) solid var(--ink);
       text-decoration: none;
 
       &:hover,
       &:focus-visible {
-        color: var(--c-black);
-        background: var(--c-white);
+        color: var(--ink);
+        background: var(--paper);
       }
     }
 
@@ -81,8 +62,8 @@
   flex-direction: column;
   gap: 0.5em;
   padding: 0.75em 1em;
-  border: 2px solid var(--c-black);
-  background-color: #fff;
+  border: var(--border-rule) solid var(--ink);
+  background-color: var(--sheet);
 
   &__header {
     display: grid;
@@ -138,7 +119,7 @@
   }
 
   input[aria-invalid="true"] {
-    outline: 1px solid var(--c-black);
+    outline: 1px solid var(--ink);
   }
 
   &__body {
@@ -161,20 +142,12 @@
     font-weight: 700;
   }
 
-  &__note {
+  // Two classes so the size wins over .LineInput's `font: inherit` regardless of
+  // stylesheet order.
+  &__note.LineInput {
     flex: 1;
     min-width: 0;
-    font: inherit;
     font-size: 0.9em;
-    border: none;
-    border-bottom: 1px dashed var(--c-black);
-    background: transparent;
-    padding: 0.2em 0;
-
-    &:focus {
-      outline: none;
-      border-bottom-style: solid;
-    }
   }
 
   // Visually hidden (not display:none) so Enter triggers implicit submission everywhere.
@@ -210,9 +183,7 @@
       display: flex;
       justify-content: space-between;
       gap: 1em;
-      padding: 0.25em 0.5em;
-      background: var(--c-black);
-      color: var(--c-white);
+      @include surfaces.strip;
       font-size: 0.85em;
     }
   }
@@ -223,7 +194,7 @@
     align-items: center;
     gap: 0.75em;
     padding: 0.4em 0.5em;
-    border-bottom: 1px dashed var(--c-black);
+    border-bottom: var(--border-hairline) dashed var(--ink);
 
     @media (max-width: constants.$breakpoint-sm) {
       grid-template-columns: 1fr auto;
@@ -282,7 +253,7 @@
     align-items: baseline;
     gap: 0.25em 1em;
     padding: 0.4em 0;
-    border-bottom: 1px dashed var(--c-black);
+    border-bottom: var(--border-hairline) dashed var(--ink);
   }
 
   &__month {
@@ -305,13 +276,13 @@
     align-items: center;
     gap: 0.5em;
     padding: 0.35em 0;
-    border-bottom: 1px dashed var(--c-black);
-    background: var(--c-white);
+    border-bottom: var(--border-hairline) dashed var(--ink);
+    background: var(--paper);
 
     &--dragging {
       position: relative;
       z-index: 1;
-      outline: 2px solid var(--c-black);
+      outline: 2px solid var(--ink);
     }
   }
 
@@ -344,7 +315,7 @@
     &--archived {
       cursor: default;
       font-weight: 400;
-      opacity: 0.6;
+      opacity: 0.7; // muted text floor (5.5:1)
       text-decoration: line-through;
 
       &:hover {
@@ -362,7 +333,7 @@
     input {
       font: inherit;
       font-weight: 700;
-      border-radius: 0;
+      border-radius: var(--radius-none);
     }
   }
 
@@ -370,28 +341,6 @@
     display: inline-flex;
     gap: 0.25em;
     margin-left: auto;
-  }
-
-  &__rowButton {
-    font: inherit;
-    font-size: 0.8em;
-    cursor: pointer;
-    background: var(--c-white);
-    color: var(--c-black);
-    border: 1px solid var(--c-black);
-    border-radius: 0;
-    padding: 0.1em 0.5em;
-
-    &:hover:not(:disabled),
-    &:focus-visible {
-      background: var(--c-black);
-      color: var(--c-white);
-    }
-
-    &:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
   }
 
   &__add {
@@ -403,16 +352,6 @@
     input {
       flex: 1;
       min-width: 0;
-      font: inherit;
-      border: none;
-      border-bottom: 1px dashed var(--c-black);
-      background: transparent;
-      padding: 0.2em 0;
-
-      &:focus {
-        outline: none;
-        border-bottom-style: solid;
-      }
     }
   }
 
@@ -456,21 +395,12 @@
 
       input {
         width: 9em;
-        font: inherit;
         text-align: right;
-        border: none;
-        border-bottom: 1px dashed var(--c-black);
-        background: transparent;
-
-        &:focus {
-          outline: none;
-          border-bottom-style: solid;
-        }
       }
 
       select {
         font: inherit;
-        border-radius: 0;
+        border-radius: var(--radius-none);
       }
     }
   }
@@ -488,7 +418,7 @@
 
 // Always-on stats: a one-line strip (totals + category bar) that expands into a panel.
 .LedgerStats {
-  border: 2px solid var(--c-black);
+  border: var(--border-rule) solid var(--ink);
 
   &__strip {
     display: flex;
@@ -496,25 +426,12 @@
     align-items: center;
     gap: 0.4em 1em;
     width: 100%;
-    padding: 0.5em 0.75em;
+    @include surfaces.strip(0.5em 0.75em);
     font: inherit;
     text-align: left;
-    color: var(--c-white);
-    background: var(--c-black);
-    border: none;
-    border-radius: 0;
     cursor: pointer;
     text-decoration: none;
     box-sizing: border-box;
-
-    // Monochrome focus ring (the browser default is blue).
-    &:focus {
-      outline: none;
-    }
-    &:focus-visible {
-      outline: 2px solid var(--c-white);
-      outline-offset: -4px;
-    }
 
     &__totals {
       font-weight: 700;
@@ -527,8 +444,8 @@
       // Over budget: inverted within the strip.
       &--over {
         padding: 0 0.4em;
-        color: var(--c-black);
-        background: var(--c-white);
+        color: var(--ink);
+        background: var(--paper);
         font-weight: 700;
       }
     }
@@ -545,7 +462,7 @@
     flex: 1;
     min-width: 6em;
     height: 0.8em;
-    border: 1px solid var(--c-white);
+    border: var(--border-hairline) solid var(--paper);
 
     &__seg {
       display: block;
@@ -553,31 +470,40 @@
       box-sizing: border-box;
 
       & + & {
-        border-left: 1px solid var(--c-black);
+        border-left: var(--border-hairline) solid var(--ink);
       }
 
+      // A 1-bit density ramp, paper -> ink, so neighbouring categories differ in
+      // how dark they read, not only in pattern.
       &--0 {
-        background: var(--c-white);
+        background: var(--paper);
       }
       &--1 {
-        background: var(--c-white);
-        outline: 1px dashed var(--c-black);
-        outline-offset: -3px;
+        background: var(--paper);
+        @include tex.texture(dots);
       }
       &--2 {
-        background: var(--c-black);
-        outline: 1px dotted var(--c-white);
-        outline-offset: -3px;
+        background: var(--paper);
+        @include tex.texture(hatch);
       }
       &--3 {
-        background: var(--c-black);
-        border-top: 2px solid var(--c-white);
-        border-bottom: 2px solid var(--c-white);
+        background: var(--paper);
+        @include tex.texture(dither);
       }
       &--rest {
-        background: var(--c-black);
+        background: var(--ink);
       }
     }
+  }
+
+  // Key swatch beside a category's share row: the same fill as its segment in the
+  // stacked bar, drawn as a tiny framed piece of that bar.
+  &__swatch {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 0.9em;
+    height: 0.9em;
+    border: var(--border-hairline) solid var(--ink);
   }
 
   &__panel {
@@ -585,7 +511,7 @@
     flex-direction: column;
     gap: 0.75em;
     padding: 0.75em;
-    background: #fff;
+    background: var(--sheet);
   }
 
   // Month headline at the top of the stats page: totals + category bar.
@@ -594,10 +520,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4em 1em;
-    padding: 0.5em 0.75em;
+    @include surfaces.strip(0.5em 0.75em);
     margin: -0.75em -0.75em 0;
-    color: var(--c-white);
-    background: var(--c-black);
   }
 
   &__heading {
@@ -633,21 +557,9 @@
     }
 
     &__track {
-      display: block;
       flex: 1;
       min-width: 8em;
       height: 1em;
-      border: 1px solid var(--c-black);
-    }
-
-    &__fill {
-      display: block;
-      height: 100%;
-      background: var(--c-black);
-    }
-
-    &--over &__track {
-      border-width: 3px;
     }
   }
 
@@ -676,38 +588,28 @@
     }
 
     &__name {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      min-width: 0;
       font-weight: 700;
+    }
+
+    &__label {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     &__track {
-      display: block;
       height: 0.7em;
-      border: 1px solid var(--c-black);
-    }
-
-    &__fill {
-      display: block;
-      height: 100%;
-      background: var(--c-black);
-    }
-
-    // Budget progress uses a dashed track to set it apart from share-of-spending bars.
-    &__track--budget {
-      border-style: dashed;
     }
 
     &--over {
-      .LedgerStats__shares__track {
-        border: 3px solid var(--c-black);
-      }
-
       .LedgerStats__shares__pct {
         font-weight: 700;
-        color: var(--c-white);
-        background: var(--c-black);
+        color: var(--paper);
+        background: var(--ink);
         padding: 0 0.2em;
       }
     }

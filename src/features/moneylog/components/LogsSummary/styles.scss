@@ -30,9 +30,9 @@
   }
 
   &__bubble {
-    border-radius: 5px;
-    color: #fff;
-    background-color: var(--c-black);
+    border-radius: var(--radius-none);
+    color: var(--inverse-ink);
+    background-color: var(--ink);
     font-size: 0.7em;
     margin: 1em 0;
     padding: 1em;
@@ -78,15 +78,15 @@
     font-size: 0.85em;
     cursor: pointer;
     padding: 0.35em 1.1em;
-    border: 2px solid var(--c-black);
-    border-radius: 6px 6px 0 0;
-    background: var(--c-white);
-    color: var(--c-black);
+    border: var(--border-rule) solid var(--ink);
+    border-radius: var(--radius-tab) var(--radius-tab) 0 0; // sanctioned: folder tab
+    background: var(--paper);
+    color: var(--ink);
     position: relative;
 
     &--active {
-      background: var(--c-white);
-      color: var(--c-black);
+      background: var(--paper);
+      color: var(--ink);
       border-bottom: none;
       top: 0;
       z-index: 2;
@@ -135,7 +135,7 @@
   }
 
   &__empty {
-    opacity: 0.6;
+    opacity: 0.7; // muted text floor (5.5:1)
     padding: 1.5em 0;
   }
 
@@ -168,10 +168,10 @@
   }
 
   &__bar {
-    fill: var(--c-black);
+    fill: var(--ink);
 
     &--hover {
-      fill: var(--c-black);
+      fill: var(--ink);
     }
 
     &--dim {
@@ -181,38 +181,38 @@
 
   &__line {
     fill: none;
-    stroke: var(--c-black);
+    stroke: var(--ink);
     stroke-width: 2;
-    stroke-linejoin: round;
-    stroke-linecap: round;
+    stroke-linejoin: miter;
+    stroke-linecap: square;
   }
 
   &__area {
-    fill: var(--c-black);
+    fill: var(--ink);
     opacity: 0.07;
   }
 
   &__dot {
-    fill: var(--c-black);
-    stroke: var(--c-white);
+    fill: var(--ink);
+    stroke: var(--paper);
     stroke-width: 2;
   }
 
   &__axis {
-    stroke: var(--c-black);
+    stroke: var(--ink);
     stroke-width: 1.5;
   }
 
   &__grid {
-    stroke: var(--c-black);
+    stroke: var(--ink);
     opacity: 0.15;
     stroke-dasharray: 2 3;
   }
 
   &__ytick,
   &__xtick {
-    fill: var(--c-black);
-    opacity: 0.6;
+    fill: var(--ink);
+    opacity: 0.7; // muted text floor (5.5:1)
     font-size: 11px;
     font-family: inherit;
   }
@@ -223,7 +223,7 @@
     outline: none;
 
     &:focus-visible {
-      fill: var(--c-black);
+      fill: var(--ink);
       opacity: 0.08;
     }
   }
@@ -232,9 +232,9 @@
     position: absolute;
     transform: translate(-50%, -130%);
     pointer-events: none;
-    background: var(--c-black);
-    color: var(--c-white);
-    border-radius: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: var(--radius-none);
     padding: 0.35em 0.55em;
     font-size: 0.72em;
     white-space: nowrap;
@@ -253,10 +253,10 @@
 .PostPreview {
   display: flex;
   flex-direction: column;
-  color: var(--c-black);
-  background-color: #fff;
-  border: 1px solid var(--c-black);
-  border-radius: 2px;
+  color: var(--ink);
+  background-color: var(--sheet);
+  border: var(--border-hairline) solid var(--ink);
+  border-radius: var(--radius-none);
   font-size: 0.7em;
   padding: 0.8em;
   min-width: fit-content;
@@ -334,26 +334,25 @@
     text-align: center;
     gap: 0.4em;
     padding: 0.8em;
-    border: 1px solid var(--c-black);
-    border-radius: 2px;
+    border: var(--border-hairline) solid var(--ink);
+    border-radius: var(--radius-none);
     min-width: 0;
     // Tiles are links; opt out of the global anchor styling so they keep the
     // tile look, and invert on hover/focus like the other interactive surfaces.
-    color: var(--c-black);
+    color: var(--ink);
     font-weight: inherit;
     text-decoration: none;
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
-      background-color: var(--c-black);
-      color: var(--c-white);
+      background-color: var(--ink);
+      color: var(--paper);
 
-      // Icons are <img>, so they need the same invert filter Icon.tsx uses for
-      // fill="white" — otherwise they disappear against the inverted background.
+      // Icons are <img>, so they flip with a filter — otherwise they disappear
+      // against the inverted background.
       .Icon img {
-        filter: invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%)
-          contrast(100%);
+        filter: var(--icon-filter-inverse);
       }
     }
 
@@ -378,7 +377,7 @@
       }
 
       span {
-        opacity: 0.6;
+        opacity: 0.7; // muted text floor (5.5:1)
       }
     }
   }
@@ -386,7 +385,7 @@
   &__empty {
     grid-column: 1 / -1;
     font-size: 0.85em;
-    opacity: 0.55;
+    opacity: 0.7; // muted text floor (5.5:1)
     text-align: center;
     padding: 1em 0;
   }

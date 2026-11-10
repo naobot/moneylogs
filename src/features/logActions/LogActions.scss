@@ -26,7 +26,7 @@
     & + & {
       margin-top: 1.25em;
       padding-top: 1em;
-      border-top: 1px dashed var(--c-black);
+      border-top: var(--border-hairline) dashed var(--ink);
     }
   }
 }
@@ -51,29 +51,12 @@
       align-items: baseline;
       gap: 1em;
       padding: 0.35em 0;
-      border-bottom: 1px dashed var(--c-black);
+      border-bottom: var(--border-hairline) dashed var(--ink);
     }
 
     small {
-      opacity: 0.6;
+      opacity: 0.7; // muted text floor (5.5:1)
     }
-  }
-}
-
-.LogRowButton {
-  font: inherit;
-  font-size: 0.7em;
-  cursor: pointer;
-  background: var(--c-white);
-  color: var(--c-black);
-  border: 1px solid var(--c-black);
-  border-radius: 0;
-  padding: 0.1em 0.5em;
-
-  &:hover:not(:disabled),
-  &:focus-visible {
-    background: var(--c-black);
-    color: var(--c-white);
   }
 }
 
@@ -95,11 +78,11 @@
     align-items: baseline;
     gap: 0.25em 1em;
     padding: 0.35em 0;
-    border-bottom: 1px dashed var(--c-black);
+    border-bottom: var(--border-hairline) dashed var(--ink);
 
     // Push to the right edge, like the other lists' row actions, even when the row
     // wraps and the button lands on its own line.
-    > .LogRowButton {
+    > .RowButton {
       margin-left: auto;
     }
   }
@@ -107,12 +90,12 @@
 
 // Danger zone: heavier rule above, inverted heading. Monochrome only.
 .LogActions__danger {
-  border-top: 3px solid var(--c-black) !important;
+  border-top: var(--border-heavy) solid var(--ink) !important;
 
   h4 {
     padding: 0.1em 0.4em;
-    color: var(--c-white);
-    background: var(--c-black);
+    color: var(--paper);
+    background: var(--ink);
   }
 }
 
@@ -122,17 +105,4 @@
   gap: 0.3em;
   width: 100%;
   font-size: 0.9em;
-
-  input {
-    font: inherit;
-    border: none;
-    border-bottom: 1px dashed var(--c-black);
-    background: transparent;
-    padding: 0.2em 0;
-
-    &:focus {
-      outline: none;
-      border-bottom-style: solid;
-    }
-  }
 }

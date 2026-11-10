@@ -7,6 +7,7 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { Group } from "@/types/user";
 import { Ledger } from "@/types/ledger";
 import { archivedAtMillis } from "@/utils/archivedLogs";
+import RowButton from "@/components/RowButton";
 import { ManageLogButton } from "./ManageLogButton";
 import { ManageTarget, manageTargetForGroup, manageTargetForLedger } from "./manageTarget";
 
@@ -75,15 +76,13 @@ export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsList
             {onManage ? (
               <ManageLogButton target={row.target} onManage={onManage} />
             ) : (
-              <button
-                type="button"
-                className="LogRowButton"
+              <RowButton
                 aria-label={`Unarchive ${row.title}`}
                 disabled={pendingId === row.id}
                 onClick={() => void unarchive(row.id)}
               >
                 {pendingId === row.id ? "…" : "unarchive"}
-              </button>
+              </RowButton>
             )}
           </li>
         ))}
