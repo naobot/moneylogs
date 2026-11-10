@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { auth } from "@/config/firebase-config";
-import { signOut } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { useCurrentUser } from "@/contexts";
+import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { isArchived } from "@/utils/archivedLogs";
 import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
 
@@ -18,7 +17,6 @@ const MainNav = () => {
   const [firebaseUser] = useAuthState(auth);
   const isLoggedIn = !!firebaseUser;
 
-  const navigate = useNavigate();
   const location = useLocation();
   const currentGroupId = location.pathname.match(/\/[gl]\/([^/]+)/)?.[1];
   const { user } = useCurrentUser();
@@ -41,23 +39,7 @@ const MainNav = () => {
   // Home is a list of logs now, so only highlight the log actually being viewed.
   const highlightedGroupId = currentGroupId ?? null;
 
-  const [signOutPending, setSignOutPending] = useState(false);
-
-  const handleSignOut = () => {
-    setSignOutPending(true);
-    void signOut(auth)
-      .then(() => {
-        console.log("sign out successful");
-        setSignOutPending(false);
-        void navigate("/login");
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        setSignOutPending(false);
-        console.log(`${errorCode}: ${errorMessage}`);
-      });
-  };
+  const { signOut, isPending: signOutPending } = useSignOut();
 
   return (
     <nav className="MainNav">
@@ -113,12 +95,7 @@ const MainNav = () => {
         <Link to={"/about"}>
           moneylogs <small>{__APP_VERSION__}</small>
         </Link>
-        <Button
-          title="Sign out"
-          onClick={() => handleSignOut()}
-          loading={signOutPending}
-          icon="exit"
-        />
+        <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
       </div>
     </nav>
   );
