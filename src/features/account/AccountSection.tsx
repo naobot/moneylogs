@@ -10,21 +10,18 @@ import { getResetEmailErrorMessage } from "@/features/auth/accountErrors";
 import dayjs from "@/utils/configuredDayjs";
 
 import Button from "@/components/Button";
-import { ChangePasswordForm } from "./ChangePasswordForm";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
-// .LogRowButton (the reset-link button) lives with the other small row buttons.
-import "@/features/logActions/LogActions.scss";
 import "./AccountSection.scss";
 
-declare const __APP_VERSION__: string;
-
-/** Account details and credentials: email, member since, password, sign out. */
+/** Account details, then the account actions as a row of buttons. */
 export const AccountSection = () => {
   const [firebaseUser] = useAuthState(auth);
   const { user } = useCurrentUser();
   const { showToast } = useToastContext();
   const { signOut, isPending: signOutPending } = useSignOut();
   const [resetPending, setResetPending] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const email = firebaseUser?.email ?? user?.email;
   const memberSince = user?.createdAt?.seconds
@@ -60,36 +57,37 @@ export const AccountSection = () => {
             <dd>{memberSince}</dd>
           </>
         )}
-        <dt>App version</dt>
-        <dd>{__APP_VERSION__}</dd>
       </dl>
 
-      <div>
-        <h4>Change password</h4>
-        <ChangePasswordForm />
-        <p className="AccountSection__hint">
-          Forgot your current password?{" "}
-          <button
-            type="button"
-            className="LogRowButton"
-            disabled={!email || resetPending}
-            onClick={() => void sendReset()}
-          >
-            {resetPending ? "sending…" : "email me a reset link"}
-          </button>
-        </p>
-      </div>
-
-      <div className="Menu">
+      <div className="AccountSection__actions">
+        <Button
+          text="Change password"
+          size="sm"
+          buttonStyle="primary-border"
+          onClick={() => setChangingPassword(true)}
+        />
+        <Button
+          text="Reset password"
+          title={email ? `Email a reset link to ${email}` : "Email me a reset link"}
+          size="sm"
+          buttonStyle="primary-border"
+          disabled={!email}
+          loading={resetPending}
+          onClick={() => void sendReset()}
+        />
         <Button
           text="Sign out"
           size="sm"
           buttonStyle="primary-border"
-          icon="exit"
+          className="AccountSection__signOut"
           loading={signOutPending}
           onClick={signOut}
         />
       </div>
+
+      {changingPassword && (
+        <ChangePasswordModal isOpen onClose={() => setChangingPassword(false)} />
+      )}
     </>
   );
 };

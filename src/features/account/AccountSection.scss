@@ -20,16 +20,43 @@
     }
   }
 
-  &__password {
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+}
+
+// Sign out is the highlighted action: inverted, flipping back on hover. Two classes so
+// it wins over .Button--primary-border.
+.Button.AccountSection__signOut {
+  background-color: var(--c-black);
+  color: var(--c-white);
+
+  &:hover {
+    background-color: var(--c-white);
+    color: var(--c-black);
+  }
+}
+
+.ChangePassword {
+  &__body {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-    margin-top: 0.5em;
+    text-align: left;
+
+    .ControlledInput {
+      justify-content: space-between;
+
+      label {
+        min-width: 11em;
+      }
+    }
   }
 
   &__hint {
     margin: 0;
     font-size: 0.9em;
-    opacity: 0.8;
   }
 }

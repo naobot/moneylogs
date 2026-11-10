@@ -12,13 +12,21 @@ import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
+import Modal from "@/components/Modal";
+
+type ChangePasswordModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
 
 /**
  * Change password while signed in. Firebase only lets a recent sign-in change the
  * password, so we re-authenticate with the current one first; that also proves it's
  * really the account owner at the keyboard.
+ *
+ * Render it only while open (or key it) so the fields start empty each time.
  */
-export const ChangePasswordForm = () => {
+export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
   const { showToast } = useToastContext();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -28,7 +36,7 @@ export const ChangePasswordForm = () => {
   const { isValid: meetsPolicy } = useValidatePassword(next);
 
   const problem = validatePasswordChange({ current, next, confirm, meetsPolicy });
-  // Only nag about a field once the user has started on the new password.
+  // Only nag once the user has started on both new-password fields.
   const showProblem = !!problem && next.length > 0 && confirm.length > 0;
 
   const submit = async () => {
@@ -42,10 +50,8 @@ export const ChangePasswordForm = () => {
         EmailAuthProvider.credential(firebaseUser.email, current),
       );
       await updatePassword(firebaseUser, next);
-      setCurrent("");
-      setNext("");
-      setConfirm("");
       showToast("Password changed", "success");
+      onClose();
     } catch (err) {
       const code = (err as { code?: string })?.code;
       console.error("Failed to change password:", code);
@@ -66,41 +72,51 @@ export const ChangePasswordForm = () => {
   };
 
   return (
-    <form className="AccountSection__password" onSubmit={handleSubmit}>
-      <ControlledInput
-        type="password"
-        label="Current password"
-        value={current}
-        onChange={field(setCurrent)}
-      />
-      <ControlledInput
-        type="password"
-        label="New password"
-        value={next}
-        onChange={field(setNext)}
-        isError={!!next && !meetsPolicy}
-        errorMessage="doesn't meet the requirements"
-      />
-      <ControlledInput
-        type="password"
-        label="Confirm new password"
-        value={confirm}
-        onChange={field(setConfirm)}
-      />
-      {showProblem && <p className="AccountSection__hint">{problem}</p>}
-      <AuthErrorMessage message={error} />
-      <div className="Menu">
-        <Button
-          text="Change password"
-          size="sm"
-          buttonStyle="primary-border"
-          disabled={!!problem}
-          loading={pending}
-          onClick={() => void submit()}
-        />
-      </div>
-    </form>
+    <Modal
+      isOpen={isOpen}
+      onClose={pending ? undefined : onClose}
+      disabled={pending}
+      className="ChangePassword"
+    >
+      <Modal.Header title="Change password" />
+      <form onSubmit={handleSubmit}>
+        <Modal.Body className="ChangePassword__body">
+          <ControlledInput
+            type="password"
+            label="Current password"
+            value={current}
+            onChange={field(setCurrent)}
+          />
+          <ControlledInput
+            type="password"
+            label="New password"
+            value={next}
+            onChange={field(setNext)}
+            isError={!!next && !meetsPolicy}
+            errorMessage="doesn't meet the requirements"
+          />
+          <ControlledInput
+            type="password"
+            label="Confirm new password"
+            value={confirm}
+            onChange={field(setConfirm)}
+          />
+          {showProblem && <p className="ChangePassword__hint">{problem}</p>}
+          <AuthErrorMessage message={error} />
+        </Modal.Body>
+        <Modal.Actions>
+          <Modal.CancelButton />
+          <Button
+            text="Change password"
+            buttonStyle="primary-border"
+            disabled={!!problem}
+            loading={pending}
+            onClick={() => void submit()}
+          />
+        </Modal.Actions>
+      </form>
+    </Modal>
   );
 };
 
-export default ChangePasswordForm;
+export default ChangePasswordModal;
