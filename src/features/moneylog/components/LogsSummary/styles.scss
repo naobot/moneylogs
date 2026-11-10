@@ -349,11 +349,10 @@
       background-color: var(--ink);
       color: var(--paper);
 
-      // Icons are <img>, so they need the same invert filter Icon.tsx uses for
-      // fill="white" — otherwise they disappear against the inverted background.
+      // Icons are <img>, so they flip with a filter — otherwise they disappear
+      // against the inverted background.
       .Icon img {
-        filter: invert(100%) sepia(100%) saturate(2%) hue-rotate(281deg) brightness(108%)
-          contrast(100%);
+        filter: var(--icon-filter-inverse);
       }
     }
 

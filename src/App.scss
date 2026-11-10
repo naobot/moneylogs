@@ -246,6 +246,15 @@ html {
     width: 16px;
     height: 16px;
   }
+
+  img {
+    filter: var(--icon-filter);
+  }
+
+  // On an inverted block (fill="white").
+  &--inverse img {
+    filter: var(--icon-filter-inverse);
+  }
 }
 
 // Type conventions (terminal style): headings and heading-like labels are lowercase;

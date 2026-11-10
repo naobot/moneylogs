@@ -19,6 +19,12 @@
   --inverse-ink: var(--paper);
   --focus-ring: var(--ink);
 
+  // Icons are black single-ink <img>s and can't inherit colour, so they are flipped
+  // with a filter: --icon-filter on the ground, --icon-filter-inverse on an
+  // inverted block. Night shift swaps the two.
+  --icon-filter: none;
+  --icon-filter-inverse: invert(1);
+
   // ---- type: Hack reads, Pixelify presses ----
   --font-mono: Hack, monospace;
   --font-pixel: "Pixelify Sans", Hack, monospace; // button labels only
@@ -78,6 +84,8 @@
   --ink-ghost: rgba(245, 243, 240, 0.15);
   --ink-wash: rgba(245, 243, 240, 0.07);
   --scrim: rgba(0, 0, 0, 0.5);
+  --icon-filter: invert(1);
+  --icon-filter-inverse: none;
 
   color-scheme: dark;
 }
