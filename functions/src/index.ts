@@ -5,6 +5,13 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { onCall } from "firebase-functions/https";
 import sharp from "sharp";
+import {
+  buildCommentNotification,
+  chunk,
+  commentNotificationId,
+  NotifiablePost,
+  notificationRecipients,
+} from "./notifications";
 
 initializeApp();
 const db = getFirestore();
@@ -58,16 +65,18 @@ export const updatePostMetadata = onDocumentCreated("log_posts/{postId}", async 
   }
 });
 
-// When a comment is created, update post's latestCommentAt
+// When a comment is created, update post's latestCommentAt and notify the post's author
+// and comment subscribers (see notifications.ts).
 export const updateCommentMetadata = onDocumentCreated(
   "log_posts/{postId}/comments/{commentId}",
   async (event) => {
     const commentData = event.data?.data();
-    const { postId } = event.params;
+    const { postId, commentId } = event.params;
 
     if (!commentData?.authorId) return;
 
     const timestamp = FieldValue.serverTimestamp();
+    const actorId: string = commentData.authorId.id;
 
     try {
       const batch = db.batch();
@@ -78,7 +87,7 @@ export const updateCommentMetadata = onDocumentCreated(
       });
 
       // Update the commenter's subscription tracking (they've now seen this comment)
-      batch.update(db.collection("users").doc(commentData.authorId.id), {
+      batch.update(db.collection("users").doc(actorId), {
         [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp,
       });
 
@@ -87,6 +96,40 @@ export const updateCommentMetadata = onDocumentCreated(
       console.log(`Updated comment metadata for post ${postId}`);
     } catch (error) {
       console.error("Error updating comment metadata:", error);
+    }
+
+    // Notifications, separately so a failure here never holds up the metadata above.
+    // Comment ids are unique, so a retried trigger overwrites rather than duplicates.
+    try {
+      const postSnap = await db.collection("log_posts").doc(postId).get();
+      const post = (postSnap.data() ?? {}) as NotifiablePost;
+      const recipients = notificationRecipients(post, actorId);
+      if (!recipients.length) return;
+
+      const notification = buildCommentNotification({
+        post,
+        postId,
+        commentId,
+        actorId,
+        actorName: commentData.authorName ?? "Someone",
+        content: commentData.content,
+      });
+      for (const group of chunk(recipients)) {
+        const batch = db.batch();
+        for (const recipient of group) {
+          batch.set(
+            db
+              .collection("users")
+              .doc(recipient)
+              .collection("notifications")
+              .doc(commentNotificationId(commentId)),
+            { ...notification, createdAt: timestamp, readAt: null },
+          );
+        }
+        await batch.commit();
+      }
+    } catch (error) {
+      console.error("Error writing comment notifications:", error);
     }
   },
 );
@@ -380,3 +423,4 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
 }
 export { recomputeLedgerMonth } from "./ledger";
 export { deleteLog } from "./deleteLog";
+export { notifyOnReaction } from "./notifyOnReaction";

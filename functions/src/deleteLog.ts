@@ -81,7 +81,7 @@ export const deleteLog = onCall({ timeoutSeconds: 300, memory: "512MiB" }, async
       .catch(recordFailure("delete processing doc"));
   }
 
-  // Participants' bookkeeping and achievements for this log.
+  // Participants' bookkeeping, achievements and notifications for this log.
   const fieldsToDelete = userFieldsToDelete(req.id, postIds);
   for (const userDocId of participantIds) {
     const userRef = db.collection("users").doc(userDocId);
@@ -100,6 +100,14 @@ export const deleteLog = onCall({ timeoutSeconds: 300, memory: "512MiB" }, async
       .get();
     for (const d of achievements.docs) {
       bulk.delete(d.ref).catch(recordFailure(`delete achievement ${d.id}`));
+    }
+    // Notifications about this log's posts (comment and reaction fan-out).
+    const notifications = await userRef
+      .collection("notifications")
+      .where("groupId", "==", req.id)
+      .get();
+    for (const d of notifications.docs) {
+      bulk.delete(d.ref).catch(recordFailure(`delete notification ${d.id}`));
     }
   }
   await bulk.flush();
