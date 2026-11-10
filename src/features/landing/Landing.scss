@@ -1,0 +1,161 @@
+@use "/src/constants.scss";
+@use "@/texture.scss" as tex;
+
+// Logged-out landing page. Example screens sit in striped window frames (the tool-modal
+// chrome) so they read as "a look at the app", not as the visitor's own logs.
+.Landing {
+  align-items: center;
+  gap: var(--space-7);
+  padding-bottom: var(--space-7);
+
+  > * {
+    width: 100%;
+    max-width: var(--main-width);
+    flex-shrink: 0;
+  }
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-6) var(--space-5);
+    text-align: center;
+
+    h1 {
+      margin: 0;
+    }
+  }
+
+  &__pitch {
+    max-width: 34em;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  &__window {
+    border: var(--border-rule) solid var(--ink);
+    background-color: var(--paper);
+
+    .Modal__header {
+      font-size: 0.8em;
+    }
+
+    &__tag {
+      padding: 0 6px;
+      font-size: 0.85em;
+      text-transform: lowercase;
+    }
+
+    &__body {
+      padding: var(--space-5);
+      @include tex.texture(grid);
+
+      // Graph paper is a background, so it sits faint (as .tex-grid does).
+      &::before {
+        opacity: 0.15;
+      }
+
+      @media (max-width: constants.$breakpoint-sm) {
+        padding: var(--space-4);
+      }
+    }
+
+    // The dashboard's own bottom padding is for the scrolling page; here the frame pads.
+    .Dashboard {
+      padding-bottom: 0;
+    }
+  }
+
+  &__posts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 36em;
+    margin: 0 auto;
+    text-align: center;
+
+    .LogPosts__posts__item__body p {
+      margin: 0.5em 0;
+    }
+  }
+
+  &__post__author {
+    font-weight: 700;
+    text-align: left;
+  }
+
+  &__steps {
+    h2 {
+      margin: 0 0 var(--space-5);
+    }
+
+    .Landing__intro {
+      margin: 0 0 var(--space-5);
+      line-height: 1.5;
+    }
+
+    ol,
+    ul {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: var(--space-4);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    li {
+      counter-increment: step;
+      padding: var(--space-4);
+      border: var(--border-hairline) solid var(--ink);
+      background-color: var(--sheet);
+
+      // Text-mode step numbers: [1], [2], …
+      &::before {
+        content: "[" counter(step) "]";
+        font-weight: 700;
+      }
+
+      .Landing__steps--solo & {
+        // Points, not steps: a text-mode bullet instead of a number.
+        &::before {
+          content: "[+]";
+        }
+      }
+
+      h3 {
+        margin: var(--space-2) 0;
+        font-size: 1em;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.9em;
+        color: var(--ink-muted);
+      }
+    }
+  }
+
+  &__cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+    border-top: var(--border-hairline) dotted var(--ink);
+    text-align: center;
+
+    p {
+      margin: 0;
+    }
+  }
+}
