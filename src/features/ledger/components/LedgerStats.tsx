@@ -190,7 +190,9 @@ export const LedgerStatsPanel = ({
 
       {(hasEntries || catRows.length > 0) && (
         <>
-          <h4 className="LedgerStats__heading">By category · {currency}</h4>
+          <h4 className="LedgerStats__heading">
+            By category · <span className="keep-case">{currency}</span>
+          </h4>
           {budget && (
             <p className="LedgerStats__note">
               Categories with a budget show progress toward it; the rest show their share of
@@ -204,7 +206,9 @@ export const LedgerStatsPanel = ({
       {hasEntries && (
         <>
           <div className="LedgerStats__chartHeader">
-            <h4 className="LedgerStats__heading">Day by day · {currency}</h4>
+            <h4 className="LedgerStats__heading">
+              Day by day · <span className="keep-case">{currency}</span>
+            </h4>
             <div className="Segmented" role="group" aria-label="Graph type">
               <Button
                 text="daily"
@@ -231,7 +235,9 @@ export const LedgerStatsPanel = ({
 
           {isShared && people.length > 0 && (
             <>
-              <h4 className="LedgerStats__heading">By person · {currency}</h4>
+              <h4 className="LedgerStats__heading">
+                By person · <span className="keep-case">{currency}</span>
+              </h4>
               <ShareRows rows={people} currency={currency} label="Spending by person" />
             </>
           )}
@@ -324,7 +330,9 @@ const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: 
   }
   return (
     <div className={cx("LedgerStats__budget", { "LedgerStats__budget--over": budget.over })}>
-      <h4 className="LedgerStats__heading">Budget · {currency}</h4>
+      <h4 className="LedgerStats__heading">
+        Budget · <span className="keep-case">{currency}</span>
+      </h4>
       <div className="LedgerStats__budget__meter">
         <span
           className="LedgerStats__budget__track"

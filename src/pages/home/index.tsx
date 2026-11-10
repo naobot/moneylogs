@@ -25,7 +25,7 @@ export const Home = () => {
     archivedCount > 0 ? (
       <p className="GroupArchive__empty">
         {archivedCount} archived log{archivedCount === 1 ? "" : "s"} ·{" "}
-        <Link to="/me#logs">see My logs</Link>
+        <Link to="/me#logs">see my logs</Link>
       </p>
     ) : null;
 

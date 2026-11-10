@@ -26,6 +26,17 @@
     gap: 0.25em 1em;
   }
 
+  // Section actions ("+ start a new log", "see all N in my logs"): lighter than the
+  // headings they sit beside, with the destination in bold.
+  &__action {
+    font-size: 0.9em;
+    font-weight: 400;
+
+    strong {
+      font-weight: 700;
+    }
+  }
+
   &__grid {
     display: grid;
     gap: 0.75em;
@@ -108,8 +119,7 @@
 
   &__kind {
     font-size: 0.75em;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    text-transform: lowercase;
     opacity: 0.7;
   }
 

@@ -121,7 +121,7 @@ export const LogActionsModal = ({
           <p>
             {archived
               ? `This ${noun} is archived for you. Unarchive it to show it in your navigation and lists again.`
-              : `Hide this ${noun} from your navigation and lists. It moves to the "Archived" list under My logs on your profile page. Only you are affected, and you can still open it.`}
+              : `Hide this ${noun} from your navigation and lists. It moves to the "Archived" list under "my logs" on your profile page. Only you are affected, and you can still open it.`}
           </p>
           <Button
             text={archived ? "Unarchive" : "Archive for me"}

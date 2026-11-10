@@ -53,7 +53,9 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
       <section className="Dashboard__section" aria-labelledby="dashboard-now">
         <div className="Dashboard__heading">
           <h3 id="dashboard-now">Now</h3>
-          <Link to="/create">+ Start a new log</Link>
+          <Link to="/create" className="Dashboard__action">
+            + start a new log
+          </Link>
         </div>
         {now.length > 0 ? (
           <div className="Dashboard__grid Dashboard__grid--large">
@@ -115,8 +117,9 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
         <section className="Dashboard__section" aria-labelledby="dashboard-recent">
           <div className="Dashboard__heading">
             <h3 id="dashboard-recent">Recently ended</h3>
-            <Link to="/me#logs">
-              See all{pastCount > recent.length ? ` ${pastCount}` : ""} in My logs →
+            <Link to="/me#logs" className="Dashboard__action">
+              see all{pastCount > recent.length ? ` ${pastCount}` : ""} in <strong>my logs</strong>{" "}
+              →
             </Link>
           </div>
           <div className="Dashboard__grid Dashboard__grid--compact">
