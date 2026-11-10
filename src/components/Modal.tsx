@@ -85,6 +85,11 @@ interface ModalHeaderProps {
   title?: string;
   showCloseButton?: boolean;
   className?: string;
+  /**
+   * Striped window chrome (title on a paper label over 1-bit stripes) for tool-like
+   * modals — managing a log, editing categories. Confirmations keep the solid bar.
+   */
+  striped?: boolean;
 }
 
 const ModalHeader: React.FC<ModalHeaderProps> = ({
@@ -92,12 +97,14 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   title,
   showCloseButton = false,
   className = "",
+  striped = false,
 }) => {
   const { onClose, disabled } = useContext(ModalContext);
 
   return (
-    <div className={`Modal__header ${className}`}>
+    <div className={`Modal__header ${striped ? "Modal__header--striped" : ""} ${className}`}>
       <h2 className="Modal__title">{title ?? children}</h2>
+      {striped && <span className="Modal__header__fill tex-stripe" aria-hidden="true" />}
       {showCloseButton && onClose && (
         <button
           className="Modal__button--close"

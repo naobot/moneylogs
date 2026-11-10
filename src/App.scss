@@ -1470,6 +1470,27 @@ h6,
     background-color: var(--ink);
   }
 
+  // Striped window chrome for tool modals: the title and close sit on paper labels
+  // over a field of horizontal 1-bit stripes.
+  &__header--striped {
+    align-items: center;
+    gap: 8px;
+    background-color: var(--paper);
+    border-bottom: var(--border-rule) solid var(--ink);
+
+    .Modal__title,
+    .Modal__button--close {
+      color: var(--ink);
+      padding: 0 6px;
+    }
+  }
+
+  &__header__fill {
+    flex: 1;
+    align-self: stretch;
+    margin: 5px 0;
+  }
+
   &__title {
     font-size: 1em;
     color: var(--paper);

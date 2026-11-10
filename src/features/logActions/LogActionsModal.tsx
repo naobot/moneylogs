@@ -114,7 +114,9 @@ export const LogActionsModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={pending ? undefined : onClose} className="LogActions">
-      <Modal.Header title="Manage">Manage {logTitle}</Modal.Header>
+      <Modal.Header striped title="Manage">
+        Manage {logTitle}
+      </Modal.Header>
       <Modal.Body>
         <section className="LogActions__section">
           <h4>{archived ? "Archived" : "Archive"}</h4>

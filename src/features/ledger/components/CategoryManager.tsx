@@ -148,7 +148,9 @@ const CategoryManagerDialog = ({
 
   return (
     <Modal isOpen onClose={isSaving ? undefined : onClose} className="CategoryManager">
-      <Modal.Header title="Categories">Categories</Modal.Header>
+      <Modal.Header striped title="Categories">
+        Categories
+      </Modal.Header>
       <Modal.Body>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
