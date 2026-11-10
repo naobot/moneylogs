@@ -1,16 +1,10 @@
 @use "./constants.scss";
+@use "./tokens.scss";
 
 :root {
-  --c-white: #f5f3f0;
-  --c-black: #242424;
-
-  font-family: Terminal, monospace;
-  color-scheme: light;
-  background-color: var(--c-white);
-  color: var(--c-black);
-
-  --sidebar-width: 420px;
-  --main-width: 800px;
+  font-family: var(--font-mono);
+  background-color: var(--paper);
+  color: var(--ink);
 }
 
 #root {
@@ -45,7 +39,7 @@ html {
 
 .wmde-markdown {
   background-color: transparent;
-  font-family: Terminal, monospace !important;
+  font-family: var(--font-mono) !important;
   font-size: 1em !important;
 }
 
