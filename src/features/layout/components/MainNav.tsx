@@ -9,6 +9,7 @@ import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { arrangeDashboard } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
+import ThemeToggle from "./ThemeToggle";
 
 declare const __APP_VERSION__: string;
 
@@ -93,6 +94,7 @@ const MainNav = () => {
         <Link to={"/about"}>
           moneylogs <small>{__APP_VERSION__}</small>
         </Link>
+        <ThemeToggle />
         <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
       </div>
     </nav>
