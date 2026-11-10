@@ -39,7 +39,13 @@ export const UserSettings = () => {
 
   return (
     <div className="Window UserSettings">
-      <div className="Window__heading">{user?.displayName && <h2>hi {user?.displayName}</h2>}</div>
+      <div className="Window__heading">
+        {user?.displayName && (
+          <h2>
+            hi <span className="keep-case">{user?.displayName}</span>
+          </h2>
+        )}
+      </div>
 
       <div className="UserSettings__drawers">
         <Drawer
@@ -67,7 +73,7 @@ export const UserSettings = () => {
 
         <Drawer
           id="logs"
-          title="My logs"
+          title="my logs"
           summary={myLogsHint({
             financial: ledgers.length,
             ongoing: ongoing.length,

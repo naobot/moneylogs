@@ -225,7 +225,7 @@ export const GroupAnalyticsDebug = ({ analytics }: { analytics: GroupAnalytics }
 
       {[...analytics.currencyPercentiles.entries()].map(([currency, percentiles]) => (
         <div key={`analytics-${currency}`}>
-          <h5>{currency}</h5>
+          <h5 className="keep-case">{currency}</h5>
           <p>25th percentile: {percentiles.p25.toFixed(2)}</p>
           <p>50th percentile (median): {percentiles.p50.toFixed(2)}</p>
           <p>75th percentile: {percentiles.p75.toFixed(2)}</p>

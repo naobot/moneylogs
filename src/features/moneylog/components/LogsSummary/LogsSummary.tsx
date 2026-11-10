@@ -196,7 +196,9 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
   if (processingState) {
     return (
       <div className="LogsSummary">
-        <h2>Preparing insights for {group.title}</h2>
+        <h2>
+          Preparing insights for <span className="keep-case">{group.title}</span>
+        </h2>
         <div className="Window">
           <h3>Processing analytics...</h3>
           <div style={{ padding: "2rem", textAlign: "center" }}>
@@ -215,7 +217,9 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
   if (analyticsError) {
     return (
       <div className="LogsSummary">
-        <h2>Insights for {group.title}</h2>
+        <h2>
+          Insights for <span className="keep-case">{group.title}</span>
+        </h2>
         <div className="Window">
           <h3>Processing error</h3>
           <p>Failed to process analytics: {analyticsError}</p>
