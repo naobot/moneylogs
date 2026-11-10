@@ -281,15 +281,13 @@ const ShareRows = ({
         <li key={row.id} className={cx({ "LedgerStats__shares--over": row.over })}>
           <span className="LedgerStats__shares__name">{row.name}</span>
           <span
-            className={cx("LedgerStats__shares__track", {
-              "LedgerStats__shares__track--budget": budgeted,
+            className={cx("Meter__track LedgerStats__shares__track", {
+              "Meter__track--budget": budgeted,
+              "Meter__track--over": row.over,
             })}
             aria-hidden="true"
           >
-            <span
-              className="LedgerStats__shares__fill"
-              style={{ width: pct(Math.min(ratio, 1)) }}
-            />
+            <span className="Meter__fill" style={{ width: pct(Math.min(ratio, 1)) }} />
           </span>
           <span className="LedgerStats__shares__amount">
             {formatAmount(row.amount, currency)}
@@ -335,17 +333,16 @@ const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: 
       </h4>
       <div className="LedgerStats__budget__meter">
         <span
-          className="LedgerStats__budget__track"
+          className={cx("Meter__track Meter__track--budget LedgerStats__budget__track", {
+            "Meter__track--over": budget.over,
+          })}
           role="meter"
           aria-label={`${currency} budget used`}
           aria-valuemin={0}
           aria-valuemax={budget.budget}
           aria-valuenow={budget.spent}
         >
-          <span
-            className="LedgerStats__budget__fill"
-            style={{ width: pct(Math.min(budget.used, 1)) }}
-          />
+          <span className="Meter__fill" style={{ width: pct(Math.min(budget.used, 1)) }} />
         </span>
         <strong>
           {formatAmount(budget.spent, currency)} / {formatAmount(budget.budget, currency)} (

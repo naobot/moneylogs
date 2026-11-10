@@ -448,6 +448,29 @@ h6,
   }
 }
 
+// A horizontal meter: hairline track, solid ink fill. A dashed track is a target
+// (budget progress) rather than a measurement; over budget, the track goes heavy and
+// solid. Size and layout come from the component.
+.Meter__track {
+  display: block;
+  border: var(--border-hairline) solid var(--ink);
+
+  &--budget {
+    border-style: dashed;
+  }
+
+  &--over {
+    border-width: var(--border-heavy);
+    border-style: solid;
+  }
+}
+
+.Meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
 .ControlledInput {
   display: flex;
   grid-gap: 0.4em;

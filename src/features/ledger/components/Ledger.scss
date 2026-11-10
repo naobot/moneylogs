@@ -547,21 +547,9 @@
     }
 
     &__track {
-      display: block;
       flex: 1;
       min-width: 8em;
       height: 1em;
-      border: 1px solid var(--ink);
-    }
-
-    &__fill {
-      display: block;
-      height: 100%;
-      background: var(--ink);
-    }
-
-    &--over &__track {
-      border-width: 3px;
     }
   }
 
@@ -597,27 +585,10 @@
     }
 
     &__track {
-      display: block;
       height: 0.7em;
-      border: 1px solid var(--ink);
-    }
-
-    &__fill {
-      display: block;
-      height: 100%;
-      background: var(--ink);
-    }
-
-    // Budget progress uses a dashed track to set it apart from share-of-spending bars.
-    &__track--budget {
-      border-style: dashed;
     }
 
     &--over {
-      .LedgerStats__shares__track {
-        border: 3px solid var(--ink);
-      }
-
       .LedgerStats__shares__pct {
         font-weight: 700;
         color: var(--paper);
