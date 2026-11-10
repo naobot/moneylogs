@@ -15,13 +15,16 @@ import "./LogActions.scss";
 type ArchivedLogsListProps = {
   groups: ReadonlyArray<Group>;
   ledgers: ReadonlyArray<Ledger>;
-  /** When given, each row also gets a "manage" button (archive / delete). */
+  /**
+   * When given, each row gets a "manage" button (unarchive / delete) in place of the
+   * plain "unarchive" button, which would only duplicate it.
+   */
   onManage?: (target: ManageTarget) => void;
 };
 
 type Row = { id: string; title: string; href: string; kind: string; target: ManageTarget };
 
-/** Collapsed-by-default list of the logs this user archived, each with an unarchive button. */
+/** Collapsed-by-default list of the logs this user archived, each with an unarchive or manage button. */
 export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsListProps) => {
   const { user } = useCurrentUser();
   const { unarchiveLog } = useUserQuery();
@@ -69,7 +72,9 @@ export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsList
             <span>
               <Link to={row.href}>{row.title}</Link> <small>{row.kind}</small>
             </span>
-            <span className="LogRowActions">
+            {onManage ? (
+              <ManageLogButton target={row.target} onManage={onManage} />
+            ) : (
               <button
                 type="button"
                 className="LogRowButton"
@@ -79,8 +84,7 @@ export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsList
               >
                 {pendingId === row.id ? "…" : "unarchive"}
               </button>
-              {onManage && <ManageLogButton target={row.target} onManage={onManage} />}
-            </span>
+            )}
           </li>
         ))}
       </ul>
