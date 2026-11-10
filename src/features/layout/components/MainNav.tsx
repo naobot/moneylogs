@@ -25,9 +25,9 @@ const MainNav = () => {
   const ledgersQuery = useGetMyLedgers();
 
   // Same arrangement as the Home dashboard, so the nav and Home always agree: archived
-  // logs left out, ongoing groups ending soonest first, financial logs, and the few most
-  // recently ended groups.
-  const { now, recent: pastGroups } = arrangeDashboard({
+  // logs left out, ongoing groups ending soonest first, then financial logs. Past groups
+  // stay on Home and /me — the nav only lists what's ongoing, to keep the header short.
+  const { now } = arrangeDashboard({
     groups: groupsQuery.allGroups,
     ledgers: ledgersQuery.ledgers,
     user,
@@ -59,8 +59,10 @@ const MainNav = () => {
                   key={ledger.id}
                   to={`/l/${ledger.id}`}
                   title={ledger.title}
-                  text={`$ ${ledger.title}`}
+                  text={ledger.title}
+                  icon="dollar"
                   buttonStyle="primary-border-lite"
+                  className="MainNav__log"
                   isSelected={highlightedGroupId == ledger.id}
                 />
               ))}
@@ -72,19 +74,9 @@ const MainNav = () => {
                     to={`/g/${group.id}`}
                     title={group.title}
                     text={group.title}
+                    icon="social"
                     buttonStyle="primary-border-lite"
-                    isSelected={highlightedGroupId == group?.id}
-                  />
-                ))}
-              {isSuccess &&
-                pastGroups.map((group) => (
-                  <Button
-                    key={group.id}
-                    to={`/g/${group.id}`}
-                    title={group.title}
-                    text={group.title}
-                    buttonStyle="primary-border-lite"
-                    className="Button--past"
+                    className="MainNav__log"
                     isSelected={highlightedGroupId == group?.id}
                   />
                 ))}

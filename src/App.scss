@@ -340,6 +340,20 @@ h6,
   font-size: inherit;
 }
 
+// On small screens a log button collapses to its type icon (social / $), except the log
+// whose page we're on, which keeps its title. The full title stays in the tooltip.
+.MainNav__log {
+  .Icon {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: constants.$breakpoint-sm) {
+    &:not(.Button--active) strong {
+      display: none;
+    }
+  }
+}
+
 .Button {
   display: inline-flex;
   grid-gap: 0.2em;
