@@ -1,0 +1,98 @@
+// The budget buddy: a kaomoji cat in the ledger's month row. Text glyphs and tokens only.
+
+.BudgetBuddy {
+  padding: 0.1em 0.5em;
+  font-family: var(--font-mono);
+  font-size: 1em;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--ink);
+  background: none;
+  border: var(--border-hairline) dashed transparent;
+  border-radius: var(--radius-none);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--ink);
+  }
+
+  // Breathing: a 1px rise and fall every few seconds.
+  &__face {
+    display: inline-block;
+    animation: buddy-breathe 4s ease-in-out infinite;
+  }
+
+  &--asleep &__face {
+    animation-duration: 6s;
+    opacity: 0.85;
+  }
+
+  &--alarmed &__face {
+    animation: buddy-bristle 0.6s steps(2) 3;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__face,
+    &--asleep &__face,
+    &--alarmed &__face {
+      animation: none;
+    }
+  }
+}
+
+@keyframes buddy-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes buddy-bristle {
+  0% {
+    transform: translateX(-1px);
+  }
+  100% {
+    transform: translateX(1px);
+  }
+}
+
+// What it says: a speech bubble (--radius-bubble is the token for exactly this),
+// with a small tail pointing up at the cat.
+.BuddyBubble {
+  max-width: min(18em, calc(100vw - 32px));
+  padding: var(--space-3) var(--space-4);
+  border-width: var(--border-rule);
+  border-radius: var(--radius-bubble);
+  overflow: visible;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    background: var(--paper);
+    border-top: var(--border-rule) solid var(--ink);
+    border-left: var(--border-rule) solid var(--ink);
+    transform: rotate(45deg);
+  }
+
+  // Flipped above the cat when there's no room below: the tail points down instead.
+  &.Popover--top::before {
+    top: auto;
+    bottom: -7px;
+    transform: rotate(225deg);
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+}
