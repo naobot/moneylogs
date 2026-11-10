@@ -51,8 +51,8 @@
     flex-shrink: 0;
   }
 
-  // Takes .IconText's box (and .Icon's baseline nudge) like the comment bubble, and,
-  // like it, no hover treatment beyond the pointer cursor.
+  // Takes .IconText's box like the comment bubble (whose cell cancels .Icon's text
+  // nudge for both), and, like it, no hover treatment beyond the pointer cursor.
   &__trigger {
     flex-shrink: 0;
     padding: 0;

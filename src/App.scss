@@ -1107,12 +1107,23 @@ h6,
         > .IconText {
           flex-shrink: 0;
         }
+
+        // .Icon's -5px nudge is for icons in running text. Here the comment bubble and
+        // the react smiley are flex-centred, so the nudge only dragged them below the
+        // counts beside them. Without it both icons centre on those numbers.
+        .Icon {
+          margin-bottom: 0;
+        }
       }
 
       &__reactions {
         display: flex;
         justify-content: flex-end;
         font-size: 0.8em;
+
+        .Icon {
+          margin-bottom: 0;
+        }
       }
 
       &__content {
