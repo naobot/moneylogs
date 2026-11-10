@@ -68,6 +68,8 @@ vi.mock("@/features/moneylog/components/LogsMenu", () => ({
 vi.mock("@/features/moneylog/components/ActiveLog", () => ({ ActiveLog: () => null }));
 vi.mock("@/features/moneylog/components/LogsSummary/LogsSummary", () => ({ default: () => null }));
 vi.mock("@/components/Modal", () => ({ default: () => null }));
+// Rendered by Group for members; it calls useNavigate, and these tests have no router.
+vi.mock("@/features/logActions/LogActionsModal", () => ({ default: () => null }));
 vi.mock("@/components/TutorialTooltip", () => ({ default: () => null }));
 vi.mock("@/features/layout/components/CopyTextArea", () => ({ default: () => null }));
 vi.mock("@/components/Icon", () => ({
