@@ -252,6 +252,43 @@ html {
   }
 }
 
+// Type conventions (terminal style): headings and heading-like labels are lowercase;
+// button labels are small caps-lock. Done in CSS so the source text (and what screen
+// readers announce) stays normal. Wrap user content or codes that must keep their own
+// case — log titles, names, currency codes — in .keep-case.
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.Modal__title,
+.ArchivedLogs summary {
+  text-transform: lowercase;
+}
+
+.keep-case {
+  text-transform: none;
+}
+
+.Button strong,
+.LogRowButton,
+.Ledger__month__today {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.Button strong {
+  font-size: 0.85em;
+}
+
+// The nav's log buttons show log titles (user content), so they keep their case.
+.MainNav__list .Button strong {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: inherit;
+}
+
 .Button {
   display: inline-flex;
   grid-gap: 0.2em;

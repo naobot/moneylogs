@@ -76,9 +76,13 @@ export const InvitePage = () => {
       {isSuccessGroup && group && groupId && !currentUserIsMember && (
         <Modal isOpen={showInviteModal}>
           <Modal.Header>
-            {group.members.length < group.max_participants
-              ? `Welcome to ${group.title}`
-              : "Group full"}
+            {group.members.length < group.max_participants ? (
+              <>
+                Welcome to <span className="keep-case">{group.title}</span>
+              </>
+            ) : (
+              "Group full"
+            )}
           </Modal.Header>
           <Modal.Body>
             {group.members.length < group.max_participants ? (
@@ -107,7 +111,9 @@ export const InvitePage = () => {
       )}
       {group && (
         <Modal isOpen={showJoinedModal} onClose={() => setShowJoinedModal(false)}>
-          <Modal.Header>You have joined {group.title}!</Modal.Header>
+          <Modal.Header>
+            You have joined <span className="keep-case">{group.title}</span>!
+          </Modal.Header>
           <Modal.Body>
             <p>Please set up your user profile.</p>
           </Modal.Body>

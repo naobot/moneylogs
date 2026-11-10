@@ -56,6 +56,7 @@ describe("userFieldsToDelete", () => {
       "viewTracking.g1",
       "lastUpdated.g1",
       "archivedLogs.g1",
+      "logLastViewedAt.g1",
       "commentSubscriptions.p1",
       "commentSubscriptions.p2",
     ]);
