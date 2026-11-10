@@ -6,8 +6,7 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { useCurrentUser } from "@/contexts";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
-import { isArchived } from "@/utils/archivedLogs";
-import { absoluteEnd, byMostRecentlyEnded } from "@/utils/groupBoundaries";
+import { arrangeDashboard } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 
@@ -24,17 +23,16 @@ const MainNav = () => {
   const { isSuccess, isLoading } = groupsQuery;
   const ledgersQuery = useGetMyLedgers();
 
-  // Logs you've archived (for yourself) never appear in the nav.
-  const visible = <T extends { id: string }>(logs: T[]) =>
-    logs.filter((log) => !isArchived(user, log.id));
-  const ledgers = visible(ledgersQuery.ledgers);
-  const currentGroups = visible(groupsQuery.currentGroups);
-  const allGroups = visible(groupsQuery.allGroups);
-
-  const pastGroups = allGroups
-    .filter((group) => absoluteEnd(group).isBefore(new Date()))
-    .sort(byMostRecentlyEnded)
-    .slice(0, 3);
+  // Same arrangement as the Home dashboard, so the nav and Home always agree: archived
+  // logs left out, ongoing groups ending soonest first, financial logs, and the few most
+  // recently ended groups.
+  const { now, recent: pastGroups } = arrangeDashboard({
+    groups: groupsQuery.allGroups,
+    ledgers: ledgersQuery.ledgers,
+    user,
+  });
+  const ledgers = now.flatMap((item) => (item.kind === "financial" ? [item.ledger] : []));
+  const currentGroups = now.flatMap((item) => (item.kind === "social" ? [item.group] : []));
 
   // Home is a list of logs now, so only highlight the log actually being viewed.
   const highlightedGroupId = currentGroupId ?? null;
