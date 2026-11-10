@@ -31,7 +31,7 @@ export const FACES: Record<BuddyMood | "asleep", FaceSet> = {
   },
   wary: {
     resting: ["( Φ ω Φ )", "ฅ(◍ •̀ω• ́◍)ฅ", "(=ёェё=)"],
-    click: ["^ಠ_ಠ^", "｜ωФ)ｼﾞｰ"],
+    click: ["ฅ(◍ •̀ω• ́◍)ฅ", "(=ච ﻌ ච=)"],
   },
   worried: {
     resting: ["(=ච ﻌ ච=)", "(=`･∧･´=)", "(^ ｰ̀дｰ́ ^)"],

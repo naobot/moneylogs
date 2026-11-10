@@ -68,6 +68,7 @@ describe("buddyComment", () => {
     expect(FACES.content.resting).toContain("ฅ(ﾐ・ﻌ・ﾐ)ฅ");
     expect(FACES.alarmed.resting).toEqual(expect.arrayContaining(["(^ ; ᯅ ; ^)", "☜(ΦωΦ )へ"]));
     expect(FACES.wary.resting).toContain("ฅ(◍ •̀ω• ́◍)ฅ");
+    expect(FACES.wary.click).toEqual(["ฅ(◍ •̀ω• ́◍)ฅ", "(=ච ﻌ ච=)"]);
     expect(FACES.idle.resting).toEqual(["=• · • =", "ヾ(⌒(_´,,−﹃−,,`)_ｺﾞﾛｺﾞﾛ"]);
   });
 

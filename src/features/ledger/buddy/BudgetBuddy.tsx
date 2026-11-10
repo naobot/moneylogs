@@ -69,8 +69,14 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
 
   const faces = FACES[state.asleep ? "asleep" : state.mood];
   const resting = pick(faces.resting, state.seed);
+  // A click face that differs from the resting one, so the click visibly lands (some
+  // faces appear in both lists).
+  const clicked =
+    faces.click.find((f, i) => f !== resting && i >= state.seed % faces.click.length) ??
+    faces.click.find((f) => f !== resting) ??
+    faces.click[0];
   // While the bubble is open, it keeps the face it reacted with.
-  const face = bubble ? pick(faces.click, state.seed) : (hoverFace ?? resting);
+  const face = bubble ? clicked : (hoverFace ?? resting);
 
   const notice = () => {
     if (bubble) return;

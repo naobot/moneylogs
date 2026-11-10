@@ -151,3 +151,37 @@ describe("BudgetBuddy", () => {
     expect(FACES.idle.resting).toContain(face());
   });
 });
+
+describe("BudgetBuddy when wary", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    state.now = "2026-11-15T12:00:00Z";
+    state.isSuccess = true;
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    document.querySelectorAll(".BuddyBubble").forEach((el) => el.remove());
+  });
+
+  it("reacts to a click with one of its wary faces, never the one it's already making", () => {
+    // Pace 1.15: wary, whatever the day's wobble.
+    state.byMonth = november(575);
+    for (const id of ["a", "b", "c", "d", "e", "f"]) {
+      act(() => root.render(<BudgetBuddy ledger={{ ...ledger, id } as Ledger} />));
+      const btn = container.querySelector<HTMLButtonElement>(".BudgetBuddy")!;
+      const resting = btn.textContent;
+      act(() => btn.click());
+      const clicked = btn.textContent!;
+      expect(FACES.wary.click).toContain(clicked);
+      expect(clicked).not.toBe(resting);
+      act(() => btn.click());
+    }
+  });
+});
