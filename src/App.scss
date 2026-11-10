@@ -2,6 +2,7 @@
 @use "./tokens.scss";
 @use "./fonts.scss";
 @use "./texture.scss";
+@use "./surfaces.scss";
 
 :root {
   font-family: var(--font-mono);
@@ -561,9 +562,7 @@ h6,
     align-items: center;
     width: 100%;
     margin-bottom: 1em;
-    background-color: var(--ink);
-    color: var(--inverse-ink);
-    padding: 0.5em;
+    @include surfaces.strip(0.5em);
     font-size: 0.8em;
     flex-shrink: 0;
 
@@ -1482,8 +1481,7 @@ h6,
     display: flex;
     justify-content: space-between;
     width: 100%;
-    padding: 2px 8px;
-    background-color: var(--ink);
+    @include surfaces.strip(2px 8px);
   }
 
   // Striped window chrome for tool modals: the title and close sit on paper labels

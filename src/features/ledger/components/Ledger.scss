@@ -1,5 +1,6 @@
 @use "@/constants.scss";
 @use "@/texture.scss" as tex;
+@use "@/surfaces.scss";
 
 .Ledger {
   &__body {
@@ -182,9 +183,7 @@
       display: flex;
       justify-content: space-between;
       gap: 1em;
-      padding: 0.25em 0.5em;
-      background: var(--ink);
-      color: var(--paper);
+      @include surfaces.strip;
       font-size: 0.85em;
     }
   }
@@ -427,25 +426,12 @@
     align-items: center;
     gap: 0.4em 1em;
     width: 100%;
-    padding: 0.5em 0.75em;
+    @include surfaces.strip(0.5em 0.75em);
     font: inherit;
     text-align: left;
-    color: var(--paper);
-    background: var(--ink);
-    border: none;
-    border-radius: var(--radius-none);
     cursor: pointer;
     text-decoration: none;
     box-sizing: border-box;
-
-    // Monochrome focus ring (the browser default is blue).
-    &:focus {
-      outline: none;
-    }
-    &:focus-visible {
-      outline: 2px solid var(--paper);
-      outline-offset: -4px;
-    }
 
     &__totals {
       font-weight: 700;
@@ -524,10 +510,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4em 1em;
-    padding: 0.5em 0.75em;
+    @include surfaces.strip(0.5em 0.75em);
     margin: -0.75em -0.75em 0;
-    color: var(--paper);
-    background: var(--ink);
   }
 
   &__heading {
