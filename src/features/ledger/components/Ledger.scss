@@ -35,7 +35,7 @@
       background: var(--c-white);
       color: var(--c-black);
       border: 1px solid var(--c-black);
-      border-radius: 0;
+      border-radius: var(--radius-none);
       padding: 0 0.5em;
 
       &:hover,
@@ -362,7 +362,7 @@
     input {
       font: inherit;
       font-weight: 700;
-      border-radius: 0;
+      border-radius: var(--radius-none);
     }
   }
 
@@ -379,7 +379,7 @@
     background: var(--c-white);
     color: var(--c-black);
     border: 1px solid var(--c-black);
-    border-radius: 0;
+    border-radius: var(--radius-none);
     padding: 0.1em 0.5em;
 
     &:hover:not(:disabled),
@@ -470,7 +470,7 @@
 
       select {
         font: inherit;
-        border-radius: 0;
+        border-radius: var(--radius-none);
       }
     }
   }
@@ -502,7 +502,7 @@
     color: var(--c-white);
     background: var(--c-black);
     border: none;
-    border-radius: 0;
+    border-radius: var(--radius-none);
     cursor: pointer;
     text-decoration: none;
     box-sizing: border-box;

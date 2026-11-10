@@ -67,7 +67,7 @@
   background: var(--c-white);
   color: var(--c-black);
   border: 1px solid var(--c-black);
-  border-radius: 0;
+  border-radius: var(--radius-none);
   padding: 0.1em 0.5em;
 
   &:hover:not(:disabled),

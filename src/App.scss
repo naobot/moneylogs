@@ -61,7 +61,7 @@ html {
     min-width: 120px;
     max-width: 450px;
     text-align: center;
-    border-radius: 3px;
+    border-radius: var(--radius-none);
     border: 1px solid var(--c-black);
     padding: 3px;
     opacity: 0.6;
@@ -73,7 +73,7 @@ html {
   background-color: var(--c-black);
   width: var(--progress);
   height: 100%;
-  border-radius: 3px;
+  border-radius: var(--radius-none);
   transition: width 1s ease-in-out;
 }
 
@@ -209,7 +209,7 @@ html {
   padding: 0.5em 0.5em 0.5em 1em;
   background-color: var(--c-white);
   border: 2px solid var(--c-black);
-  border-radius: 4px;
+  border-radius: var(--radius-none);
   font-size: 0.85em;
 
   &__text {
@@ -295,7 +295,7 @@ h6,
   display: inline-flex;
   grid-gap: 0.2em;
   align-items: center;
-  border-radius: 1px;
+  border-radius: var(--radius-none);
   border: none;
   padding: 0.4em;
 
@@ -414,7 +414,7 @@ h6,
   margin-bottom: 1em;
   padding: 30px;
   border: 2px solid var(--c-black);
-  border-radius: 4px;
+  border-radius: var(--radius-none);
   width: 100%;
 
   .Menu {
@@ -1028,7 +1028,7 @@ h6,
     max-width: 100%;
     max-height: 400px;
     object-fit: contain;
-    border-radius: 4px;
+    border-radius: var(--radius-none);
   }
 
   &--processing {
@@ -1097,7 +1097,7 @@ h6,
   color: var(--c-black);
   border: 1px solid var(--c-black);
   padding: 0.5em 0.8em;
-  border-radius: 4px;
+  border-radius: var(--radius-none);
   font-size: 0.72em;
   font-weight: 500;
   width: max-content;
@@ -1146,7 +1146,7 @@ h6,
   &--center {
     top: 50%;
     transform: translateX(-50%) translateY(-50%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-width: var(--border-rule);
 
     &::after {
       display: none;
@@ -1218,7 +1218,7 @@ h6,
   &__item {
     position: relative;
     background: var(--c-white);
-    border-radius: 10px;
+    border-radius: var(--radius-bubble); // sanctioned: speech balloon
     padding: 0.5em;
     border: var(--c-black) solid 1px;
     display: flex;
@@ -1399,7 +1399,7 @@ h6,
     z-index: 55;
     cursor: default;
     border: 2px solid var(--c-black);
-    border-radius: 4px;
+    border-radius: var(--radius-none);
     margin: 1em;
     width: 100%;
 
@@ -1424,7 +1424,7 @@ h6,
 
   &__button {
     &--close {
-      border-radius: 1px;
+      border-radius: var(--radius-none);
       border: none;
       padding: 0.4em;
       background-color: transparent;
