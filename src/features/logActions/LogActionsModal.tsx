@@ -154,6 +154,7 @@ export const LogActionsModal = ({
                 Type <strong>{logTitle}</strong> to confirm:
               </span>
               <input
+                className="LineInput"
                 value={confirmText}
                 autoComplete="off"
                 disabled={deletion.isLoading}

@@ -164,7 +164,7 @@ export const EntryForm = ({
         <label className="EntryForm__noteField">
           <span className="EntryForm__noteLabel">Note:</span>
           <input
-            className="EntryForm__note"
+            className="LineInput EntryForm__note"
             maxLength={MAX_NOTE_LENGTH}
             placeholder="Example: coffee, new shoes, etc."
             value={values.note}

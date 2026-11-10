@@ -105,17 +105,4 @@
   gap: 0.3em;
   width: 100%;
   font-size: 0.9em;
-
-  input {
-    font: inherit;
-    border: none;
-    border-bottom: 1px dashed var(--ink);
-    background: transparent;
-    padding: 0.2em 0;
-
-    &:focus {
-      outline: none;
-      border-bottom-style: solid;
-    }
-  }
 }

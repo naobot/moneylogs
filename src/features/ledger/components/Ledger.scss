@@ -140,20 +140,12 @@
     font-weight: 700;
   }
 
-  &__note {
+  // Two classes so the size wins over .LineInput's `font: inherit` regardless of
+  // stylesheet order.
+  &__note.LineInput {
     flex: 1;
     min-width: 0;
-    font: inherit;
     font-size: 0.9em;
-    border: none;
-    border-bottom: 1px dashed var(--ink);
-    background: transparent;
-    padding: 0.2em 0;
-
-    &:focus {
-      outline: none;
-      border-bottom-style: solid;
-    }
   }
 
   // Visually hidden (not display:none) so Enter triggers implicit submission everywhere.
@@ -360,16 +352,6 @@
     input {
       flex: 1;
       min-width: 0;
-      font: inherit;
-      border: none;
-      border-bottom: 1px dashed var(--ink);
-      background: transparent;
-      padding: 0.2em 0;
-
-      &:focus {
-        outline: none;
-        border-bottom-style: solid;
-      }
     }
   }
 
@@ -413,16 +395,7 @@
 
       input {
         width: 9em;
-        font: inherit;
         text-align: right;
-        border: none;
-        border-bottom: 1px dashed var(--ink);
-        background: transparent;
-
-        &:focus {
-          outline: none;
-          border-bottom-style: solid;
-        }
       }
 
       select {

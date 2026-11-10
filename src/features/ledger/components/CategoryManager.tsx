@@ -253,6 +253,7 @@ const CategoryManagerDialog = ({
           }}
         >
           <input
+            className="LineInput"
             aria-label="New category name"
             placeholder={atCap ? `Limit of ${MAX_CATEGORIES} reached` : "New category"}
             value={newName}
@@ -386,6 +387,7 @@ const BudgetEditor = ({
         }}
       >
         <input
+          className="LineInput"
           aria-label={`Monthly budget for ${category.name}`}
           inputMode="decimal"
           placeholder="Monthly budget"
