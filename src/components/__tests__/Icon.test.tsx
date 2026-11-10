@@ -34,6 +34,7 @@ describe("Icon", () => {
     ["gear", "/icons/moneylogs-gear.svg"],
     ["smiley", "/icons/moneylogs-smiley.svg"],
     ["social", "/icons/moneylogs-social.svg"],
+    ["bell", "/icons/moneylogs-bell.svg"],
     ["pencil", "/icons/kanyayee-pencil.svg"],
     ["trash", "/icons/nakals-trash.svg"],
   ])("resolves %s to its asset, which exists", (type, src) => {
