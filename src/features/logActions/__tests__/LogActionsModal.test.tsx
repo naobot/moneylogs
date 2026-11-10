@@ -139,6 +139,28 @@ describe("LogActionsModal", () => {
       expect(navigate).toHaveBeenCalledWith("/", { replace: true });
     });
 
+    it("calls onDeleted instead of going home when managed from a list", async () => {
+      const onDeleted = vi.fn();
+      act(() =>
+        root.render(
+          <LogActionsModal
+            isOpen
+            onClose={onClose}
+            onDeleted={onDeleted}
+            logId="g1"
+            logTitle="Tokyo"
+            kind="social"
+            creatorUid="uid-1"
+          />,
+        ),
+      );
+      type("Tokyo");
+      await act(async () => deleteButton().click());
+      expect(deleteCall).toHaveBeenCalledWith({ kind: "social", id: "g1" });
+      expect(onDeleted).toHaveBeenCalledTimes(1);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
     it("explains a refusal and stays put", async () => {
       const { FirebaseError } = await import("firebase/app");
       deleteCall.mockRejectedValueOnce(new FirebaseError("functions/permission-denied", "no"));

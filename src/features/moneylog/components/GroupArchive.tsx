@@ -3,6 +3,8 @@ import { Fragment } from "react/jsx-runtime";
 
 import { Group } from "@/types/user";
 import { byMostRecentlyEnded } from "@/utils/groupBoundaries";
+import { ManageLogButton } from "@/features/logActions/ManageLogButton";
+import { ManageTarget, manageTargetForGroup } from "@/features/logActions/manageTarget";
 import dayjs from "dayjs";
 
 type GroupArchiveProps = {
@@ -10,9 +12,16 @@ type GroupArchiveProps = {
   emptyMessage?: string;
   // The source query has no orderBy, so sort here rather than trusting the caller.
   sort?: (a: Group, b: Group) => number;
+  /** When given, each row gets a "manage" button (archive / delete). */
+  onManage?: (target: ManageTarget) => void;
 };
 
-const GroupArchive = ({ groups, emptyMessage, sort = byMostRecentlyEnded }: GroupArchiveProps) => {
+const GroupArchive = ({
+  groups,
+  emptyMessage,
+  sort = byMostRecentlyEnded,
+  onManage,
+}: GroupArchiveProps) => {
   if (groups.length === 0) {
     return emptyMessage ? <p className="GroupArchive__empty">{emptyMessage}</p> : null;
   }
@@ -22,14 +31,19 @@ const GroupArchive = ({ groups, emptyMessage, sort = byMostRecentlyEnded }: Grou
 
   return (
     <Fragment>
-      <ul>
+      <ul className={onManage ? "GroupArchive--manageable" : undefined}>
         {ordered.map((group) => (
           <li key={group.id}>
-            <Link to={`/g/${group.id}`}>{group.title}</Link>{" "}
-            <small>
-              ({dayjs(group.start.toDate()).format("ddd D MMM YYYY")} to{" "}
-              {dayjs(group.end.toDate()).format("ddd D MMM YYYY")})
-            </small>
+            <span>
+              <Link to={`/g/${group.id}`}>{group.title}</Link>{" "}
+              <small>
+                ({dayjs(group.start.toDate()).format("ddd D MMM YYYY")} to{" "}
+                {dayjs(group.end.toDate()).format("ddd D MMM YYYY")})
+              </small>
+            </span>
+            {onManage && (
+              <ManageLogButton target={manageTargetForGroup(group)} onManage={onManage} />
+            )}
           </li>
         ))}
       </ul>

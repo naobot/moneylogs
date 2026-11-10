@@ -1,0 +1,70 @@
+// Collapsible section. Monochrome: a ruled summary bar that inverts while open.
+.Drawer {
+  border-top: 2px solid var(--c-black);
+
+  &:last-of-type {
+    border-bottom: 2px solid var(--c-black);
+  }
+
+  &__summary {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+    padding: 0.6em 0.5em;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+
+    // Hide the native disclosure triangle; the [+]/[-] marker replaces it.
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--c-black);
+      color: var(--c-white);
+      outline: none;
+    }
+  }
+
+  &__title {
+    font-weight: 700;
+    text-transform: lowercase;
+  }
+
+  &__hint {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85em;
+    opacity: 0.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__marker {
+    margin-left: auto;
+  }
+
+  &--open > &__summary {
+    background-color: var(--c-black);
+    color: var(--c-white);
+
+    .Drawer__hint {
+      opacity: 0.8;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 1em 0.5em 1.5em;
+
+    h3,
+    h4 {
+      margin: 0;
+    }
+  }
+}
