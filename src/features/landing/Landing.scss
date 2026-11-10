@@ -97,7 +97,13 @@
       margin: 0 0 var(--space-5);
     }
 
-    ol {
+    .Landing__intro {
+      margin: 0 0 var(--space-5);
+      line-height: 1.5;
+    }
+
+    ol,
+    ul {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: var(--space-4);
@@ -117,6 +123,13 @@
       &::before {
         content: "[" counter(step) "]";
         font-weight: 700;
+      }
+
+      .Landing__steps--solo & {
+        // Points, not steps: a text-mode bullet instead of a number.
+        &::before {
+          content: "[+]";
+        }
       }
 
       h3 {

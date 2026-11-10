@@ -36,9 +36,9 @@ export const SAMPLE_NOW: SampleCard[] = [
     badge: formatNewCount(2, "financial"),
   },
   {
-    title: "No-spend November",
-    kind: "log group",
-    details: ["ends in 20 days", memberLabel(6)],
+    title: "My spending",
+    kind: "financial",
+    details: ["November: 642.18 CAD", memberLabel(1)],
   },
 ];
 
@@ -81,10 +81,30 @@ export const SAMPLE_POSTS: SamplePost[] = [
   },
 ];
 
+/** Solo use: a financial log kept to yourself. */
+export const ON_YOUR_OWN = [
+  {
+    title: "An ongoing tracker",
+    text: "A financial log has no end date. Log each purchase as it happens, in any currency.",
+  },
+  {
+    title: "Categories and budgets",
+    text: "Sort entries into your own categories and set monthly budgets to keep an eye on.",
+  },
+  {
+    title: "Stats that are always on",
+    text: "See where this month's money went, category by category, whenever you like.",
+  },
+  {
+    title: "Private until you share it",
+    text: "Keep it to yourself, or invite a partner or flatmates later if there's room.",
+  },
+];
+
 export const HOW_IT_WORKS = [
   {
     title: "Start a log",
-    text: "One for a trip, a weekend, a no-spend month — or an ongoing financial log for a shared flat.",
+    text: "One for a trip, a weekend, a no-spend month — or an ongoing financial log for a shared flat, or just for you.",
   },
   {
     title: "Invite your people",

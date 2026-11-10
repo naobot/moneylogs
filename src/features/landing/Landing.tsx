@@ -7,6 +7,7 @@ import type { AuthLocationState } from "@/features/auth/authRedirect";
 
 import {
   HOW_IT_WORKS,
+  ON_YOUR_OWN,
   SAMPLE_DAY,
   SAMPLE_NOW,
   SAMPLE_POSTS,
@@ -72,9 +73,9 @@ export const Landing = () => (
     <header className="Landing__hero">
       <h1>moneylogs</h1>
       <p className="Landing__pitch">
-        A private log for you and your friends. Post what you spent and why — on a trip, over a long
-        weekend, or month to month at home — in any currency, and see how it all added up when it's
-        over.
+        A private log for you and your friends — or just for you. Post what you spent and why, on a
+        trip, over a long weekend, or month to month at home, in any currency, and see how it all
+        adds up.
       </p>
       <div className="Landing__actions">
         <Button to="/login" state={REGISTER} text="Create an account" />
@@ -148,6 +149,22 @@ export const Landing = () => (
         ))}
       </div>
     </PreviewWindow>
+
+    <section className="Landing__steps Landing__steps--solo" aria-labelledby="landing-solo">
+      <h2 id="landing-solo">On your own, too</h2>
+      <p className="Landing__intro">
+        Not travelling with anyone? Start a financial log, set it to just you, and use it as your
+        personal spending tracker.
+      </p>
+      <ul>
+        {ON_YOUR_OWN.map((point) => (
+          <li key={point.title}>
+            <h3>{point.title}</h3>
+            <p>{point.text}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
 
     <section className="Landing__steps" aria-labelledby="landing-how">
       <h2 id="landing-how">How it works</h2>

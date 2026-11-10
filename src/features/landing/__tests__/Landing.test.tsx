@@ -4,7 +4,12 @@ import { createRoot, Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { Landing } from "@/features/landing/Landing";
-import { SAMPLE_NOW, SAMPLE_RECENT, SAMPLE_UPCOMING } from "@/features/landing/landingSamples";
+import {
+  ON_YOUR_OWN,
+  SAMPLE_NOW,
+  SAMPLE_RECENT,
+  SAMPLE_UPCOMING,
+} from "@/features/landing/landingSamples";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -78,10 +83,17 @@ describe("Landing", () => {
     expect(authView()).toBe("login");
   });
 
+  it("shows personal tracking alongside group logs", () => {
+    const solo = cards("large").find((c) => c.textContent?.includes("just you"));
+    expect(solo?.textContent).toContain("financial");
+    const points = container.querySelectorAll(".Landing__steps--solo li");
+    expect(points).toHaveLength(ON_YOUR_OWN.length);
+  });
+
   it("explains how it works in order", () => {
-    const steps = Array.from(container.querySelectorAll(".Landing__steps li h3")).map(
-      (h) => h.textContent,
-    );
+    const steps = Array.from(
+      container.querySelectorAll('[aria-labelledby="landing-how"] li h3'),
+    ).map((h) => h.textContent);
     expect(steps[0]).toBe("Start a log");
     expect(steps).toHaveLength(4);
   });
