@@ -40,6 +40,7 @@ export const userFieldsToDelete = (logId: string, postIds: ReadonlyArray<string>
   `viewTracking.${logId}`,
   `lastUpdated.${logId}`,
   `archivedLogs.${logId}`,
+  `logLastViewedAt.${logId}`,
   ...postIds.map((postId) => `commentSubscriptions.${postId}`),
 ];
 

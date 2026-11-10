@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
+import { LogLastViewedAtMap } from "@/utils/logActivity";
 
 export type MoneyLog = {
   id: number;
@@ -41,6 +42,8 @@ export type UserData = {
     };
   } /** Logs this user has archived for themselves (see utils/archivedLogs). */;
   archivedLogs?: ArchivedLogsMap;
+  /** When this user last opened each log (see utils/logActivity). */
+  logLastViewedAt?: LogLastViewedAtMap;
 };
 
 export interface CacheableUserData {
@@ -61,6 +64,7 @@ export interface CacheableUserData {
     };
   };
   archivedLogs?: ArchivedLogsMap;
+  logLastViewedAt?: LogLastViewedAtMap;
 }
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -152,6 +156,8 @@ export const useGetUserInfo = (userId: string) => {
             timezone: userData.timezone,
             pinnedPosts: userData.pinnedPosts,
             archivedLogs: userData.archivedLogs,
+            // So Home can count new activity before the live listener lands.
+            logLastViewedAt: userData.logLastViewedAt,
           };
 
           setCachedUser(userId, cacheableData);
