@@ -11,15 +11,8 @@
  */
 import type { Dayjs } from "dayjs";
 import dayjs from "./configuredDayjs";
-import {
-  absoluteEnd,
-  absoluteStart,
-  byMostRecentlyEnded,
-  bySoonestStarting,
-  personalEnd,
-  personalStart,
-} from "./groupBoundaries";
-import { ArchivedLogsMap, isArchived } from "./archivedLogs";
+import { partitionByTime, personalEnd, personalStart } from "./groupBoundaries";
+import { ArchivedLogsMap, partitionArchived } from "./archivedLogs";
 import type { Group } from "@/types/user";
 import type { Ledger } from "@/types/ledger";
 
@@ -48,25 +41,14 @@ export const arrangeDashboard = ({
   user: { archivedLogs?: ArchivedLogsMap } | null | undefined;
   now?: Dayjs;
 }): Dashboard => {
-  const ongoing: Group[] = [];
-  const upcoming: Group[] = [];
-  const past: Group[] = [];
-  for (const group of groups) {
-    if (isArchived(user, group.id)) continue;
-    if (absoluteStart(group).isAfter(now)) upcoming.push(group);
-    else if (absoluteEnd(group).isBefore(now)) past.push(group);
-    else ongoing.push(group);
-  }
-  ongoing.sort((a, b) => absoluteEnd(a).valueOf() - absoluteEnd(b).valueOf());
-  upcoming.sort(bySoonestStarting);
-  past.sort(byMostRecentlyEnded);
+  // Same split and ordering as /me's My logs, so the two pages always agree.
+  const { ongoing, upcoming, past } = partitionByTime(partitionArchived(groups, user).active, now);
+  const activeLedgers = partitionArchived(ledgers, user).active;
 
   return {
     now: [
       ...ongoing.map((group) => ({ kind: "social" as const, id: group.id, group })),
-      ...ledgers
-        .filter((ledger) => !isArchived(user, ledger.id))
-        .map((ledger) => ({ kind: "financial" as const, id: ledger.id, ledger })),
+      ...activeLedgers.map((ledger) => ({ kind: "financial" as const, id: ledger.id, ledger })),
     ],
     upcoming,
     recent: past.slice(0, RECENT_LIMIT),

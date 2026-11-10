@@ -66,7 +66,10 @@ describe("Dashboard", () => {
     expect(cards("large").map((c) => c.getAttribute("href"))).toEqual(["/g/tokyo", "/l/l1"]);
     expect(cards("small").map((c) => c.getAttribute("href"))).toEqual(["/g/seoul"]);
     expect(cards("compact")).toHaveLength(3);
-    expect(container.textContent).toContain("See all 4 in My logs");
+    const seeAll = Array.from(container.querySelectorAll("a")).find((a) =>
+      a.textContent?.includes("See all 4 in My logs"),
+    );
+    expect(seeAll?.getAttribute("href")).toBe("/me#logs");
   });
 
   it("previews this month's spending and members on a financial card", () => {
