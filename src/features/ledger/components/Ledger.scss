@@ -15,7 +15,7 @@
   }
 
   &__empty {
-    opacity: 0.6;
+    opacity: 0.7; // muted text floor (5.5:1)
     font-size: 0.9em;
     text-align: center;
   }
@@ -344,7 +344,7 @@
     &--archived {
       cursor: default;
       font-weight: 400;
-      opacity: 0.6;
+      opacity: 0.7; // muted text floor (5.5:1)
       text-decoration: line-through;
 
       &:hover {
