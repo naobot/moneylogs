@@ -492,7 +492,7 @@ h6,
     width: 100%;
     margin-bottom: 1em;
     background-color: var(--c-black);
-    color: #e8e6e3;
+    color: var(--inverse-ink);
     padding: 0.5em;
     font-size: 0.8em;
     flex-shrink: 0;
@@ -880,7 +880,7 @@ h6,
       gap: 0.5em;
       padding: 1em;
       border: 1px solid var(--c-black);
-      background-color: #fff;
+      background-color: var(--sheet);
       transition: 0.3s ease-in-out;
       max-height: 2400px; // explicitly declare so transition works
 
@@ -889,7 +889,7 @@ h6,
           max-height: 70vh;
           box-sizing: border-box;
           border: 1px solid var(--c-black);
-          outline: 5px solid #fff;
+          outline: 5px solid var(--sheet);
           outline-offset: -6px;
         }
       }
@@ -905,8 +905,8 @@ h6,
 
       &--pinned {
         order: -1;
-        color: #fff;
-        background-color: var(--c-black);
+        color: var(--inverse-ink);
+        background-color: var(--inverse-surface);
         font-size: 0.8em;
 
         .LogPostMenu__item {
@@ -914,7 +914,7 @@ h6,
         }
 
         .wmde-markdown {
-          color: #fff !important;
+          color: var(--inverse-ink) !important;
         }
       }
 
@@ -1038,8 +1038,8 @@ h6,
   &__skeleton {
     width: 100%;
     height: 120px;
-    background: #f4f4f4;
-    border: 2px dashed #ccc;
+    background: var(--ink-ghost);
+    border: 1px dashed var(--ink);
     position: relative;
 
     &::after {
@@ -1049,9 +1049,8 @@ h6,
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 0.72em;
-      color: #aaa;
+      color: var(--ink-muted);
       letter-spacing: 0.08em;
-      font-weight: 500;
     }
   }
 }
@@ -1173,7 +1172,7 @@ h6,
     height: 100vh;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--scrim);
     z-index: 49;
   }
 
@@ -1265,7 +1264,7 @@ h6,
 
     &--highlight {
       background: var(--c-black);
-      color: #fff;
+      color: var(--inverse-ink);
 
       @media (min-width: constants.$breakpoint-md) {
         &::after {
@@ -1387,7 +1386,7 @@ h6,
     z-index: 50;
     display: flex;
     cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--scrim);
     align-items: center;
     justify-content: center;
   }

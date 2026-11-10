@@ -14,8 +14,8 @@
     margin-top: 1em;
     min-width: 240px;
     z-index: 50;
-    background: #fff;
-    border: 1px solid #242424;
+    background: var(--sheet);
+    border: 1px solid var(--ink);
 
     &__wrapper {
       overflow: auto;
