@@ -13,6 +13,7 @@ import Layout from "@/features/layout/Layout";
 import GlobalErrorHandler from "@/utils/errorHandler";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
+import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
 
@@ -67,6 +68,7 @@ const App = () => {
   const { showToast } = useToastContext();
   const { updateAvailable, refresh } = useAppVersionRefresh();
   const [updateDismissed, setUpdateDismissed] = useState(false);
+  useEnsurePersonalLedger();
 
   useEffect(() => {
     GlobalErrorHandler.getInstance().initialize(showToast);

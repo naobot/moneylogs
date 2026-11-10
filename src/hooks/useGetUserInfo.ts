@@ -47,6 +47,8 @@ export type UserData = {
   logLastViewedAt?: LogLastViewedAtMap;
   /** Per-type notification switches; unset keys use the defaults in utils/notificationTypes. */
   notificationPrefs?: NotificationPrefs;
+  /** Id of the solo "personal" ledger made for this user (see utils/personalLedger). */
+  personalLedgerId?: string;
 };
 
 export interface CacheableUserData {
@@ -68,6 +70,7 @@ export interface CacheableUserData {
   };
   archivedLogs?: ArchivedLogsMap;
   logLastViewedAt?: LogLastViewedAtMap;
+  personalLedgerId?: string;
 }
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -161,6 +164,7 @@ export const useGetUserInfo = (userId: string) => {
             archivedLogs: userData.archivedLogs,
             // So Home can count new activity before the live listener lands.
             logLastViewedAt: userData.logLastViewedAt,
+            personalLedgerId: userData.personalLedgerId,
           };
 
           setCachedUser(userId, cacheableData);
