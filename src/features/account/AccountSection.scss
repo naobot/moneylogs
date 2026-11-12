@@ -27,6 +27,32 @@
     flex-wrap: wrap;
     gap: 0.5em;
   }
+
+  // Danger zone, matching the one in LogActions: heavy rule above, inverted heading.
+  &__danger {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5em;
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: var(--border-heavy) solid var(--ink);
+
+    h4,
+    p {
+      margin: 0;
+    }
+
+    h4 {
+      padding: 0.1em 0.4em;
+      color: var(--paper);
+      background: var(--ink);
+    }
+
+    p {
+      font-size: 0.9em;
+    }
+  }
 }
 
 // Sign out is the highlighted action: inverted, flipping back on hover. Two classes so
@@ -94,5 +120,40 @@
     @media (max-width: constants.$breakpoint-sm) {
       grid-column: 1;
     }
+  }
+}
+
+.DeleteAccount {
+  max-width: min(32em, 92vw);
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    text-align: left;
+
+    p,
+    ul {
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    ul {
+      padding-left: 1.2em;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    width: 100%;
+    font-size: 0.9em;
+  }
+
+  &__input {
+    font: inherit;
+    width: 100%;
+    min-width: 0;
   }
 }
