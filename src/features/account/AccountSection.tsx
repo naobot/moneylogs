@@ -12,6 +12,7 @@ import { useDateFormat } from "@/utils/dateFormat";
 
 import Button from "@/components/Button";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { DeleteAccountModal } from "./DeleteAccountModal";
 
 import "./AccountSection.scss";
 
@@ -24,6 +25,7 @@ export const AccountSection = () => {
   const { signOut, isPending: signOutPending } = useSignOut();
   const [resetPending, setResetPending] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const email = firebaseUser?.email ?? user?.email;
   const memberSince = user?.createdAt?.seconds
@@ -87,9 +89,21 @@ export const AccountSection = () => {
         />
       </div>
 
+      <section className="AccountSection__danger">
+        <h4>Delete account</h4>
+        <p>Permanently delete your account and everything only you can see.</p>
+        <Button
+          text="Delete account"
+          size="sm"
+          buttonStyle="primary-border"
+          onClick={() => setDeletingAccount(true)}
+        />
+      </section>
+
       {changingPassword && (
         <ChangePasswordModal isOpen onClose={() => setChangingPassword(false)} />
       )}
+      {deletingAccount && <DeleteAccountModal isOpen onClose={() => setDeletingAccount(false)} />}
     </>
   );
 };
