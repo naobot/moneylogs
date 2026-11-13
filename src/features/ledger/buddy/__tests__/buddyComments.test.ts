@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vite-plus/test";
-import { buddyComment, daysLeftInWords, shareInWords } from "../buddyComments";
+import {
+  buddyCheckInComment,
+  buddyComment,
+  CHECK_IN_LINES,
+  daysLeftInWords,
+  shareInWords,
+} from "../buddyComments";
 import type { BuddyFacts, BuddyState } from "../buddyMood";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, MOOD_SCALE } from "../faces";
 
@@ -77,6 +83,20 @@ describe("buddyComment", () => {
     expect(line.startsWith("zzz") || line.startsWith("five") || line.startsWith("*yawn*")).toBe(
       true,
     );
+  });
+});
+
+describe("buddyCheckInComment", () => {
+  it.each(["quiet", "light"] as const)("picks a %s line that holds for the day", (kind) => {
+    const line = buddyCheckInComment(kind, { asleep: false, seed: 7 });
+    expect(CHECK_IN_LINES[kind]).toContain(line);
+    expect(buddyCheckInComment(kind, { asleep: false, seed: 7 })).toBe(line);
+  });
+
+  it("yawns first after bedtime", () => {
+    const line = buddyCheckInComment("quiet", { asleep: true, seed: 0 });
+    expect(line).toMatch(/^(zzz|five|\*yawn\*)/);
+    expect(line.endsWith(CHECK_IN_LINES.quiet[0])).toBe(true);
   });
 });
 
