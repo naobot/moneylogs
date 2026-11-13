@@ -26,6 +26,7 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* The only h1 is the login wordmark: the `display` type style. */

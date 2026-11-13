@@ -16,6 +16,8 @@
   right: 0;
   z-index: 1100;
   pointer-events: none;
+  // Below the notch / status bar.
+  padding-top: var(--safe-top);
 
   &__item {
     pointer-events: auto;
