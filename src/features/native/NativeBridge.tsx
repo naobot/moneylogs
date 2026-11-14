@@ -8,16 +8,21 @@ import { isNative, nativePlatform } from "@/platform";
 import { useTheme } from "@/utils/theme";
 import { backButtonAction } from "./backButton";
 import { deepLinkPath } from "./deepLink";
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+import { useCurrentUser } from "@/contexts";
+import { pushTapPath, refreshPushToken } from "@/features/push/devicePush";
 
 /**
  * Wires the native shell to the app: Android's back button, links opened from outside,
- * the status bar's ink, and the splash screen. Renders nothing, and does nothing in a browser. Mount inside the
+ * push tokens and taps, the status bar's ink, and the splash screen. Renders nothing, and does nothing in a browser. Mount inside the
  * router.
  */
 const NativeBridge = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const theme = useTheme();
+  const { user } = useCurrentUser();
+  const userDocId = user?.id;
 
   // The listener is registered once; it reads the current path from a ref.
   const pathnameRef = useRef(pathname);
@@ -46,6 +51,34 @@ const NativeBridge = () => {
       const path = deepLinkPath(url);
       if (path) void navigate(path);
     });
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, [navigate]);
+
+  // Push: tokens rotate, so re-save the current one for whoever is signed in. Does
+  // nothing unless push was turned on on this device.
+  useEffect(() => {
+    if (!isNative() || !userDocId) return;
+    void refreshPushToken(userDocId).catch(() => undefined);
+    const listener = FirebaseMessaging.addListener("tokenReceived", ({ token }) => {
+      void refreshPushToken(userDocId, token).catch(() => undefined);
+    });
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, [userDocId]);
+
+  // A tapped push opens the inbox at that notification, which follows its link.
+  useEffect(() => {
+    if (!isNative()) return;
+    const listener = FirebaseMessaging.addListener(
+      "notificationActionPerformed",
+      ({ notification }) => {
+        const path = pushTapPath(notification.data);
+        if (path) void navigate(path);
+      },
+    );
     return () => {
       void listener.then((handle) => handle.remove());
     };

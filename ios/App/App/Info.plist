@@ -43,6 +43,12 @@
       </array>
     </dict>
 	</dict>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Take a photo to add to a log entry.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

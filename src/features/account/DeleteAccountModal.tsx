@@ -16,6 +16,7 @@ import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { reportError } from "@/utils/reportError";
+import { turnPushOff } from "@/features/push/devicePush";
 
 const deleteAccountCallable = httpsCallable<void, { deleted: boolean }>(functions, "deleteAccount");
 
@@ -62,7 +63,9 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
       setPending(false);
       return;
     }
-    // The Auth account is gone server-side; clear the local session too.
+    // The Auth account is gone server-side (with its device tokens); clear the local
+    // session and this device's push registration too.
+    await turnPushOff(undefined).catch(() => undefined);
     await signOut(auth).catch((err) =>
       reportError(err, { feature: "account", action: "sign_out_after_delete", level: "warning" }),
     );
