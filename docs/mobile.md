@@ -24,5 +24,6 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
    - Upload an APNs key to Firebase.
    - Switch `aps-environment` to `production` for store builds.
 4. Google Play Console: put the upload-key and Play app-signing SHA-256 fingerprints in `public/.well-known/assetlinks.json`. New personal accounts need 12+ testers for 14 days before production.
-5. Store listings: privacy policy at https://moneylogs.app/privacy, privacy and data-safety forms (Firebase, Sentry; no replay in the apps), a demo account with a seeded log for review, and a note that the app moves no money.
-6. Deploy when the epic merges: `firestore:rules` (config, devices), `functions` (`sendPushOnNotification`) and hosting (`.well-known`).
+5. Demo account for review: `scripts/seed-review-account.ts` (try `--emulator` first).
+6. Store listings: privacy policy at https://moneylogs.app/privacy, privacy and data-safety forms (Firebase, Sentry; no replay in the apps), a demo account with a seeded log for review, and a note that the app moves no money.
+7. Deploy when the epic merges: `firestore:rules` (config, devices), `functions` (`sendPushOnNotification`) and hosting (`.well-known`).
