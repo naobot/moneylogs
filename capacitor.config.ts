@@ -14,6 +14,12 @@ const config: CapacitorConfig = {
     // Shown until NativeBridge hides it once auth has resolved, so the app never flashes
     // the login page for someone who is signed in.
     SplashScreen: { launchAutoHide: false },
+    // In the foreground the bell and inbox update live, so pushes don't also show a banner.
+    FirebaseMessaging: { presentationOptions: [] },
+  },
+  experimental: {
+    // Avoids a SwiftPM package identity collision (@capacitor-firebase/messaging docs).
+    ios: { spm: { packageOptions: { "@capacitor-firebase/messaging": { symlink: true } } } },
   },
 };
 
