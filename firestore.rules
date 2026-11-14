@@ -38,6 +38,16 @@ service cloud.firestore {
         && request.resource.data.type in ["log_created", "log_joined"]
         && request.resource.data.readAt == null;
     }
+    // Knick-knacks the budget buddy found (rolled by recomputeLedgerMonth). The owner may
+    // read them and mark each one seen, once; only the server creates or deletes them.
+    // users/{id}/buddy (the daily roll marker) has no rule: server only.
+    match /users/{userDocId}/knickknacks/{findId} {
+      allow read: if ownsUserDoc(userDocId);
+      allow update: if ownsUserDoc(userDocId)
+        && resource.data.seenAt == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenAt"])
+        && request.resource.data.seenAt is timestamp;
+    }
     match /processing/{path=**} {
       allow read, write: if true;
     }
