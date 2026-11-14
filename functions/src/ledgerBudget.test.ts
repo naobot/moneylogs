@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vite-plus/test";
-import { budgetAlerts, elapsedDays, isCurrentMonth, onBudgetPace } from "./ledgerBudget";
+import {
+  budgetAlerts,
+  elapsedDays,
+  isCurrentMonth,
+  budgetPaceRatio,
+  historyPaceRatio,
+} from "./ledgerBudget";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -112,28 +118,62 @@ describe("budgetAlerts", () => {
   });
 });
 
-describe("onBudgetPace", () => {
+describe("budgetPaceRatio", () => {
   // Nov 15 of 30 days: half of each budget is the pace.
-  const pace = (byCategory: Record<string, Record<string, number>>, cats = categories) =>
-    onBudgetPace({
+  const ratio = (byCategory: Record<string, Record<string, number>>, cats = categories) =>
+    budgetPaceRatio({
       categories: cats,
       byCategory,
       month: "2026-11",
       now: at("2026-11-15T12:00:00Z"),
     });
 
-  it("is on pace at or under the budget's share of the month so far", () => {
-    expect(pace({ food: { CAD: 300, JPY: 25000 }, fun: { CAD: 200 } })).toBe(true);
-    expect(pace({ food: { CAD: 500, JPY: 0 } })).toBe(true);
+  it("is 1 right on pace, and less under it", () => {
+    expect(ratio({ food: { CAD: 300, JPY: 25000 }, fun: { CAD: 200 } })).toBe(1);
+    expect(ratio({ food: { CAD: 250, JPY: 12500 } })).toBe(0.5);
+    expect(ratio({})).toBe(0);
   });
 
-  it("is off pace when any budgeted currency runs ahead", () => {
-    expect(pace({ food: { CAD: 100, JPY: 30000 } })).toBe(false);
-    expect(pace({ food: { CAD: 400 }, fun: { CAD: 200 } })).toBe(false);
+  it("takes the worst budgeted currency", () => {
+    expect(ratio({ food: { CAD: 100, JPY: 50000 } })).toBe(2);
   });
 
-  it("ignores unbudgeted spending, and is never on pace without budgets", () => {
-    expect(pace({ misc: { CAD: 99999 } })).toBe(true);
-    expect(pace({}, [{ id: "misc", name: "Misc" }])).toBe(false);
+  it("ignores unbudgeted spending, and is null without budgets", () => {
+    expect(ratio({ misc: { CAD: 99999 } })).toBe(0);
+    expect(ratio({}, [{ id: "misc", name: "Misc" }])).toBeNull();
+  });
+});
+
+describe("historyPaceRatio", () => {
+  // Nov 15 of 30 days: half an average month is the pace.
+  const ratio = (
+    totals: Record<string, number>,
+    history: Array<Record<string, number> | undefined>,
+  ) => historyPaceRatio({ totals, history, month: "2026-11", now: at("2026-11-15T12:00:00Z") });
+
+  it("compares this month so far with an average recent month", () => {
+    const history = [{ CAD: 1000 }, { CAD: 600 }, { CAD: 800 }]; // usual: 800
+    expect(ratio({ CAD: 400 }, history)).toBe(1);
+    expect(ratio({ CAD: 200 }, history)).toBe(0.5);
+    expect(ratio({ CAD: 800 }, history)).toBe(2);
+  });
+
+  it("averages over the months with spending only", () => {
+    expect(ratio({ CAD: 300 }, [{ CAD: 600 }, undefined, { CAD: 600 }])).toBe(1);
+    expect(ratio({ CAD: 300 }, [{ CAD: 600 }, {}, { CAD: 600 }])).toBe(1);
+  });
+
+  it("needs at least two months of history", () => {
+    expect(ratio({ CAD: 1 }, [{ CAD: 600 }, undefined, undefined])).toBeNull();
+    expect(ratio({ CAD: 1 }, [])).toBeNull();
+  });
+
+  it("takes the worst currency with history, and leaves new currencies out", () => {
+    const history = [
+      { CAD: 600, JPY: 60000 },
+      { CAD: 600, JPY: 60000 },
+    ];
+    expect(ratio({ CAD: 150, JPY: 45000 }, history)).toBe(1.5);
+    expect(ratio({ CAD: 150, EUR: 9999 }, history)).toBe(0.5);
   });
 });

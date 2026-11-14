@@ -6,10 +6,13 @@ import {
   findableIn,
   findChance,
   hemisphereOf,
-  KNICK_KNACK_SEASONS,
+  hourIn,
+  KNICK_KNACK_FINDS,
   loggedDaysBefore,
   MIN_ROLL_GAP_MS,
-  ON_PACE_BONUS,
+  PACE_BONUS,
+  paceBonus,
+  parseQuietDayRequest,
   rollFind,
   seasonOf,
   STEADY_BONUS,
@@ -23,11 +26,18 @@ import {
 const at = (iso: string) => new Date(iso).getTime();
 
 describe("knick-knacks (functions)", () => {
-  it("has the same items and seasons as the client catalog", () => {
+  it("has the same items, seasons and rarities as the client catalog", () => {
     const client = Object.fromEntries(
-      Object.entries(KNICK_KNACKS).map(([id, info]) => [id, info.seasons]),
+      Object.entries(KNICK_KNACKS).map(([id, { seasons, rarity }]) => [id, { seasons, rarity }]),
     );
-    expect(KNICK_KNACK_SEASONS).toEqual(client);
+    expect(KNICK_KNACK_FINDS).toEqual(client);
+  });
+
+  it("has a rare item in every season", () => {
+    for (const month of [1, 4, 7, 10]) {
+      const ids = findableIn({ month, timezone: "America/Toronto" });
+      expect(ids.some((id) => KNICK_KNACK_FINDS[id].rarity === "rare")).toBe(true);
+    }
   });
 
   it("agrees with the client on hemispheres and seasons", () => {
@@ -59,6 +69,21 @@ describe("knick-knacks (functions)", () => {
     ]);
   });
 
+  it("reads the hour in the user's timezone", () => {
+    const now = at("2026-11-14T22:30:00Z");
+    expect(hourIn(now, "America/Toronto")).toBe(17);
+    expect(hourIn(now, "Asia/Tokyo")).toBe(7);
+    expect(hourIn(now, undefined)).toBe(22);
+    expect(hourIn(now, "Not/AZone")).toBe(22);
+  });
+
+  it("only takes a sensible ledger id for the quiet-day roll", () => {
+    expect(parseQuietDayRequest({ ledgerId: "abc_123-X" })).toEqual({ ledgerId: "abc_123-X" });
+    expect(parseQuietDayRequest({ ledgerId: "../users" })).toBeNull();
+    expect(parseQuietDayRequest({})).toBeNull();
+    expect(parseQuietDayRequest(null)).toBeNull();
+  });
+
   it("reads the day in the user's timezone", () => {
     const now = at("2026-11-14T03:00:00Z");
     expect(dayIn(now, "America/Toronto")).toBe("2026-11-13");
@@ -69,19 +94,43 @@ describe("knick-knacks (functions)", () => {
 });
 
 describe("findChance", () => {
-  it("starts at the base and tops out with steady, on-pace logging", () => {
-    expect(findChance({ loggedDays: 0, onPace: false })).toBe(BASE_CHANCE);
-    expect(findChance({ loggedDays: 14, onPace: true })).toBeCloseTo(
-      BASE_CHANCE + STEADY_BONUS + ON_PACE_BONUS,
+  it("gives everyone the base chance, even over budget with no recent logging", () => {
+    expect(findChance({ loggedDays: 0, paceRatio: 1.5 })).toBe(BASE_CHANCE);
+    expect(findChance({ loggedDays: 0, paceRatio: null })).toBe(BASE_CHANCE);
+  });
+
+  it("tops out with steady logging comfortably under pace", () => {
+    expect(findChance({ loggedDays: 14, paceRatio: 0.3 })).toBeCloseTo(
+      BASE_CHANCE + STEADY_BONUS + PACE_BONUS,
     );
-    expect(findChance({ loggedDays: 14, onPace: true })).toBeLessThanOrEqual(0.08);
+    expect(findChance({ loggedDays: 14, paceRatio: 0.3 })).toBeCloseTo(0.08);
+  });
+
+  it("leans mostly on spending: a steady logger well under pace finds ~2.5x as often", () => {
+    const over = findChance({ loggedDays: 14, paceRatio: 1.2 });
+    const under = findChance({ loggedDays: 14, paceRatio: 0.5 });
+    expect(under / over).toBeGreaterThan(2.5);
   });
 
   it("rises with more logged days, then levels off", () => {
-    const chances = [0, 3, 6, 10, 14].map((d) => findChance({ loggedDays: d, onPace: false }));
+    const chances = [0, 3, 6, 10, 14].map((d) => findChance({ loggedDays: d, paceRatio: null }));
     for (let i = 1; i < chances.length; i++)
       expect(chances[i]).toBeGreaterThanOrEqual(chances[i - 1]);
     expect(chances[3]).toBe(chances[4]);
+  });
+});
+
+describe("paceBonus", () => {
+  it("is full comfortably under pace, half right on it, nothing over it", () => {
+    expect(paceBonus(0)).toBe(PACE_BONUS);
+    expect(paceBonus(0.6)).toBe(PACE_BONUS);
+    expect(paceBonus(0.8)).toBeCloseTo(PACE_BONUS * 0.75);
+    expect(paceBonus(1)).toBeCloseTo(PACE_BONUS / 2);
+    expect(paceBonus(1.01)).toBe(0);
+  });
+
+  it("is nothing without budgets", () => {
+    expect(paceBonus(null)).toBe(0);
   });
 });
 
@@ -120,6 +169,18 @@ describe("rollFind", () => {
     expect(rollFind({ rand: seq(0.01, 0.6), chance: 0.05, findable: ["acorn", "pinecone"] })).toBe(
       "pinecone",
     );
+  });
+
+  it("picks rare items a third as often as common ones", () => {
+    // Autumn: acorn, pinecone, maple leaf (3 each) and the apple (1), out of 10.
+    const autumn = ["acorn", "pinecone", "maple_leaf", "apple"] as const;
+    const pick = (r: number) => rollFind({ rand: seq(0, r), chance: 1, findable: autumn });
+    expect(pick(0)).toBe("acorn");
+    expect(pick(0.29)).toBe("acorn");
+    expect(pick(0.31)).toBe("pinecone");
+    expect(pick(0.89)).toBe("maple_leaf");
+    expect(pick(0.91)).toBe("apple");
+    expect(pick(0.999)).toBe("apple");
   });
 
   it("finds nothing on a miss", () => {

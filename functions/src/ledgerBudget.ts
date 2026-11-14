@@ -174,11 +174,12 @@ export const budgetAlerts = ({
 };
 
 /**
- * Whether spending in budgeted categories is on or under pace in every budgeted
- * currency: at most the budget's share for the days elapsed so far. False when nothing
- * has a budget. Feeds the knick-knack find chance, so it's never shown.
+ * How spending in budgeted categories compares with the budget's share for the days
+ * elapsed so far: 1 is right on pace, under 1 is under it. The worst budgeted currency
+ * counts. Null when nothing has a budget. Feeds the knick-knack find chance, so it's
+ * never shown.
  */
-export const onBudgetPace = ({
+export const budgetPaceRatio = ({
   categories,
   byCategory,
   month,
@@ -188,10 +189,11 @@ export const onBudgetPace = ({
   byCategory: { [categoryId: string]: { [currency: string]: number } };
   month: string;
   now: number;
-}): boolean => {
+}): number | null => {
   const budgets = budgetsByCurrency(categories);
-  if (!budgets.size) return false;
+  if (!budgets.size) return null;
   const share = elapsedDays(month, now) / daysIn(month);
+  let worst = 0;
   for (const [currency, byId] of budgets) {
     let total = 0;
     let spent = 0;
@@ -199,7 +201,48 @@ export const onBudgetPace = ({
       total += budget;
       spent += byCategory[categoryId]?.[currency] ?? 0;
     }
-    if (r2(spent) > r2(total * share)) return false;
+    worst = Math.max(worst, r2(spent) / (total * share));
   }
-  return true;
+  return worst;
+};
+
+/** Months back that count as spending history, when a log has no budgets. */
+export const HISTORY_MONTHS = 3;
+/** Months with spending, out of those, needed before history stands in for a budget. */
+export const MIN_HISTORY_MONTHS = 2;
+
+/**
+ * For logs without budgets: this month's spending so far against an average month
+ * from the last few, scaled to the days elapsed. 1 is spending like usual, under 1 is
+ * lighter than usual. The worst currency with history counts; currencies with no
+ * history are left out. Null until there are enough months to go on.
+ */
+export const historyPaceRatio = ({
+  totals,
+  history,
+  month,
+  now,
+}: {
+  /** This month's totals per currency. */
+  totals: { [currency: string]: number };
+  /** Totals for previous months; missing or empty months count as no data. */
+  history: ReadonlyArray<{ [currency: string]: number } | undefined>;
+  month: string;
+  now: number;
+}): number | null => {
+  const months = history.filter(
+    (t): t is { [currency: string]: number } => !!t && Object.values(t).some((v) => v > 0),
+  );
+  if (months.length < MIN_HISTORY_MONTHS) return null;
+  const share = elapsedDays(month, now) / daysIn(month);
+
+  let worst: number | null = null;
+  const currencies = new Set(months.flatMap((t) => Object.keys(t)));
+  for (const currency of currencies) {
+    const usual = months.reduce((sum, t) => sum + (t[currency] ?? 0), 0) / months.length;
+    if (usual <= 0) continue;
+    const ratio = r2(totals[currency] ?? 0) / (usual * share);
+    worst = Math.max(worst ?? 0, ratio);
+  }
+  return worst;
 };

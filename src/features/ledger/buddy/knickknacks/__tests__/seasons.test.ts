@@ -48,6 +48,7 @@ describe("findableIn", () => {
   it("turns up the autumn set in a northern October", () => {
     expect(findableIn({ month: 10, timezone: "America/Toronto" }).sort()).toEqual([
       "acorn",
+      "apple",
       "maple_leaf",
       "pinecone",
     ]);
@@ -75,6 +76,7 @@ describe("findableIn", () => {
     ]);
     expect(findableIn({ month: 4, timezone: "Australia/Sydney" }).sort()).toEqual([
       "acorn",
+      "apple",
       "maple_leaf",
       "pinecone",
     ]);

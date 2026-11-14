@@ -3,30 +3,36 @@
  * (src/features/ledger/buddy/knickknacks/catalog.ts and seasons.ts); a root test keeps
  * the two in step. Dependency-free so it can be unit tested from the root Vitest run.
  *
- * Logging an entry earns at most one roll a day. The odds tilt gently, and invisibly,
- * toward steady logging and staying on budget pace: from about one find a month to
- * about one every twelve days.
+ * A day earns at most one roll: by logging an entry, or, on a day with nothing logged,
+ * by checking in on a financial log in the evening. The odds lean mostly on budget pace
+ * (graded: comfortably under pays most, over pays nothing) and a little on steady
+ * logging, over a small base everyone gets. On a hit, rarer items are picked less often.
  */
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type Hemisphere = "north" | "south";
+export type Rarity = "common" | "rare";
 
-export const KNICK_KNACK_SEASONS = {
-  acorn: ["autumn"],
-  pinecone: ["autumn", "winter"],
-  maple_leaf: ["autumn"],
-  pine_branch: ["winter"],
-  holly: ["winter"],
-  snowdrop: ["winter"],
-  cherry_blossom: ["spring"],
-  tulip: ["spring"],
-  lilac: ["spring"],
-  daisy: ["summer"],
-  sunflower: ["summer"],
-  dragonfly: ["summer"],
-} as const satisfies Record<string, readonly Season[]>;
+/** How often each rarity is picked, relative to the others in season. */
+export const RARITY_WEIGHTS: Record<Rarity, number> = { common: 3, rare: 1 };
 
-export type KnickKnackId = keyof typeof KNICK_KNACK_SEASONS;
+export const KNICK_KNACK_FINDS = {
+  acorn: { seasons: ["autumn"], rarity: "common" },
+  pinecone: { seasons: ["autumn", "winter"], rarity: "common" },
+  maple_leaf: { seasons: ["autumn"], rarity: "common" },
+  apple: { seasons: ["autumn"], rarity: "rare" },
+  pine_branch: { seasons: ["winter"], rarity: "common" },
+  holly: { seasons: ["winter"], rarity: "common" },
+  snowdrop: { seasons: ["winter"], rarity: "rare" },
+  cherry_blossom: { seasons: ["spring"], rarity: "rare" },
+  tulip: { seasons: ["spring"], rarity: "common" },
+  lilac: { seasons: ["spring"], rarity: "common" },
+  daisy: { seasons: ["summer"], rarity: "common" },
+  sunflower: { seasons: ["summer"], rarity: "common" },
+  dragonfly: { seasons: ["summer"], rarity: "rare" },
+} as const satisfies Record<string, { seasons: readonly Season[]; rarity: Rarity }>;
+
+export type KnickKnackId = keyof typeof KNICK_KNACK_FINDS;
 
 const SOUTHERN_PREFIXES = ["Australia/", "Antarctica/", "America/Argentina/"];
 
@@ -90,8 +96,8 @@ export const findableIn = ({
   timezone?: string | null;
 }): KnickKnackId[] => {
   const season = seasonOf(month, hemisphereOf(timezone));
-  return (Object.keys(KNICK_KNACK_SEASONS) as KnickKnackId[]).filter((id) =>
-    (KNICK_KNACK_SEASONS[id] as readonly Season[]).includes(season),
+  return (Object.keys(KNICK_KNACK_FINDS) as KnickKnackId[]).filter((id) =>
+    (KNICK_KNACK_FINDS[id].seasons as readonly Season[]).includes(season),
   );
 };
 
@@ -104,18 +110,41 @@ export const dayIn = (now: number, timezone?: string | null): string => {
   }
 };
 
-export const BASE_CHANCE = 0.03;
-export const STEADY_BONUS = 0.03;
-export const ON_PACE_BONUS = 0.02;
+/** Everyone's chance on a roll, whatever their habits. */
+export const BASE_CHANCE = 0.015;
+/** Up to this much more for logging on most recent days. */
+export const STEADY_BONUS = 0.015;
+/** Up to this much more for spending under budget pace; half of it right on pace. */
+export const PACE_BONUS = 0.05;
 /** Days with spending, out of the last 14, that count as fully steady. */
 export const STEADY_DAYS = 10;
+/** At or under this share of the pace budget counts as comfortably under. */
+export const COMFORTABLY_UNDER = 0.6;
 /** Rolls at least this far apart, so hopping timezones can't make a second "day". */
 export const MIN_ROLL_GAP_MS = 20 * 3_600_000;
 
-export const findChance = ({ loggedDays, onPace }: { loggedDays: number; onPace: boolean }) =>
+/**
+ * The pace part, from `paceRatio` (spending ÷ the budget's share of the month so far,
+ * the worst currency; null without budgets): full when comfortably under, sliding to
+ * half right on pace, nothing once over.
+ */
+export const paceBonus = (paceRatio: number | null): number => {
+  if (paceRatio === null || paceRatio > 1) return 0;
+  if (paceRatio <= COMFORTABLY_UNDER) return PACE_BONUS;
+  const t = (paceRatio - COMFORTABLY_UNDER) / (1 - COMFORTABLY_UNDER);
+  return PACE_BONUS * (1 - t / 2);
+};
+
+export const findChance = ({
+  loggedDays,
+  paceRatio,
+}: {
+  loggedDays: number;
+  paceRatio: number | null;
+}) =>
   BASE_CHANCE +
   (Math.min(Math.max(loggedDays, 0), STEADY_DAYS) / STEADY_DAYS) * STEADY_BONUS +
-  (onPace ? ON_PACE_BONUS : 0);
+  paceBonus(paceRatio);
 
 export type RollMarker = { lastDay?: string; lastAtMs?: number };
 
@@ -133,6 +162,7 @@ export const canRoll = ({
   return typeof marker.lastAtMs !== "number" || now - marker.lastAtMs >= MIN_ROLL_GAP_MS;
 };
 
+/** On a hit, one item from what's in season, weighted by rarity. */
 export const rollFind = ({
   rand,
   chance,
@@ -143,7 +173,13 @@ export const rollFind = ({
   findable: readonly KnickKnackId[];
 }): KnickKnackId | null => {
   if (!findable.length || rand() >= chance) return null;
-  return findable[Math.min(Math.floor(rand() * findable.length), findable.length - 1)];
+  const weights = findable.map((id) => RARITY_WEIGHTS[KNICK_KNACK_FINDS[id].rarity]);
+  let pick = rand() * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < findable.length; i++) {
+    pick -= weights[i];
+    if (pick < 0) return findable[i];
+  }
+  return findable[findable.length - 1];
 };
 
 /** Days with any spending among the 14 before `today`, from month docs' byDay. */
@@ -159,4 +195,31 @@ export const loggedDaysBefore = (
     if (Object.values(amounts).some((v) => v > 0)) days++;
   }
   return days;
+};
+
+/** The hour (0–23) at `now` in `timezone`; UTC when the zone is missing or unknown. */
+export const hourIn = (now: number, timezone?: string | null): number => {
+  try {
+    const hour = new Intl.DateTimeFormat("en-GB", {
+      timeZone: timezone || "UTC",
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).format(now);
+    return Number(hour);
+  } catch {
+    return new Date(now).getUTCHours();
+  }
+};
+
+/**
+ * A day with nothing logged can still earn its roll, from this hour on: the same hour
+ * the buddy's evening check-in starts (src/features/ledger/buddy/buddyCheckIn.ts).
+ */
+export const QUIET_DAY_FROM_HOUR = 17;
+
+export const parseQuietDayRequest = (data: unknown): { ledgerId: string } | null => {
+  const ledgerId = (data as { ledgerId?: unknown } | null)?.ledgerId;
+  return typeof ledgerId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(ledgerId)
+    ? { ledgerId }
+    : null;
 };
