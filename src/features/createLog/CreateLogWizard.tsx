@@ -10,6 +10,7 @@ import { useLedgerQuery } from "@/hooks/useLedgerQuery";
 import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
+import { reportError } from "@/utils/reportError";
 
 import ControlledInput from "@/components/ControlledInput";
 import Wizard from "@/components/Wizard/Wizard";
@@ -128,7 +129,11 @@ export const CreateLogWizard = () => {
         void navigate(`/l/${ledgerId}`, { replace: true });
       }
     } catch (err) {
-      console.error("Failed to create log:", err);
+      reportError(err, {
+        feature: "create_log",
+        action: "create_log",
+        tags: { mode: state.mode },
+      });
     }
   };
 

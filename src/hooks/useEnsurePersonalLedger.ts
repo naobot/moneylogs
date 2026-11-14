@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useCurrentUser } from "@/contexts";
 import { ensurePersonalLedger } from "@/hooks/useLedgerQuery";
 import { hasPersonalLedger, preferredCurrency } from "@/utils/personalLedger";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Gives a signed-in user their solo "personal" financial log the first time they're seen
@@ -25,7 +26,9 @@ export const useEnsurePersonalLedger = () => {
     ensurePersonalLedger({
       member: { uid, userDocId },
       defaultCurrency: preferredCurrency({ defaultCurrency }),
-    }).catch((err) => console.error("Failed to create personal log:", err));
+    }).catch((err: unknown) =>
+      reportError(err, { feature: "personal_ledger", action: "ensure_personal_ledger" }),
+    );
   }, [needsOne, uid, userDocId, defaultCurrency]);
 };
 

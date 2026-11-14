@@ -3,14 +3,23 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import RegistrationHandler from "@/features/auth/components/RegistrationHandler";
 
-const { mockCreateUser, mockSendVerification, mockSignIn, mockUpdateProfile, mockMutate } =
-  vi.hoisted(() => ({
-    mockCreateUser: vi.fn(),
-    mockSendVerification: vi.fn(),
-    mockSignIn: vi.fn(),
-    mockUpdateProfile: vi.fn(),
-    mockMutate: vi.fn(),
-  }));
+const {
+  mockCreateUser,
+  mockSendVerification,
+  mockSignIn,
+  mockUpdateProfile,
+  mockMutate,
+  mockReportError,
+} = vi.hoisted(() => ({
+  mockCreateUser: vi.fn(),
+  mockSendVerification: vi.fn(),
+  mockSignIn: vi.fn(),
+  mockUpdateProfile: vi.fn(),
+  mockMutate: vi.fn(),
+  mockReportError: vi.fn(),
+}));
+
+vi.mock("@/utils/reportError", () => ({ reportError: mockReportError, trackStep: vi.fn() }));
 
 vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: mockCreateUser,
@@ -87,6 +96,24 @@ describe("RegistrationHandler", () => {
     const alert = container.querySelector(".AuthError");
     expect(alert).not.toBeNull();
     expect(alert!.textContent).toContain("already exists");
+  });
+
+  it("doesn't report mistakes the user can fix, but reports anything unexpected", async () => {
+    mockCreateUser
+      .mockRejectedValueOnce({ code: "auth/email-already-in-use" })
+      .mockRejectedValueOnce({ code: "auth/network-request-failed" });
+
+    act(() => root.render(<RegistrationHandler />));
+    await fillAndSubmit();
+    expect(mockReportError).not.toHaveBeenCalled();
+
+    await act(async () => {
+      container.querySelector("button")!.click();
+    });
+    expect(mockReportError).toHaveBeenCalledWith(
+      { code: "auth/network-request-failed" },
+      { feature: "registration", action: "register" },
+    );
   });
 
   it("re-enables the register button after a failed attempt", async () => {

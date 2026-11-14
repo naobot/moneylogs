@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import * as Sentry from "@sentry/react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/config/firebase-config";
 import { useGetUserInfo, UserData } from "@/hooks/useGetUserInfo";
@@ -17,6 +18,13 @@ const CurrentUserContext = createContext<CurrentUserContextType | undefined>(und
 export const CurrentUserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Use Firebase auth as the source of truth
   const [firebaseUser, firebaseLoading] = useAuthState(auth);
+
+  // Sentry events carry the auth uid only (no email or name), so an issue shows how
+  // many people it affects.
+  const uid = firebaseUser?.uid;
+  useEffect(() => {
+    Sentry.setUser(uid ? { id: uid } : null);
+  }, [uid]);
 
   // Get user info based on Firebase auth state
   const userInfo = useGetUserInfo(firebaseUser?.uid || "");

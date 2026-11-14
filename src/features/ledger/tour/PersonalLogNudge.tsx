@@ -6,6 +6,7 @@ import { useLedgerHasEntries } from "@/hooks/useLedgerHasEntries";
 import { updateUserFields } from "@/hooks/useUserQuery";
 import { personalLedgerId } from "@/utils/personalLedger";
 import RowButton from "@/components/RowButton";
+import { reportError } from "@/utils/reportError";
 
 import { shouldShowLedgerNudge } from "./tourRules";
 
@@ -27,7 +28,8 @@ export const PersonalLogNudge = ({ ledgerIds }: { ledgerIds: readonly string[] }
 
   const seen = () => {
     updateUserFields(user.id, { "tutorials.ledgerNudge": serverTimestamp() }).catch(
-      (err: unknown) => console.error("Failed to record the personal log nudge:", err),
+      (err: unknown) =>
+        reportError(err, { feature: "ledger_tour", action: "record_nudge", level: "warning" }),
     );
   };
 

@@ -8,6 +8,7 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { Currency } from "@/types/user";
 import { isCurrency } from "@/utils/currency";
 import { preferredCurrency } from "@/utils/personalLedger";
+import { reportError } from "@/utils/reportError";
 
 import Button from "@/components/Button";
 import CurrencySelect from "@/components/CurrencySelect";
@@ -51,7 +52,11 @@ export const DefaultCurrencyPrompt = () => {
     try {
       await updateUserFields(user.id, { defaultCurrency });
     } catch (err) {
-      console.error("Failed to save default currency:", err);
+      reportError(err, {
+        feature: "default_currency",
+        action: "save_default_currency",
+        tags: { choice: defaultCurrency === guess ? "kept_guess" : "changed" },
+      });
       showToast("Couldn't save your currency. Please try again.");
       setSaving(false);
     }

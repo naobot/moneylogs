@@ -17,7 +17,8 @@ import { useCurrentUser } from "@/contexts";
 import { Currency } from "@/types/user";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
-import { useImageUpload } from "@/hooks/useImageUpload";
+import { ImageValidationError, useImageUpload } from "@/hooks/useImageUpload";
+import { reportError } from "@/utils/reportError";
 import { useToastContext } from "@/hooks/useToastContext";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
@@ -144,7 +145,9 @@ const LogPostEditor = forwardRef(
         const url = await uploadInlineImage(file, groupId);
         api.replaceSelection(`![image](${url})`);
       } catch (err) {
-        console.error("Failed to upload image:", err);
+        if (!(err instanceof ImageValidationError)) {
+          reportError(err, { feature: "log_post", action: "upload_inline_image" });
+        }
         showToast(err instanceof Error ? err.message : "Image upload failed. Please try again.");
       }
     };
@@ -184,7 +187,7 @@ const LogPostEditor = forwardRef(
         newEntryContentSet(null);
         newEntryAmountSet(0);
       } catch (err) {
-        console.error("Failed to create log post:", err);
+        reportError(err, { feature: "log_post", action: "create_post" });
       }
     };
 
@@ -210,7 +213,7 @@ const LogPostEditor = forwardRef(
         newEntryContentSet(null);
         newEntryAmountSet(0);
       } catch (err) {
-        console.error("Failed to create log post:", err);
+        reportError(err, { feature: "log_post", action: "edit_post" });
       }
     };
 
