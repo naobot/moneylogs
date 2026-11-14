@@ -34,7 +34,8 @@ import { creatorUid } from "@/utils/logOwnership";
 import { useDateFormat } from "@/utils/dateFormat";
 import { MemberNamesContext } from "./LogPosts/memberNames";
 import type { PostFocus } from "./LogPosts/LogPosts";
-import { publicHost, storage } from "@/platform";
+import { publicHost, publicUrl, storage } from "@/platform";
+import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
 
 const agreeWarningKey = (groupId: string) => `ML__${groupId}__agreeWarning`;
 const agreedToEndWarning = (groupId: string) => storage.get(agreeWarningKey(groupId)) === "1";
@@ -466,6 +467,10 @@ export const Group = ({
           </p>
           <p>Do not share the group URL with anyone you do not want participating!</p>
           <CopyTextArea value={`${publicHost()}/g/${groupId}/invite`} />
+          <ShareLinkButton
+            title={`Join ${group.title} on moneylogs`}
+            url={publicUrl(`/g/${groupId}/invite`)}
+          />
         </Modal.Body>
         <Modal.Actions>
           <Modal.CancelButton text="Close" />

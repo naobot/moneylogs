@@ -5,7 +5,8 @@ import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { useLedgerCategoryQuery } from "@/hooks/useLedgerCategoryQuery";
 import { Ledger } from "@/types/ledger";
-import { publicHost } from "@/platform";
+import { publicHost, publicUrl } from "@/platform";
+import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
 import {
   formatMonth,
   isValidMonthKey,
@@ -172,6 +173,10 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           <p>Send the following URL to anyone you want to share this financial log with.</p>
           <p>Members can see every entry in this log, and add their own.</p>
           <CopyTextArea value={`${publicHost()}/l/${ledger.id}/invite`} />
+          <ShareLinkButton
+            title={`Join ${ledger.title} on moneylogs`}
+            url={publicUrl(`/l/${ledger.id}/invite`)}
+          />
         </Modal.Body>
         <Modal.Actions>
           <Modal.CancelButton text="Close" />
