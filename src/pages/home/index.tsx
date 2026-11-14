@@ -4,6 +4,7 @@ import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Dashboard } from "@/features/dashboard/Dashboard";
+import { KnickKnackDrawer } from "@/features/dashboard/KnickKnackDrawer";
 import { partitionArchived } from "@/utils/archivedLogs";
 
 // Home is a dashboard of what's current. The full history (every past and archived log)
@@ -44,6 +45,9 @@ export const Home = () => {
           You can also <Link to="/create">create one</Link> yourself.
         </p>
         {archivedNote}
+        <div className="Dashboard">
+          <KnickKnackDrawer ledgers={ledgers} />
+        </div>
       </div>
     );
   }

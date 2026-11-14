@@ -21,6 +21,9 @@ export const KNICK_KNACK_SEASONS = {
   cherry_blossom: ["spring"],
   tulip: ["spring"],
   lilac: ["spring"],
+  daisy: ["summer"],
+  sunflower: ["summer"],
+  dragonfly: ["summer"],
 } as const satisfies Record<string, readonly Season[]>;
 
 export type KnickKnackId = keyof typeof KNICK_KNACK_SEASONS;

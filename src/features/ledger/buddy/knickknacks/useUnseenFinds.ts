@@ -47,6 +47,22 @@ export const useUnseenFind = (userDocId?: string): KnickKnackFind | null => {
   return known.reduce((oldest, f) => (foundMs(f) < foundMs(oldest) ? f : oldest));
 };
 
+/** Every find the user has, seen or not, live: the knick-knack drawer's contents. */
+export const useKnickKnackFinds = (userDocId?: string) => {
+  const result = useFirebaseCollection<KnickKnackFind>({
+    queryBuilder: () => (userDocId ? collection(db, "users", userDocId, "knickknacks") : null),
+    dataTransformer: (docs) => docs.map((d) => ({ id: d.id, ...d.data() }) as KnickKnackFind),
+    dependencies: [userDocId],
+    enabled: !!userDocId,
+  });
+
+  useEffect(() => {
+    if (result.isError) console.error("Failed to load the knick-knack drawer:", result.error);
+  }, [result.isError, result.error]);
+
+  return result;
+};
+
 /** The owner may set seenAt once (firestore.rules). */
 export const markFindSeen = (userDocId: string, findId: string) =>
   updateDoc(doc(db, "users", userDocId, "knickknacks", findId), { seenAt: serverTimestamp() });

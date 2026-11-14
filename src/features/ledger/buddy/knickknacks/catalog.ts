@@ -62,6 +62,21 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     seasons: ["spring"],
     found: "a sprig of lilac. it smells so sweet i might sneeze *achoo* ♡",
   },
+  daisy: {
+    name: "daisy",
+    seasons: ["summer"],
+    found: "a daisy! loves me… loves me not… someone's been plucking it~",
+  },
+  sunflower: {
+    name: "sunflower",
+    seasons: ["summer"],
+    found: "a sunflower as big as my head! someone's been snacking on the seeds…",
+  },
+  dragonfly: {
+    name: "dragonfly",
+    seasons: ["summer"],
+    found: "a dragonfly looped right past my nose and landed on the receipts ♪",
+  },
 };
 
 export const KNICK_KNACK_IDS = Object.keys(KNICK_KNACKS) as KnickKnackId[];

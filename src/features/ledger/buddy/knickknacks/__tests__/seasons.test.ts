@@ -68,7 +68,11 @@ describe("findableIn", () => {
       "tulip",
       "lilac",
     ]);
-    expect(findableIn({ month: 1, timezone: "Australia/Sydney" })).toEqual([]);
+    expect(findableIn({ month: 1, timezone: "Australia/Sydney" })).toEqual([
+      "daisy",
+      "sunflower",
+      "dragonfly",
+    ]);
     expect(findableIn({ month: 4, timezone: "Australia/Sydney" }).sort()).toEqual([
       "acorn",
       "maple_leaf",

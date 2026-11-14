@@ -46,7 +46,11 @@ describe("knick-knacks (functions)", () => {
       "holly",
       "snowdrop",
     ]);
-    expect(findableIn({ month: 7, timezone: "America/Toronto" })).toEqual([]);
+    expect(findableIn({ month: 7, timezone: "America/Toronto" })).toEqual([
+      "daisy",
+      "sunflower",
+      "dragonfly",
+    ]);
     expect(findableIn({ month: 7, timezone: "Australia/Sydney" })).toEqual([
       "pinecone",
       "pine_branch",

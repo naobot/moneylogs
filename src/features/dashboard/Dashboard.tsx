@@ -10,6 +10,7 @@ import { formatMonth, monthKeyOf, todayInTz } from "@/utils/ledger";
 import { formatTotals } from "@/utils/ledgerEntries";
 import { formatNewCount } from "@/utils/logActivity";
 
+import { KnickKnackDrawer } from "./KnickKnackDrawer";
 import { LogCard } from "./LogCard";
 
 import "./Dashboard.scss";
@@ -22,7 +23,8 @@ type DashboardProps = {
 /**
  * Home's gallery. What's current gets big cards with live previews (new activity since
  * your last visit; this month's spending for financial logs). Upcoming groups get smaller
- * cards, and only the few most recently ended groups appear, as a compact strip.
+ * cards, and only the few most recently ended groups appear, as a compact strip. The
+ * knick-knack drawer is always at the bottom.
  */
 export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
   const { user } = useCurrentUser();
@@ -135,6 +137,8 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
           </div>
         </section>
       )}
+
+      <KnickKnackDrawer ledgers={ledgers} />
     </div>
   );
 };

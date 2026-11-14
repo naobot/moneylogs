@@ -10,6 +10,9 @@ vi.mock("@/contexts", () => ({
 vi.mock("@/hooks/useLogActivity", () => ({
   useLogActivity: () => ({ activity, isLoading: false }),
 }));
+vi.mock("@/features/ledger/buddy/knickknacks/useUnseenFinds", () => ({
+  useKnickKnackFinds: () => ({ data: [], isLoading: false }),
+}));
 vi.mock("@/hooks/useLedgerMonthTotals", () => ({
   useLedgerMonthTotals: () => ({ l1: { JPY: 12000 } }),
 }));
