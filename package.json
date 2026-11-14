@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vp dev",
     "build": "vp build && node scripts/write-version.mjs",
-    "cap:sync": "vp build && cap sync",
-    "cap:sync:dev": "vp build --mode development && cap sync",
+    "cap:sync": "CAPACITOR_BUILD=1 vp build && cap sync",
+    "cap:sync:dev": "CAPACITOR_BUILD=1 vp build --mode development && cap sync",
     "cap:ios": "npm run cap:sync:dev && cap run ios",
     "cap:android": "npm run cap:sync:dev && cap run android",
     "lint": "vp lint .",
