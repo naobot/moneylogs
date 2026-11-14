@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
+  confirmsAccountDeletion,
+  getDeleteAccountErrorMessage,
   getPasswordChangeErrorMessage,
   getResetEmailErrorMessage,
   validatePasswordChange,
@@ -79,5 +81,43 @@ describe("validatePasswordChange", () => {
     expect(validatePasswordChange({ ...ok, confirm: "new-pazz" })).toBe(
       "The new passwords don't match.",
     );
+  });
+});
+
+describe("confirmsAccountDeletion", () => {
+  it("accepts the confirmation word in any case, ignoring surrounding spaces", () => {
+    expect(confirmsAccountDeletion("delete")).toBe(true);
+    expect(confirmsAccountDeletion("  DELETE ")).toBe(true);
+  });
+
+  it("rejects anything else", () => {
+    expect(confirmsAccountDeletion("")).toBe(false);
+    expect(confirmsAccountDeletion("delet")).toBe(false);
+    expect(confirmsAccountDeletion("delete my account")).toBe(false);
+  });
+});
+
+describe("getDeleteAccountErrorMessage", () => {
+  it("blames the password for bad-credential codes", () => {
+    expect(getDeleteAccountErrorMessage("auth/invalid-credential")).toBe(
+      "Your password is incorrect.",
+    );
+    expect(getDeleteAccountErrorMessage("auth/wrong-password")).toBe("Your password is incorrect.");
+  });
+
+  it("asks for the password again when the sign-in is no longer recent", () => {
+    expect(getDeleteAccountErrorMessage("functions/failed-precondition")).toMatch(
+      /enter your password/,
+    );
+  });
+
+  it("treats offline errors from either source the same way", () => {
+    const offline = getDeleteAccountErrorMessage("auth/network-request-failed");
+    expect(getDeleteAccountErrorMessage("functions/unavailable")).toBe(offline);
+  });
+
+  it("invites a retry when the deletion stopped part-way", () => {
+    expect(getDeleteAccountErrorMessage("functions/internal")).toMatch(/try again/);
+    expect(getDeleteAccountErrorMessage(undefined)).toMatch(/try again/);
   });
 });

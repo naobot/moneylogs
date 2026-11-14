@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react";
 import "./index.css";
 import { initTheme } from "@/utils/theme";
 import { initDisplayPrefs } from "@/utils/displayPrefs";
+import { initKeyboardInset } from "@/utils/keyboardInset";
 import App from "@/App";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
@@ -58,6 +59,7 @@ Sentry.init({
 // Apply the stored theme and display prefs before the first paint so nothing flashes.
 initTheme();
 initDisplayPrefs();
+initKeyboardInset();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

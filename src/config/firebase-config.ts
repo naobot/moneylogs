@@ -42,11 +42,14 @@ export { analytics };
 
 if (isDevelopment && typeof window !== "undefined") {
   // Only connect if not already connected
+  // The emulators run on the dev machine. Reach them at whatever host served the page,
+  // so a phone on the LAN (vp dev --host, opened at the machine's IP) talks to them too.
+  const emulatorHost = window.location.hostname || "localhost";
   try {
-    connectFirestoreEmulator(db, "localhost", 8888);
-    connectAuthEmulator(auth, "http://localhost:9099");
-    connectStorageEmulator(storage, "localhost", 9199);
-    connectFunctionsEmulator(functions, "localhost", 5001);
+    connectFirestoreEmulator(db, emulatorHost, 8888);
+    connectAuthEmulator(auth, `http://${emulatorHost}:9099`);
+    connectStorageEmulator(storage, emulatorHost, 9199);
+    connectFunctionsEmulator(functions, emulatorHost, 5001);
   } catch {
     // Emulators already connected or not running
     console.log("Emulators may already be connected or not running");

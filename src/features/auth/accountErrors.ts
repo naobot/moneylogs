@@ -55,3 +55,34 @@ export const validatePasswordChange = ({
   if (next !== confirm) return "The new passwords don't match.";
   return null;
 };
+
+/** The word typed to confirm deleting the account (trim/case-insensitive). */
+export const DELETE_ACCOUNT_CONFIRMATION = "delete";
+
+export const confirmsAccountDeletion = (typed: string): boolean =>
+  typed.trim().toLowerCase() === DELETE_ACCOUNT_CONFIRMATION;
+
+/**
+ * Messages for deleting the account. `code` is either a Firebase Auth code from the
+ * password check (`auth/...`) or a callable code from the deleteAccount function
+ * (`functions/...`).
+ */
+export const getDeleteAccountErrorMessage = (code?: string) => {
+  switch (code) {
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+      return "Your password is incorrect.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please try again later.";
+    case "auth/network-request-failed":
+    case "functions/unavailable":
+      return "You appear to be offline. Please try again when connected.";
+    case "functions/failed-precondition":
+    case "auth/requires-recent-login":
+      return "That took too long. Please enter your password and try again.";
+    case "functions/deadline-exceeded":
+    case "functions/internal":
+    default:
+      return "Couldn't finish deleting your account. Some data may already be gone, so please try again to complete it.";
+  }
+};

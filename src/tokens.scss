@@ -74,6 +74,22 @@
   --z-modal: 1000;
   --z-snackbar: 1100;
 
+  // ---- device viewport ----
+  // Notch / home-indicator insets (non-zero once index.html opts in with viewport-fit=cover)
+  // and the on-screen keyboard (set by src/utils/keyboardInset.ts). Fixed-position and
+  // full-height surfaces pad by these so nothing hides under hardware or the keyboard.
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --keyboard-inset: 0px;
+  // The visible height. dvh tracks the mobile URL bar; vh is the fallback for old engines.
+  --viewport-height: 100vh;
+
+  @supports (height: 100dvh) {
+    --viewport-height: 100dvh;
+  }
+
   color-scheme: light;
 }
 

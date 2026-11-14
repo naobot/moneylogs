@@ -437,6 +437,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
 }
 export { recomputeLedgerMonth } from "./ledger";
 export { deleteLog } from "./deleteLog";
+export { deleteAccount } from "./deleteAccount";
 export { rollQuietDay } from "./rollQuietDay";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";

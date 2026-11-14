@@ -11,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import cx from "classnames";
 
+import { visibleViewportHeight } from "@/utils/keyboardInset";
 import { Align, computePosition, Placement } from "./popoverPosition";
 import "./Popover.scss";
 
@@ -61,7 +62,8 @@ export const Popover = ({
       computePosition(
         anchor.getBoundingClientRect(),
         { width: panel.offsetWidth, height: panel.offsetHeight },
-        { width: window.innerWidth, height: window.innerHeight },
+        // Above the on-screen keyboard, not behind it.
+        { width: window.innerWidth, height: visibleViewportHeight() },
         placement,
         align,
       ),
@@ -74,6 +76,8 @@ export const Popover = ({
     update();
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
+    // iOS reports the on-screen keyboard only through the visual viewport.
+    window.visualViewport?.addEventListener("resize", update);
     // The panel can change size after opening (e.g. the emoji list finishes loading).
     const observer =
       typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => update()) : undefined;
@@ -81,6 +85,7 @@ export const Popover = ({
     return () => {
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
       observer?.disconnect();
     };
   }, [open, update]);
