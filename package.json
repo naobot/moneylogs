@@ -10,6 +10,7 @@
     "cap:sync:dev": "CAPACITOR_BUILD=1 vp build --mode development && cap sync",
     "cap:ios": "npm run cap:sync:dev && cap run ios",
     "cap:android": "npm run cap:sync:dev && cap run android",
+    "version": "node scripts/sync-native-version.mjs && git add ios/App/App.xcodeproj/project.pbxproj android/app/build.gradle",
     "lint": "vp lint .",
     "preview": "vp preview",
     "seed-emulator": "npx tsx scripts/seed-emulator.ts",
