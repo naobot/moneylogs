@@ -7,14 +7,16 @@
   flex-direction: column;
   gap: 2em;
   padding-bottom: 1em;
+  // Fill the page's height, so the knick-knack drawer can run to the bottom.
+  flex: 1 0 auto;
 
   // Wider screens: logs on the left, the knick-knack drawer in a thinner column on
-  // the right (2:1). Narrow screens stack them, drawer last.
+  // the right (2:1), running the full height. Narrow screens stack them, drawer last,
+  // filling whatever height is left.
   &--split {
     @media (min-width: constants.$breakpoint-md) {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-      align-items: start;
       gap: 2em;
     }
   }
@@ -25,6 +27,10 @@
     flex-direction: column;
     gap: 2em;
     min-width: 0;
+  }
+
+  &__side {
+    flex: 1 0 auto;
   }
 
   &__section {
@@ -173,6 +179,9 @@
 
 // Everything the budget buddies have found: a framed drawer of one-ink pixel art.
 .KnickKnackDrawer {
+  // Takes all the height it's given; its contents stay at the top.
+  flex: 1 0 auto;
+
   &__heading {
     display: flex;
     align-items: center;
@@ -186,10 +195,12 @@
     padding: var(--space-3);
     border: var(--border-rule) solid var(--ink);
     background-color: var(--paper);
+    flex: 1 0 auto;
   }
 
   &__items {
     display: grid;
+    align-content: start;
     grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
     gap: var(--space-3);
     margin: 0;
