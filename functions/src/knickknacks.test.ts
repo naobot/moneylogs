@@ -52,6 +52,7 @@ describe("knick-knacks (functions)", () => {
   it("finds by season in the finder's hemisphere", () => {
     expect(findableIn({ month: 1, timezone: "America/Toronto" })).toEqual([
       "pinecone",
+      "persimmon",
       "pine_branch",
       "holly",
       "snowdrop",
@@ -63,6 +64,7 @@ describe("knick-knacks (functions)", () => {
     ]);
     expect(findableIn({ month: 7, timezone: "Australia/Sydney" })).toEqual([
       "pinecone",
+      "persimmon",
       "pine_branch",
       "holly",
       "snowdrop",

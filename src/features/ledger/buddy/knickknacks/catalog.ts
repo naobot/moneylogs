@@ -45,6 +45,24 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     seasons: ["autumn"],
     found: "a maple leaf drifted right onto the receipts. it's perfect!!",
   },
+  persimmon: {
+    name: "persimmon",
+    rarity: "rare",
+    seasons: ["autumn", "winter"],
+    found: "a persimmon! it's so ripe it's practically glowing ♡",
+  },
+  osmanthus: {
+    name: "osmanthus",
+    rarity: "common",
+    seasons: ["autumn"],
+    found: "a sprig of osmanthus. the whole room smells like apricots now~",
+  },
+  chestnut: {
+    name: "chestnut",
+    rarity: "common",
+    seasons: ["autumn"],
+    found: "a chestnut came rolling past, so i pounced on it! all mine ♪",
+  },
   pine_branch: {
     name: "pine branch",
     rarity: "common",
