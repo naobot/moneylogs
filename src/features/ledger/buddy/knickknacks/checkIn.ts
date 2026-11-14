@@ -1,6 +1,7 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
 import { reportError } from "@/utils/reportError";
+import { storage } from "@/platform";
 
 const checkInCallable = httpsCallable<{ ledgerId: string }, { ok: boolean }>(
   functions,
@@ -9,22 +10,12 @@ const checkInCallable = httpsCallable<{ ledgerId: string }, { ok: boolean }>(
 
 const key = (userDocId: string) => `ML__buddy_checkin_${userDocId}`;
 
-// Storage can throw (private mode, blocked site data). Losing the record only means
-// checking in again: the server counts each day once whatever the client does.
-const checkedInToday = (userDocId: string, today: string) => {
-  try {
-    return window.localStorage.getItem(key(userDocId)) === today;
-  } catch {
-    return false;
-  }
-};
+// Losing the record (private mode, blocked site data) only means checking in again: the
+// server counts each day once whatever the client does.
+const checkedInToday = (userDocId: string, today: string) => storage.get(key(userDocId)) === today;
 
 const markCheckedIn = (userDocId: string, today: string) => {
-  try {
-    window.localStorage.setItem(key(userDocId), today);
-  } catch {
-    // ignore
-  }
+  storage.set(key(userDocId), today);
 };
 
 /**

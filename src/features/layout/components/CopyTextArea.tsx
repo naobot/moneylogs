@@ -1,5 +1,6 @@
 import cx from "classnames";
 import { useRef, useState } from "react";
+import { copyText } from "@/platform";
 
 interface CopyTextAreaProps {
   value: string;
@@ -15,7 +16,8 @@ const CopyTextArea = ({ value, rows = 1 }: CopyTextAreaProps) => {
       textAreaRef.current.focus();
       textAreaRef.current.select();
 
-      navigator.clipboard.writeText(value);
+      // Selected above, so if the clipboard refuses, the text is ready to copy by hand.
+      void copyText(value);
       setShowCopiedMsg(true);
 
       setTimeout(() => {

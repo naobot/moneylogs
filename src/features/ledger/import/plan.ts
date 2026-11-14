@@ -1,6 +1,7 @@
 import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { activeCategories } from "@/utils/ledger";
 import { sumByCurrency } from "@/utils/ledgerEntries";
+import { storage } from "@/platform";
 import { ImportRow, ImportSource } from "./types";
 
 /** Rows per importLedgerEntries call; mirrors MAX_IMPORT_ROWS in functions/src/ledgerImportPlan.ts. */
@@ -125,16 +126,11 @@ const mappingKey = (ledgerId: string, source: ImportSource) =>
 
 /** The mapping used last time for this ledger and source, on this device. */
 export const readSavedMapping = (ledgerId: string, source: ImportSource): CategoryMapping => {
-  try {
-    const raw = window.localStorage.getItem(mappingKey(ledgerId, source));
-    const parsed: unknown = raw ? JSON.parse(raw) : {};
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-    return Object.fromEntries(
-      Object.entries(parsed).filter((e): e is [string, string] => typeof e[1] === "string"),
-    );
-  } catch {
-    return {};
-  }
+  const parsed = storage.getJSON(mappingKey(ledgerId, source));
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+  return Object.fromEntries(
+    Object.entries(parsed).filter((e): e is [string, string] => typeof e[1] === "string"),
+  );
 };
 
 export const saveMapping = (
@@ -142,9 +138,6 @@ export const saveMapping = (
   source: ImportSource,
   mapping: CategoryMapping,
 ): void => {
-  try {
-    window.localStorage.setItem(mappingKey(ledgerId, source), JSON.stringify(mapping));
-  } catch {
-    // A convenience only: next time the user maps again.
-  }
+  // A convenience only: if it doesn't stick, next time the user maps again.
+  storage.setJSON(mappingKey(ledgerId, source), mapping);
 };

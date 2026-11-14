@@ -2,6 +2,7 @@ import dayjs from "@/utils/configuredDayjs";
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerMonth } from "@/types/ledger";
 import { monthKeyOf } from "@/utils/ledger";
+import { storage } from "@/platform";
 
 /** The buddy checks in on its own from 17:00 in the viewer's timezone. */
 export const CHECK_IN_FROM_HOUR = 17;
@@ -80,21 +81,11 @@ export const eveningCheckIn = ({
 
 const checkInKey = (ledgerId: string) => `ML__buddy_checkin_${ledgerId}`;
 
-// Storage can throw (private mode, blocked site data) or be missing. Losing the record
-// only means the buddy might check in twice in a day.
+// Losing the record only means the buddy might check in twice in a day.
 /** Whether the buddy already checked in on this log today. */
-export const checkedInToday = (ledgerId: string, today: string): boolean => {
-  try {
-    return window.localStorage.getItem(checkInKey(ledgerId)) === today;
-  } catch {
-    return false;
-  }
-};
+export const checkedInToday = (ledgerId: string, today: string): boolean =>
+  storage.get(checkInKey(ledgerId)) === today;
 
 export const markCheckedIn = (ledgerId: string, today: string) => {
-  try {
-    window.localStorage.setItem(checkInKey(ledgerId), today);
-  } catch {
-    // ignore
-  }
+  storage.set(checkInKey(ledgerId), today);
 };
