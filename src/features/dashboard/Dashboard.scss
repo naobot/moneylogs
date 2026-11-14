@@ -7,6 +7,31 @@
   flex-direction: column;
   gap: 2em;
   padding-bottom: 1em;
+  // Fill the page's height, so the knick-knack drawer can run to the bottom.
+  flex: 1 0 auto;
+
+  // Wider screens: logs on the left, the knick-knack drawer in a thinner column on
+  // the right (2:1), running the full height. Narrow screens stack them, drawer last,
+  // filling whatever height is left.
+  &--split {
+    @media (min-width: constants.$breakpoint-md) {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      gap: 2em;
+    }
+  }
+
+  &__main,
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    min-width: 0;
+  }
+
+  &__side {
+    flex: 1 0 auto;
+  }
 
   &__section {
     display: flex;
@@ -149,5 +174,84 @@
     font-size: 0.85em;
     opacity: 0.8;
     font-variant-numeric: tabular-nums;
+  }
+}
+
+// Everything the budget buddies have found: a framed drawer of one-ink pixel art.
+.KnickKnackDrawer {
+  // Takes all the height it's given; its contents stay at the top.
+  flex: 1 0 auto;
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+
+  &__box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: var(--border-rule) solid var(--ink);
+    background-color: var(--paper);
+    flex: 1 0 auto;
+  }
+
+  &__items {
+    display: grid;
+    align-content: start;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3em;
+    text-align: center;
+
+    .KnickKnack {
+      flex: none;
+    }
+  }
+
+  &__name {
+    font-size: 0.8em;
+    text-transform: lowercase;
+  }
+
+  &__count {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // A find the buddy hasn't shown you yet: points to the log, doesn't reveal it.
+  &__waiting {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    align-self: flex-start;
+    padding: 0.2em 0.5em;
+    border: var(--border-hairline) dashed var(--ink);
+    font-size: 0.85em;
+    color: var(--ink);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      border-style: solid;
+      outline: none;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: 0.85em;
+    color: var(--ink-muted);
   }
 }
