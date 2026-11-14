@@ -45,13 +45,14 @@ describe("LedgerTourProvider", () => {
       ),
     );
 
+  // The bubble is portalled to <body>; the marker it leaves behind shows which target owns it.
   const shownAt = () =>
     Array.from(container.querySelectorAll("[data-target]"))
-      .filter((el) => el.querySelector(".TutorialTooltip"))
+      .filter((el) => el.querySelector("span[hidden]"))
       .map((el) => el.getAttribute("data-target"));
 
   const clickTip = () =>
-    act(() => container.querySelector<HTMLElement>(".TutorialTooltip")!.click());
+    act(() => document.querySelector<HTMLElement>(".TutorialTooltip")!.click());
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,10 +79,17 @@ describe("LedgerTourProvider", () => {
     expect(updateUserFields).toHaveBeenCalledWith("doc-1", { "tutorials.ledgerTour": "<now>" });
   });
 
+  it("renders one bubble, outside any clipping container", () => {
+    render();
+    const bubbles = document.querySelectorAll(".TutorialTooltip");
+    expect(bubbles).toHaveLength(1);
+    expect(container.contains(bubbles[0])).toBe(false);
+  });
+
   it("can be skipped from any tip", () => {
     render();
     clickTip();
-    act(() => container.querySelector<HTMLElement>(".TutorialTooltip__skip")!.click());
+    act(() => document.querySelector<HTMLElement>(".TutorialTooltip__skip")!.click());
     expect(shownAt()).toEqual([]);
     expect(updateUserFields).toHaveBeenCalledTimes(1);
   });

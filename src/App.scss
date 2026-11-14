@@ -1245,26 +1245,28 @@ h6,
   opacity: 0.5;
 }
 
+// Positioned (fixed, in a portal) by TutorialTooltip.tsx, so no container can bury or
+// crop it. --tooltip-arrow-x points the arrow at the anchor when the bubble has slid.
 .TutorialTooltip {
-  position: absolute;
-  z-index: 300;
+  position: fixed;
+  z-index: var(--z-tooltip);
+  box-sizing: border-box;
   background-color: var(--paper);
   color: var(--ink);
   border: var(--border-hairline) solid var(--ink);
   padding: 0.5em 0.8em;
   border-radius: var(--radius-none);
-  font-size: 0.72em;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 400;
   width: max-content;
-  max-width: min(240px, 80vw);
+  max-width: min(240px, calc(100vw - 16px));
   text-align: center;
   cursor: pointer;
   line-height: 1.4;
   display: flex;
   flex-direction: column;
   gap: 0.2em;
-  left: 50%;
-  transform: translateX(-50%);
 
   small {
     font-size: 0.78em;
@@ -1275,58 +1277,26 @@ h6,
   &::after {
     content: "";
     position: absolute;
-    left: 50%;
+    left: var(--tooltip-arrow-x, 50%);
     transform: translateX(-50%);
     border: 6px solid transparent;
   }
 
-  &--bottom {
-    top: calc(100% + 8px);
-
-    &::after {
-      bottom: 100%;
-      border-bottom-color: var(--ink);
-    }
+  &--bottom::after {
+    bottom: 100%;
+    border-bottom-color: var(--ink);
   }
 
-  &--top {
-    bottom: calc(100% + 8px);
-
-    &::after {
-      top: 100%;
-      border-top-color: var(--ink);
-    }
+  &--top::after {
+    top: 100%;
+    border-top-color: var(--ink);
   }
 
   &--center {
-    top: 50%;
-    transform: translateX(-50%) translateY(-50%);
     border-width: var(--border-rule);
 
     &::after {
       display: none;
-    }
-  }
-
-  // Anchors at a screen edge: pin the bubble to that edge so it stays on screen.
-  &--start {
-    left: 0;
-    transform: none;
-
-    &::after {
-      left: 1.5em;
-    }
-  }
-
-  &--end {
-    left: auto;
-    right: 0;
-    transform: none;
-
-    &::after {
-      left: auto;
-      right: 1.5em;
-      transform: translateX(50%);
     }
   }
 
@@ -1339,11 +1309,6 @@ h6,
     text-decoration: underline;
     cursor: pointer;
   }
-}
-
-// Gives a tour tip something to position against.
-.TourAnchor {
-  position: relative;
 }
 
 .TimezoneSetter {

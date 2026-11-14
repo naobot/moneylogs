@@ -23,7 +23,6 @@ import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
-import cx from "classnames";
 
 import "./Ledger.scss";
 
@@ -53,9 +52,7 @@ export const LedgerShell = (props: LedgerShellProps) => (
 
 const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const { user } = useCurrentUser();
-  const { tip, activeTarget } = useLedgerTour();
-  const anchor = (className: string, target: string) =>
-    cx(className, { TourAnchor: activeTarget === target });
+  const { tip } = useLedgerTour();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
@@ -89,10 +86,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
               <IconText type={"gear"} fill={"white"} text="manage" />
             </div>
-            <div
-              className={anchor("handler Group__header__item", "categories")}
-              onClick={() => setShowCategories(true)}
-            >
+            <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
               <IconText type={"pencil"} fill={"white"} text="categories" />
               {tip("categories")}
             </div>
@@ -116,7 +110,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
 
         <div className="Ledger__body">
           <nav className="Ledger__month" aria-label="Month">
-            <div className={anchor("Ledger__month__controls", "month")}>
+            <div className="Ledger__month__controls">
               {tip("month")}
               <RowButton
                 glyph
@@ -138,12 +132,12 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               )}
             </div>
             {/* Always about this month, whichever month is being browsed. */}
-            <div className={anchor("Ledger__month__buddy", "buddy")}>
+            <div className="Ledger__month__buddy">
               {tip("buddy")}
               <BudgetBuddy ledger={ledger} />
             </div>
             <Link
-              className={anchor("Ledger__month__view", "stats")}
+              className="Ledger__month__view"
               to={ledgerViewPath(ledger.id, otherView, month, currentMonth)}
             >
               {otherView === "stats" ? "stats ›" : "‹ entries"}

@@ -42,10 +42,6 @@ export const EntryForm = ({
   const tour = useLedgerTour();
   // The first-run tour only walks through the add form.
   const tip = (target: LedgerTourTarget) => (mode === "add" ? tour.tip(target) : null);
-  const anchor = (className: string, ...targets: LedgerTourTarget[]) =>
-    cx(className, {
-      TourAnchor: mode === "add" && targets.some((t) => t === tour.activeTarget),
-    });
 
   // A different default date (e.g. after switching month) resets the add form's date.
   useEffect(() => {
@@ -111,7 +107,7 @@ export const EntryForm = ({
       {/* Mirrors the social post editor: a compact, label-less header row
           (date · amount + currency · category), then the note and a small button. */}
       <div className="EntryForm__header">
-        <div className={anchor("EntryForm__header__left", "date")}>
+        <div className="EntryForm__header__left">
           {tip("date")}
           <input
             type="date"
@@ -121,7 +117,7 @@ export const EntryForm = ({
             onChange={(e) => set({ date: e.target.value })}
           />
         </div>
-        <div className={anchor("EntryForm__header__center", "amount", "currency")}>
+        <div className="EntryForm__header__center">
           {tip("amount")}
           {tip("currency")}
           <input
@@ -148,7 +144,7 @@ export const EntryForm = ({
             ))}
           </select>
         </div>
-        <div className={anchor("EntryForm__header__right", "category")}>
+        <div className="EntryForm__header__right">
           {tip("category")}
           <select
             aria-label="Category"
@@ -173,7 +169,7 @@ export const EntryForm = ({
           )}
         </div>
       </div>
-      <div className={anchor("EntryForm__body", "note")}>
+      <div className="EntryForm__body">
         {tip("note")}
         <label className="EntryForm__noteField">
           <span className="EntryForm__noteLabel">Note:</span>
