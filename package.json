@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vp dev",
     "build": "vp build && node scripts/write-version.mjs",
+    "cap:sync": "CAPACITOR_BUILD=1 vp build && cap sync",
+    "cap:sync:dev": "CAPACITOR_BUILD=1 vp build --mode development && cap sync",
+    "cap:ios": "npm run cap:sync:dev && cap run ios",
+    "cap:android": "npm run cap:sync:dev && cap run android",
     "lint": "vp lint .",
     "preview": "vp preview",
     "seed-emulator": "npx tsx scripts/seed-emulator.ts",
@@ -15,6 +19,13 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/keyboard": "8.0.6",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -33,6 +44,7 @@
     "sentry": "^0.37.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/firebase": "^2.4.32",
     "@types/lodash": "^4.17.13",

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isNative } from "@/platform";
 
 // How long the tab must have been hidden before a return checks for a new deploy.
 // Tune here (4 hours). Kept generous so a brief step-away never prompts.
@@ -47,6 +48,9 @@ export const useAppVersionRefresh = () => {
   const hiddenAt = useRef<number | null>(null);
 
   useEffect(() => {
+    // Native apps ship their build inside the app and update through the stores (with
+    // the minimum-version gate); a deployed version.json says nothing about them.
+    if (isNative()) return;
     let cancelled = false;
 
     // Record the build this tab is running. If it can't be fetched (dev/offline),

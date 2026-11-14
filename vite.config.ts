@@ -1290,9 +1290,12 @@ export default defineConfig({
     () =>
       [
         react(),
-        cdn({
-          modules: ["react", "react-dom"],
-        }),
+        // The web loads React from a CDN. The native apps bundle it: they must start
+        // offline, and a WebView can't count on reaching a CDN (cap:sync sets this).
+        !process.env.CAPACITOR_BUILD &&
+          cdn({
+            modules: ["react", "react-dom"],
+          }),
         sourcemapExclude({ excludeNodeModules: true }),
       ] as PluginOption[],
   ),
