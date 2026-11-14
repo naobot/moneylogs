@@ -1,7 +1,6 @@
 import { BuddyFacts, BuddyState } from "./buddyMood";
 import type { CheckIn } from "./buddyCheckIn";
 import { BuddyMood } from "./faces";
-import { KNICK_KNACKS, KnickKnackId } from "./knickknacks/catalog";
 
 /**
  * What the buddy says when clicked. Chatty and a bit vague on purpose: it rounds the
@@ -145,12 +144,6 @@ export const CHECK_IN_LINES: Record<CheckIn, readonly string[]> = {
     "way under our usual for a day. keep it up, human ♪",
   ],
 };
-
-/** What it says when showing off something it found. */
-export const buddyFindComment = (
-  item: KnickKnackId,
-  { asleep, seed }: Pick<BuddyState, "asleep" | "seed">,
-): string => drowsy(KNICK_KNACKS[item].found, asleep, seed);
 
 /** Stable for the day (seed). */
 export const buddyCheckInComment = (

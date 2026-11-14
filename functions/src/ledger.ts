@@ -1,14 +1,13 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { getFirestore, FieldValue, DocumentReference } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import {
   affectedMonths,
   aggregateFieldsChanged,
   aggregateMonth,
   AggregatableEntry,
 } from "./ledgerAggregate";
-import { BudgetCategory, isCurrentMonth } from "./ledgerBudget";
+import { isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
-import { maybeFindKnickKnack } from "./knickknackFind";
 
 /**
  * Keep ledgers/{ledgerId}/months/{YYYY-MM} in sync with its entries.
@@ -20,9 +19,6 @@ import { maybeFindKnickKnack } from "./knickknackFind";
  *
  * For the current month it then sends any budget alerts that are newly due
  * (ledgerBudget.ts).
- *
- * A newly logged entry also gives its author the buddy's roll of the day for a
- * knick-knack (knickknackFind.ts).
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -72,21 +68,6 @@ export const recomputeLedgerMonth = onDocumentWritten(
         });
       } catch (error) {
         console.error(`recomputeLedgerMonth: budget alerts for ${ledgerId}/${month}:`, error);
-      }
-    }
-
-    // New entries only: editing or deleting one never earns a roll.
-    const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
-    if (!before && authorRef && typeof authorRef.id === "string") {
-      try {
-        await maybeFindKnickKnack({
-          db,
-          ledgerRef,
-          authorRef,
-          categories: (ledgerSnap.get("categories") ?? []) as BudgetCategory[],
-        });
-      } catch (error) {
-        console.error(`recomputeLedgerMonth: knick-knack roll for ${ledgerId}:`, error);
       }
     }
   },
