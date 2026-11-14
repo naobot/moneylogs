@@ -6,6 +6,7 @@ import { initTheme } from "@/utils/theme";
 import { initDisplayPrefs } from "@/utils/displayPrefs";
 import { initKeyboardInset } from "@/utils/keyboardInset";
 import App from "@/App";
+import { nativePlatform } from "@/platform";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -31,6 +32,9 @@ const isNetworkFetchError = (event: Sentry.ErrorEvent, hint: Sentry.EventHint): 
   return NETWORK_FETCH_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
 };
 
+// "web", "ios" or "android": every event is tagged so issues can be split by app.
+const platform = nativePlatform() ?? "web";
+
 Sentry.init({
   dsn: "https://0e984f575ce18cc4c1dc79cfa56e845e@o4511585490239488.ingest.us.sentry.io/4511585495744512",
   dataCollection: {
@@ -48,7 +52,9 @@ Sentry.init({
     }
     return event;
   },
-  integrations: [Sentry.replayIntegration()],
+  initialScope: { tags: { platform } },
+  // Session replay stays web-only, which keeps the app-store privacy declarations simple.
+  integrations: platform === "web" ? [Sentry.replayIntegration()] : [],
   // Session Replay
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
   replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.,
