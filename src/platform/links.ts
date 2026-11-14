@@ -21,3 +21,11 @@ export const PUBLIC_HOST = "moneylogs.app";
  * their own links. A native build serves itself from localhost, so it uses PUBLIC_HOST.
  */
 export const publicHost = (): string => (isNative() ? PUBLIC_HOST : window.location.host);
+
+/**
+ * A full link to `path` that works for someone else, e.g. `https://moneylogs.app/g/abc/invite`,
+ * for the copy box and the share sheet. Always https: a bare host pastes as text that many
+ * apps won't linkify.
+ */
+export const publicUrl = (path: string, host: string = publicHost()): string =>
+  `https://${host}${path.startsWith("/") ? path : `/${path}`}`;

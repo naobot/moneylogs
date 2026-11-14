@@ -37,6 +37,7 @@ import type { PostFocus } from "./LogPosts/LogPosts";
 import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
 import { storage } from "@/platform";
+import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
 
 const agreeWarningKey = (groupId: string) => `ML__${groupId}__agreeWarning`;
 const agreedToEndWarning = (groupId: string) => storage.get(agreeWarningKey(groupId)) === "1";
@@ -475,6 +476,10 @@ export const Group = ({
             </p>
             <p>Do not share the group URL with anyone you do not want participating!</p>
             <CopyTextArea value={shareUrl(`/g/${groupId}/invite`)} />
+            <ShareLinkButton
+              title={`Join ${group.title} on moneylogs`}
+              url={shareUrl(`/g/${groupId}/invite`)}
+            />
           </Modal.Body>
           <Modal.Actions>
             <Modal.CancelButton text="Close" />
