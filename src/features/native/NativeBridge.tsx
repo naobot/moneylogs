@@ -7,10 +7,11 @@ import { auth } from "@/config/firebase-config";
 import { isNative, nativePlatform } from "@/platform";
 import { useTheme } from "@/utils/theme";
 import { backButtonAction } from "./backButton";
+import { deepLinkPath } from "./deepLink";
 
 /**
- * Wires the native shell to the app: Android's back button, the status bar's ink, and
- * the splash screen. Renders nothing, and does nothing in a browser. Mount inside the
+ * Wires the native shell to the app: Android's back button, links opened from outside,
+ * the status bar's ink, and the splash screen. Renders nothing, and does nothing in a browser. Mount inside the
  * router.
  */
 const NativeBridge = () => {
@@ -31,6 +32,19 @@ const NativeBridge = () => {
       if (action === "back") void navigate(-1);
       else if (action === "home") void navigate("/", { replace: true });
       else void CapApp.exitApp();
+    });
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, [navigate]);
+
+  // Universal links (iOS) and app links (Android) for moneylogs.app open here, on the
+  // same route the web would show, so invites and CheckAuth's redirect work unchanged.
+  useEffect(() => {
+    if (!isNative()) return;
+    const listener = CapApp.addListener("appUrlOpen", ({ url }) => {
+      const path = deepLinkPath(url);
+      if (path) void navigate(path);
     });
     return () => {
       void listener.then((handle) => handle.remove());
