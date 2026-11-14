@@ -30,6 +30,7 @@ import { GroupPage } from "@/pages/group";
 import { InvitePage } from "@/pages/group/invite";
 import { LedgerPage, LedgerStatsPage } from "@/pages/ledger";
 import { LedgerInvitePage } from "@/pages/ledger/invite";
+import { Privacy } from "@/pages/privacy";
 import { About } from "@/pages/about";
 import { Notifications } from "@/pages/notifications";
 import { Welcome } from "@/pages/welcome";
@@ -104,6 +105,7 @@ const App = () => {
             <Routes>
               <Route path="/login" element={<Auth />} />
               <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/create" element={<CreateNewLog />} />
               <Route
                 path="/welcome"
