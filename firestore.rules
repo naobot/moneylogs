@@ -38,6 +38,15 @@ service cloud.firestore {
         && request.resource.data.type in ["log_created", "log_joined"]
         && request.resource.data.readAt == null;
     }
+    // Push tokens, one per app install (features/push/devicePush.ts). The owner registers
+    // and removes their own; sendPushOnNotification reads them with the Admin SDK.
+    match /users/{userDocId}/devices/{installId} {
+      allow read, delete: if ownsUserDoc(userDocId);
+      allow create, update: if ownsUserDoc(userDocId)
+        && request.resource.data.keys().hasOnly(["token", "platform", "updatedAt"])
+        && request.resource.data.token is string
+        && request.resource.data.platform in ["ios", "android"];
+    }
     // Knick-knacks the budget buddy found (rolled by recomputeLedgerMonth). The owner may
     // read them and mark each one seen, once; only the server creates or deletes them.
     // users/{id}/buddy (the daily roll marker) has no rule: server only.

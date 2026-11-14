@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
 
 import Button from "@/components/Button";
 import { useCurrentUser } from "@/contexts";
@@ -10,6 +12,8 @@ import {
 import { useNow } from "@/hooks/useNow";
 import { AppNotification } from "@/types/notification";
 import { NotificationItem } from "@/features/notifications/NotificationItem";
+import { db } from "@/config/firebase-config";
+import { notificationHref } from "@/utils/notificationTypes";
 
 import "@/features/notifications/notifications.scss";
 
@@ -24,6 +28,36 @@ export const Notifications = () => {
   const { items, isLoading, isError, hasMore, isLoadingMore, loadMore } =
     useNotificationFeed(userDocId);
   const now = useNow().toDate();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const openId = searchParams.get("open");
+
+  // A tapped push lands here with ?open=<id>: follow that notification's own link, the
+  // same one its row in the list opens, and mark it read on the way.
+  useEffect(() => {
+    if (!userDocId || !openId) return;
+    const run = { cancelled: false };
+    void getDoc(doc(db, "users", userDocId, "notifications", openId))
+      .then((snap) => {
+        if (run.cancelled) return;
+        if (!snap.exists()) {
+          void navigate("/notifications", { replace: true });
+          return;
+        }
+        const n = {
+          id: snap.id,
+          ...snap.data({ serverTimestamps: "estimate" }),
+        } as AppNotification;
+        markNotificationRead(userDocId, n).catch(() => {});
+        void navigate(notificationHref(n), { replace: true });
+      })
+      .catch(() => {
+        if (!run.cancelled) void navigate("/notifications", { replace: true });
+      });
+    return () => {
+      run.cancelled = true;
+    };
+  }, [userDocId, openId, navigate]);
 
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
   const markedFor = useRef<string>();

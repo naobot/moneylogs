@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor-firebase/messaging": "8.5.2",
     "@capacitor/android": "8.6.0",
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.6.0",
@@ -63,6 +64,9 @@
     "vite-plus": "latest"
   },
   "overrides": {
+    "@capacitor-firebase/messaging": {
+      "firebase": "$firebase"
+    },
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vitest": "5.1.0"
   },
