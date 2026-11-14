@@ -1,5 +1,6 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
+import { storage } from "@/platform";
 
 const rollQuietDayCallable = httpsCallable<{ ledgerId: string }, { ok: boolean }>(
   functions,
@@ -8,22 +9,12 @@ const rollQuietDayCallable = httpsCallable<{ ledgerId: string }, { ok: boolean }
 
 const key = (userDocId: string) => `ML__buddy_quietroll_${userDocId}`;
 
-// Storage can throw (private mode, blocked site data). Losing the record only means
-// asking again: the server allows one roll a day whatever the client does.
-const askedToday = (userDocId: string, today: string) => {
-  try {
-    return window.localStorage.getItem(key(userDocId)) === today;
-  } catch {
-    return false;
-  }
-};
+// Losing the record only means asking again: the server allows one roll a day whatever
+// the client does.
+const askedToday = (userDocId: string, today: string) => storage.get(key(userDocId)) === today;
 
 const markAsked = (userDocId: string, today: string) => {
-  try {
-    window.localStorage.setItem(key(userDocId), today);
-  } catch {
-    // ignore
-  }
+  storage.set(key(userDocId), today);
 };
 
 /**

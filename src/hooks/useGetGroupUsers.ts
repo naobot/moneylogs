@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, query, where, onSnapshot, doc, DocumentSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
+import { storage } from "@/platform";
 
 // type UseGetGroupUsersParams = {
 //   userIds: string[] // Array of user document IDs
@@ -33,14 +34,14 @@ const getCacheKey = (groupId: string) => `groupUsers_${groupId}`;
 
 export const getCachedUsers = (groupId: string): CacheableUserData[] | null => {
   try {
-    const cached = localStorage.getItem(getCacheKey(groupId));
+    const cached = storage.get(getCacheKey(groupId));
     if (!cached) return null;
 
     const { data, timestamp } = JSON.parse(cached);
     const isExpired = Date.now() - timestamp > CACHE_DURATION;
 
     if (isExpired) {
-      localStorage.removeItem(getCacheKey(groupId));
+      storage.remove(getCacheKey(groupId));
       return null;
     }
 
@@ -57,7 +58,7 @@ export const setCachedUsers = (groupId: string, users: CacheableUserData[]) => {
       data: users,
       timestamp: Date.now(),
     };
-    localStorage.setItem(getCacheKey(groupId), JSON.stringify(cacheData));
+    storage.set(getCacheKey(groupId), JSON.stringify(cacheData));
     console.log(`💾 Cached user profiles for group ${groupId}`);
   } catch (error) {
     console.warn("Failed to cache users:", error);

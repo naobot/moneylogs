@@ -30,6 +30,7 @@ import Icon from "@/components/Icon";
 import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import { markdownColorMode, useTheme } from "@/utils/theme";
+import { storage } from "@/platform";
 
 const DRAFT_KEY = "ML__logPostDraft";
 
@@ -69,7 +70,7 @@ const LogPostEditor = forwardRef(
     const theme = useTheme();
     const [newEntryContent, newEntryContentSet] = useState<string | null>(() => {
       if (type === "new") {
-        const savedDraft = localStorage.getItem(DRAFT_KEY);
+        const savedDraft = storage.get(DRAFT_KEY);
         return savedDraft || "";
       }
       return content;
@@ -153,7 +154,7 @@ const LogPostEditor = forwardRef(
     };
 
     const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
-      localStorage.setItem(LAST_CURRENCY_KEY, e.target.value);
+      storage.set(LAST_CURRENCY_KEY, e.target.value);
       selectedCurrencySet(e.target.value as Currency);
     };
 
@@ -180,7 +181,7 @@ const LogPostEditor = forwardRef(
           post_id: postId,
         });
 
-        localStorage.removeItem(DRAFT_KEY);
+        storage.remove(DRAFT_KEY);
         completeTutorial();
 
         isCreateNewEntrySet(false);
@@ -279,9 +280,9 @@ const LogPostEditor = forwardRef(
     useEffect(() => {
       if (type === "new" && newEntryContent !== null) {
         if (newEntryContent.trim() === "") {
-          localStorage.removeItem(DRAFT_KEY);
+          storage.remove(DRAFT_KEY);
         } else {
-          localStorage.setItem(DRAFT_KEY, newEntryContent);
+          storage.set(DRAFT_KEY, newEntryContent);
         }
       }
     }, [newEntryContent, type]);

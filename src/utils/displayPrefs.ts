@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from "react";
+import { storage } from "@/platform";
 
 /**
  * Display preferences: how dates/times read and how entry text is set. Like the theme,
- * they are viewing preferences kept per device in localStorage, not account data.
+ * they are viewing preferences kept per device in local storage, not account data.
  * Entry size and alignment reach the CSS as data attributes on <html> (see the
  * --entry-* tokens in src/tokens.scss); date formats are read by src/utils/dateFormat.ts.
  */
@@ -49,15 +50,9 @@ export const parsePrefs = (raw: unknown): DisplayPrefs => {
   };
 };
 
-// Storage can throw (private mode, blocked site data); these are conveniences.
 export const readStoredPrefs = (): DisplayPrefs => {
-  try {
-    const value = window.localStorage.getItem(STORAGE_KEY);
-    if (value) return parsePrefs(JSON.parse(value));
-  } catch {
-    // ignore
-  }
-  return DEFAULT_DISPLAY_PREFS;
+  const value = storage.getJSON(STORAGE_KEY);
+  return value === undefined ? DEFAULT_DISPLAY_PREFS : parsePrefs(value);
 };
 
 const applyToDocument = (prefs: DisplayPrefs) => {
@@ -79,11 +74,7 @@ export const getDisplayPrefs = (): DisplayPrefs => current;
 export const setDisplayPrefs = (changes: Partial<DisplayPrefs>) => {
   current = parsePrefs({ ...current, ...changes });
   applyToDocument(current);
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {
-    // ignore
-  }
+  storage.setJSON(STORAGE_KEY, current);
   listeners.forEach((listener) => listener());
 };
 
