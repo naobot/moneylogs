@@ -28,6 +28,7 @@ import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
 import Icon from "@/components/Icon";
 
 import cx from "classnames";
+import { storage } from "@/platform";
 
 type LogMember = FullUserData & {
   lastUpdated?: Record<string, { seconds: number }>;
@@ -75,12 +76,8 @@ const LogsMenu = ({
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(MEMBER_ORDER_KEY(groupId)) ?? "null");
-      setOrderedIds(Array.isArray(saved) ? saved : []);
-    } catch {
-      setOrderedIds([]);
-    }
+    const saved = storage.getJSON(MEMBER_ORDER_KEY(groupId));
+    setOrderedIds(Array.isArray(saved) ? saved : []);
   }, [groupId]);
 
   const isSpectator = useMemo(() => {
@@ -122,7 +119,7 @@ const LogsMenu = ({
     const reordered = arrayMove(orderedMembers, oldIndex, newIndex);
     const newIds = reordered.map((m) => m.id);
     setOrderedIds(newIds);
-    localStorage.setItem(MEMBER_ORDER_KEY(groupId), JSON.stringify(newIds));
+    storage.setJSON(MEMBER_ORDER_KEY(groupId), newIds);
   };
 
   const skeletonCount = Math.min(Math.max(0, loadingMemberCount), MAX_MEMBER_SKELETONS);

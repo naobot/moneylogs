@@ -5,6 +5,7 @@ import { useFirebaseCollection } from "./useFirebase";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/config/firebase-config";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { storage } from "@/platform";
 
 export type GroupsResponse = {
   currentGroups: Array<Group>;
@@ -24,14 +25,14 @@ const getUserDocCacheKey = (userId: string) => `userDocId_${userId}`;
 
 const getCachedGroups = (userId: string): Group[] | null => {
   try {
-    const cached = localStorage.getItem(getCacheKey(userId));
+    const cached = storage.get(getCacheKey(userId));
     if (!cached) return null;
 
     const { data, timestamp } = JSON.parse(cached);
     const isExpired = Date.now() - timestamp > CACHE_DURATION;
 
     if (isExpired) {
-      localStorage.removeItem(getCacheKey(userId));
+      storage.remove(getCacheKey(userId));
       return null;
     }
 
@@ -48,7 +49,7 @@ const setCachedGroups = (userId: string, groups: Group[]) => {
       data: groups,
       timestamp: Date.now(),
     };
-    localStorage.setItem(getCacheKey(userId), JSON.stringify(cacheData));
+    storage.set(getCacheKey(userId), JSON.stringify(cacheData));
     console.log("💾 Cached current groups");
   } catch (error) {
     console.warn("Failed to cache groups:", error);
@@ -57,14 +58,14 @@ const setCachedGroups = (userId: string, groups: Group[]) => {
 
 const getCachedUserDocId = (userId: string): string | null => {
   try {
-    const cached = localStorage.getItem(getUserDocCacheKey(userId));
+    const cached = storage.get(getUserDocCacheKey(userId));
     if (!cached) return null;
 
     const { data, timestamp } = JSON.parse(cached);
     const isExpired = Date.now() - timestamp > USER_DOC_CACHE_DURATION;
 
     if (isExpired) {
-      localStorage.removeItem(getUserDocCacheKey(userId));
+      storage.remove(getUserDocCacheKey(userId));
       return null;
     }
 
@@ -81,7 +82,7 @@ const setCachedUserDocId = (userId: string, docId: string) => {
       data: docId,
       timestamp: Date.now(),
     };
-    localStorage.setItem(getUserDocCacheKey(userId), JSON.stringify(cacheData));
+    storage.set(getUserDocCacheKey(userId), JSON.stringify(cacheData));
     console.log("💾 Cached user doc ID");
   } catch (error) {
     console.warn("Failed to cache user doc ID:", error);

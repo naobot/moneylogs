@@ -5,6 +5,7 @@ import { ArchivedLogsMap } from "@/utils/archivedLogs";
 import type { NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
 import type { Currency } from "@/types/user";
+import { storage } from "@/platform";
 
 export type MoneyLog = {
   id: number;
@@ -95,7 +96,7 @@ const getCacheKey = (userId: string) => `currentUser_${userId}`;
 
 export const getCachedUser = (userId: string): CacheableUserData | null => {
   try {
-    const cached = localStorage.getItem(getCacheKey(userId));
+    const cached = storage.get(getCacheKey(userId));
     if (!cached) return null;
 
     const { data, timestamp } = JSON.parse(cached) as {
@@ -105,7 +106,7 @@ export const getCachedUser = (userId: string): CacheableUserData | null => {
     const isExpired = Date.now() - timestamp > CACHE_DURATION;
 
     if (isExpired) {
-      localStorage.removeItem(getCacheKey(userId));
+      storage.remove(getCacheKey(userId));
       return null;
     }
 
@@ -122,7 +123,7 @@ export const setCachedUser = (userId: string, user: CacheableUserData) => {
       data: user,
       timestamp: Date.now(),
     };
-    localStorage.setItem(getCacheKey(userId), JSON.stringify(cacheData));
+    storage.set(getCacheKey(userId), JSON.stringify(cacheData));
     console.log("💾 Cached current user profile");
   } catch (error) {
     console.warn("Failed to cache user:", error);

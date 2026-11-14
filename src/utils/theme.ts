@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from "react";
+import { storage } from "@/platform";
 
 /**
  * Display theme. "paper" is ink on paper; "night" (Night shift) is the same two inks
- * swapped. Kept per device in localStorage: it is a viewing preference, not account
+ * swapped. Kept per device in local storage: it is a viewing preference, not account
  * data. The CSS lives in src/tokens.scss under :root[data-theme="night"].
  */
 export type Theme = "paper" | "night";
@@ -13,15 +14,9 @@ let current: Theme = "paper";
 
 const isTheme = (value: unknown): value is Theme => value === "paper" || value === "night";
 
-// Storage can throw (private mode, blocked site data); the theme is a convenience.
 export const readStoredTheme = (): Theme => {
-  try {
-    const value = window.localStorage.getItem(STORAGE_KEY);
-    if (isTheme(value)) return value;
-  } catch {
-    // ignore
-  }
-  return "paper";
+  const value = storage.get(STORAGE_KEY);
+  return isTheme(value) ? value : "paper";
 };
 
 const applyToDocument = (theme: Theme) => {
@@ -41,11 +36,7 @@ export const getTheme = (): Theme => current;
 export const setTheme = (theme: Theme) => {
   current = theme;
   applyToDocument(theme);
-  try {
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  } catch {
-    // ignore
-  }
+  storage.set(STORAGE_KEY, theme);
   listeners.forEach((listener) => listener());
 };
 
