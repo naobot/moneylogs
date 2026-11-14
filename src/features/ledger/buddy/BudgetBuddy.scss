@@ -26,8 +26,17 @@
     }
   }
 
+  // It found something: a "!" beside the face, which hops once as it appears.
+  &__found {
+    display: inline-block;
+    margin-left: 0.15em;
+    vertical-align: middle;
+    animation: buddy-bounce 0.45s ease-out 1;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    &__face--react {
+    &__face--react,
+    &__found {
       animation: none;
     }
   }
@@ -80,5 +89,29 @@
     margin: 0;
     font-size: 0.9em;
     line-height: 1.4;
+  }
+
+  // Showing off a find: inverted (emphasis is inversion), the knick-knack on the left
+  // and what it says on the right. The art draws in currentColor, so in the inverse ink.
+  &--find {
+    color: var(--inverse-ink);
+    background-color: var(--inverse-surface);
+    border-color: var(--inverse-surface);
+    max-width: min(22em, calc(100vw - 32px));
+
+    &::before {
+      background: var(--inverse-surface);
+      border-color: var(--inverse-surface);
+    }
+  }
+
+  &__find {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+
+    .KnickKnack {
+      flex: none;
+    }
   }
 }

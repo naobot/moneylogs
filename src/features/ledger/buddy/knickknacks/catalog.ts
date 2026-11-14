@@ -32,6 +32,36 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     seasons: ["autumn"],
     found: "a maple leaf drifted right onto the receipts. it's perfect!!",
   },
+  pine_branch: {
+    name: "pine branch",
+    seasons: ["winter"],
+    found: "a little pine branch with snow still on it! it smells like the holidays~",
+  },
+  holly: {
+    name: "holly",
+    seasons: ["winter"],
+    found: "holly! careful, it's pointy. one of the berries is trying to escape…",
+  },
+  snowdrop: {
+    name: "snowdrop",
+    seasons: ["winter"],
+    found: "a snowdrop poked up through the snow. so brave and so tiny ♡",
+  },
+  cherry_blossom: {
+    name: "cherry blossom",
+    seasons: ["spring"],
+    found: "a cherry blossom! one petal already ran off on the breeze~",
+  },
+  tulip: {
+    name: "tulip",
+    seasons: ["spring"],
+    found: "a tulip, and it came with a ladybug! i promise not to pounce. probably.",
+  },
+  lilac: {
+    name: "lilac",
+    seasons: ["spring"],
+    found: "a sprig of lilac. it smells so sweet i might sneeze *achoo* ♡",
+  },
 };
 
 export const KNICK_KNACK_IDS = Object.keys(KNICK_KNACKS) as KnickKnackId[];

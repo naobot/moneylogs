@@ -53,12 +53,21 @@ describe("findableIn", () => {
     ]);
   });
 
-  it("keeps only the pinecone into winter", () => {
-    expect(findableIn({ month: 1, timezone: "America/Toronto" })).toEqual(["pinecone"]);
+  it("turns up the winter set, and the pinecone, in a northern January", () => {
+    expect(findableIn({ month: 1, timezone: "America/Toronto" })).toEqual([
+      "pinecone",
+      "pine_branch",
+      "holly",
+      "snowdrop",
+    ]);
   });
 
   it("flips for the southern hemisphere", () => {
-    expect(findableIn({ month: 10, timezone: "Australia/Sydney" })).toEqual([]);
+    expect(findableIn({ month: 10, timezone: "Australia/Sydney" })).toEqual([
+      "cherry_blossom",
+      "tulip",
+      "lilac",
+    ]);
     expect(findableIn({ month: 1, timezone: "Australia/Sydney" })).toEqual([]);
     expect(findableIn({ month: 4, timezone: "Australia/Sydney" }).sort()).toEqual([
       "acorn",

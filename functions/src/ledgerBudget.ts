@@ -172,3 +172,34 @@ export const budgetAlerts = ({
   }
   return alerts;
 };
+
+/**
+ * Whether spending in budgeted categories is on or under pace in every budgeted
+ * currency: at most the budget's share for the days elapsed so far. False when nothing
+ * has a budget. Feeds the knick-knack find chance, so it's never shown.
+ */
+export const onBudgetPace = ({
+  categories,
+  byCategory,
+  month,
+  now,
+}: {
+  categories: ReadonlyArray<BudgetCategory>;
+  byCategory: { [categoryId: string]: { [currency: string]: number } };
+  month: string;
+  now: number;
+}): boolean => {
+  const budgets = budgetsByCurrency(categories);
+  if (!budgets.size) return false;
+  const share = elapsedDays(month, now) / daysIn(month);
+  for (const [currency, byId] of budgets) {
+    let total = 0;
+    let spent = 0;
+    for (const [categoryId, budget] of byId) {
+      total += budget;
+      spent += byCategory[categoryId]?.[currency] ?? 0;
+    }
+    if (r2(spent) > r2(total * share)) return false;
+  }
+  return true;
+};

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { budgetAlerts, elapsedDays, isCurrentMonth } from "./ledgerBudget";
+import { budgetAlerts, elapsedDays, isCurrentMonth, onBudgetPace } from "./ledgerBudget";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -109,5 +109,31 @@ describe("budgetAlerts", () => {
 
   it("never alerts on a past month", () => {
     expect(alertsFor({ food: { CAD: 5000 } }, at("2026-12-15T00:00:00Z"))).toEqual([]);
+  });
+});
+
+describe("onBudgetPace", () => {
+  // Nov 15 of 30 days: half of each budget is the pace.
+  const pace = (byCategory: Record<string, Record<string, number>>, cats = categories) =>
+    onBudgetPace({
+      categories: cats,
+      byCategory,
+      month: "2026-11",
+      now: at("2026-11-15T12:00:00Z"),
+    });
+
+  it("is on pace at or under the budget's share of the month so far", () => {
+    expect(pace({ food: { CAD: 300, JPY: 25000 }, fun: { CAD: 200 } })).toBe(true);
+    expect(pace({ food: { CAD: 500, JPY: 0 } })).toBe(true);
+  });
+
+  it("is off pace when any budgeted currency runs ahead", () => {
+    expect(pace({ food: { CAD: 100, JPY: 30000 } })).toBe(false);
+    expect(pace({ food: { CAD: 400 }, fun: { CAD: 200 } })).toBe(false);
+  });
+
+  it("ignores unbudgeted spending, and is never on pace without budgets", () => {
+    expect(pace({ misc: { CAD: 99999 } })).toBe(true);
+    expect(pace({}, [{ id: "misc", name: "Misc" }])).toBe(false);
   });
 });
