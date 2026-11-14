@@ -51,6 +51,11 @@ service cloud.firestore {
     match /processing/{path=**} {
       allow read, write: if true;
     }
+    // App-wide settings: config/app holds the minimum supported native version and the
+    // store links. Anyone may read (the check runs before sign-in); only the console writes.
+    match /config/{docId} {
+      allow read: if true;
+    }
 
     // ---------------------------------------------------------------------
     // Financial mode — members only.

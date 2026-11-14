@@ -1,0 +1,22 @@
+.UpdateRequired {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--viewport-height);
+  box-sizing: border-box;
+  padding: calc(var(--window-pad) + var(--safe-top)) calc(var(--window-pad) + var(--safe-right))
+    calc(var(--window-pad) + var(--safe-bottom)) calc(var(--window-pad) + var(--safe-left));
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.UpdateRequired__frame {
+  max-width: var(--modal-width);
+  padding: 1.5em;
+  border: var(--border-heavy) solid var(--ink);
+  background-color: var(--sheet);
+
+  h1 {
+    margin-top: 0;
+  }
+}

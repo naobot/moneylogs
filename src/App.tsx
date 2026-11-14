@@ -17,6 +17,8 @@ import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
 import NativeBridge from "@/features/native/NativeBridge";
+import UpdateRequired from "@/features/native/UpdateRequired";
+import { useRequiredUpdate } from "@/features/native/useRequiredUpdate";
 import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
@@ -73,10 +75,21 @@ const App = () => {
   const { updateAvailable, refresh } = useAppVersionRefresh();
   const [updateDismissed, setUpdateDismissed] = useState(false);
   useEnsurePersonalLedger();
+  const requiredUpdate = useRequiredUpdate();
 
   useEffect(() => {
     GlobalErrorHandler.getInstance().initialize(showToast);
   }, [showToast]);
+
+  // The bridge still mounts, so the splash screen hides and the status bar matches.
+  if (requiredUpdate) {
+    return (
+      <Router>
+        <NativeBridge />
+        <UpdateRequired storeUrl={requiredUpdate.storeUrl} />
+      </Router>
+    );
+  }
 
   return (
     <Router>
