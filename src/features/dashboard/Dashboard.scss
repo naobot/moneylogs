@@ -8,6 +8,25 @@
   gap: 2em;
   padding-bottom: 1em;
 
+  // Wider screens: logs on the left, the knick-knack drawer in a thinner column on
+  // the right (2:1). Narrow screens stack them, drawer last.
+  &--split {
+    @media (min-width: constants.$breakpoint-md) {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 2em;
+    }
+  }
+
+  &__main,
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    min-width: 0;
+  }
+
   &__section {
     display: flex;
     flex-direction: column;

@@ -62,6 +62,13 @@ describe("Dashboard", () => {
   const cards = (size: string) =>
     Array.from(container.querySelectorAll<HTMLAnchorElement>(`.LogCard--${size}`));
 
+  it("puts the knick-knack drawer in the side column, apart from the logs", () => {
+    render([], [ledger]);
+    expect(container.querySelector(".Dashboard__side .KnickKnackDrawer")).not.toBeNull();
+    expect(container.querySelector(".Dashboard__main .KnickKnackDrawer")).toBeNull();
+    expect(container.querySelector(".Dashboard__main .LogCard")).not.toBeNull();
+  });
+
   it("sizes cards by how current they are", () => {
     const past = [1, 2, 3, 4].map((n) => group(`past${n}`, -30 - n, -10 - n));
     render([group("tokyo", -2, 5), group("seoul", 10, 20), ...past], [ledger]);
