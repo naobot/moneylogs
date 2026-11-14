@@ -18,6 +18,7 @@ Key architectural values: single source of truth, cost-effectiveness at current 
 | Dates           | dayjs + `react-timezone-select`                         |
 | Monitoring      | Sentry (`@sentry/react`, with session replay)           |
 | Hosting / CI    | Firebase Hosting via GitHub Actions                     |
+| Mobile apps     | Capacitor 8 (iOS + Android shells, `app.moneylogs`)     |
 
 Node >= 24, npm >= 11. Path alias `@` → `./src`.
 
@@ -27,6 +28,10 @@ Node >= 24, npm >= 11. Path alias `@` → `./src`.
 moneylogs/
 ├── src/                    # React application
 ├── functions/              # Firebase Cloud Functions (separate package)
+├── ios/, android/          # Capacitor native projects (see docs/mobile.md)
+├── assets/                 # App icon + splash sources for @capacitor/assets
+├── docs/mobile.md          # Mobile dev, release and store checklist
+├── capacitor.config.ts     # Native app config
 ├── public/                 # Static assets, custom SVG icon set
 ├── scripts/                # Emulator seeding, CORS setup, version stamping
 ├── .github/workflows/      # Firebase Hosting deploy (merge + PR preview)
@@ -81,6 +86,8 @@ src/
 │                           #     useAppVersionRefresh, useDragReorderEnabled, useToast
 │
 ├── config/                 # firebase-config.ts (app init, emulator wiring), links.ts
+├── platform/               # Browser/native seam: storage, clipboard, links, share,
+│                           #   isNative(). Use it instead of localStorage/navigator.
 ├── utils/                  # helpers, auth, groupBoundaries, memberOrder, unread,
 │                           #   errorHandler (global singleton), configuredDayjs
 ├── types/                  # Shared TypeScript types (user, error)
@@ -94,6 +101,7 @@ src/
 | `/`                  | `Home`         | Yes                     |
 | `/login`             | `Auth`         | No                      |
 | `/about`             | `About`        | No                      |
+| `/privacy`           | `Privacy`      | No                      |
 | `/create`            | `CreateNewLog` | No                      |
 | `/me`                | `UserSettings` | Yes                     |
 | `/g/:groupId`        | `GroupPage`    | No (spectators allowed) |
@@ -104,14 +112,15 @@ the intended destination in router state.
 
 ## `functions/` — Cloud Functions
 
-A separate npm package with its own build and lint step, deployed via `firebase deploy`. Four functions:
+A separate npm package with its own build and lint step, deployed via `firebase deploy`. Main functions (see `functions/src/index.ts` for the full list):
 
-| Function                | Trigger                                     | Purpose                                                                            |
-| ----------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `updatePostMetadata`    | `onDocumentCreated` on `log_posts/{postId}` | Stamps server timestamps, denormalizes author name/timezone, updates user tracking |
-| `updateCommentMetadata` | `onDocumentCreated` on comments             | Same treatment for comments                                                        |
-| `processUploadedImage`  | `onObjectFinalized` (Storage)               | Resizes and optimizes uploads with `sharp`                                         |
-| `processGroupAnalytics` | `onCall` (callable)                         | Computes spending percentiles for a group                                          |
+| Function                 | Trigger                                                | Purpose                                                                            |
+| ------------------------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `updatePostMetadata`     | `onDocumentCreated` on `log_posts/{postId}`            | Stamps server timestamps, denormalizes author name/timezone, updates user tracking |
+| `updateCommentMetadata`  | `onDocumentCreated` on comments                        | Same treatment for comments                                                        |
+| `processUploadedImage`   | `onObjectFinalized` (Storage)                          | Resizes and optimizes uploads with `sharp`                                         |
+| `processGroupAnalytics`  | `onCall` (callable)                                    | Computes spending percentiles for a group                                          |
+| `sendPushOnNotification` | `onDocumentCreated` on `users/{id}/notifications/{id}` | Pushes each inbox notification to the user's registered devices (FCM)              |
 
 ## Storage layout
 
@@ -132,13 +141,15 @@ npm run seed-emulator      # Populate emulator with dummy data (not necessary mo
 
 Emulator data is wiped each session. Local `.env` values are not committed.
 
-| Script                  | Does                                         |
-| ----------------------- | -------------------------------------------- |
-| `vp dev`                | Dev server                                   |
-| `vp build`              | Production build, then stamps `version.json` |
-| `vp check`              | Oxlint + TypeScript + React rules            |
-| `vp test`               | Vitest (run once)                            |
-| `npm run seed-emulator` | Seed local Firestore                         |
+| Script                            | Does                                           |
+| --------------------------------- | ---------------------------------------------- |
+| `vp dev`                          | Dev server                                     |
+| `vp build`                        | Production build, then stamps `version.json`   |
+| `vp check`                        | Oxlint + TypeScript + React rules              |
+| `vp test`                         | Vitest (run once)                              |
+| `npm run seed-emulator`           | Seed local Firestore                           |
+| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator |
+| `npm run cap:sync`                | Production build → sync native projects        |
 
 Linting and formatting run automatically on staged files pre-commit.
 

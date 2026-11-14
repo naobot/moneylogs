@@ -35,3 +35,26 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MONEYLOGS_89EBF }}
           projectId: moneylogs-89ebf
+
+  # Catches changes that break the native Android project (plugins, Gradle, manifest).
+  # Compiles a debug build only: no signing, nothing uploaded. iOS needs a macOS runner
+  # and isn't built in CI yet.
+  android_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.18"
+          cache: "npm"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "gradle"
+      - run: npm install -g npm@11.17.0
+      - run: |
+          npm ci
+          npm run cap:sync
+      - working-directory: android
+        run: ./gradlew assembleDebug --no-daemon

@@ -41,6 +41,9 @@ export const About = () => {
           </a>
           .
         </p>
+        <p>
+          <Link to="/privacy">How moneylogs handles your data</Link>.
+        </p>
       </div>
     </div>
   );
