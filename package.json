@@ -25,6 +25,7 @@
     "@capacitor/core": "8.6.0",
     "@capacitor/ios": "8.6.0",
     "@capacitor/keyboard": "8.0.6",
+    "@capacitor/share": "8.0.3",
     "@capacitor/splash-screen": "8.0.2",
     "@capacitor/status-bar": "8.0.4",
     "@dnd-kit/core": "^6.3.1",
