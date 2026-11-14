@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAM_ID.app.moneylogs"],
+        "components": [
+          { "/": "/g/*", "comment": "log groups and their invites" },
+          { "/": "/l/*", "comment": "financial logs and their invites" },
+          { "/": "/notifications", "comment": "notification inbox" }
+        ]
+      }
+    ]
+  }
+}

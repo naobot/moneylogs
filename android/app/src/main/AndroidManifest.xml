@@ -22,6 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- App Links: moneylogs.app links open in the app (verified by .well-known/assetlinks.json). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="moneylogs.app" />
+                <data android:pathPrefix="/g/" />
+                <data android:pathPrefix="/l/" />
+                <data android:path="/notifications" />
+            </intent-filter>
+
         </activity>
 
         <provider
