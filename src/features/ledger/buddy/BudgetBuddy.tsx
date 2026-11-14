@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import cx from "classnames";
 
 import dayjs from "@/utils/configuredDayjs";
@@ -10,10 +10,17 @@ import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
 import { shiftMonth, todayInTz } from "@/utils/ledger";
 import { buddyMood } from "./buddyMood";
-import { buddyComment } from "./buddyComments";
+import { buddyCheckInComment, buddyComment } from "./buddyComments";
+import { checkedInToday, CheckIn, eveningCheckIn, markCheckedIn } from "./buddyCheckIn";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
 
 import "./BudgetBuddy.scss";
+
+/** Cheerful faces for the evening check-in. */
+const CHECK_IN_FACES: Record<CheckIn, readonly string[]> = {
+  quiet: FACES.happy.click,
+  light: FACES.delighted.click,
+};
 
 /** How long the pointer has to linger before the cat notices it. */
 export const BUDDY_HOVER_DELAY = 700;
@@ -33,6 +40,8 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
  * - Lingering over it with a mouse makes it notice you (ﾆｬｰ).
  * - A click opens a speech bubble with a comment on the month. Its face holds still
  *   until the bubble closes.
+ * - In the evening it speaks up by itself, once a day per log, to cheer on a day with
+ *   nothing spent yet or one well under the usual.
  */
 export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categories"> }) => {
   const { user } = useCurrentUser();
@@ -41,9 +50,10 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   const month = today.slice(0, 7);
   const localHour = localHourIn(now, user?.timezone);
 
+  const previousMonth = shiftMonth(month, -1);
   const { byMonth, isSuccess } = useLedgerMonths({
     ledgerId: ledger.id,
-    from: shiftMonth(month, -1),
+    from: previousMonth,
     to: month,
   });
 
@@ -52,17 +62,43 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
     ledgerId: ledger.id,
     categories: ledger.categories ?? [],
     current: byMonth[month],
-    previous: byMonth[shiftMonth(month, -1)],
+    previous: byMonth[previousMonth],
     today,
     localHour,
+  });
+  const checkIn = eveningCheckIn({
+    today,
+    localHour,
+    current: byMonth[month],
+    previous: byMonth[previousMonth],
   });
 
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const [hoverFace, setHoverFace] = useState<string | null>(null);
-  const [bubble, setBubble] = useState<string | null>(null);
+  // The face is set when the bubble speaks for itself; clicks use the mood's click face.
+  const [bubble, setBubble] = useState<{ text: string; face?: string } | null>(null);
   const hovers = useRef(0);
   const clicks = useRef(0);
   const { openAfterDelay, cancelOpen } = useHoverIntent({ openDelay: BUDDY_HOVER_DELAY });
+
+  // Speak up unprompted, once a day per log. The ref covers storage being unavailable.
+  const checkedIn = useRef<string | null>(null);
+  const { asleep, seed } = state;
+  useEffect(() => {
+    if (!isSuccess || !anchor || !checkIn) return;
+    const key = `${ledger.id}:${today}`;
+    if (checkedIn.current === key || checkedInToday(ledger.id, today)) return;
+    checkedIn.current = key;
+    markCheckedIn(ledger.id, today);
+    // If a bubble is already open, the user is talking to it already: leave it be.
+    setBubble(
+      (open) =>
+        open ?? {
+          text: buddyCheckInComment(checkIn, { asleep, seed }),
+          face: pick(CHECK_IN_FACES[checkIn], seed),
+        },
+    );
+  }, [isSuccess, anchor, checkIn, ledger.id, today, asleep, seed]);
 
   // Nothing until the month docs arrive, so the face doesn't flash from idle.
   if (!isSuccess) return null;
@@ -76,7 +112,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
     faces.click.find((f) => f !== resting) ??
     faces.click[0];
   // While the bubble is open, it keeps the face it reacted with.
-  const face = bubble ? clicked : (hoverFace ?? resting);
+  const face = bubble ? (bubble.face ?? clicked) : (hoverFace ?? resting);
 
   const notice = () => {
     if (bubble) return;
@@ -98,7 +134,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
       setBubble(null);
       return;
     }
-    setBubble(buddyComment(state, clicks.current));
+    setBubble({ text: buddyComment(state, clicks.current) });
     clicks.current += 1;
   };
 
@@ -135,7 +171,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         role="dialog"
         aria-label="Budget buddy says"
       >
-        <p className="BuddyBubble__text keep-case">{bubble}</p>
+        <p className="BuddyBubble__text keep-case">{bubble?.text}</p>
       </Popover>
     </>
   );

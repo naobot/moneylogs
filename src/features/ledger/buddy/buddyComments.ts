@@ -1,4 +1,5 @@
 import { BuddyFacts, BuddyState } from "./buddyMood";
+import type { CheckIn } from "./buddyCheckIn";
 import { BuddyMood } from "./faces";
 
 /**
@@ -114,6 +115,10 @@ const LINES: Record<BuddyMood, Line[]> = {
 
 const SLEEPY = ["zzz… mrrp? oh, it's you.", "five more minutes…", "*yawn* …you're up late."];
 
+/** After bedtime, everything it says comes with a yawn first. */
+const drowsy = (said: string, asleep: boolean, n: number): string =>
+  asleep ? `${SLEEPY[n % SLEEPY.length]} ${said}` : said;
+
 /**
  * Stable for the day (seed), and moves to the next line on each click (nth). Lines
  * whose facts are missing are skipped.
@@ -121,5 +126,30 @@ const SLEEPY = ["zzz… mrrp? oh, it's you.", "five more minutes…", "*yawn* �
 export const buddyComment = ({ mood, asleep, facts, seed }: BuddyState, nth = 0): string => {
   const lines = LINES[mood].map((line) => line(facts)).filter((line): line is string => !!line);
   const said = lines.length ? lines[(seed + nth) % lines.length] : "mrrp?";
-  return asleep ? `${SLEEPY[(seed + nth) % SLEEPY.length]} ${said}` : said;
+  return drowsy(said, asleep, seed + nth);
+};
+
+/** What it says when it speaks up on its own in the evening. */
+export const CHECK_IN_LINES: Record<CheckIn, readonly string[]> = {
+  quiet: [
+    "nothing spent today so far! the wallet's having a nap too~",
+    "not a single thing logged today. a whole day of being frugal ♡",
+    "a no-spend day so far! i'm very impressed. *slow blink*",
+    "today's been nice and quiet. let's keep the wallet tucked in tonight~",
+  ],
+  light: [
+    "today's been way lighter than usual. so proud of us ♡",
+    "we spent hardly anything today compared to most days. nice!!",
+    "such a light day! the budget is purring right along with me~",
+    "way under our usual for a day. keep it up, human ♪",
+  ],
+};
+
+/** Stable for the day (seed). */
+export const buddyCheckInComment = (
+  kind: CheckIn,
+  { asleep, seed }: Pick<BuddyState, "asleep" | "seed">,
+): string => {
+  const lines = CHECK_IN_LINES[kind];
+  return drowsy(lines[seed % lines.length], asleep, seed);
 };

@@ -22,6 +22,7 @@ vi.mock("@/hooks/useLedgerMonths", () => ({
 
 import { BudgetBuddy, BUDDY_HOVER_DELAY } from "../BudgetBuddy";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES } from "../faces";
+import { CHECK_IN_LINES } from "../buddyComments";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -183,5 +184,95 @@ describe("BudgetBuddy when wary", () => {
       expect(clicked).not.toBe(resting);
       act(() => btn.click());
     }
+  });
+});
+
+describe("BudgetBuddy evening check-in", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  /** Spending on each of the given November days. */
+  const spending = (days: Record<string, number>) => ({
+    "2026-11": {
+      month: "2026-11",
+      entryCount: Object.keys(days).length,
+      totals: { CAD: Object.values(days).reduce((a, b) => a + b, 0) },
+      byCategory: {},
+      byMember: {},
+      byDay: Object.fromEntries(Object.entries(days).map(([dd, v]) => [dd, { CAD: v }])),
+    },
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    state.isSuccess = true;
+    state.byMonth = spending({ "10": 40, "12": 40 }); // nothing today (the 15th)
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    document.querySelectorAll(".BuddyBubble").forEach((el) => el.remove());
+  });
+
+  const render = (id = "l1") =>
+    act(() => root.render(<BudgetBuddy ledger={{ ...ledger, id } as Ledger} />));
+  const bubbleText = () => document.querySelector(".BuddyBubble")?.textContent ?? null;
+  const button = () => container.querySelector<HTMLButtonElement>(".BudgetBuddy")!;
+
+  it("speaks up by itself in the evening when nothing's been spent today", () => {
+    state.now = "2026-11-15T18:00:00Z";
+    render();
+    expect(CHECK_IN_LINES.quiet).toContain(bubbleText());
+    expect(button().getAttribute("aria-expanded")).toBe("true");
+    expect(FACES.happy.click).toContain(button().textContent);
+  });
+
+  it("keeps quiet before 5pm", () => {
+    state.now = "2026-11-15T16:59:00Z";
+    render();
+    expect(bubbleText()).toBeNull();
+  });
+
+  it("only checks in once a day per log", () => {
+    state.now = "2026-11-15T18:00:00Z";
+    render();
+    act(() => button().click()); // close it
+    expect(bubbleText()).toBeNull();
+    act(() => root.unmount());
+    root = createRoot(container);
+    render();
+    expect(bubbleText()).toBeNull();
+    // Another log still gets its own.
+    render("l2");
+    expect(CHECK_IN_LINES.quiet).toContain(bubbleText());
+  });
+
+  it("cheers a day well under the usual", () => {
+    state.now = "2026-11-15T19:00:00Z";
+    state.byMonth = spending({ "08": 90, "09": 90, "10": 90, "12": 90, "14": 90, "15": 20 });
+    render();
+    expect(CHECK_IN_LINES.light).toContain(bubbleText());
+    expect(FACES.delighted.click).toContain(button().textContent);
+  });
+
+  it("says nothing on an ordinary day", () => {
+    state.now = "2026-11-15T19:00:00Z";
+    state.byMonth = spending({ "08": 90, "09": 90, "10": 90, "12": 90, "14": 90, "15": 80 });
+    render();
+    expect(bubbleText()).toBeNull();
+  });
+
+  it("goes back to its usual comments once the check-in is closed", () => {
+    state.now = "2026-11-15T18:00:00Z";
+    render();
+    act(() => button().click());
+    act(() => button().click());
+    const text = bubbleText();
+    expect(text).not.toBeNull();
+    expect(CHECK_IN_LINES.quiet).not.toContain(text);
   });
 });
