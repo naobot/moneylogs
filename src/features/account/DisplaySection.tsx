@@ -15,6 +15,8 @@ import {
 } from "@/utils/displayPrefs";
 import { markdownColorMode, setTheme, Theme, useTheme } from "@/utils/theme";
 
+import "./DisplaySection.scss";
+
 export const THEME_LABELS: Record<Theme, string> = {
   paper: "Paper",
   night: "Night shift",

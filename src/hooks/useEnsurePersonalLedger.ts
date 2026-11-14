@@ -15,7 +15,8 @@ export const useEnsurePersonalLedger = () => {
 
   const uid = user?.userId;
   const userDocId = user?.id;
-  const needsOne = !!user && !hasPersonalLedger(user);
+  // New accounts get theirs from the welcome wizard, in the currency they pick there.
+  const needsOne = !!user && !user.onboardingPending && !hasPersonalLedger(user);
   const defaultCurrency = user?.defaultCurrency;
 
   useEffect(() => {

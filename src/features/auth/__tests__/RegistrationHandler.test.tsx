@@ -63,11 +63,10 @@ describe("RegistrationHandler", () => {
   });
 
   const fillAndSubmit = async () => {
-    const [nameInput, emailInput, passwordInput] = Array.from(
+    const [emailInput, passwordInput] = Array.from(
       container.querySelectorAll<HTMLInputElement>("input"),
     );
     act(() => {
-      setInputValue(nameInput, "Ada");
       setInputValue(emailInput, "user@example.com");
       setInputValue(passwordInput, "hunter2");
     });
@@ -116,6 +115,11 @@ describe("RegistrationHandler", () => {
     expect(alert.textContent).toContain("Something went wrong");
   });
 
+  it("only asks for email and password", () => {
+    act(() => root.render(<RegistrationHandler />));
+    expect(container.querySelectorAll("input")).toHaveLength(2);
+  });
+
   it("shows no error and creates the account on success", async () => {
     mockCreateUser.mockResolvedValueOnce({ user: { uid: "abc" } });
     mockMutate.mockResolvedValueOnce(undefined);
@@ -141,7 +145,11 @@ describe("RegistrationHandler", () => {
 
       expect(container.querySelector(".AuthError")).toBeNull();
       expect(mockCreateUser).toHaveBeenCalled();
-      expect(hrefSetter).toHaveBeenCalledWith("/me");
+      // A placeholder name now; the welcome wizard asks for the real one.
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: "abc", displayName: "user" }),
+      );
+      expect(hrefSetter).toHaveBeenCalledWith(`/welcome?next=${encodeURIComponent("/me")}`);
     } finally {
       Object.defineProperty(window, "location", {
         configurable: true,

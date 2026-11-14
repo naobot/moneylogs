@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent, ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
@@ -12,7 +12,7 @@ import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 
 import ControlledInput from "@/components/ControlledInput";
-import Button from "@/components/Button";
+import Wizard from "@/components/Wizard/Wizard";
 import CurrencySelect from "@/components/CurrencySelect";
 
 import {
@@ -132,20 +132,10 @@ export const CreateLogWizard = () => {
     }
   };
 
-  const handleNext = (e?: FormEvent) => {
-    e?.preventDefault();
+  const handleNext = () => {
     if (!canAdvance || isSubmitting) return;
     if (isLast) void submit();
     else goTo(stepIndex + 1);
-  };
-
-  // Enter in a text/number/date input advances, without relying on implicit form
-  // submission (inconsistent across browsers when there's no visible submit button).
-  const handleKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
-    if (!(e.target instanceof HTMLInputElement)) return;
-    e.preventDefault();
-    handleNext();
   };
 
   const chooseMode = (mode: LogMode) => {
@@ -161,7 +151,7 @@ export const CreateLogWizard = () => {
     case "type":
       body = (
         <>
-          <h3 className="CreateLogWizard__question">What kind of log are you starting?</h3>
+          <h3 className="Wizard__question">What kind of log are you starting?</h3>
           <div className="CreateLogWizard__choices" role="radiogroup" aria-label="Log type">
             {MODE_OPTIONS.map((option) => (
               <button
@@ -188,7 +178,7 @@ export const CreateLogWizard = () => {
     case "basics":
       body = (
         <>
-          <h3 className="CreateLogWizard__question">Give it a name</h3>
+          <h3 className="Wizard__question">Give it a name</h3>
           <ControlledInput
             label="Title"
             value={state.title}
@@ -206,7 +196,7 @@ export const CreateLogWizard = () => {
             isError={!!participantsError(state.maxParticipants)}
             errorMessage={participantsError(state.maxParticipants)}
           />
-          <p className="CreateLogWizard__hint">
+          <p className="Wizard__hint">
             {state.mode === "financial"
               ? "Set this to 1 to keep the log to yourself. You can invite others later if there's room."
               : "Invite friends with a link once the group is created."}
@@ -218,7 +208,7 @@ export const CreateLogWizard = () => {
     case "schedule":
       body = (
         <>
-          <h3 className="CreateLogWizard__question">When does it run?</h3>
+          <h3 className="Wizard__question">When does it run?</h3>
           <ControlledInput
             label="Start date"
             type="date"
@@ -245,7 +235,7 @@ export const CreateLogWizard = () => {
             value={state.endTime}
             onChange={(e) => update({ endTime: e.target.value })}
           />
-          <p className="CreateLogWizard__hint">Log groups can run for up to a month.</p>
+          <p className="Wizard__hint">Log groups can run for up to a month.</p>
         </>
       );
       break;
@@ -253,14 +243,14 @@ export const CreateLogWizard = () => {
     case "currency":
       body = (
         <>
-          <h3 className="CreateLogWizard__question">What currency do you usually spend in?</h3>
+          <h3 className="Wizard__question">What currency do you usually spend in?</h3>
           <CurrencySelect
             id="wizard-default-currency"
             label="Default currency"
             value={state.defaultCurrency}
             onChange={(defaultCurrency) => update({ defaultCurrency })}
           />
-          <p className="CreateLogWizard__hint">
+          <p className="Wizard__hint">
             New entries start in this currency, but any entry can use a different one. Totals are
             kept per currency and never converted.
           </p>
@@ -271,8 +261,8 @@ export const CreateLogWizard = () => {
     case "review":
       body = (
         <>
-          <h3 className="CreateLogWizard__question">Ready to go?</h3>
-          <dl className="CreateLogWizard__review">
+          <h3 className="Wizard__question">Ready to go?</h3>
+          <dl className="Wizard__review">
             <dt>Type</dt>
             <dd>{state.mode === "social" ? "Social log group" : "Financial log"}</dd>
             <dt>Title</dt>
@@ -304,57 +294,27 @@ export const CreateLogWizard = () => {
       break;
   }
 
+  const labels = (state.mode ? steps : stepsFor("social")).map((s, i) =>
+    i === 2 && !state.mode ? "Details" : STEP_LABELS[s],
+  );
+
   return (
-    <form
-      className="Window CreateNewLog CreateLogWizard"
-      onSubmit={handleNext}
-      onKeyDown={handleKeyDown}
-      noValidate
+    <Wizard
+      className="CreateNewLog CreateLogWizard"
+      labels={labels}
+      stepIndex={stepIndex}
+      onBack={() => goTo(stepIndex - 1)}
+      onNext={handleNext}
+      showNext={step !== "type"}
+      nextText={
+        isLast ? (state.mode === "social" ? "Start log group" : "Start financial log") : "Next"
+      }
+      nextLarge={isLast}
+      nextDisabled={!canAdvance || (isLast && !user?.userId)}
+      busy={isSubmitting}
     >
-      <ol className="CreateLogWizard__progress" aria-label="Progress">
-        {(state.mode ? steps : stepsFor("social")).map((s, i) => (
-          <li
-            key={s}
-            className={cx("CreateLogWizard__progress__step", {
-              "CreateLogWizard__progress__step--done": i < stepIndex,
-              "CreateLogWizard__progress__step--current": i === stepIndex,
-            })}
-            aria-current={i === stepIndex ? "step" : undefined}
-          >
-            {i + 1}. {i === 2 && !state.mode ? "Details" : STEP_LABELS[s]}
-          </li>
-        ))}
-      </ol>
-
-      <div className="CreateLogWizard__body">{body}</div>
-
-      <div className="Menu CreateLogWizard__actions">
-        {stepIndex > 0 && (
-          <Button
-            text="Back"
-            buttonStyle="primary-border-lite"
-            disabled={isSubmitting}
-            onClick={() => goTo(stepIndex - 1)}
-          />
-        )}
-        {step !== "type" && (
-          <Button
-            text={
-              isLast
-                ? state.mode === "social"
-                  ? "Start log group"
-                  : "Start financial log"
-                : "Next"
-            }
-            size={isLast ? "lg" : undefined}
-            buttonStyle="primary-border"
-            disabled={!canAdvance || isSubmitting || (isLast && !user?.userId)}
-            loading={isLast && isSubmitting}
-            onClick={() => handleNext()}
-          />
-        )}
-      </div>
-    </form>
+      {body}
+    </Wizard>
   );
 };
 

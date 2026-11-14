@@ -1,6 +1,4 @@
-import cx from "classnames";
 import { useEffect, useMemo, useState } from "react";
-import { useTimezoneSelect, allTimezones } from "react-timezone-select";
 
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
@@ -11,6 +9,7 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
 import CurrencySelect from "@/components/CurrencySelect";
+import TimezoneSelect from "@/components/TimezoneSelect";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 
@@ -19,11 +18,6 @@ export const ProfileSection = () => {
   const { showToast } = useToastContext();
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
-  const { options, parseTimezone } = useTimezoneSelect({
-    labelStyle: "original",
-    timezones: allTimezones,
-  });
-
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
   const [newTimezone, setNewTimezone] = useState<string>();
@@ -111,26 +105,7 @@ export const ProfileSection = () => {
           </p>
         )}
 
-        <div
-          className={cx("ControlledInput", {
-            "ControlledInput--warning": !newTimezone,
-          })}
-        >
-          <label>My timezone is</label>
-          <select
-            onChange={(e) => {
-              parseTimezone(e.currentTarget.value);
-              setNewTimezone(e.currentTarget.value);
-            }}
-            value={newTimezone}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TimezoneSelect label="My timezone is" value={newTimezone} onChange={setNewTimezone} />
 
         <CurrencySelect
           id="profile-default-currency"
