@@ -57,7 +57,7 @@ describe("CreateLogWizard", () => {
   const click = async (text: string) => {
     await act(async () => button(text).click());
   };
-  const question = () => container.querySelector(".CreateLogWizard__question")?.textContent;
+  const question = () => container.querySelector(".Wizard__question")?.textContent;
   const typeInto = (label: string, value: string) => {
     const field = Array.from(container.querySelectorAll(".ControlledInput")).find(
       (el) => el.querySelector("label")?.textContent === label,
@@ -90,7 +90,7 @@ describe("CreateLogWizard", () => {
     await click("Next");
 
     expect(question()).toMatch(/Ready to go/);
-    const review = container.querySelector(".CreateLogWizard__review")!.textContent;
+    const review = container.querySelector(".Wizard__review")!.textContent;
     expect(review).toContain("Financial log");
     expect(review).toContain("Groceries 2027");
     expect(review).toContain("Just you");

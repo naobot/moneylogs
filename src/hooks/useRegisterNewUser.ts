@@ -18,6 +18,8 @@ export const useRegisterNewUser = () => {
       email,
       createdAt: serverTimestamp(),
       groups: [], // Initialize groups array instead of logs
+      // Routes them through /welcome until they've set up their profile (features/onboarding).
+      onboardingPending: true,
     });
 
     if (!docRef?.id) {

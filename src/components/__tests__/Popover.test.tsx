@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vite-plus/test";
-import { computePosition } from "@/components/popoverPosition";
+import {
+  arrowOffset,
+  computeCenteredPosition,
+  computePosition,
+} from "@/components/popoverPosition";
 
 const viewport = { width: 400, height: 800 };
 const anchorAt = (top: number, left: number, width = 20, height = 20) => ({
@@ -37,5 +41,33 @@ describe("computePosition", () => {
   it("keeps the panel inside the viewport horizontally", () => {
     expect(computePosition(anchorAt(100, 390), panel, viewport, "bottom", "start").left).toBe(192);
     expect(computePosition(anchorAt(100, 0), panel, viewport, "bottom", "end").left).toBe(8);
+  });
+});
+
+describe("arrowOffset", () => {
+  const anchor = { top: 0, bottom: 20, left: 100, right: 140, width: 40 };
+
+  it("points at the anchor's centre", () => {
+    expect(arrowOffset(anchor, 50, 200)).toBe(70);
+  });
+
+  it("stays off the corners when the panel slid far to one side", () => {
+    expect(arrowOffset(anchor, 130, 200)).toBe(12);
+    expect(arrowOffset({ ...anchor, left: 390, right: 400, width: 10 }, 0, 200)).toBe(188);
+  });
+});
+
+describe("computeCenteredPosition", () => {
+  const viewport = { width: 400, height: 800 };
+  const panel = { width: 200, height: 100 };
+
+  it("centres over the anchor", () => {
+    const anchor = { top: 300, bottom: 400, left: 100, right: 300, width: 200 };
+    expect(computeCenteredPosition(anchor, panel, viewport)).toEqual({ top: 300, left: 100 });
+  });
+
+  it("stays on screen", () => {
+    const anchor = { top: 0, bottom: 20, left: 380, right: 400, width: 20 };
+    expect(computeCenteredPosition(anchor, panel, viewport)).toEqual({ top: 8, left: 192 });
   });
 });
