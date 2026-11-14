@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { useLedgerHasEntries } from "@/hooks/useLedgerHasEntries";
 import { updateUserFields } from "@/hooks/useUserQuery";
 import TutorialTooltip from "@/components/TutorialTooltip";
+import { reportError, trackStep } from "@/utils/reportError";
 
 import { LEDGER_TOUR_STEPS, LedgerTourTarget, shouldShowLedgerTour } from "./tourRules";
 
@@ -51,7 +52,8 @@ export const LedgerTourProvider = ({
     updateUserFields(user.id, { "tutorials.ledgerTour": serverTimestamp() }).catch(
       (err: unknown) => {
         recorded.current = false;
-        console.error("Failed to record the ledger tour:", err);
+        // Unnoticed by the user (the tour may just show again), so only a warning.
+        reportError(err, { feature: "ledger_tour", action: "record_tour", level: "warning" });
       },
     );
   };
@@ -66,7 +68,17 @@ export const LedgerTourProvider = ({
 
   const current = LEDGER_TOUR_STEPS[Math.min(step, LEDGER_TOUR_STEPS.length - 1)];
   const isLast = step >= LEDGER_TOUR_STEPS.length - 1;
-  const advance = () => (isLast ? complete() : setStep((s) => s + 1));
+  const advance = () => {
+    trackStep("ledger_tour", isLast ? "finished tour" : "next tour tip", {
+      target: current.target,
+    });
+    if (isLast) complete();
+    else setStep((s) => s + 1);
+  };
+  const skip = () => {
+    trackStep("ledger_tour", "skipped tour", { target: current.target });
+    complete();
+  };
 
   const value: LedgerTourValue = {
     activeTarget: current.target,
@@ -80,7 +92,7 @@ export const LedgerTourProvider = ({
           progress={`${step + 1}/${LEDGER_TOUR_STEPS.length}`}
           hint={isLast ? "tap to finish" : "tap for next"}
           onDismiss={advance}
-          onSkip={isLast ? undefined : complete}
+          onSkip={isLast ? undefined : skip}
         />
       ) : null,
   };

@@ -12,6 +12,7 @@ import CurrencySelect from "@/components/CurrencySelect";
 import TimezoneSelect from "@/components/TimezoneSelect";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
+import { reportError } from "@/utils/reportError";
 
 /** Display name, location and timezone. */
 export const ProfileSection = () => {
@@ -76,7 +77,7 @@ export const ProfileSection = () => {
 
       showToast("Profile updated", "success");
     } catch (err) {
-      console.error("Failed to update user info:", err);
+      reportError(err, { feature: "profile", action: "update_profile" });
       showToast("Failed to update profile. Please try again.");
     }
   };

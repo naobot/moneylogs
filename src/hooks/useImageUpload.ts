@@ -59,13 +59,18 @@ const resizeImageIfNeeded = (file: File): Promise<Blob> =>
     img.src = objectUrl;
   });
 
+/** A problem with the file the user picked (e.g. too big), shown to them and not reported. */
+export class ImageValidationError extends Error {
+  name = "ImageValidationError";
+}
+
 export const useImageUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadInlineImage = async (file: File, groupId: string): Promise<string> => {
     const maxMB = MAX_FILE_SIZE_BYTES / 1024 / 1024;
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new Error(`Image is too large. Maximum size is ${maxMB}MB.`);
+      throw new ImageValidationError(`Image is too large. Maximum size is ${maxMB}MB.`);
     }
 
     setIsUploading(true);

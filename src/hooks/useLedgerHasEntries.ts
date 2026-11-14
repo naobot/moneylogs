@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, limit, query } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Whether a ledger has any entries at all, read once with a single-doc query. Undefined
@@ -16,7 +17,14 @@ export const useLedgerHasEntries = (ledgerId: string | undefined, enabled = true
       .then((snap) => {
         if (!cancelled) setResult({ id: ledgerId, hasEntries: !snap.empty });
       })
-      .catch((err: unknown) => console.error("Failed to check ledger entries:", err));
+      .catch((err: unknown) =>
+        // Only decides whether to offer the tour, so a failure just means no tour.
+        reportError(err, {
+          feature: "ledger_tour",
+          action: "check_ledger_has_entries",
+          level: "warning",
+        }),
+      );
     return () => {
       cancelled = true;
     };

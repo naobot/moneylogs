@@ -11,7 +11,11 @@ import { useRegisterNewUser } from "@/hooks/useRegisterNewUser";
 import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
-import { getRegistrationErrorMessage } from "@/features/auth/registrationErrors";
+import {
+  getRegistrationErrorMessage,
+  isExpectedRegistrationError,
+} from "@/features/auth/registrationErrors";
+import { reportError, trackStep } from "@/utils/reportError";
 import { placeholderDisplayName, welcomePath } from "@/features/auth/authRedirect";
 
 const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
@@ -38,6 +42,8 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
         email: email,
       });
 
+      trackStep("registration", "created account");
+
       await sendEmailVerification(auth.currentUser!);
       await updateProfile(auth.currentUser!, { displayName });
       const loggedInUser = await signInWithEmailAndPassword(auth, email, password);
@@ -52,7 +58,11 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       const err = error as { code?: string; message?: string };
       setRegistrationPending(false);
       setRegistrationError(getRegistrationErrorMessage(err.code));
-      console.log(`${err.code}: ${err.message}`);
+      if (isExpectedRegistrationError(err.code)) {
+        console.log(`${err.code}: ${err.message}`);
+      } else {
+        reportError(error, { feature: "registration", action: "register" });
+      }
     }
   };
 

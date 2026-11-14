@@ -13,6 +13,7 @@ import { DisplaySection } from "@/features/account/DisplaySection";
 import dayjs from "@/utils/configuredDayjs";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { personalLedgerId } from "@/utils/personalLedger";
+import { reportError, trackStep } from "@/utils/reportError";
 
 import ControlledInput from "@/components/ControlledInput";
 import CurrencySelect from "@/components/CurrencySelect";
@@ -120,13 +121,21 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
     setFailed(false);
     try {
       await saveStep();
+      trackStep("onboarding", "finished welcome step", { step, index: stepIndex });
       if (isLast) {
+        trackStep("onboarding", "finished welcome wizard", { toInvite: !!next });
         void navigate(next ?? `/l/${personalLedgerId(user.userId)}`, { replace: true });
         return;
       }
       goTo(stepIndex + 1);
     } catch (err) {
-      console.error("Failed to save welcome step:", err);
+      // A failure here leaves a brand-new account stuck at signup, so it's an error.
+      reportError(err, {
+        feature: "onboarding",
+        action: "save_welcome_step",
+        tags: { step },
+        extra: { stepIndex, hasNext: !!next },
+      });
       setFailed(true);
     } finally {
       setSaving(false);

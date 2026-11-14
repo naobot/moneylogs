@@ -9,6 +9,7 @@ import { activeCategories, MAX_NOTE_LENGTH, resolveCategory, validateEntry } fro
 import { toEntryInput } from "@/utils/ledgerEntries";
 
 import Button from "@/components/Button";
+import { reportError } from "@/utils/reportError";
 import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 import type { LedgerTourTarget } from "@/features/ledger/tour/tourRules";
 
@@ -89,7 +90,10 @@ export const EntryForm = ({
     try {
       await onSubmit(input);
     } catch (err) {
-      console.error("Failed to save entry:", err);
+      reportError(err, {
+        feature: "ledger_entry",
+        action: mode === "add" ? "add_entry" : "edit_entry",
+      });
       if (mode === "add") setValues(submitted);
       setFailed(true);
     }
