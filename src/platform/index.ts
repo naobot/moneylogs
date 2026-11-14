@@ -5,4 +5,5 @@
  */
 export { storage } from "./storage";
 export { copyText } from "./clipboard";
-export { isExternalUrl, publicHost } from "./links";
+export { isExternalUrl, publicHost, PUBLIC_HOST } from "./links";
+export { isNative, nativePlatform, type NativePlatform } from "./native";

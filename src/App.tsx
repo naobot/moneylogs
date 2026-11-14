@@ -16,6 +16,7 @@ import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
+import NativeBridge from "@/features/native/NativeBridge";
 import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
@@ -81,6 +82,7 @@ const App = () => {
 
   return (
     <Router>
+      <NativeBridge />
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
       )}
