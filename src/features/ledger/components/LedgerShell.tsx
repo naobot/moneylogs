@@ -22,6 +22,7 @@ import CategoryManager from "./CategoryManager";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
+import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
 import "./Ledger.scss";
 
@@ -42,8 +43,16 @@ type LedgerShellProps = {
  * switcher with a link between the entries and stats views. The viewed month lives in
  * ?month= so refresh, back and switching views keep your place.
  */
-export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
+export const LedgerShell = (props: LedgerShellProps) => (
+  // The first-run tour points at the add form, so it only runs on the entries view.
+  <LedgerTourProvider ledgerId={props.ledger.id} enabled={props.view === "entries"}>
+    <LedgerShellFrame {...props} />
+  </LedgerTourProvider>
+);
+
+const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const { user } = useCurrentUser();
+  const { tip } = useLedgerTour();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
@@ -79,6 +88,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
             </div>
             <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
               <IconText type={"pencil"} fill={"white"} text="categories" />
+              {tip("categories")}
             </div>
             {spots > 0 && (
               <>
@@ -101,6 +111,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
         <div className="Ledger__body">
           <nav className="Ledger__month" aria-label="Month">
             <div className="Ledger__month__controls">
+              {tip("month")}
               <RowButton
                 glyph
                 aria-label="Previous month"
@@ -122,6 +133,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
             </div>
             {/* Always about this month, whichever month is being browsed. */}
             <div className="Ledger__month__buddy">
+              {tip("buddy")}
               <BudgetBuddy ledger={ledger} />
             </div>
             <Link
@@ -129,6 +141,7 @@ export const LedgerShell = ({ ledger, view, children }: LedgerShellProps) => {
               to={ledgerViewPath(ledger.id, otherView, month, currentMonth)}
             >
               {otherView === "stats" ? "stats ›" : "‹ entries"}
+              {tip("stats")}
             </Link>
           </nav>
 

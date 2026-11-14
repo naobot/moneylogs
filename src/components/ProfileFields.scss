@@ -1,0 +1,30 @@
+@use "/src/constants.scss";
+
+// Profile-style forms (/me, /welcome): labelled inputs and long selects that still fit
+// a phone.
+.ProfileFields {
+  min-width: 0;
+
+  .ControlledInput {
+    // Flex children default to min-width: auto, so the timezone select refuses to
+    // shrink below the intrinsic width of its longest option (~600px) and pushes
+    // the whole page past the viewport. min-width: 0 lets it shrink normally.
+    min-width: 0;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      flex-wrap: wrap;
+    }
+
+    label {
+      width: 20vw;
+      min-width: 125px;
+      max-width: 250px;
+    }
+
+    select {
+      width: 100%;
+      min-width: 0;
+      max-width: 600px;
+    }
+  }
+}

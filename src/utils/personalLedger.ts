@@ -1,5 +1,5 @@
 import { Currency } from "@/types/user";
-import { isCurrency, LAST_CURRENCY_KEY } from "@/utils/currency";
+import { FALLBACK_CURRENCY, ledgerStartCurrency } from "@/utils/currency";
 
 /**
  * Every user starts with a solo financial log called "personal", so the financial side of
@@ -12,7 +12,7 @@ import { isCurrency, LAST_CURRENCY_KEY } from "@/utils/currency";
  */
 export const PERSONAL_LEDGER_TITLE = "personal";
 export const PERSONAL_LEDGER_MAX_PARTICIPANTS = 1;
-export const PERSONAL_LEDGER_FALLBACK_CURRENCY: Currency = "JPY";
+export const PERSONAL_LEDGER_FALLBACK_CURRENCY: Currency = FALLBACK_CURRENCY;
 
 export const personalLedgerId = (uid: string): string => `personal-${uid}`;
 
@@ -42,12 +42,9 @@ export const planPersonalLedger = ({
     ? { createLedger: false, markUser: false }
     : { createLedger: !ledgerExists, markUser: true };
 
-/** The currency the user last picked anywhere in the app, else the app default. */
-export const preferredCurrency = (): Currency => {
-  try {
-    const last = localStorage.getItem(LAST_CURRENCY_KEY);
-    return isCurrency(last) ? last : PERSONAL_LEDGER_FALLBACK_CURRENCY;
-  } catch {
-    return PERSONAL_LEDGER_FALLBACK_CURRENCY;
-  }
-};
+/**
+ * The currency a personal ledger starts on: the user's explicit default, else the one they
+ * last picked on this device, else the app default.
+ */
+export const preferredCurrency = (user?: { defaultCurrency?: Currency }): Currency =>
+  ledgerStartCurrency(user);

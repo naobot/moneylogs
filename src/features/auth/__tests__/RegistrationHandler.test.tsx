@@ -3,14 +3,23 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import RegistrationHandler from "@/features/auth/components/RegistrationHandler";
 
-const { mockCreateUser, mockSendVerification, mockSignIn, mockUpdateProfile, mockMutate } =
-  vi.hoisted(() => ({
-    mockCreateUser: vi.fn(),
-    mockSendVerification: vi.fn(),
-    mockSignIn: vi.fn(),
-    mockUpdateProfile: vi.fn(),
-    mockMutate: vi.fn(),
-  }));
+const {
+  mockCreateUser,
+  mockSendVerification,
+  mockSignIn,
+  mockUpdateProfile,
+  mockMutate,
+  mockReportError,
+} = vi.hoisted(() => ({
+  mockCreateUser: vi.fn(),
+  mockSendVerification: vi.fn(),
+  mockSignIn: vi.fn(),
+  mockUpdateProfile: vi.fn(),
+  mockMutate: vi.fn(),
+  mockReportError: vi.fn(),
+}));
+
+vi.mock("@/utils/reportError", () => ({ reportError: mockReportError, trackStep: vi.fn() }));
 
 vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: mockCreateUser,
@@ -63,11 +72,10 @@ describe("RegistrationHandler", () => {
   });
 
   const fillAndSubmit = async () => {
-    const [nameInput, emailInput, passwordInput] = Array.from(
+    const [emailInput, passwordInput] = Array.from(
       container.querySelectorAll<HTMLInputElement>("input"),
     );
     act(() => {
-      setInputValue(nameInput, "Ada");
       setInputValue(emailInput, "user@example.com");
       setInputValue(passwordInput, "hunter2");
     });
@@ -88,6 +96,24 @@ describe("RegistrationHandler", () => {
     const alert = container.querySelector(".AuthError");
     expect(alert).not.toBeNull();
     expect(alert!.textContent).toContain("already exists");
+  });
+
+  it("doesn't report mistakes the user can fix, but reports anything unexpected", async () => {
+    mockCreateUser
+      .mockRejectedValueOnce({ code: "auth/email-already-in-use" })
+      .mockRejectedValueOnce({ code: "auth/network-request-failed" });
+
+    act(() => root.render(<RegistrationHandler />));
+    await fillAndSubmit();
+    expect(mockReportError).not.toHaveBeenCalled();
+
+    await act(async () => {
+      container.querySelector("button")!.click();
+    });
+    expect(mockReportError).toHaveBeenCalledWith(
+      { code: "auth/network-request-failed" },
+      { feature: "registration", action: "register" },
+    );
   });
 
   it("re-enables the register button after a failed attempt", async () => {
@@ -116,6 +142,11 @@ describe("RegistrationHandler", () => {
     expect(alert.textContent).toContain("Something went wrong");
   });
 
+  it("only asks for email and password", () => {
+    act(() => root.render(<RegistrationHandler />));
+    expect(container.querySelectorAll("input")).toHaveLength(2);
+  });
+
   it("shows no error and creates the account on success", async () => {
     mockCreateUser.mockResolvedValueOnce({ user: { uid: "abc" } });
     mockMutate.mockResolvedValueOnce(undefined);
@@ -141,7 +172,11 @@ describe("RegistrationHandler", () => {
 
       expect(container.querySelector(".AuthError")).toBeNull();
       expect(mockCreateUser).toHaveBeenCalled();
-      expect(hrefSetter).toHaveBeenCalledWith("/me");
+      // A placeholder name now; the welcome wizard asks for the real one.
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: "abc", displayName: "user" }),
+      );
+      expect(hrefSetter).toHaveBeenCalledWith(`/welcome?next=${encodeURIComponent("/me")}`);
     } finally {
       Object.defineProperty(window, "location", {
         configurable: true,

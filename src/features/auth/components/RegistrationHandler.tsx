@@ -11,10 +11,14 @@ import { useRegisterNewUser } from "@/hooks/useRegisterNewUser";
 import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
-import { getRegistrationErrorMessage } from "@/features/auth/registrationErrors";
+import {
+  getRegistrationErrorMessage,
+  isExpectedRegistrationError,
+} from "@/features/auth/registrationErrors";
+import { reportError, trackStep } from "@/utils/reportError";
+import { placeholderDisplayName, welcomePath } from "@/features/auth/authRedirect";
 
 const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
-  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [registrationPending, setRegistrationPending] = useState(false);
@@ -30,37 +34,41 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // A placeholder until the welcome wizard asks for a real display name.
+      const displayName = placeholderDisplayName(email);
       await addNewUser.mutate({
         userId: user.uid,
-        displayName: displayName,
+        displayName,
         email: email,
       });
 
+      trackStep("registration", "created account");
+
       await sendEmailVerification(auth.currentUser!);
-      await updateProfile(auth.currentUser!, { displayName: displayName });
+      await updateProfile(auth.currentUser!, { displayName });
       const loggedInUser = await signInWithEmailAndPassword(auth, email, password);
 
       setRegistrationPending(false);
 
       if (loggedInUser.user) {
-        window.location.href = redirectTo ?? "/me";
+        // The welcome wizard sets up the profile, then carries on to where they were headed.
+        window.location.href = welcomePath(redirectTo);
       }
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       setRegistrationPending(false);
       setRegistrationError(getRegistrationErrorMessage(err.code));
-      console.log(`${err.code}: ${err.message}`);
+      if (isExpectedRegistrationError(err.code)) {
+        console.log(`${err.code}: ${err.message}`);
+      } else {
+        reportError(error, { feature: "registration", action: "register" });
+      }
     }
   };
 
   return (
     <>
       <div className="InfoBox Registration">
-        <ControlledInput
-          value={displayName}
-          onChange={(e) => setDisplayName((e.target as HTMLInputElement).value)}
-          label="Name"
-        />
         <ControlledInput
           value={email}
           onChange={(e) => setEmail((e.target as HTMLInputElement).value)}

@@ -1,0 +1,20 @@
+// A dismissible one-line pointer on Home; 2px solid like any other committed container.
+.PersonalLogNudge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background-color: var(--sheet);
+  border: var(--border-rule) solid var(--ink);
+
+  p {
+    flex: 1 1 16em;
+    margin: 0;
+  }
+
+  a {
+    font-weight: 700;
+  }
+}

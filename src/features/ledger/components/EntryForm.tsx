@@ -9,6 +9,9 @@ import { activeCategories, MAX_NOTE_LENGTH, resolveCategory, validateEntry } fro
 import { toEntryInput } from "@/utils/ledgerEntries";
 
 import Button from "@/components/Button";
+import { reportError } from "@/utils/reportError";
+import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
+import type { LedgerTourTarget } from "@/features/ledger/tour/tourRules";
 
 export type { EntryFormValues } from "@/utils/ledgerEntries";
 
@@ -37,6 +40,9 @@ export const EntryForm = ({
   const [values, setValues] = useState<EntryFormValues>(initial);
   const [failed, setFailed] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
+  const tour = useLedgerTour();
+  // The first-run tour only walks through the add form.
+  const tip = (target: LedgerTourTarget) => (mode === "add" ? tour.tip(target) : null);
 
   // A different default date (e.g. after switching month) resets the add form's date.
   useEffect(() => {
@@ -84,7 +90,10 @@ export const EntryForm = ({
     try {
       await onSubmit(input);
     } catch (err) {
-      console.error("Failed to save entry:", err);
+      reportError(err, {
+        feature: "ledger_entry",
+        action: mode === "add" ? "add_entry" : "edit_entry",
+      });
       if (mode === "add") setValues(submitted);
       setFailed(true);
     }
@@ -103,6 +112,7 @@ export const EntryForm = ({
           (date · amount + currency · category), then the note and a small button. */}
       <div className="EntryForm__header">
         <div className="EntryForm__header__left">
+          {tip("date")}
           <input
             type="date"
             aria-label="Date"
@@ -112,6 +122,8 @@ export const EntryForm = ({
           />
         </div>
         <div className="EntryForm__header__center">
+          {tip("amount")}
+          {tip("currency")}
           <input
             ref={amountRef}
             className="LogPostsCurrency__input EntryForm__amount"
@@ -137,6 +149,7 @@ export const EntryForm = ({
           </select>
         </div>
         <div className="EntryForm__header__right">
+          {tip("category")}
           <select
             aria-label="Category"
             value={values.categoryId}
@@ -161,6 +174,7 @@ export const EntryForm = ({
         </div>
       </div>
       <div className="EntryForm__body">
+        {tip("note")}
         <label className="EntryForm__noteField">
           <span className="EntryForm__noteLabel">Note:</span>
           <input

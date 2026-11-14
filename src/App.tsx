@@ -16,6 +16,7 @@ import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
+import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
 import { Home } from "@/pages/home";
@@ -28,6 +29,8 @@ import { LedgerPage, LedgerStatsPage } from "@/pages/ledger";
 import { LedgerInvitePage } from "@/pages/ledger/invite";
 import { About } from "@/pages/about";
 import { Notifications } from "@/pages/notifications";
+import { Welcome } from "@/pages/welcome";
+import { OnboardingGate } from "@/features/onboarding/OnboardingGate";
 
 import "./App.scss";
 
@@ -79,70 +82,81 @@ const App = () => {
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
       )}
+      <DefaultCurrencyPrompt />
       <Layout>
         <ErrorBoundary>
-          <Routes>
-            <Route path="/login" element={<Auth />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/create" element={<CreateNewLog />} />
-            <Route
-              path="/"
-              element={
-                <CheckAuth fallback={<Landing />}>
-                  <Home />
-                </CheckAuth>
-              }
-            />
-            <Route
-              path="/me"
-              element={
-                <CheckAuth>
-                  <UserSettings />
-                </CheckAuth>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <CheckAuth>
-                  <Notifications />
-                </CheckAuth>
-              }
-            />
-            <Route path="/g/:groupId" element={<GroupPage />} />
-            <Route
-              path="/g/:groupId/invite"
-              element={
-                <CheckAuth>
-                  <InvitePage />
-                </CheckAuth>
-              }
-            />
-            <Route
-              path="/l/:ledgerId"
-              element={
-                <CheckAuth>
-                  <LedgerPage />
-                </CheckAuth>
-              }
-            />
-            <Route
-              path="/l/:ledgerId/stats"
-              element={
-                <CheckAuth>
-                  <LedgerStatsPage />
-                </CheckAuth>
-              }
-            />
-            <Route
-              path="/l/:ledgerId/invite"
-              element={
-                <CheckAuth>
-                  <LedgerInvitePage />
-                </CheckAuth>
-              }
-            />
-          </Routes>
+          <OnboardingGate>
+            <Routes>
+              <Route path="/login" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/create" element={<CreateNewLog />} />
+              <Route
+                path="/welcome"
+                element={
+                  <CheckAuth>
+                    <Welcome />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <CheckAuth fallback={<Landing />}>
+                    <Home />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/me"
+                element={
+                  <CheckAuth>
+                    <UserSettings />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <CheckAuth>
+                    <Notifications />
+                  </CheckAuth>
+                }
+              />
+              <Route path="/g/:groupId" element={<GroupPage />} />
+              <Route
+                path="/g/:groupId/invite"
+                element={
+                  <CheckAuth>
+                    <InvitePage />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/l/:ledgerId"
+                element={
+                  <CheckAuth>
+                    <LedgerPage />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/l/:ledgerId/stats"
+                element={
+                  <CheckAuth>
+                    <LedgerStatsPage />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/l/:ledgerId/invite"
+                element={
+                  <CheckAuth>
+                    <LedgerInvitePage />
+                  </CheckAuth>
+                }
+              />
+            </Routes>
+          </OnboardingGate>
         </ErrorBoundary>
       </Layout>
     </Router>

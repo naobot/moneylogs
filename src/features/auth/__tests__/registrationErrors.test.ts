@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vite-plus/test";
-import { getRegistrationErrorMessage } from "@/features/auth/registrationErrors";
+import {
+  getRegistrationErrorMessage,
+  isExpectedRegistrationError,
+} from "@/features/auth/registrationErrors";
 
 describe("getRegistrationErrorMessage", () => {
   it("maps an already-registered email to a helpful message", () => {
@@ -39,5 +42,18 @@ describe("getRegistrationErrorMessage", () => {
     expect(getRegistrationErrorMessage(undefined)).toBe(
       "Something went wrong creating your account. Please try again.",
     );
+  });
+});
+
+describe("isExpectedRegistrationError", () => {
+  it("treats mistakes the user can fix as expected", () => {
+    expect(isExpectedRegistrationError("auth/email-already-in-use")).toBe(true);
+    expect(isExpectedRegistrationError("auth/weak-password")).toBe(true);
+  });
+
+  it("treats anything else, or no code at all, as worth reporting", () => {
+    expect(isExpectedRegistrationError("auth/network-request-failed")).toBe(false);
+    expect(isExpectedRegistrationError("auth/operation-not-allowed")).toBe(false);
+    expect(isExpectedRegistrationError(undefined)).toBe(false);
   });
 });
