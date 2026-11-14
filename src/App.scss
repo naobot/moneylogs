@@ -1307,6 +1307,43 @@ h6,
       display: none;
     }
   }
+
+  // Anchors at a screen edge: pin the bubble to that edge so it stays on screen.
+  &--start {
+    left: 0;
+    transform: none;
+
+    &::after {
+      left: 1.5em;
+    }
+  }
+
+  &--end {
+    left: auto;
+    right: 0;
+    transform: none;
+
+    &::after {
+      left: auto;
+      right: 1.5em;
+      transform: translateX(50%);
+    }
+  }
+
+  &__skip {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+// Gives a tour tip something to position against.
+.TourAnchor {
+  position: relative;
 }
 
 .TimezoneSetter {
