@@ -10,6 +10,9 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
+import CurrencySelect from "@/components/CurrencySelect";
+import { Currency } from "@/types/user";
+import { ledgerStartCurrency } from "@/utils/currency";
 
 /** Display name, location and timezone. */
 export const ProfileSection = () => {
@@ -24,6 +27,9 @@ export const ProfileSection = () => {
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
   const [newTimezone, setNewTimezone] = useState<string>();
+  const [newDefaultCurrency, setNewDefaultCurrency] = useState<Currency>(() =>
+    ledgerStartCurrency(user),
+  );
 
   const isSubmittable = useMemo(() => {
     return !!user?.userId && !!newTimezone;
@@ -37,6 +43,7 @@ export const ProfileSection = () => {
       displayName: string;
       displayLocation?: string;
       timezone: string;
+      defaultCurrency: Currency;
     }) => {
       await updateUserProfile.mutate(userData);
 
@@ -56,6 +63,9 @@ export const ProfileSection = () => {
     if (user?.timezone) {
       setNewTimezone(user?.timezone);
     }
+    if (user?.defaultCurrency) {
+      setNewDefaultCurrency(user.defaultCurrency);
+    }
   }, [user]);
 
   const handleUpdateUserInfo = async () => {
@@ -67,6 +77,7 @@ export const ProfileSection = () => {
         displayName: newDisplayName,
         displayLocation: newDisplayLocation ?? undefined,
         timezone: newTimezone,
+        defaultCurrency: newDefaultCurrency,
       });
 
       showToast("Profile updated", "success");
@@ -120,6 +131,13 @@ export const ProfileSection = () => {
             ))}
           </select>
         </div>
+
+        <CurrencySelect
+          id="profile-default-currency"
+          label="Default currency"
+          value={newDefaultCurrency}
+          onChange={setNewDefaultCurrency}
+        />
       </div>
 
       <div className="Menu">

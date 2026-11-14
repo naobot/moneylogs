@@ -67,4 +67,9 @@ describe("preferredCurrency", () => {
     localStorage.setItem(LAST_CURRENCY_KEY, "DOGE");
     expect(preferredCurrency()).toBe(PERSONAL_LEDGER_FALLBACK_CURRENCY);
   });
+
+  it("prefers the user's explicit default over the last-used currency", () => {
+    localStorage.setItem(LAST_CURRENCY_KEY, "CAD");
+    expect(preferredCurrency({ defaultCurrency: "EUR" })).toBe("EUR");
+  });
 });

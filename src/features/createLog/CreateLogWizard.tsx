@@ -9,10 +9,11 @@ import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
 import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
-import { CURRENCIES, isCurrency, LAST_CURRENCY_KEY } from "@/utils/currency";
+import { ledgerStartCurrency } from "@/utils/currency";
 
 import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
+import CurrencySelect from "@/components/CurrencySelect";
 
 import {
   isStepValid,
@@ -29,16 +30,7 @@ import {
 
 import "./CreateLogWizard.scss";
 
-const initialCurrency = (): Currency => {
-  try {
-    const last = localStorage.getItem(LAST_CURRENCY_KEY);
-    return isCurrency(last) ? last : "JPY";
-  } catch {
-    return "JPY";
-  }
-};
-
-const initialState = (): WizardState => ({
+const initialState = (defaultCurrency: Currency): WizardState => ({
   mode: null,
   title: "",
   maxParticipants: 10,
@@ -46,7 +38,7 @@ const initialState = (): WizardState => ({
   startTime: "00:00",
   endDate: dayjs().add(1, "month").format("YYYY-MM-DD"),
   endTime: "23:59",
-  defaultCurrency: initialCurrency(),
+  defaultCurrency,
 });
 
 const MODE_OPTIONS: Array<{ mode: LogMode; title: string; lines: string[] }> = [
@@ -80,7 +72,7 @@ export const CreateLogWizard = () => {
   const { addNewLogGroup } = useLogGroupQuery();
   const { createLedger } = useLedgerQuery();
 
-  const [state, setState] = useState<WizardState>(initialState);
+  const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
   const update = (patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch }));
 
   const steps = stepsFor(state.mode);
@@ -262,22 +254,12 @@ export const CreateLogWizard = () => {
       body = (
         <>
           <h3 className="CreateLogWizard__question">What currency do you usually spend in?</h3>
-          <div className="ControlledInput">
-            <div className="ControlledInput__input">
-              <label htmlFor="wizard-default-currency">Default currency</label>
-              <select
-                id="wizard-default-currency"
-                value={state.defaultCurrency}
-                onChange={(e) => update({ defaultCurrency: e.target.value as Currency })}
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <CurrencySelect
+            id="wizard-default-currency"
+            label="Default currency"
+            value={state.defaultCurrency}
+            onChange={(defaultCurrency) => update({ defaultCurrency })}
+          />
           <p className="CreateLogWizard__hint">
             New entries start in this currency, but any entry can use a different one. Totals are
             kept per currency and never converted.

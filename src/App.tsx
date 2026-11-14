@@ -16,6 +16,7 @@ import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
+import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
 import { Home } from "@/pages/home";
@@ -79,6 +80,7 @@ const App = () => {
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
       )}
+      <DefaultCurrencyPrompt />
       <Layout>
         <ErrorBoundary>
           <Routes>
