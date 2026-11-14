@@ -8,6 +8,7 @@ import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsStrip } from "./LedgerStats";
+import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
 type LedgerProps = {
   ledger: LedgerType;
@@ -24,6 +25,7 @@ const LedgerEntries = ({ ledger, month, today, setMonth }: LedgerProps & LedgerS
   const { user } = useCurrentUser();
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
   const { addEntry, editEntry, deleteEntry } = useLedgerEntryQuery();
+  const tour = useLedgerTour();
 
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const categories = ledger.categories ?? [];
@@ -36,6 +38,8 @@ const LedgerEntries = ({ ledger, month, today, setMonth }: LedgerProps & LedgerS
       input,
       author: { uid: user.userId, userDocId: user.id, displayName: user.displayName },
     });
+    // A first entry means they've got the hang of it.
+    if (tour.activeTarget) tour.complete();
     // Logged into another month (e.g. a late receipt): jump there so it's visible.
     if (monthKeyOf(input.date) !== month) setMonth(monthKeyOf(input.date));
   };

@@ -26,7 +26,7 @@ import { getAutoPostTimezone } from "@/utils/timezone";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 
-import { CURRENCIES, LAST_CURRENCY_KEY } from "@/utils/currency";
+import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 
@@ -267,10 +267,9 @@ const LogPostEditor = forwardRef(
         }
       }
 
-      const lastCurrency = localStorage.getItem(LAST_CURRENCY_KEY) as Currency;
-
-      if (type == "new" && lastCurrency && CURRENCIES.includes(lastCurrency)) {
-        selectedCurrencySet(lastCurrency as Currency);
+      // New posts start on this device's last-used currency, else the user's default.
+      if (type == "new") {
+        selectedCurrencySet(postStartCurrency(user));
       }
     }, []);
 

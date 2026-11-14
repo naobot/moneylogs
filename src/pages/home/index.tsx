@@ -5,6 +5,7 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { KnickKnackDrawer } from "@/features/dashboard/KnickKnackDrawer";
+import { PersonalLogNudge } from "@/features/ledger/tour/PersonalLogNudge";
 import { partitionArchived } from "@/utils/archivedLogs";
 
 // Home is a dashboard of what's current. The full history (every past and archived log)
@@ -22,6 +23,8 @@ export const Home = () => {
   const activeCount = groupParts.active.length + ledgerParts.active.length;
   const archivedCount = groupParts.archived.length + ledgerParts.archived.length;
 
+  const nudge = <PersonalLogNudge ledgerIds={ledgerParts.active.map((l) => l.id)} />;
+
   const archivedNote =
     archivedCount > 0 ? (
       <p className="GroupArchive__empty">
@@ -33,6 +36,7 @@ export const Home = () => {
   if (activeCount === 0) {
     return (
       <div className="Content__body">
+        {nudge}
         <h3>
           {archivedCount > 0
             ? "All your logs are archived"
@@ -54,6 +58,7 @@ export const Home = () => {
 
   return (
     <div className="Content__body Home">
+      {nudge}
       <Dashboard groups={allGroups} ledgers={ledgers} />
       {archivedNote}
     </div>

@@ -1,55 +1,7 @@
 @use "@/constants.scss";
 
+// Flow-specific styles; the shared chrome is in components/Wizard/Wizard.scss.
 .CreateLogWizard {
-  max-width: var(--main-width);
-  align-self: flex-start;
-
-  @media (max-width: constants.$breakpoint-sm) {
-    padding: 1em;
-  }
-
-  &__progress {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5em 1.5em;
-    list-style: none;
-    margin: 0;
-    padding: 0 0 0.75em 0;
-    border-bottom: var(--border-hairline) dashed var(--ink);
-    font-size: 0.85em;
-
-    &__step {
-      opacity: 0.45;
-
-      &--done {
-        opacity: 0.8;
-      }
-
-      &--current {
-        opacity: 1;
-        font-weight: 700;
-        text-decoration: underline;
-        text-underline-offset: 0.25em;
-      }
-    }
-  }
-
-  &__body {
-    display: flex;
-    flex-direction: column;
-    grid-gap: 0.75em;
-  }
-
-  &__question {
-    margin: 0.25em 0 0.5em;
-  }
-
-  &__hint {
-    opacity: 0.7;
-    font-size: 0.85em;
-    margin: 0;
-  }
-
   &__choices {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -87,36 +39,5 @@
       background: var(--ink);
       color: var(--paper);
     }
-  }
-
-  &__review {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 0.5em 1.5em;
-    margin: 0;
-
-    dt {
-      opacity: 0.7;
-    }
-
-    dd {
-      margin: 0;
-    }
-
-    @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: 1fr;
-      gap: 0.15em;
-
-      dd {
-        margin-bottom: 0.5em;
-      }
-    }
-  }
-
-  &__actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 1em;
-    width: 100%;
   }
 }

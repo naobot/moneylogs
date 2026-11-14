@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vite-plus/test";
-import { initialAuthView, sanitizeRedirect } from "@/features/auth/authRedirect";
+import {
+  initialAuthView,
+  placeholderDisplayName,
+  sanitizeRedirect,
+  welcomePath,
+} from "@/features/auth/authRedirect";
 
 describe("sanitizeRedirect", () => {
   it("allows internal paths", () => {
@@ -55,5 +60,31 @@ describe("initialAuthView", () => {
 
   it("ignores invite-looking destinations that fail sanitization", () => {
     expect(initialAuthView({ from: "//evil.com/g/abc123/invite" })).toBe("login");
+  });
+});
+
+describe("welcomePath", () => {
+  it("goes straight to the wizard with nowhere else to be", () => {
+    expect(welcomePath()).toBe("/welcome");
+    expect(welcomePath("/")).toBe("/welcome");
+  });
+
+  it("carries an internal destination along as next", () => {
+    expect(welcomePath("/g/abc/invite")).toBe("/welcome?next=%2Fg%2Fabc%2Finvite");
+  });
+
+  it("drops destinations that fail sanitization", () => {
+    expect(welcomePath("//evil.com")).toBe("/welcome");
+    expect(welcomePath("https://evil.com")).toBe("/welcome");
+  });
+});
+
+describe("placeholderDisplayName", () => {
+  it("uses the email's local part", () => {
+    expect(placeholderDisplayName("ada@example.com")).toBe("ada");
+  });
+
+  it("never comes back empty", () => {
+    expect(placeholderDisplayName("@example.com")).toBe("new user");
   });
 });

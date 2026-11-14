@@ -1,6 +1,4 @@
-import cx from "classnames";
 import { useEffect, useMemo, useState } from "react";
-import { useTimezoneSelect, allTimezones } from "react-timezone-select";
 
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
@@ -10,20 +8,22 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
+import CurrencySelect from "@/components/CurrencySelect";
+import TimezoneSelect from "@/components/TimezoneSelect";
+import { Currency } from "@/types/user";
+import { ledgerStartCurrency } from "@/utils/currency";
 
 /** Display name, location and timezone. */
 export const ProfileSection = () => {
   const { showToast } = useToastContext();
   const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
-  const { options, parseTimezone } = useTimezoneSelect({
-    labelStyle: "original",
-    timezones: allTimezones,
-  });
-
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
   const [newTimezone, setNewTimezone] = useState<string>();
+  const [newDefaultCurrency, setNewDefaultCurrency] = useState<Currency>(() =>
+    ledgerStartCurrency(user),
+  );
 
   const isSubmittable = useMemo(() => {
     return !!user?.userId && !!newTimezone;
@@ -37,6 +37,7 @@ export const ProfileSection = () => {
       displayName: string;
       displayLocation?: string;
       timezone: string;
+      defaultCurrency: Currency;
     }) => {
       await updateUserProfile.mutate(userData);
 
@@ -56,6 +57,9 @@ export const ProfileSection = () => {
     if (user?.timezone) {
       setNewTimezone(user?.timezone);
     }
+    if (user?.defaultCurrency) {
+      setNewDefaultCurrency(user.defaultCurrency);
+    }
   }, [user]);
 
   const handleUpdateUserInfo = async () => {
@@ -67,6 +71,7 @@ export const ProfileSection = () => {
         displayName: newDisplayName,
         displayLocation: newDisplayLocation ?? undefined,
         timezone: newTimezone,
+        defaultCurrency: newDefaultCurrency,
       });
 
       showToast("Profile updated", "success");
@@ -100,26 +105,14 @@ export const ProfileSection = () => {
           </p>
         )}
 
-        <div
-          className={cx("ControlledInput", {
-            "ControlledInput--warning": !newTimezone,
-          })}
-        >
-          <label>My timezone is</label>
-          <select
-            onChange={(e) => {
-              parseTimezone(e.currentTarget.value);
-              setNewTimezone(e.currentTarget.value);
-            }}
-            value={newTimezone}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TimezoneSelect label="My timezone is" value={newTimezone} onChange={setNewTimezone} />
+
+        <CurrencySelect
+          id="profile-default-currency"
+          label="Default currency"
+          value={newDefaultCurrency}
+          onChange={setNewDefaultCurrency}
+        />
       </div>
 
       <div className="Menu">

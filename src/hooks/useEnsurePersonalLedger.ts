@@ -15,16 +15,18 @@ export const useEnsurePersonalLedger = () => {
 
   const uid = user?.userId;
   const userDocId = user?.id;
-  const needsOne = !!user && !hasPersonalLedger(user);
+  // New accounts get theirs from the welcome wizard, in the currency they pick there.
+  const needsOne = !!user && !user.onboardingPending && !hasPersonalLedger(user);
+  const defaultCurrency = user?.defaultCurrency;
 
   useEffect(() => {
     if (!needsOne || !uid || !userDocId || attempted.current.has(uid)) return;
     attempted.current.add(uid);
     ensurePersonalLedger({
       member: { uid, userDocId },
-      defaultCurrency: preferredCurrency(),
+      defaultCurrency: preferredCurrency({ defaultCurrency }),
     }).catch((err) => console.error("Failed to create personal log:", err));
-  }, [needsOne, uid, userDocId]);
+  }, [needsOne, uid, userDocId, defaultCurrency]);
 };
 
 export default useEnsurePersonalLedger;

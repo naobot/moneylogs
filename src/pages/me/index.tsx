@@ -17,6 +17,7 @@ import { partitionByTime } from "@/utils/groupBoundaries";
 import { useTheme } from "@/utils/theme";
 import { useDisplayPrefs } from "@/utils/displayPrefs";
 
+import "@/components/ProfileFields.scss";
 import "./me.scss";
 
 // Personal settings plus everything tied to the account, in drawers. "logs" is linked
@@ -43,7 +44,7 @@ export const UserSettings = () => {
   const archivedCount = archivedGroups.length + archivedLedgers.length;
 
   return (
-    <div className="Window UserSettings">
+    <div className="Window UserSettings ProfileFields">
       <div className="Window__heading">
         {user?.displayName && (
           <h2>

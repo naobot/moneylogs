@@ -4,9 +4,17 @@ import { db } from "@/config/firebase-config";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
 import type { NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
+import type { Currency } from "@/types/user";
 
 export type MoneyLog = {
   id: number;
+};
+
+export type UserTutorials = {
+  /** When the personal-ledger tooltip tour was finished or skipped. */
+  ledgerTour?: Timestamp;
+  /** When the Home nudge pointing at the personal ledger was dismissed or followed. */
+  ledgerNudge?: Timestamp;
 };
 
 export type UserData = {
@@ -49,6 +57,12 @@ export type UserData = {
   notificationPrefs?: NotificationPrefs;
   /** Id of the solo "personal" ledger made for this user (see utils/personalLedger). */
   personalLedgerId?: string;
+  /** The currency the user chose as theirs (see utils/currency for how it's applied). */
+  defaultCurrency?: Currency;
+  /** Set at registration until the welcome wizard is finished (see features/onboarding). */
+  onboardingPending?: boolean;
+  /** One-time guided tours and nudges this user has already seen. */
+  tutorials?: UserTutorials;
 };
 
 export interface CacheableUserData {
@@ -71,6 +85,9 @@ export interface CacheableUserData {
   archivedLogs?: ArchivedLogsMap;
   logLastViewedAt?: LogLastViewedAtMap;
   personalLedgerId?: string;
+  defaultCurrency?: Currency;
+  onboardingPending?: boolean;
+  tutorials?: UserTutorials;
 }
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -165,6 +182,10 @@ export const useGetUserInfo = (userId: string) => {
             // So Home can count new activity before the live listener lands.
             logLastViewedAt: userData.logLastViewedAt,
             personalLedgerId: userData.personalLedgerId,
+            // So the welcome gate and the currency prompt don't misfire before the listener lands.
+            defaultCurrency: userData.defaultCurrency,
+            onboardingPending: userData.onboardingPending,
+            tutorials: userData.tutorials,
           };
 
           setCachedUser(userId, cacheableData);

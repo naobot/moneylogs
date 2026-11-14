@@ -1,6 +1,14 @@
-import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+  deleteField,
+  doc,
+  FieldValue,
+  serverTimestamp,
+  updateDoc,
+  UpdateData,
+} from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { useMutation } from "./useFirebase";
+import type { Currency } from "@/types/user";
 
 type UpdateViewTrackingArgs = {
   userId: string;
@@ -13,6 +21,24 @@ type UpdateUserProfileArgs = {
   displayName: string;
   displayLocation?: string;
   timezone: string;
+  defaultCurrency?: Currency;
+};
+
+/** Top-level user-doc fields that onboarding, prompts and tours write piecemeal. */
+export type UserFieldsPatch = UpdateData<{
+  displayName: string;
+  displayLocation: string;
+  timezone: string;
+  defaultCurrency: Currency;
+  onboardingPending: boolean | FieldValue;
+  "tutorials.ledgerTour": FieldValue;
+  "tutorials.ledgerNudge": FieldValue;
+}>;
+
+/** Partial write to one user doc (by doc id, not auth uid). */
+export const updateUserFields = async (userDocId: string, patch: UserFieldsPatch) => {
+  console.log("✍️ executing write on users collection");
+  await updateDoc(doc(db, "users", userDocId), patch);
 };
 
 type UpdatePinnedPostArgs = {
@@ -40,6 +66,7 @@ export const useUserQuery = () => {
     displayName,
     displayLocation,
     timezone,
+    defaultCurrency,
   }: UpdateUserProfileArgs): Promise<void> => {
     console.log("✍️ executing write on users collection");
 
@@ -47,6 +74,7 @@ export const useUserQuery = () => {
       displayName,
       displayLocation,
       timezone,
+      ...(defaultCurrency ? { defaultCurrency } : {}),
     });
   };
 
