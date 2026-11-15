@@ -55,6 +55,28 @@ describe("SpendingChart", () => {
     expect(container.querySelector(".SpendingChart__line")).toBeNull();
   });
 
+  it("labels each bucket with its weekday initial when asked", () => {
+    act(() => root.render(<SpendingChart series={points()} mode="bars" currency="CAD" weekdays />));
+    // 15–19 Jan 2024 is Monday to Friday.
+    const initials = Array.from(container.querySelectorAll(".SpendingChart__weekday")).map(
+      (t) => t.textContent,
+    );
+    expect(initials).toEqual(["M", "T", "W", "T", "F"]);
+    // Decorative: each bucket's own label already names the day.
+    expect(
+      container.querySelector(".SpendingChart__weekday")!.closest("g")!.getAttribute("aria-hidden"),
+    ).toBe("true");
+    // The date labels drop below the initials.
+    const weekdayY = Number(container.querySelector(".SpendingChart__weekday")!.getAttribute("y"));
+    const dateY = Number(container.querySelector(".SpendingChart__xtick")!.getAttribute("y"));
+    expect(dateY).toBeGreaterThan(weekdayY);
+  });
+
+  it("shows no weekday initials by default", () => {
+    act(() => root.render(<SpendingChart series={points()} mode="bars" currency="CAD" />));
+    expect(container.querySelector(".SpendingChart__weekday")).toBeNull();
+  });
+
   it("renders a line path in cumulative mode", () => {
     act(() => root.render(<SpendingChart series={points()} mode="cumulative" currency="CAD" />));
     const line = container.querySelector<SVGPathElement>(".SpendingChart__line");

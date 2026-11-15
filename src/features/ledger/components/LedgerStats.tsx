@@ -236,6 +236,7 @@ export const LedgerStatsPanel = ({
             mode={chartMode}
             currency={currency}
             barRadius={0}
+            weekdays
           />
 
           {isShared && people.length > 0 && (

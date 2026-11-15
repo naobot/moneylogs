@@ -210,11 +210,17 @@
   }
 
   &__ytick,
-  &__xtick {
+  &__xtick,
+  &__weekday {
     fill: var(--ink);
     opacity: 0.7; // muted text floor (5.5:1)
     font-size: 11px;
     font-family: inherit;
+  }
+
+  // One letter per day, centred under its bar.
+  &__weekday {
+    font-size: 10px;
   }
 
   &__hit {
