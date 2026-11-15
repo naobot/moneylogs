@@ -249,55 +249,62 @@ export const BudgetWizard = ({
                   in the Budgets window too. Whatever isn't budgeted is left to save. Re-rolling
                   replaces your changes.
                 </p>
-                <BudgetPie data={pieData(edited, currency)} summary={pieSummary(edited)} />
-                <ul className="BudgetWizard__plan" aria-label="Suggested budget">
-                  {edited.rows.map((row) => (
-                    <PlanRow
-                      key={row.id}
-                      name={NAME_OF.get(row.id) ?? row.id}
-                      group={planGroupOf(row.id)}
-                      pct={row.pct}
-                    >
-                      <span className="BudgetWizard__amount">
-                        <input
-                          className="LineInput"
-                          aria-label={`${NAME_OF.get(row.id) ?? row.id} budget`}
-                          inputMode="decimal"
-                          autoComplete="off"
-                          placeholder="0"
-                          value={row.raw}
-                          aria-invalid={row.invalid}
-                          onChange={(e) => setEdits((d) => ({ ...d, [row.id]: e.target.value }))}
-                        />
-                        <span className="keep-case">{currency}</span>
-                      </span>
-                    </PlanRow>
-                  ))}
-                  <PlanRow name="Left to save" group="savings" pct={edited.savings.pct}>
-                    {formatAmount(edited.savings.amount, currency)}
-                  </PlanRow>
-                </ul>
-                {edited.hasInvalid && (
-                  <p className="error-message" role="alert">
-                    Enter each amount as a number, or leave it empty for none.
-                  </p>
-                )}
-                {edited.over > 0 && (
-                  <p className="error-message" role="alert">
-                    That's {formatAmount(edited.over, currency)} more than your income of{" "}
-                    {formatAmount(incomeValue, currency)}. Lower some amounts to fit.
-                  </p>
-                )}
-                {plan.savingsCapped && Object.keys(edits).length === 0 && (
-                  <p className="Wizard__hint">
-                    We saved a little less than that style usually would, to leave room for everyday
-                    costs.
-                  </p>
-                )}
-                <p className="Wizard__hint">
-                  These use the default categories. After saving, you can rename them or break them
-                  down (say, Food into Coffee and Restaurants) in Categories.
-                </p>
+                {/* Pie beside the figures on wide screens, stacked on narrow ones. */}
+                <div className="BudgetWizard__planLayout">
+                  <BudgetPie data={pieData(edited, currency)} summary={pieSummary(edited)} />
+                  <div className="BudgetWizard__planDetails">
+                    <ul className="BudgetWizard__plan" aria-label="Suggested budget">
+                      {edited.rows.map((row) => (
+                        <PlanRow
+                          key={row.id}
+                          name={NAME_OF.get(row.id) ?? row.id}
+                          group={planGroupOf(row.id)}
+                          pct={row.pct}
+                        >
+                          <span className="BudgetWizard__amount">
+                            <input
+                              className="LineInput"
+                              aria-label={`${NAME_OF.get(row.id) ?? row.id} budget`}
+                              inputMode="decimal"
+                              autoComplete="off"
+                              placeholder="0"
+                              value={row.raw}
+                              aria-invalid={row.invalid}
+                              onChange={(e) =>
+                                setEdits((d) => ({ ...d, [row.id]: e.target.value }))
+                              }
+                            />
+                            <span className="keep-case">{currency}</span>
+                          </span>
+                        </PlanRow>
+                      ))}
+                      <PlanRow name="Left to save" group="savings" pct={edited.savings.pct}>
+                        {formatAmount(edited.savings.amount, currency)}
+                      </PlanRow>
+                    </ul>
+                    {edited.hasInvalid && (
+                      <p className="error-message" role="alert">
+                        Enter each amount as a number, or leave it empty for none.
+                      </p>
+                    )}
+                    {edited.over > 0 && (
+                      <p className="error-message" role="alert">
+                        That's {formatAmount(edited.over, currency)} more than your income of{" "}
+                        {formatAmount(incomeValue, currency)}. Lower some amounts to fit.
+                      </p>
+                    )}
+                    {plan.savingsCapped && Object.keys(edits).length === 0 && (
+                      <p className="Wizard__hint">
+                        We saved a little less than that style usually would, to leave room for
+                        everyday costs.
+                      </p>
+                    )}
+                    <p className="Wizard__hint">
+                      These use the default categories. After saving, you can rename them or break
+                      them down (say, Food into Coffee and Restaurants) in Categories.
+                    </p>
+                  </div>
+                </div>
               </>
             )
           )}

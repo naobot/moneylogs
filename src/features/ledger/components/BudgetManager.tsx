@@ -81,7 +81,7 @@ const BudgetManagerDialog = ({
 
   if (mode === "wizard") {
     return (
-      <Modal isOpen onClose={onClose} className="BudgetManager">
+      <Modal isOpen onClose={onClose} className="BudgetManager BudgetManager--wizard">
         <Modal.Header striped title="Budget helper">
           Budget helper
         </Modal.Header>

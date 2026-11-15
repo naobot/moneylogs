@@ -449,10 +449,10 @@
     opacity: 0.7;
   }
 
-  // Entry to the budget helper: a quiet text link, not a framed button.
+  // Entry to the budget helper: a quiet, centred text link, not a framed button.
   &__helper {
     display: block;
-    margin: 0 0 0.75em;
+    margin: 0 auto 0.75em;
     padding: 0;
     font: inherit;
     font-size: 0.85em;
@@ -496,6 +496,13 @@
     min-width: 0;
     font-weight: 700;
     overflow-wrap: anywhere;
+  }
+}
+
+// The budget helper needs more room than a tool modal: wider from tablet width up.
+.Modal__content.BudgetManager--wizard {
+  @media (min-width: constants.$breakpoint-md) {
+    max-width: 760px;
   }
 }
 

@@ -72,14 +72,39 @@
     gap: 1em;
   }
 
+  // The modal body centres text; the plan reads as a left-aligned list.
   &__plan {
     list-style: none;
     margin: 0;
     padding: 0;
+    text-align: left;
   }
 
   .BudgetPie {
     margin: 0.25em 0 0.5em;
+  }
+
+  // Wide screens: the pie (and its key) in a left column, the figures beside it.
+  &__planLayout {
+    @media (min-width: constants.$breakpoint-md) {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: start;
+      gap: 1.5em;
+
+      .BudgetPie {
+        flex-direction: column;
+        margin: 0.5em 0 0;
+      }
+    }
+  }
+
+  &__planDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    min-width: 0;
+    text-align: left;
   }
 
   &__planRow {
