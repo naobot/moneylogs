@@ -57,44 +57,54 @@ describe("BudgetManager", () => {
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
   };
-  const submit = (el: HTMLElement) =>
+
+  const field = (name: string) => byLabel(`Monthly budget for ${name}`) as HTMLInputElement;
+  const select = (el: HTMLSelectElement, value: string) =>
     act(() => {
-      el.closest("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      el.value = value;
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-  it("lists an editor per active category, with existing budgets", () => {
-    expect(byLabel("Monthly budget for Food")).not.toBeNull();
-    expect(byLabel("Monthly budget for Transport")).not.toBeNull();
+  it("shows one amount per active category, in the currency most budgets use", () => {
+    // Transport's EUR budget outnumbers no-one else's, so EUR is shown first.
+    expect((byLabel("Budget currency") as unknown as HTMLSelectElement).value).toBe("EUR");
+    expect(field("Transport").value).toBe("80");
+    expect(field("Food").value).toBe("");
     expect(byLabel("Monthly budget for Old")).toBeNull();
-    expect(document.body.textContent).toContain("80 EUR / month");
+    // No per-field "set" step, only Save.
+    expect(document.querySelector('[aria-label^="Set budget"]')).toBeNull();
     expect(button("Save").disabled).toBe(true);
   });
 
-  it("sets and removes a monthly budget per currency", async () => {
-    const input = byLabel("Monthly budget for Food") as HTMLInputElement;
-    type(input, "abc");
-    expect(byLabel("Set budget for Food").disabled).toBe(true);
-    type(input, "30,000");
-    act(() => byLabel("Set budget for Food").click());
-    expect(document.body.textContent).toContain("30,000 JPY / month");
-
-    act(() => byLabel("Remove JPY budget for Food").click());
-    expect(document.body.textContent).not.toContain("30,000 JPY / month");
-    type(byLabel("Monthly budget for Food") as HTMLInputElement, "25000");
-    submit(byLabel("Monthly budget for Food"));
+  it("saves typed, changed and cleared amounts across currencies in one go", async () => {
+    type(field("Food"), "30,000");
+    select(byLabel("Budget currency") as unknown as HTMLSelectElement, "JPY");
+    expect(field("Food").value).toBe("");
+    type(field("Food"), "25000");
+    select(byLabel("Budget currency") as unknown as HTMLSelectElement, "EUR");
+    expect(field("Food").value).toBe("30,000"); // kept across the switch
+    type(field("Transport"), "");
 
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
-      { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
-      { type: "setBudget", id: "food", currency: "JPY", amount: null },
       { type: "setBudget", id: "food", currency: "JPY", amount: 25000 },
+      { type: "setBudget", id: "food", currency: "EUR", amount: 30000 },
+      { type: "setBudget", id: "transport", currency: "EUR", amount: null },
     ]);
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("blocks Save while an amount is invalid", () => {
+    type(field("Food"), "abc");
+    expect(document.body.textContent).toContain("Enter an amount between 0 and");
+    expect(button("Save").disabled).toBe(true);
+    type(field("Food"), "50");
+    expect(button("Save").disabled).toBe(false);
+  });
+
   it("keeps the dialog open with an error when saving fails", async () => {
     onSave.mockRejectedValueOnce(new Error("offline"));
-    act(() => byLabel("Remove EUR budget for Transport").click());
+    type(field("Transport"), "90");
     await act(async () => button("Save").click());
     expect(document.body.textContent).toContain("Couldn't save your changes");
     expect(onClose).not.toHaveBeenCalled();

@@ -137,19 +137,19 @@ describe("CategoryManager", () => {
     expect(document.querySelector('[role="tooltip"]')).toBeNull();
   });
 
-  it("sets and removes a monthly budget inline", async () => {
+  it("edits a budget inline with no separate set step, saved with the rest", async () => {
     expect(byLabel("Monthly budget for Food")).toBeNull();
     act(() => byLabel("Budget for Food").click());
     expect(byLabel("Budget for Food").getAttribute("aria-expanded")).toBe("true");
     type(byLabel("Monthly budget for Food") as HTMLInputElement, "30,000");
-    act(() => byLabel("Set budget for Food").click());
     expect(document.body.textContent).toContain("30,000 JPY / month");
-    act(() => byLabel("Remove JPY budget for Food").click());
+    expect(document.querySelector('[aria-label^="Set budget"]')).toBeNull();
+    act(() => byLabel("Archive Transport").click());
 
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
+      { type: "archive", id: "transport" },
       { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
-      { type: "setBudget", id: "food", currency: "JPY", amount: null },
     ]);
   });
 

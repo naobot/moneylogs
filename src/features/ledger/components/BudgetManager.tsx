@@ -1,24 +1,25 @@
-import { FormEvent, useMemo, useState } from "react";
+import { useState } from "react";
 
-import RowButton from "@/components/RowButton";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { CURRENCIES } from "@/utils/currency";
-import { formatAmount, parseAmount } from "@/utils/ledgerEntries";
 import { activeCategories } from "@/utils/ledger";
 import {
-  applyCategoryOps,
+  BudgetDrafts,
+  budgetDraftKey,
+  budgetDraftOps,
+  budgetFieldError,
+  budgetFieldValue,
   CategoryOp,
-  isValidBudgetAmount,
-  MAX_BUDGET,
+  preferredBudgetCurrency,
 } from "@/utils/ledgerCategories";
 
 type BudgetManagerProps = {
   isOpen: boolean;
   categories: ReadonlyArray<LedgerCategory>;
-  /** Pre-selected currency when adding a budget. */
+  /** Shown first when no budgets exist yet. */
   defaultCurrency: Currency;
   onClose: () => void;
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
@@ -26,11 +27,11 @@ type BudgetManagerProps = {
 };
 
 /**
- * Monthly budgets per category. Budgets live on the categories, so edits are recorded as
- * the same category operations and replayed onto the latest server copy on Save.
+ * Monthly budgets per category, one currency at a time. Fields are drafts until Save,
+ * where the changed ones become category ops replayed onto the latest server copy.
  */
 export const BudgetManager = (props: BudgetManagerProps) =>
-  // Remount on open so each session starts from the current budgets with no pending ops.
+  // Remount on open so each session starts from the saved budgets with no drafts.
   props.isOpen ? <BudgetManagerDialog {...props} /> : null;
 
 const BudgetManagerDialog = ({
@@ -40,16 +41,16 @@ const BudgetManagerDialog = ({
   onSave,
   isSaving,
 }: BudgetManagerProps) => {
-  const [ops, setOps] = useState<CategoryOp[]>([]);
+  const [currency, setCurrency] = useState<Currency>(() =>
+    preferredBudgetCurrency(categories, defaultCurrency),
+  );
+  // Kept across currency switches, so edits in one currency survive a look at another.
+  const [drafts, setDrafts] = useState<BudgetDrafts>({});
   const [saveFailed, setSaveFailed] = useState(false);
 
-  const draft = useMemo(() => applyCategoryOps(categories, ops), [categories, ops]);
-  const active = activeCategories(draft);
-
-  const push = (op: CategoryOp) => {
-    setSaveFailed(false);
-    setOps((prev) => [...prev, op]);
-  };
+  const active = activeCategories(categories);
+  const ops = budgetDraftOps(categories, drafts);
+  const hasErrors = Object.values(drafts).some((raw) => budgetFieldError(raw));
 
   const handleSave = async () => {
     try {
@@ -67,19 +68,34 @@ const BudgetManagerDialog = ({
         Budgets
       </Modal.Header>
       <Modal.Body>
-        <p className="BudgetManager__hint">
-          Monthly limits per category. The running total and stats track your progress.
-        </p>
+        <div className="BudgetManager__intro">
+          <p className="BudgetManager__hint">
+            Monthly limits per category. Leave one empty for no budget.
+          </p>
+          <select
+            aria-label="Budget currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as Currency)}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
         <ul className="BudgetManager__list" aria-label="Category budgets">
           {active.map((category) => (
             <li key={category.id} className="BudgetManager__row">
               <span className="BudgetManager__name keep-case">{category.name}</span>
-              <BudgetEditor
+              <BudgetField
                 category={category}
-                defaultCurrency={defaultCurrency}
-                onSet={(currency, amount) =>
-                  push({ type: "setBudget", id: category.id, currency, amount })
-                }
+                currency={currency}
+                drafts={drafts}
+                onChange={(raw) => {
+                  setSaveFailed(false);
+                  setDrafts((d) => ({ ...d, [budgetDraftKey(category.id, currency)]: raw }));
+                }}
               />
             </li>
           ))}
@@ -93,7 +109,7 @@ const BudgetManagerDialog = ({
         <Button
           text="Save"
           buttonStyle="primary-border"
-          disabled={ops.length === 0 || isSaving}
+          disabled={ops.length === 0 || hasErrors || isSaving}
           loading={isSaving}
           onClick={() => void handleSave()}
         />
@@ -108,66 +124,42 @@ const BudgetManagerDialog = ({
   );
 };
 
-/** Per-currency monthly budget editor for one category (also used inline in Categories). */
-export const BudgetEditor = ({
+/**
+ * One category's monthly budget in one currency: a right-aligned amount, with an
+ * optional currency picker beside it (the Budgets window picks currency once, above).
+ */
+export const BudgetField = ({
   category,
-  defaultCurrency,
-  onSet,
+  currency,
+  drafts,
+  onChange,
+  onCurrencyChange,
 }: {
   category: LedgerCategory;
-  defaultCurrency: Currency;
-  onSet: (currency: Currency, amount: number | null) => void;
+  currency: Currency;
+  drafts: BudgetDrafts;
+  onChange: (raw: string) => void;
+  onCurrencyChange?: (currency: Currency) => void;
 }) => {
-  const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
-  const parsed = parseAmount(amount);
-  const valid = isValidBudgetAmount(parsed);
-  const existing = CURRENCIES.filter((c) => category.budget?.[c] !== undefined);
-
-  const submit = () => {
-    if (!valid) return;
-    onSet(currency, parsed);
-    setAmount("");
-  };
-
+  const value = budgetFieldValue(drafts, category, currency);
+  const error = budgetFieldError(value);
   return (
-    <div className="BudgetManager__editor">
-      {existing.length > 0 && (
-        <ul className="BudgetManager__amounts" aria-label={`${category.name} budgets`}>
-          {existing.map((c) => (
-            <li key={c}>
-              {formatAmount(category.budget![c]!, c)} / month
-              <RowButton
-                glyph
-                aria-label={`Remove ${c} budget for ${category.name}`}
-                title={`Remove ${c} budget for ${category.name}`}
-                onClick={() => onSet(c, null)}
-              >
-                ×
-              </RowButton>
-            </li>
-          ))}
-        </ul>
-      )}
-      <form
-        className="BudgetManager__form"
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        <input
-          className="LineInput"
-          aria-label={`Monthly budget for ${category.name}`}
-          inputMode="decimal"
-          placeholder="Monthly budget"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+    <span className="BudgetField">
+      <input
+        className="LineInput BudgetField__amount"
+        aria-label={`Monthly budget for ${category.name}`}
+        aria-invalid={!!error}
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder="no budget"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {onCurrencyChange ? (
         <select
           aria-label={`Budget currency for ${category.name}`}
           value={currency}
-          onChange={(e) => setCurrency(e.target.value as Currency)}
+          onChange={(e) => onCurrencyChange(e.target.value as Currency)}
         >
           {CURRENCIES.map((c) => (
             <option key={c} value={c}>
@@ -175,21 +167,11 @@ export const BudgetEditor = ({
             </option>
           ))}
         </select>
-        <RowButton
-          aria-label={`Set budget for ${category.name}`}
-          title={`Set budget for ${category.name}`}
-          disabled={!valid}
-          onClick={submit}
-        >
-          {category.budget?.[currency] !== undefined ? "update" : "set"}
-        </RowButton>
-        {amount.trim() !== "" && !valid && (
-          <small className="BudgetManager__error">
-            Enter an amount between 0 and {MAX_BUDGET.toLocaleString("en-US")}.
-          </small>
-        )}
-      </form>
-    </div>
+      ) : (
+        <span className="BudgetField__unit keep-case">{currency}</span>
+      )}
+      {error && <small className="BudgetField__error">{error}</small>}
+    </span>
   );
 };
 

@@ -422,10 +422,12 @@
     display: inline-flex;
   }
 
-  // Inline budget editor: wraps onto its own line under the category row.
+  // Inline budget field: its own line under the category row, right-aligned.
   &__budget {
     flex-basis: 100%;
-    padding: 0.2em 0 0.2em 1.5em;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.2em 0;
   }
 
   &__subheading {
@@ -439,10 +441,19 @@
   }
 }
 
-// Monthly budgets per category: one row per active category, its editor always open.
+// Monthly budgets per category, one currency at a time: name left, amount right.
 .BudgetManager {
+  &__intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em 1em;
+    margin-bottom: 0.5em;
+  }
+
   &__hint {
-    margin: 0 0 0.5em;
+    margin: 0;
     font-size: 0.8em;
     opacity: 0.7;
   }
@@ -455,60 +466,43 @@
 
   &__row {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25em 1em;
-    padding: 0.5em 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.4em 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
   }
 
   &__name {
-    flex: 0 0 8em;
     min-width: 0;
     font-weight: 700;
     overflow-wrap: anywhere;
   }
+}
 
-  &__editor {
-    flex: 1;
-    min-width: 14em;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4em;
+// One budget amount (right-aligned) with its currency: a fixed unit or a picker.
+.BudgetField {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25em 0.5em;
+  flex-shrink: 0;
+
+  &__amount {
+    width: 8em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__unit {
+    min-width: 2.5em;
     font-size: 0.85em;
-  }
-
-  &__amounts {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-    }
-  }
-
-  &__form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4em;
-
-    input {
-      width: 9em;
-      text-align: right;
-    }
-
-    select {
-      font: inherit;
-      border-radius: var(--radius-none);
-    }
   }
 
   &__error {
     flex-basis: 100%;
+    text-align: right;
     font-size: 0.8em;
   }
 }

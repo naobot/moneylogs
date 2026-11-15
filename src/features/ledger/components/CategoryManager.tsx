@@ -32,8 +32,13 @@ import {
   CategoryOp,
   MAX_CATEGORIES,
   newCategoryId,
+  BudgetDrafts,
+  budgetDraftKey,
+  budgetDraftOps,
+  budgetFieldError,
+  preferredBudgetCurrency,
 } from "@/utils/ledgerCategories";
-import { BudgetEditor } from "./BudgetManager";
+import { BudgetField } from "./BudgetManager";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -77,12 +82,21 @@ const CategoryManagerDialog = ({
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
   const [budgetingId, setBudgetingId] = useState<string | null>(null);
+  // Budget fields are drafts (no per-field "set"); they become ops on Save.
+  const [budgetDrafts, setBudgetDrafts] = useState<BudgetDrafts>({});
+  const [budgetCurrency, setBudgetCurrency] = useState<Record<string, Currency>>({});
   const [saveFailed, setSaveFailed] = useState(false);
 
   const draft = useMemo(() => applyCategoryOps(categories, ops), [categories, ops]);
   const active = activeCategories(draft);
   const archived = sortCategories(draft.filter((c) => c.archived));
-  const isDirty = ops.length > 0;
+  const budgetOps = budgetDraftOps(draft, budgetDrafts);
+  // Budgets as they'll be after Save, for each row's "X / month" summary.
+  const budgetsAfterSave = new Map(applyCategoryOps(draft, budgetOps).map((c) => [c.id, c.budget]));
+  const budgetHasErrors = Object.values(budgetDrafts).some((raw) => budgetFieldError(raw));
+  const isDirty = ops.length > 0 || budgetOps.length > 0;
+  const currencyFor = (category: LedgerCategory) =>
+    budgetCurrency[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
 
   const push = (op: CategoryOp) => {
     setSaveFailed(false);
@@ -145,7 +159,7 @@ const CategoryManagerDialog = ({
 
   const handleSave = async () => {
     try {
-      await onSave(ops);
+      await onSave([...ops, ...budgetOps]);
       onClose();
     } catch (err) {
       console.error("Failed to save categories:", err);
@@ -202,9 +216,9 @@ const CategoryManagerDialog = ({
                       {category.name}
                     </button>
                   )}
-                  {category.budget && (
+                  {budgetsAfterSave.get(category.id) && (
                     <small className="CategoryManager__budgetSummary">
-                      {formatTotals(category.budget)} / month
+                      {formatTotals(budgetsAfterSave.get(category.id)!)} / month
                     </small>
                   )}
                   <span className="CategoryManager__actions">
@@ -234,11 +248,19 @@ const CategoryManagerDialog = ({
                   </span>
                   {budgetingId === category.id && (
                     <div className="CategoryManager__budget">
-                      <BudgetEditor
+                      <BudgetField
                         category={category}
-                        defaultCurrency={defaultCurrency}
-                        onSet={(currency, amount) =>
-                          push({ type: "setBudget", id: category.id, currency, amount })
+                        currency={currencyFor(category)}
+                        drafts={budgetDrafts}
+                        onChange={(raw) => {
+                          setSaveFailed(false);
+                          setBudgetDrafts((d) => ({
+                            ...d,
+                            [budgetDraftKey(category.id, currencyFor(category))]: raw,
+                          }));
+                        }}
+                        onCurrencyChange={(currency) =>
+                          setBudgetCurrency((m) => ({ ...m, [category.id]: currency }))
                         }
                       />
                     </div>
@@ -328,7 +350,7 @@ const CategoryManagerDialog = ({
         <Button
           text="Save"
           buttonStyle="primary-border"
-          disabled={!isDirty || isSaving}
+          disabled={!isDirty || budgetHasErrors || isSaving}
           loading={isSaving}
           onClick={() => void handleSave()}
         />
