@@ -24,8 +24,10 @@
     margin: 0;
   }
 
-  // Label left, amount right (as in the Budgets window).
+  // Label left, amount right (as in the Budgets window). Left-aligned text too: the
+  // modal body centres it, which shifted a label within the width of its hint line.
   &__field {
+    text-align: left;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
