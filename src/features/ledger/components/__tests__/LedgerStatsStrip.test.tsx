@@ -65,14 +65,14 @@ describe("LedgerStatsStrip", () => {
 
   it("invites setting a budget when there is none", () => {
     render([{ id: "food", name: "Food", order: 0 }]);
-    const cta = buttons().find((b) => b.textContent === "+ set a monthly budget")!;
+    const cta = buttons().find((b) => b.textContent === "set budget")!;
     act(() => cta.click());
     expect(onEditBudget).toHaveBeenCalled();
   });
 
   it("shows budget progress, which opens the budgets editor", () => {
     render([{ id: "food", name: "Food", order: 0, budget: { JPY: 4000 } }]);
-    expect(container.textContent).not.toContain("set a monthly budget");
+    expect(container.textContent).not.toContain("set budget");
     const status = buttons().find((b) => b.textContent?.includes("budget"))!;
     expect(status.textContent).toMatch(/25%.*4,000 JPY budget/);
     act(() => status.click());

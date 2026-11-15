@@ -108,8 +108,8 @@ const BudgetManagerDialog = ({
   );
 };
 
-/** Per-currency monthly budget editor for one category. */
-const BudgetEditor = ({
+/** Per-currency monthly budget editor for one category (also used inline in Categories). */
+export const BudgetEditor = ({
   category,
   defaultCurrency,
   onSet,

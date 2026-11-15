@@ -5,8 +5,6 @@ import CategoryManager from "@/features/ledger/components/CategoryManager";
 import { LedgerCategory } from "@/types/ledger";
 import { CategoryOp } from "@/utils/ledgerCategories";
 
-vi.mock("@/hooks/useDragReorderEnabled", () => ({ default: () => false }));
-
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const CATEGORIES: LedgerCategory[] = [
@@ -34,6 +32,7 @@ describe("CategoryManager", () => {
         <CategoryManager
           isOpen
           categories={CATEGORIES}
+          defaultCurrency="JPY"
           onClose={onClose}
           onSave={onSave}
           isSaving={false}
@@ -75,7 +74,7 @@ describe("CategoryManager", () => {
     expect(button("Save").disabled).toBe(true);
   });
 
-  it("adds, renames and reorders, then saves exactly those edits", async () => {
+  it("adds and renames, then saves exactly those edits", async () => {
     type(byLabel("New category name") as HTMLInputElement, "Coffee");
     submit(byLabel("New category name"));
     expect(activeNames()).toEqual(["Food", "Transport", "Coffee"]);
@@ -86,14 +85,10 @@ describe("CategoryManager", () => {
     submit(rename);
     expect(activeNames()).toEqual(["Eating out", "Transport", "Coffee"]);
 
-    act(() => byLabel("Move Coffee up").click());
-    expect(activeNames()).toEqual(["Eating out", "Coffee", "Transport"]);
-
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
       { type: "add", id: "coffee", name: "Coffee" },
       { type: "rename", id: "food", name: "Eating out" },
-      { type: "move", id: "coffee", toIndex: 1 },
     ]);
     expect(onClose).toHaveBeenCalled();
   });
@@ -105,13 +100,9 @@ describe("CategoryManager", () => {
   });
 
   it("archives, restores, and only deletes unused archived categories", async () => {
-    // Archive is tucked behind the row's ⋯ button.
-    expect(byLabel("Archive Transport")).toBeNull();
-    act(() => byLabel("More for Transport").click());
     act(() => byLabel("Archive Transport").click());
     expect(activeNames()).toEqual(["Food"]);
     // The last active category can't be archived.
-    act(() => byLabel("More for Food").click());
     expect(byLabel("Archive Food").disabled).toBe(true);
 
     checkInUse.mockResolvedValueOnce(true);
@@ -127,13 +118,42 @@ describe("CategoryManager", () => {
     expect(activeNames()).toEqual(["Food", "Old"]);
   });
 
-  it("has no budget controls (budgets have their own editor)", () => {
+  it("reorders by drag handle only: every active row has one, no up/down buttons", () => {
+    expect(byLabel("Reorder Food")).not.toBeNull();
+    expect(byLabel("Reorder Transport")).not.toBeNull();
+    expect(byLabel("Move Food up")).toBeNull();
+  });
+
+  it("explains archiving in a tooltip on keyboard focus", () => {
+    const archive = byLabel("Archive Transport") as HTMLButtonElement;
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    act(() => archive.focus());
+    expect(document.querySelector('[role="tooltip"]')?.textContent).toContain(
+      "hides this category when adding entries",
+    );
+    act(() => archive.blur());
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+  });
+
+  it("sets and removes a monthly budget inline", async () => {
     expect(byLabel("Monthly budget for Food")).toBeNull();
+    act(() => byLabel("Budget for Food").click());
+    expect(byLabel("Budget for Food").getAttribute("aria-expanded")).toBe("true");
+    type(byLabel("Monthly budget for Food") as HTMLInputElement, "30,000");
+    act(() => byLabel("Set budget for Food").click());
+    expect(document.body.textContent).toContain("30,000 JPY / month");
+    act(() => byLabel("Remove JPY budget for Food").click());
+
+    await act(async () => button("Save").click());
+    expect(onSave).toHaveBeenCalledWith([
+      { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
+      { type: "setBudget", id: "food", currency: "JPY", amount: null },
+    ]);
   });
 
   it("keeps the dialog open with an error when saving fails", async () => {
     onSave.mockRejectedValueOnce(new Error("offline"));
-    act(() => byLabel("Move Transport up").click());
+    act(() => byLabel("Archive Transport").click());
     await act(async () => button("Save").click());
     expect(document.body.textContent).toContain("Couldn't save your changes");
     expect(onClose).not.toHaveBeenCalled();

@@ -163,6 +163,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
       <CategoryManager
         isOpen={showCategories}
         categories={ledger.categories ?? []}
+        defaultCurrency={ledger.defaultCurrency}
         onClose={() => setShowCategories(false)}
         isSaving={saveCategoryOps.isLoading}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}

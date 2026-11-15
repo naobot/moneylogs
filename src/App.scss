@@ -465,6 +465,19 @@ h6,
     letter-spacing: normal;
     padding: 0 0.5em;
   }
+
+  // An icon before the label (e.g. the wallet on "budget").
+  &--icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+  }
+
+  // The icon flips with the button when it inverts.
+  &:hover:not(:disabled) .Icon img,
+  &:focus-visible .Icon img {
+    filter: var(--icon-filter-inverse);
+  }
 }
 
 // Inline, in-place text input: a dashed underline that turns solid on focus.

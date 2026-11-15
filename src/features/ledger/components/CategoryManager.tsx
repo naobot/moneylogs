@@ -1,19 +1,29 @@
-import { FormEvent, ReactNode, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useId, useMemo, useState } from "react";
 import cx from "classnames";
 import {
   DndContext,
   DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
   TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import SharedRowButton from "@/components/RowButton";
+import Icon, { IconType } from "@/components/Icon";
+import Popover from "@/components/Popover";
+import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { LedgerCategory } from "@/types/ledger";
+import { Currency } from "@/types/user";
 import { formatTotals } from "@/utils/ledgerEntries";
 import { activeCategories, MAX_CATEGORY_NAME_LENGTH, sortCategories } from "@/utils/ledger";
 import {
@@ -23,7 +33,7 @@ import {
   MAX_CATEGORIES,
   newCategoryId,
 } from "@/utils/ledgerCategories";
-import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
+import { BudgetEditor } from "./BudgetManager";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -31,6 +41,8 @@ import Button from "@/components/Button";
 type CategoryManagerProps = {
   isOpen: boolean;
   categories: ReadonlyArray<LedgerCategory>;
+  /** Pre-selected currency when adding a budget. */
+  defaultCurrency: Currency;
   onClose: () => void;
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
   isSaving: boolean;
@@ -54,6 +66,7 @@ export const CategoryManager = (props: CategoryManagerProps) =>
 
 const CategoryManagerDialog = ({
   categories,
+  defaultCurrency,
   onClose,
   onSave,
   isSaving,
@@ -63,10 +76,8 @@ const CategoryManagerDialog = ({
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
-  // The row whose rarely-needed actions (archive) are expanded.
-  const [moreId, setMoreId] = useState<string | null>(null);
+  const [budgetingId, setBudgetingId] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
-  const dragEnabled = useDragReorderEnabled();
 
   const draft = useMemo(() => applyCategoryOps(categories, ops), [categories, ops]);
   const active = activeCategories(draft);
@@ -99,9 +110,13 @@ const CategoryManagerDialog = ({
 
   const move = (id: string, toIndex: number) => push({ type: "move", id, toIndex });
 
+  // Dragging is the only way to reorder, so it's on everywhere here (unlike the nav's
+  // LogsMenu): only the ⋮⋮ handle starts a drag, so it can't fight scrolling or taps,
+  // and the keyboard sensor (Space on a focused handle, then arrows) keeps it accessible.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const handleDragEnd = ({ active: dragged, over }: DragEndEvent) => {
     if (!over || dragged.id === over.id) return;
@@ -149,8 +164,8 @@ const CategoryManagerDialog = ({
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
             <ul className="CategoryManager__list" aria-label="Active categories">
-              {active.map((category, index) => (
-                <SortableRow key={category.id} id={category.id} dragEnabled={dragEnabled}>
+              {active.map((category) => (
+                <SortableRow key={category.id} id={category.id} name={category.name}>
                   {renaming?.id === category.id ? (
                     <form
                       className="CategoryManager__rename"
@@ -193,48 +208,39 @@ const CategoryManagerDialog = ({
                     </small>
                   )}
                   <span className="CategoryManager__actions">
-                    <RowButton
-                      glyph
-                      label={`Move ${category.name} up`}
-                      disabled={index === 0}
-                      onClick={() => move(category.id, index - 1)}
+                    <ActionButton
+                      icon="wallet"
+                      label={`Budget for ${category.name}`}
+                      expanded={budgetingId === category.id}
+                      onClick={() =>
+                        setBudgetingId((id) => (id === category.id ? null : category.id))
+                      }
                     >
-                      ↑
-                    </RowButton>
-                    <RowButton
-                      glyph
-                      label={`Move ${category.name} down`}
-                      disabled={index === active.length - 1}
-                      onClick={() => move(category.id, index + 1)}
+                      budget
+                    </ActionButton>
+                    <ActionButton
+                      icon="folder"
+                      label={`Archive ${category.name}`}
+                      disabled={lastActive}
+                      tip={
+                        lastActive
+                          ? "A log needs at least one category, so this one can't be archived."
+                          : "Archiving hides this category when adding entries. Past entries keep it, and you can restore it any time."
+                      }
+                      onClick={() => push({ type: "archive", id: category.id })}
                     >
-                      ↓
-                    </RowButton>
-                    <RowButton
-                      glyph
-                      label={`More for ${category.name}`}
-                      onClick={() => setMoreId((id) => (id === category.id ? null : category.id))}
-                    >
-                      ⋯
-                    </RowButton>
+                      archive
+                    </ActionButton>
                   </span>
-                  {moreId === category.id && (
-                    <div className="CategoryManager__more">
-                      <small>
-                        {lastActive
-                          ? "A log needs at least one category."
-                          : "Archiving hides it when adding entries. Past entries keep it."}
-                      </small>
-                      <RowButton
-                        label={`Archive ${category.name}`}
-                        disabled={lastActive}
-                        title={lastActive ? "A log needs at least one category" : undefined}
-                        onClick={() => {
-                          push({ type: "archive", id: category.id });
-                          setMoreId(null);
-                        }}
-                      >
-                        archive
-                      </RowButton>
+                  {budgetingId === category.id && (
+                    <div className="CategoryManager__budget">
+                      <BudgetEditor
+                        category={category}
+                        defaultCurrency={defaultCurrency}
+                        onSet={(currency, amount) =>
+                          push({ type: "setBudget", id: category.id, currency, amount })
+                        }
+                      />
                     </div>
                   )}
                 </SortableRow>
@@ -363,18 +369,89 @@ const RowButton = ({
   </SharedRowButton>
 );
 
-const SortableRow = ({
-  id,
-  dragEnabled,
+/**
+ * A row action with an icon and a one-word label. An optional tip explains it on hover
+ * or keyboard focus (touch goes straight to the action).
+ */
+const ActionButton = ({
+  icon,
+  label,
+  tip,
+  expanded,
+  disabled,
+  onClick,
   children,
 }: {
-  id: string;
-  dragEnabled: boolean;
+  icon: IconType;
+  label: string;
+  tip?: string;
+  expanded?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
   children: ReactNode;
 }) => {
+  const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const { openAfterDelay, cancelOpen } = useHoverIntent();
+  const tipId = useId();
+
+  const close = () => {
+    cancelOpen();
+    setOpen(false);
+  };
+
+  return (
+    // The tip hangs off a wrapper, since a disabled button gets no pointer events.
+    <span
+      ref={setAnchor}
+      className="CategoryManager__action"
+      onPointerEnter={(e) => tip && isMousePointer(e) && openAfterDelay(() => setOpen(true))}
+      onPointerLeave={(e) => isMousePointer(e) && close()}
+    >
+      <SharedRowButton
+        className="RowButton--icon"
+        aria-label={label}
+        aria-expanded={expanded}
+        aria-describedby={tip && open ? tipId : undefined}
+        disabled={disabled}
+        onClick={() => {
+          close();
+          onClick();
+        }}
+        onFocus={() => tip && setOpen(true)}
+        onBlur={close}
+        onKeyDown={(e) => {
+          // Escape dismisses the tip first, without also closing the modal.
+          if (e.key === "Escape" && open) {
+            e.stopPropagation();
+            close();
+          }
+        }}
+      >
+        <Icon type={icon} size={14} />
+        {children}
+      </SharedRowButton>
+      {tip && (
+        <Popover
+          anchor={anchor}
+          open={open}
+          onClose={close}
+          interactive={false}
+          className="HelpTip__panel"
+          role="tooltip"
+        >
+          <p id={tipId} className="HelpTip__text">
+            {tip}
+          </p>
+        </Popover>
+      )}
+    </span>
+  );
+};
+
+const SortableRow = ({ id, name, children }: { id: string; name: string; children: ReactNode }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: !dragEnabled,
   });
   return (
     <li
@@ -382,16 +459,15 @@ const SortableRow = ({
       className={cx("CategoryManager__row", { "CategoryManager__row--dragging": isDragging })}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
-      {dragEnabled && (
-        <span
-          className="CategoryManager__handle"
-          aria-label="Drag to reorder"
-          {...attributes}
-          {...listeners}
-        >
-          ⋮⋮
-        </span>
-      )}
+      <span
+        className="CategoryManager__handle"
+        {...attributes}
+        {...listeners}
+        aria-label={`Reorder ${name}`}
+        title="Drag to reorder"
+      >
+        ⋮⋮
+      </span>
       {children}
     </li>
   );

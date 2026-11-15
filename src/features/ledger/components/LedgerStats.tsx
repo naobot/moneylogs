@@ -32,6 +32,7 @@ import {
 } from "@/utils/ledgerStats";
 
 import Button from "@/components/Button";
+import Icon from "@/components/Icon";
 import RowButton from "@/components/RowButton";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 
@@ -121,7 +122,8 @@ export const LedgerStatsStrip = ({
       )}
       {!isLoading && noBudget && (
         <button type="button" className="LedgerStats__strip__cta" onClick={onEditBudget}>
-          + set a monthly budget
+          <Icon type="wallet" size={14} />
+          set budget
         </button>
       )}
       <Link className="LedgerStats__strip__toggle" to={statsPath} tabIndex={-1} aria-hidden>
