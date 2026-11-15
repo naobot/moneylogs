@@ -14,6 +14,9 @@ type WizardProps = {
   children: ReactNode;
   /** Back is shown from the second step on. */
   onBack: () => void;
+  /** When given, the first step shows this as its Back button (e.g. to leave a modal flow). */
+  onCancel?: () => void;
+  cancelText?: string;
   /** Called by the Next button, by Enter in a text input, and by form submit. */
   onNext: () => void;
   /** Hide Next on steps that advance themselves (e.g. picking a card). */
@@ -35,6 +38,8 @@ export const Wizard = ({
   stepIndex,
   children,
   onBack,
+  onCancel,
+  cancelText = "Back",
   onNext,
   showNext = true,
   nextText,
@@ -81,8 +86,17 @@ export const Wizard = ({
       <div className="Wizard__body">{children}</div>
 
       <div className="Menu Wizard__actions">
-        {stepIndex > 0 && (
+        {stepIndex > 0 ? (
           <Button text="Back" buttonStyle="primary-border-lite" disabled={busy} onClick={onBack} />
+        ) : (
+          onCancel && (
+            <Button
+              text={cancelText}
+              buttonStyle="primary-border-lite"
+              disabled={busy}
+              onClick={onCancel}
+            />
+          )
         )}
         {showNext && (
           <Button
