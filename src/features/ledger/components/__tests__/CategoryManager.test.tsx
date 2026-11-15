@@ -5,8 +5,6 @@ import CategoryManager from "@/features/ledger/components/CategoryManager";
 import { LedgerCategory } from "@/types/ledger";
 import { CategoryOp } from "@/utils/ledgerCategories";
 
-vi.mock("@/hooks/useDragReorderEnabled", () => ({ default: () => false }));
-
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const CATEGORIES: LedgerCategory[] = [
@@ -76,7 +74,7 @@ describe("CategoryManager", () => {
     expect(button("Save").disabled).toBe(true);
   });
 
-  it("adds, renames and reorders, then saves exactly those edits", async () => {
+  it("adds and renames, then saves exactly those edits", async () => {
     type(byLabel("New category name") as HTMLInputElement, "Coffee");
     submit(byLabel("New category name"));
     expect(activeNames()).toEqual(["Food", "Transport", "Coffee"]);
@@ -87,14 +85,10 @@ describe("CategoryManager", () => {
     submit(rename);
     expect(activeNames()).toEqual(["Eating out", "Transport", "Coffee"]);
 
-    act(() => byLabel("Move Coffee up").click());
-    expect(activeNames()).toEqual(["Eating out", "Coffee", "Transport"]);
-
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
       { type: "add", id: "coffee", name: "Coffee" },
       { type: "rename", id: "food", name: "Eating out" },
-      { type: "move", id: "coffee", toIndex: 1 },
     ]);
     expect(onClose).toHaveBeenCalled();
   });
@@ -124,31 +118,44 @@ describe("CategoryManager", () => {
     expect(activeNames()).toEqual(["Food", "Old"]);
   });
 
-  it("sets and removes a monthly budget per currency", async () => {
-    act(() => byLabel("Budget for Food").click());
-    const input = byLabel("Monthly budget for Food") as HTMLInputElement;
-    type(input, "abc");
-    expect(byLabel("Set budget for Food").disabled).toBe(true);
-    type(input, "30,000");
-    act(() => byLabel("Set budget for Food").click());
-    expect(document.body.textContent).toContain("30,000 JPY / month");
+  it("reorders by drag handle only: every active row has one, no up/down buttons", () => {
+    expect(byLabel("Reorder Food")).not.toBeNull();
+    expect(byLabel("Reorder Transport")).not.toBeNull();
+    expect(byLabel("Move Food up")).toBeNull();
+  });
 
-    act(() => byLabel("Remove JPY budget for Food").click());
-    expect(document.body.textContent).not.toContain("30,000 JPY / month");
-    type(byLabel("Monthly budget for Food") as HTMLInputElement, "25000");
-    submit(byLabel("Monthly budget for Food"));
+  it("explains archiving in a tooltip on keyboard focus", () => {
+    const archive = byLabel("Archive Transport") as HTMLButtonElement;
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    act(() => archive.focus());
+    expect(document.querySelector('[role="tooltip"]')?.textContent).toContain(
+      "hides this category when adding entries",
+    );
+    // Layered above the modal it was opened from, not behind it.
+    expect(document.querySelector('[role="tooltip"]')!.className).toContain("Popover--inModal");
+    act(() => archive.blur());
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+  });
+
+  it("edits a budget inline with no separate set step, saved with the rest", async () => {
+    expect(byLabel("Monthly budget for Food")).toBeNull();
+    act(() => byLabel("Budget for Food").click());
+    expect(byLabel("Budget for Food").getAttribute("aria-expanded")).toBe("true");
+    type(byLabel("Monthly budget for Food") as HTMLInputElement, "30,000");
+    expect(document.body.textContent).toContain("30,000 JPY / month");
+    expect(document.querySelector('[aria-label^="Set budget"]')).toBeNull();
+    act(() => byLabel("Archive Transport").click());
 
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
+      { type: "archive", id: "transport" },
       { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
-      { type: "setBudget", id: "food", currency: "JPY", amount: null },
-      { type: "setBudget", id: "food", currency: "JPY", amount: 25000 },
     ]);
   });
 
   it("keeps the dialog open with an error when saving fails", async () => {
     onSave.mockRejectedValueOnce(new Error("offline"));
-    act(() => byLabel("Move Transport up").click());
+    act(() => byLabel("Archive Transport").click());
     await act(async () => button("Save").click());
     expect(document.body.textContent).toContain("Couldn't save your changes");
     expect(onClose).not.toHaveBeenCalled();

@@ -2,7 +2,13 @@ import { describe, it, expect } from "vite-plus/test";
 import {
   applyCategoryOp,
   applyCategoryOps,
+  budgetDraftKey,
+  budgetDraftOps,
+  budgetFieldError,
+  budgetFieldValue,
   categoryNameError,
+  hasAnyBudget,
+  preferredBudgetCurrency,
   MAX_CATEGORIES,
   newCategoryId,
   normaliseOrder,
@@ -196,5 +202,75 @@ describe("setBudget", () => {
       { type: "setBudget", id: "food", currency: "JPY", amount: 20000 },
     ]);
     expect(result[0]).toMatchObject({ name: "Eating out", budget: { JPY: 20000 } });
+  });
+});
+
+describe("hasAnyBudget", () => {
+  it("is false with no budgets, empty budgets, or budgets only on archived categories", () => {
+    expect(hasAnyBudget(cats())).toBe(false);
+    expect(hasAnyBudget([{ id: "food", name: "Food", order: 0, budget: {} }])).toBe(false);
+    expect(
+      hasAnyBudget([{ id: "old", name: "Old", order: 0, archived: true, budget: { JPY: 5000 } }]),
+    ).toBe(false);
+  });
+
+  it("is true when an active category has a budget in any currency", () => {
+    expect(hasAnyBudget([...cats(), { id: "x", name: "X", order: 4, budget: { EUR: 50 } }])).toBe(
+      true,
+    );
+  });
+});
+
+describe("budget drafts", () => {
+  const budgeted = (): LedgerCategory[] => [
+    { id: "food", name: "Food", order: 0, budget: { JPY: 30000 } },
+    { id: "transport", name: "Transport", order: 1 },
+  ];
+  const food = budgeted()[0];
+
+  it("shows the draft if touched, else the saved amount, else empty", () => {
+    expect(budgetFieldValue({}, food, "JPY")).toBe("30000");
+    expect(budgetFieldValue({}, food, "EUR")).toBe("");
+    expect(budgetFieldValue({ [budgetDraftKey("food", "JPY")]: "" }, food, "JPY")).toBe("");
+  });
+
+  it("accepts empty or valid amounts only", () => {
+    expect(budgetFieldError("")).toBeUndefined();
+    expect(budgetFieldError("  ")).toBeUndefined();
+    expect(budgetFieldError("25,000")).toBeUndefined();
+    expect(budgetFieldError("abc")).toMatch(/between 0 and/);
+    expect(budgetFieldError("0")).toMatch(/between 0 and/);
+  });
+
+  it("turns changed fields into setBudget ops, ignoring unchanged and invalid ones", () => {
+    expect(
+      budgetDraftOps(budgeted(), {
+        [budgetDraftKey("food", "JPY")]: "30,000", // unchanged
+        [budgetDraftKey("transport", "JPY")]: "8000.555", // new, rounded
+        [budgetDraftKey("transport", "EUR")]: "", // empty and never set: nothing
+        [budgetDraftKey("food", "EUR")]: "abc", // invalid: nothing
+      }),
+    ).toEqual([{ type: "setBudget", id: "transport", currency: "JPY", amount: 8000.56 }]);
+  });
+
+  it("clearing a saved budget removes it", () => {
+    expect(budgetDraftOps(budgeted(), { [budgetDraftKey("food", "JPY")]: " " })).toEqual([
+      { type: "setBudget", id: "food", currency: "JPY", amount: null },
+    ]);
+  });
+
+  it("prefers the currency most active budgets use, else the fallback", () => {
+    expect(preferredBudgetCurrency(budgeted(), "EUR")).toBe("JPY");
+    expect(preferredBudgetCurrency(cats(), "EUR")).toBe("EUR");
+    expect(
+      preferredBudgetCurrency(
+        [
+          { id: "a", name: "A", order: 0, budget: { USD: 1 } },
+          { id: "b", name: "B", order: 1, budget: { USD: 1, JPY: 1 } },
+          { id: "c", name: "C", order: 2, archived: true, budget: { JPY: 1 } },
+        ],
+        "JPY",
+      ),
+    ).toBe("USD");
   });
 });

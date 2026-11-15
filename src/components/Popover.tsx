@@ -120,6 +120,7 @@ export const Popover = ({
       ref={panelRef}
       className={cx("Popover", position && `Popover--${position.side}`, className, {
         "Popover--passive": !interactive,
+        "Popover--inModal": !!anchor.closest("#modal-root"),
       })}
       style={style}
       role={role}

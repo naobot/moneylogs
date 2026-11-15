@@ -1,6 +1,7 @@
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { isCurrency } from "@/utils/currency";
+import { CURRENCIES, isCurrency } from "@/utils/currency";
+import { parseAmount } from "@/utils/ledgerEntries";
 import { MAX_CATEGORY_NAME_LENGTH, normaliseCategoryName } from "@/utils/ledger";
 
 /** Matches the `categories.size() <= 50` cap in firestore.rules. */
@@ -26,6 +27,78 @@ export const MAX_BUDGET = 1_000_000_000;
 
 export const isValidBudgetAmount = (amount: number): boolean =>
   Number.isFinite(amount) && amount > 0 && amount <= MAX_BUDGET;
+
+/**
+ * Budget fields being typed into, keyed by budgetDraftKey: the raw text of each field
+ * the user has touched. Turned into setBudget ops only on Save, so there's no
+ * per-field "set" step.
+ */
+export type BudgetDrafts = Record<string, string>;
+
+export const budgetDraftKey = (categoryId: string, currency: Currency) =>
+  `${categoryId}:${currency}`;
+
+/** What a budget field shows: the draft if touched, else the saved amount (or empty). */
+export const budgetFieldValue = (
+  drafts: BudgetDrafts,
+  category: LedgerCategory,
+  currency: Currency,
+): string =>
+  drafts[budgetDraftKey(category.id, currency)] ?? String(category.budget?.[currency] ?? "");
+
+/** A field's problem, if any: empty is fine (no budget), anything else must be valid. */
+export const budgetFieldError = (raw: string): string | undefined =>
+  raw.trim() === "" || isValidBudgetAmount(parseAmount(raw))
+    ? undefined
+    : `Enter an amount between 0 and ${MAX_BUDGET.toLocaleString("en-US")}.`;
+
+/**
+ * The setBudget ops that turn saved budgets into the drafts. Untouched or unchanged
+ * fields produce nothing; a cleared field removes that budget. Invalid fields produce
+ * nothing either (callers block Save while any field has an error).
+ */
+export const budgetDraftOps = (
+  categories: ReadonlyArray<LedgerCategory>,
+  drafts: BudgetDrafts,
+): CategoryOp[] => {
+  const ops: CategoryOp[] = [];
+  for (const category of categories) {
+    for (const currency of CURRENCIES) {
+      const raw = drafts[budgetDraftKey(category.id, currency)];
+      if (raw === undefined || budgetFieldError(raw)) continue;
+      const saved = category.budget?.[currency];
+      const amount = raw.trim() === "" ? null : Math.round(parseAmount(raw) * 100) / 100;
+      if (amount === (saved ?? null)) continue;
+      ops.push({ type: "setBudget", id: category.id, currency, amount });
+    }
+  }
+  return ops;
+};
+
+/** The currency most active budgets are in, else the fallback (e.g. the log's default). */
+export const preferredBudgetCurrency = (
+  categories: ReadonlyArray<LedgerCategory>,
+  fallback: Currency,
+): Currency => {
+  const counts = new Map<Currency, number>();
+  for (const c of categories) {
+    if (c.archived) continue;
+    for (const currency of CURRENCIES) {
+      if ((c.budget?.[currency] ?? 0) > 0) counts.set(currency, (counts.get(currency) ?? 0) + 1);
+    }
+  }
+  let best = fallback;
+  for (const [currency, n] of counts) {
+    if (n > (counts.get(best) ?? 0)) best = currency;
+  }
+  return best;
+};
+
+/** True when any active category has a positive monthly budget, in any currency. */
+export const hasAnyBudget = (categories: ReadonlyArray<LedgerCategory>): boolean =>
+  categories.some(
+    (c) => !c.archived && Object.values(c.budget ?? {}).some((amount) => (amount ?? 0) > 0),
+  );
 
 const sameName = (a: string, b: string) =>
   normaliseCategoryName(a).toLowerCase() === normaliseCategoryName(b).toLowerCase();

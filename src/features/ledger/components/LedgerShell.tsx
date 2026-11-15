@@ -19,6 +19,7 @@ import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
+import BudgetManager from "./BudgetManager";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
@@ -30,6 +31,8 @@ export type LedgerShellContext = {
   month: string;
   today: string;
   setMonth: (month: string) => void;
+  /** Opens the monthly budgets editor. */
+  openBudgets: () => void;
 };
 
 type LedgerShellProps = {
@@ -56,6 +59,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showBudgets, setShowBudgets] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
 
@@ -76,7 +80,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         <div className="Group__header">
           <div className="Group__header__left">
             <div className="Group__header__item">
-              {isShared ? `shared · ${ledger.memberUids.length} members` : "personal"}
+              {isShared ? `financial · ${ledger.memberUids.length} members` : "financial"}
             </div>
           </div>
           <div className="Group__header__center">
@@ -145,7 +149,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             </Link>
           </nav>
 
-          {children({ month, today, setMonth })}
+          {children({ month, today, setMonth, openBudgets: () => setShowBudgets(true) })}
         </div>
       </div>
       <LogActionsModal
@@ -164,6 +168,14 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         isSaving={saveCategoryOps.isLoading}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
         checkInUse={(categoryId) => isCategoryUsed.mutate({ ledgerId: ledger.id, categoryId })}
+      />
+      <BudgetManager
+        isOpen={showBudgets}
+        categories={ledger.categories ?? []}
+        defaultCurrency={ledger.defaultCurrency}
+        onClose={() => setShowBudgets(false)}
+        isSaving={saveCategoryOps.isLoading}
+        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
       />
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
         <Modal.Header title={"Invite"}>Invite</Modal.Header>

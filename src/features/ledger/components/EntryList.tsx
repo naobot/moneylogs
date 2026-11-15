@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { LedgerCategory, LedgerEntry, LedgerEntryInput } from "@/types/ledger";
 import { resolveCategory } from "@/utils/ledger";
@@ -32,6 +32,18 @@ export const EntryList = ({
 }: EntryListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<LedgerEntry | null>(null);
+  const editingRowRef = useRef<HTMLLIElement>(null);
+
+  // Bring the entry being edited to the top of the log. scrollIntoView stops wherever the
+  // scroller runs out of room, so near the bottom of a short list it only dims.
+  useEffect(() => {
+    if (!editingId) return;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    editingRowRef.current?.scrollIntoView?.({
+      block: "start",
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }, [editingId]);
 
   const days = groupEntriesByDay([...entries]);
 
@@ -47,6 +59,15 @@ export const EntryList = ({
 
   return (
     <>
+      {/* While editing, dim everything but the entry, so the add form above doesn't
+          read as a second editor. Clicking the dimmed area cancels, like a modal. */}
+      {editingId && (
+        <div
+          className="EntryList__scrim"
+          aria-hidden="true"
+          onClick={() => !isSavingEdit && setEditingId(null)}
+        />
+      )}
       <div className="EntryList">
         {days.map((day) => (
           <section key={day.date} className="EntryList__day" aria-label={day.label}>
@@ -59,7 +80,11 @@ export const EntryList = ({
                 const isMine = !!currentUid && entry.authorUid === currentUid;
                 if (editingId === entry.id) {
                   return (
-                    <li key={entry.id} className="EntryList__row EntryList__row--editing">
+                    <li
+                      key={entry.id}
+                      ref={editingRowRef}
+                      className="EntryList__row EntryList__row--editing"
+                    >
                       <EntryForm
                         mode="edit"
                         categories={categories}

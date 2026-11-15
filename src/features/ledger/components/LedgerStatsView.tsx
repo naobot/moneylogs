@@ -15,7 +15,12 @@ export const LedgerStatsView = ({ ledger }: LedgerStatsViewProps) => (
   </LedgerShell>
 );
 
-const MonthStats = ({ ledger, month, today }: LedgerStatsViewProps & LedgerShellContext) => {
+const MonthStats = ({
+  ledger,
+  month,
+  today,
+  openBudgets,
+}: LedgerStatsViewProps & LedgerShellContext) => {
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
   if (isError) {
     return <p className="error-message">Couldn't load stats for {formatMonth(month)}.</p>;
@@ -27,6 +32,7 @@ const MonthStats = ({ ledger, month, today }: LedgerStatsViewProps & LedgerShell
       today={today}
       entries={entries}
       isLoading={isLoading}
+      onEditBudget={openBudgets}
     />
   );
 };

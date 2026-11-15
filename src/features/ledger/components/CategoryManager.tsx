@@ -1,33 +1,44 @@
-import { FormEvent, ReactNode, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useId, useMemo, useState } from "react";
 import cx from "classnames";
 import {
   DndContext,
   DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
   TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import SharedRowButton from "@/components/RowButton";
+import Icon, { IconType } from "@/components/Icon";
+import Popover from "@/components/Popover";
+import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { CURRENCIES } from "@/utils/currency";
-import { formatAmount, formatTotals, parseAmount } from "@/utils/ledgerEntries";
+import { formatTotals } from "@/utils/ledgerEntries";
 import { activeCategories, MAX_CATEGORY_NAME_LENGTH, sortCategories } from "@/utils/ledger";
 import {
   applyCategoryOps,
   categoryNameError,
   CategoryOp,
-  isValidBudgetAmount,
-  MAX_BUDGET,
   MAX_CATEGORIES,
   newCategoryId,
+  BudgetDrafts,
+  budgetDraftKey,
+  budgetDraftOps,
+  budgetFieldError,
+  preferredBudgetCurrency,
 } from "@/utils/ledgerCategories";
-import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
+import { BudgetField } from "./BudgetManager";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -71,13 +82,21 @@ const CategoryManagerDialog = ({
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
   const [budgetingId, setBudgetingId] = useState<string | null>(null);
+  // Budget fields are drafts (no per-field "set"); they become ops on Save.
+  const [budgetDrafts, setBudgetDrafts] = useState<BudgetDrafts>({});
+  const [budgetCurrency, setBudgetCurrency] = useState<Record<string, Currency>>({});
   const [saveFailed, setSaveFailed] = useState(false);
-  const dragEnabled = useDragReorderEnabled();
 
   const draft = useMemo(() => applyCategoryOps(categories, ops), [categories, ops]);
   const active = activeCategories(draft);
   const archived = sortCategories(draft.filter((c) => c.archived));
-  const isDirty = ops.length > 0;
+  const budgetOps = budgetDraftOps(draft, budgetDrafts);
+  // Budgets as they'll be after Save, for each row's "X / month" summary.
+  const budgetsAfterSave = new Map(applyCategoryOps(draft, budgetOps).map((c) => [c.id, c.budget]));
+  const budgetHasErrors = Object.values(budgetDrafts).some((raw) => budgetFieldError(raw));
+  const isDirty = ops.length > 0 || budgetOps.length > 0;
+  const currencyFor = (category: LedgerCategory) =>
+    budgetCurrency[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
 
   const push = (op: CategoryOp) => {
     setSaveFailed(false);
@@ -105,9 +124,13 @@ const CategoryManagerDialog = ({
 
   const move = (id: string, toIndex: number) => push({ type: "move", id, toIndex });
 
+  // Dragging is the only way to reorder, so it's on everywhere here (unlike the nav's
+  // LogsMenu): only the ⋮⋮ handle starts a drag, so it can't fight scrolling or taps,
+  // and the keyboard sensor (Space on a focused handle, then arrows) keeps it accessible.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const handleDragEnd = ({ active: dragged, over }: DragEndEvent) => {
     if (!over || dragged.id === over.id) return;
@@ -136,7 +159,7 @@ const CategoryManagerDialog = ({
 
   const handleSave = async () => {
     try {
-      await onSave(ops);
+      await onSave([...ops, ...budgetOps]);
       onClose();
     } catch (err) {
       console.error("Failed to save categories:", err);
@@ -155,8 +178,8 @@ const CategoryManagerDialog = ({
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
             <ul className="CategoryManager__list" aria-label="Active categories">
-              {active.map((category, index) => (
-                <SortableRow key={category.id} id={category.id} dragEnabled={dragEnabled}>
+              {active.map((category) => (
+                <SortableRow key={category.id} id={category.id} name={category.name}>
                   {renaming?.id === category.id ? (
                     <form
                       className="CategoryManager__rename"
@@ -193,53 +216,54 @@ const CategoryManagerDialog = ({
                       {category.name}
                     </button>
                   )}
-                  {category.budget && (
+                  {budgetsAfterSave.get(category.id) && (
                     <small className="CategoryManager__budgetSummary">
-                      {formatTotals(category.budget)} / month
+                      {formatTotals(budgetsAfterSave.get(category.id)!)} / month
                     </small>
                   )}
                   <span className="CategoryManager__actions">
-                    <RowButton
-                      glyph
-                      label={`Move ${category.name} up`}
-                      disabled={index === 0}
-                      onClick={() => move(category.id, index - 1)}
-                    >
-                      ↑
-                    </RowButton>
-                    <RowButton
-                      glyph
-                      label={`Move ${category.name} down`}
-                      disabled={index === active.length - 1}
-                      onClick={() => move(category.id, index + 1)}
-                    >
-                      ↓
-                    </RowButton>
-                    <RowButton
+                    <ActionButton
+                      icon="wallet"
                       label={`Budget for ${category.name}`}
+                      expanded={budgetingId === category.id}
                       onClick={() =>
                         setBudgetingId((id) => (id === category.id ? null : category.id))
                       }
                     >
                       budget
-                    </RowButton>
-                    <RowButton
+                    </ActionButton>
+                    <ActionButton
+                      icon="folder"
                       label={`Archive ${category.name}`}
                       disabled={lastActive}
-                      title={lastActive ? "A log needs at least one category" : undefined}
+                      tip={
+                        lastActive
+                          ? "A log needs at least one category, so this one can't be archived."
+                          : "Archiving hides this category when adding entries. Past entries keep it, and you can restore it any time."
+                      }
                       onClick={() => push({ type: "archive", id: category.id })}
                     >
                       archive
-                    </RowButton>
+                    </ActionButton>
                   </span>
                   {budgetingId === category.id && (
-                    <BudgetEditor
-                      category={category}
-                      defaultCurrency={defaultCurrency}
-                      onSet={(currency, amount) =>
-                        push({ type: "setBudget", id: category.id, currency, amount })
-                      }
-                    />
+                    <div className="CategoryManager__budget">
+                      <BudgetField
+                        category={category}
+                        currency={currencyFor(category)}
+                        drafts={budgetDrafts}
+                        onChange={(raw) => {
+                          setSaveFailed(false);
+                          setBudgetDrafts((d) => ({
+                            ...d,
+                            [budgetDraftKey(category.id, currencyFor(category))]: raw,
+                          }));
+                        }}
+                        onCurrencyChange={(currency) =>
+                          setBudgetCurrency((m) => ({ ...m, [category.id]: currency }))
+                        }
+                      />
+                    </div>
                   )}
                 </SortableRow>
               ))}
@@ -326,7 +350,7 @@ const CategoryManagerDialog = ({
         <Button
           text="Save"
           buttonStyle="primary-border"
-          disabled={!isDirty || isSaving}
+          disabled={!isDirty || budgetHasErrors || isSaving}
           loading={isSaving}
           onClick={() => void handleSave()}
         />
@@ -338,86 +362,6 @@ const CategoryManagerDialog = ({
         />
       </Modal.Actions>
     </Modal>
-  );
-};
-
-/** Inline per-currency monthly budget editor for one category. */
-const BudgetEditor = ({
-  category,
-  defaultCurrency,
-  onSet,
-}: {
-  category: LedgerCategory;
-  defaultCurrency: Currency;
-  onSet: (currency: Currency, amount: number | null) => void;
-}) => {
-  const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
-  const parsed = parseAmount(amount);
-  const valid = isValidBudgetAmount(parsed);
-  const existing = CURRENCIES.filter((c) => category.budget?.[c] !== undefined);
-
-  const submit = () => {
-    if (!valid) return;
-    onSet(currency, parsed);
-    setAmount("");
-  };
-
-  return (
-    <div className="CategoryManager__budget">
-      {existing.length > 0 && (
-        <ul className="CategoryManager__budget__list" aria-label={`${category.name} budgets`}>
-          {existing.map((c) => (
-            <li key={c}>
-              {formatAmount(category.budget![c]!, c)} / month
-              <RowButton
-                glyph
-                label={`Remove ${c} budget for ${category.name}`}
-                onClick={() => onSet(c, null)}
-              >
-                ×
-              </RowButton>
-            </li>
-          ))}
-        </ul>
-      )}
-      <form
-        className="CategoryManager__budget__form"
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        <input
-          className="LineInput"
-          aria-label={`Monthly budget for ${category.name}`}
-          inputMode="decimal"
-          placeholder="Monthly budget"
-          value={amount}
-          autoFocus
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <select
-          aria-label={`Budget currency for ${category.name}`}
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value as Currency)}
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <RowButton label={`Set budget for ${category.name}`} disabled={!valid} onClick={submit}>
-          {category.budget?.[currency] !== undefined ? "update" : "set"}
-        </RowButton>
-        {amount.trim() !== "" && !valid && (
-          <small className="CategoryManager__error">
-            Enter an amount between 0 and {MAX_BUDGET.toLocaleString("en-US")}.
-          </small>
-        )}
-      </form>
-    </div>
   );
 };
 
@@ -447,18 +391,89 @@ const RowButton = ({
   </SharedRowButton>
 );
 
-const SortableRow = ({
-  id,
-  dragEnabled,
+/**
+ * A row action with an icon and a one-word label. An optional tip explains it on hover
+ * or keyboard focus (touch goes straight to the action).
+ */
+const ActionButton = ({
+  icon,
+  label,
+  tip,
+  expanded,
+  disabled,
+  onClick,
   children,
 }: {
-  id: string;
-  dragEnabled: boolean;
+  icon: IconType;
+  label: string;
+  tip?: string;
+  expanded?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
   children: ReactNode;
 }) => {
+  const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const { openAfterDelay, cancelOpen } = useHoverIntent();
+  const tipId = useId();
+
+  const close = () => {
+    cancelOpen();
+    setOpen(false);
+  };
+
+  return (
+    // The tip hangs off a wrapper, since a disabled button gets no pointer events.
+    <span
+      ref={setAnchor}
+      className="CategoryManager__action"
+      onPointerEnter={(e) => tip && isMousePointer(e) && openAfterDelay(() => setOpen(true))}
+      onPointerLeave={(e) => isMousePointer(e) && close()}
+    >
+      <SharedRowButton
+        className="RowButton--icon"
+        aria-label={label}
+        aria-expanded={expanded}
+        aria-describedby={tip && open ? tipId : undefined}
+        disabled={disabled}
+        onClick={() => {
+          close();
+          onClick();
+        }}
+        onFocus={() => tip && setOpen(true)}
+        onBlur={close}
+        onKeyDown={(e) => {
+          // Escape dismisses the tip first, without also closing the modal.
+          if (e.key === "Escape" && open) {
+            e.stopPropagation();
+            close();
+          }
+        }}
+      >
+        <Icon type={icon} size={20} />
+        {children}
+      </SharedRowButton>
+      {tip && (
+        <Popover
+          anchor={anchor}
+          open={open}
+          onClose={close}
+          interactive={false}
+          className="HelpTip__panel"
+          role="tooltip"
+        >
+          <p id={tipId} className="HelpTip__text">
+            {tip}
+          </p>
+        </Popover>
+      )}
+    </span>
+  );
+};
+
+const SortableRow = ({ id, name, children }: { id: string; name: string; children: ReactNode }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: !dragEnabled,
   });
   return (
     <li
@@ -466,16 +481,15 @@ const SortableRow = ({
       className={cx("CategoryManager__row", { "CategoryManager__row--dragging": isDragging })}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
-      {dragEnabled && (
-        <span
-          className="CategoryManager__handle"
-          aria-label="Drag to reorder"
-          {...attributes}
-          {...listeners}
-        >
-          ⋮⋮
-        </span>
-      )}
+      <span
+        className="CategoryManager__handle"
+        {...attributes}
+        {...listeners}
+        aria-label={`Reorder ${name}`}
+        title="Drag to reorder"
+      >
+        ⋮⋮
+      </span>
       {children}
     </li>
   );

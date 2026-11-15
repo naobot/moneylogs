@@ -13,6 +13,7 @@ import {
   trailingMonths,
 } from "@/utils/ledger";
 import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
+import { hasAnyBudget } from "@/utils/ledgerCategories";
 import {
   aggregateEntries,
   BudgetRow,
@@ -31,6 +32,8 @@ import {
 } from "@/utils/ledgerStats";
 
 import Button from "@/components/Button";
+import Icon from "@/components/Icon";
+import RowButton from "@/components/RowButton";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 
 const TREND_MONTHS = 6;
@@ -41,6 +44,8 @@ type LedgerStatsProps = {
   today: string;
   entries: ReadonlyArray<LedgerEntry>;
   isLoading: boolean;
+  /** Opens the budgets editor. */
+  onEditBudget: () => void;
 };
 
 /** Pick the currency to show: an explicit choice if still used, else the most-used one. */
@@ -56,7 +61,8 @@ const useStatsCurrency = (ledger: Ledger, month: string, entries: ReadonlyArray<
 
 /**
  * Compact, always-visible indicator on the entries page: this month's totals and a
- * category bar. Links to the full stats page for the same month.
+ * category bar, linking to the full stats page for the same month, plus the budget
+ * status (or a prompt to set one), which opens the budgets editor.
  */
 export const LedgerStatsStrip = ({
   ledger,
@@ -64,6 +70,7 @@ export const LedgerStatsStrip = ({
   today,
   entries,
   isLoading,
+  onEditBudget,
 }: LedgerStatsProps) => {
   const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
   const { currency } = useStatsCurrency(ledger, month, entries);
@@ -78,33 +85,51 @@ export const LedgerStatsStrip = ({
     categories: ledger.categories ?? [],
   });
 
+  const statsPath = ledgerViewPath(ledger.id, "stats", month, currentMonth);
+  const noBudget = !hasAnyBudget(ledger.categories ?? []);
+
   return (
-    <Link
-      className="LedgerStats LedgerStats__strip"
-      to={ledgerViewPath(ledger.id, "stats", month, currentMonth)}
-      aria-label={`${formatMonth(month)} stats`}
-    >
-      <span className="LedgerStats__strip__totals">
-        {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
-      </span>
-      {hasEntries && !isLoading && (
-        <CategoryBar shares={catShares} currency={currency} categories={ledger.categories ?? []} />
-      )}
-      {budget && !isLoading && (
-        <span
+    <div className="LedgerStats LedgerStats__strip">
+      <Link
+        className="LedgerStats__strip__link"
+        to={statsPath}
+        aria-label={`${formatMonth(month)} stats`}
+      >
+        <span className="LedgerStats__strip__totals">
+          {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
+        </span>
+        {hasEntries && !isLoading && (
+          <CategoryBar
+            shares={catShares}
+            currency={currency}
+            categories={ledger.categories ?? []}
+          />
+        )}
+      </Link>
+      {!isLoading && budget && (
+        <button
+          type="button"
           className={cx("LedgerStats__strip__budget", {
             "LedgerStats__strip__budget--over": budget.over,
           })}
+          title="Edit budgets"
+          onClick={onEditBudget}
         >
           {budget.over
             ? `over budget by ${formatAmount(-budget.remaining, currency)}`
             : `${pct(budget.used)} of ${formatAmount(budget.budget, currency)} budget`}
-        </span>
+        </button>
       )}
-      <span className="LedgerStats__strip__toggle" aria-hidden="true">
+      {!isLoading && noBudget && (
+        <button type="button" className="LedgerStats__strip__cta" onClick={onEditBudget}>
+          <Icon type="wallet" size={20} />
+          set budget
+        </button>
+      )}
+      <Link className="LedgerStats__strip__toggle" to={statsPath} tabIndex={-1} aria-hidden>
         ›
-      </span>
-    </Link>
+      </Link>
+    </div>
   );
 };
 
@@ -119,6 +144,7 @@ export const LedgerStatsPanel = ({
   today,
   entries,
   isLoading,
+  onEditBudget,
 }: LedgerStatsProps) => {
   const [chartMode, setChartMode] = useState<"bars" | "cumulative">("bars");
   const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
@@ -178,7 +204,18 @@ export const LedgerStatsPanel = ({
         </div>
       )}
 
-      {budget && <BudgetSection budget={budget} currency={currency} />}
+      {budget ? (
+        <BudgetSection budget={budget} currency={currency} onEdit={onEditBudget} />
+      ) : (
+        <p className="LedgerStats__noBudget">
+          {hasAnyBudget(categories)
+            ? `No ${currency} budget set.`
+            : "No monthly budget yet. Set one to see how much is left and where the month is heading."}{" "}
+          <RowButton onClick={onEditBudget}>
+            {hasAnyBudget(categories) ? "edit budgets" : "set a budget"}
+          </RowButton>
+        </p>
+      )}
 
       {!hasEntries ? (
         <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>
@@ -319,7 +356,15 @@ const ShareRows = ({
   </ul>
 );
 
-const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: Currency }) => {
+const BudgetSection = ({
+  budget,
+  currency,
+  onEdit,
+}: {
+  budget: BudgetSummary;
+  currency: Currency;
+  onEdit: () => void;
+}) => {
   const lines: string[] = [];
   if (budget.over) {
     lines.push(`Over budget by ${formatAmount(-budget.remaining, currency)}.`);
@@ -345,9 +390,12 @@ const BudgetSection = ({ budget, currency }: { budget: BudgetSummary; currency: 
   }
   return (
     <div className={cx("LedgerStats__budget", { "LedgerStats__budget--over": budget.over })}>
-      <h4 className="LedgerStats__heading">
-        Budget · <span className="keep-case">{currency}</span>
-      </h4>
+      <div className="LedgerStats__chartHeader">
+        <h4 className="LedgerStats__heading">
+          Budget · <span className="keep-case">{currency}</span>
+        </h4>
+        <RowButton onClick={onEdit}>edit</RowButton>
+      </div>
       <div className="LedgerStats__budget__meter">
         <span
           className={cx("Meter__track Meter__track--budget LedgerStats__budget__track", {

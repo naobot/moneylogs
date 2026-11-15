@@ -21,7 +21,13 @@ export const Ledger = ({ ledger }: LedgerProps) => (
   </LedgerShell>
 );
 
-const LedgerEntries = ({ ledger, month, today, setMonth }: LedgerProps & LedgerShellContext) => {
+const LedgerEntries = ({
+  ledger,
+  month,
+  today,
+  setMonth,
+  openBudgets,
+}: LedgerProps & LedgerShellContext) => {
   const { user } = useCurrentUser();
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
   const { addEntry, editEntry, deleteEntry } = useLedgerEntryQuery();
@@ -52,6 +58,7 @@ const LedgerEntries = ({ ledger, month, today, setMonth }: LedgerProps & LedgerS
         today={today}
         entries={entries}
         isLoading={isLoading}
+        onEditBudget={openBudgets}
       />
 
       <EntryForm
