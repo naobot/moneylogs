@@ -78,9 +78,13 @@
     padding: 0;
   }
 
+  .BudgetPie {
+    margin: 0.25em 0 0.5em;
+  }
+
   &__planRow {
     display: grid;
-    grid-template-columns: minmax(6.5em, 1fr) minmax(3em, 1.2fr) 3.5em auto;
+    grid-template-columns: auto 1fr 3.5em auto;
     align-items: center;
     gap: 0.75em;
     padding: 0.25em 0;
@@ -93,18 +97,6 @@
       border-top: var(--border-rule) dotted var(--ink);
       font-weight: 700;
     }
-
-    @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: 1fr 3.5em auto;
-
-      .BudgetWizard__planMeter {
-        display: none;
-      }
-    }
-  }
-
-  &__planMeter {
-    height: 0.7em;
   }
 
   &__planPct,
@@ -116,5 +108,9 @@
 
   &__planAmount {
     min-width: 7em;
+
+    input {
+      width: 6.5em;
+    }
   }
 }

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
+  editPlan,
+  pieSlices,
   planBudget,
+  planGroupOf,
   resetToDefaultsOps,
   roundingStep,
   SAVING_STYLES,
@@ -161,5 +164,77 @@ describe("resetToDefaultsOps", () => {
     }));
     expect(resetToDefaultsOps(many).tooMany).toBe(true);
     expect(resetToDefaultsOps(defaults()).tooMany).toBe(false);
+  });
+});
+
+describe("editPlan", () => {
+  const rows = [
+    { id: "housing", amount: 500, pct: 50 },
+    { id: "food", amount: 300, pct: 30 },
+  ];
+
+  it("leaves the suggestion alone without edits", () => {
+    const e = editPlan(rows, {}, 1000);
+    expect(e.rows.map((r) => [r.raw, r.amount, r.pct])).toEqual([
+      ["500", 500, 50],
+      ["300", 300, 30],
+    ]);
+    expect(e.savings).toEqual({ amount: 200, pct: 20 });
+    expect(e.over).toBe(0);
+    expect(e.hasInvalid).toBe(false);
+  });
+
+  it("recomputes amounts, %s and savings from edits; empty counts as zero", () => {
+    const e = editPlan(rows, { food: "", housing: "1,000" }, 2000);
+    expect(e.rows.map((r) => [r.amount, r.pct])).toEqual([
+      [1000, 50],
+      [0, 0],
+    ]);
+    expect(e.savings).toEqual({ amount: 1000, pct: 50 });
+  });
+
+  it("reports how far the total goes past the income", () => {
+    const e = editPlan(rows, { housing: "900" }, 1000);
+    expect(e.over).toBe(200);
+    expect(e.savings).toEqual({ amount: 0, pct: 0 });
+  });
+
+  it("flags amounts that aren't numbers, counting them as zero meanwhile", () => {
+    const e = editPlan(rows, { food: "lots" }, 1000);
+    expect(e.hasInvalid).toBe(true);
+    expect(e.rows[1]).toMatchObject({ raw: "lots", invalid: true, amount: 0 });
+  });
+});
+
+describe("pie", () => {
+  it("groups categories: fixed costs, essentials, lifestyle, savings", () => {
+    expect(planGroupOf("housing")).toBe("fixed");
+    expect(planGroupOf("utilities")).toBe("fixed");
+    expect(planGroupOf("groceries")).toBe("essentials");
+    expect(planGroupOf("other")).toBe("essentials");
+    expect(planGroupOf("food")).toBe("lifestyle");
+    expect(planGroupOf("travel")).toBe("lifestyle");
+    expect(planGroupOf("savings")).toBe("savings");
+  });
+
+  it("orders slices by group, sizes them by value, and drops zeros", () => {
+    const datum = (id: string, value: number) => ({
+      id,
+      name: id,
+      group: planGroupOf(id),
+      value,
+      label: "",
+    });
+    const slices = pieSlices([
+      datum("savings", 25),
+      datum("food", 25),
+      datum("travel", 0),
+      datum("groceries", 25),
+      datum("housing", 25),
+    ]);
+    expect(slices.map((s) => s.id)).toEqual(["housing", "groceries", "food", "savings"]);
+    expect(slices[0].start).toBe(0);
+    expect(slices[1].start).toBeCloseTo(Math.PI / 2);
+    expect(slices[3].end).toBeCloseTo(2 * Math.PI);
   });
 });

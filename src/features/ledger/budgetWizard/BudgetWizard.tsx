@@ -9,7 +9,19 @@ import { CURRENCIES } from "@/utils/currency";
 import { DEFAULT_CATEGORIES } from "@/utils/ledger";
 import { formatAmount, parseAmount } from "@/utils/ledgerEntries";
 import { CategoryOp, MAX_BUDGET } from "@/utils/ledgerCategories";
-import { planBudget, resetToDefaultsOps, SAVING_STYLES, SavingStyleId } from "./budgetPlan";
+import {
+  editPlan,
+  EditedPlan,
+  PLAN_GROUPS,
+  planBudget,
+  PieDatum,
+  PlanGroup,
+  planGroupOf,
+  resetToDefaultsOps,
+  SAVING_STYLES,
+  SavingStyleId,
+} from "./budgetPlan";
+import { BudgetPie, Swatch } from "./BudgetPie";
 
 import "./BudgetWizard.scss";
 
@@ -61,6 +73,8 @@ export const BudgetWizard = ({
   const [utilities, setUtilities] = useState("");
   const [style, setStyle] = useState<SavingStyleId | null>(null);
   const [seed, setSeed] = useState(() => initialSeed ?? newSeed());
+  // The user's in-place changes to the suggested amounts, by category id.
+  const [edits, setEdits] = useState<Record<string, string>>({});
 
   const reset = useMemo(() => resetToDefaultsOps(categories), [categories]);
   const step = STEPS[stepIndex];
@@ -82,12 +96,14 @@ export const BudgetWizard = ({
         })
       : null;
 
+  const edited = plan?.ok ? editPlan(plan.rows, edits, incomeValue) : null;
+
   const canContinue: Record<Step, boolean> = {
     start: !reset.tooMany,
     income: incomeValid,
     housing: fixedValid,
     saving: style !== null,
-    plan: !!plan?.ok,
+    plan: !!edited && !edited.hasInvalid && edited.over === 0,
   };
 
   const next = () => {
@@ -95,11 +111,11 @@ export const BudgetWizard = ({
       setStepIndex((i) => i + 1);
       return;
     }
-    if (!plan?.ok) return;
+    if (!edited) return;
     onUse({
       resetOps: reset.ops,
       currency,
-      amounts: Object.fromEntries(plan.rows.map((r) => [reset.idFor[r.id] ?? r.id, r.amount])),
+      amounts: Object.fromEntries(edited.rows.map((r) => [reset.idFor[r.id] ?? r.id, r.amount])),
     });
   };
 
@@ -208,7 +224,16 @@ export const BudgetWizard = ({
         <>
           <div className="BudgetWizard__planHeader">
             <h3 className="Wizard__question">Here's a starting point</h3>
-            {plan?.ok && <RowButton onClick={() => setSeed(newSeed())}>re-roll</RowButton>}
+            {plan?.ok && (
+              <RowButton
+                onClick={() => {
+                  setSeed(newSeed());
+                  setEdits({});
+                }}
+              >
+                re-roll
+              </RowButton>
+            )}
           </div>
           {plan && !plan.ok ? (
             <p className="error-message">
@@ -216,25 +241,54 @@ export const BudgetWizard = ({
               with. Go back and check the amounts.
             </p>
           ) : (
-            plan && (
+            plan?.ok &&
+            edited && (
               <>
+                <p className="Wizard__hint">
+                  Every amount here is a suggestion you can change, and you can keep adjusting them
+                  in the Budgets window too. Whatever isn't budgeted is left to save. Re-rolling
+                  replaces your changes.
+                </p>
+                <BudgetPie data={pieData(edited, currency)} summary={pieSummary(edited)} />
                 <ul className="BudgetWizard__plan" aria-label="Suggested budget">
-                  {plan.rows.map((row) => (
+                  {edited.rows.map((row) => (
                     <PlanRow
                       key={row.id}
                       name={NAME_OF.get(row.id) ?? row.id}
+                      group={planGroupOf(row.id)}
                       pct={row.pct}
-                      amount={formatAmount(row.amount, currency)}
-                    />
+                    >
+                      <span className="BudgetWizard__amount">
+                        <input
+                          className="LineInput"
+                          aria-label={`${NAME_OF.get(row.id) ?? row.id} budget`}
+                          inputMode="decimal"
+                          autoComplete="off"
+                          placeholder="0"
+                          value={row.raw}
+                          aria-invalid={row.invalid}
+                          onChange={(e) => setEdits((d) => ({ ...d, [row.id]: e.target.value }))}
+                        />
+                        <span className="keep-case">{currency}</span>
+                      </span>
+                    </PlanRow>
                   ))}
-                  <PlanRow
-                    savings
-                    name="Left to save"
-                    pct={plan.savings.pct}
-                    amount={formatAmount(plan.savings.amount, currency)}
-                  />
+                  <PlanRow name="Left to save" group="savings" pct={edited.savings.pct}>
+                    {formatAmount(edited.savings.amount, currency)}
+                  </PlanRow>
                 </ul>
-                {plan.savingsCapped && (
+                {edited.hasInvalid && (
+                  <p className="error-message" role="alert">
+                    Enter each amount as a number, or leave it empty for none.
+                  </p>
+                )}
+                {edited.over > 0 && (
+                  <p className="error-message" role="alert">
+                    That's {formatAmount(edited.over, currency)} more than your income of{" "}
+                    {formatAmount(incomeValue, currency)}. Lower some amounts to fit.
+                  </p>
+                )}
+                {plan.savingsCapped && Object.keys(edits).length === 0 && (
                   <p className="Wizard__hint">
                     We saved a little less than that style usually would, to leave room for everyday
                     costs.
@@ -349,24 +403,54 @@ const AmountField = ({
   );
 };
 
+/** Every category plus savings, for the pie. */
+const pieData = (edited: EditedPlan, currency: Currency): PieDatum[] => [
+  ...edited.rows.map((r) => ({
+    id: r.id,
+    name: NAME_OF.get(r.id) ?? r.id,
+    group: planGroupOf(r.id),
+    value: r.amount,
+    label: `${r.pct.toFixed(1)}% · ${formatAmount(r.amount, currency)}`,
+  })),
+  {
+    id: "savings",
+    name: "Left to save",
+    group: "savings" as const,
+    value: edited.savings.amount,
+    label: `${edited.savings.pct.toFixed(1)}% · ${formatAmount(edited.savings.amount, currency)}`,
+  },
+];
+
+/** The pie in words, for screen readers: each group's share of income. */
+const pieSummary = (edited: EditedPlan): string => {
+  const share = (group: PlanGroup) =>
+    group === "savings"
+      ? edited.savings.pct
+      : edited.rows.filter((r) => planGroupOf(r.id) === group).reduce((s, r) => s + r.pct, 0);
+  return `Income split: ${PLAN_GROUPS.map((g) => `${g.label} ${share(g.id).toFixed(1)}%`).join(", ")}`;
+};
+
 const PlanRow = ({
   name,
+  group,
   pct,
-  amount,
-  savings,
+  children,
 }: {
   name: string;
+  group: PlanGroup;
   pct: number;
-  amount: string;
-  savings?: boolean;
+  /** The amount: an editable field, or plain text for savings. */
+  children: ReactNode;
 }) => (
-  <li className={cx("BudgetWizard__planRow", { "BudgetWizard__planRow--savings": savings })}>
+  <li
+    className={cx("BudgetWizard__planRow", {
+      "BudgetWizard__planRow--savings": group === "savings",
+    })}
+  >
+    <Swatch group={group} />
     <span className="BudgetWizard__planName">{name}</span>
-    <span className="Meter__track BudgetWizard__planMeter" aria-hidden="true">
-      <span className="Meter__fill" style={{ width: `${Math.min(pct, 100)}%` }} />
-    </span>
     <span className="BudgetWizard__planPct">{pct.toFixed(1)}%</span>
-    <span className="BudgetWizard__planAmount">{amount}</span>
+    <span className="BudgetWizard__planAmount">{children}</span>
   </li>
 );
 

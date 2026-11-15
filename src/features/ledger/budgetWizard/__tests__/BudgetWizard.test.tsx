@@ -47,7 +47,11 @@ const type = (el: HTMLInputElement, value: string) => {
 };
 const click = (el: HTMLElement) => act(() => el.click());
 const planAmounts = () =>
-  Array.from(document.querySelectorAll(".BudgetWizard__planAmount")).map((el) => el.textContent);
+  Array.from(document.querySelectorAll<HTMLInputElement>(".BudgetWizard__planAmount input")).map(
+    (el) => el.value,
+  );
+const savingsText = () =>
+  document.querySelector(".BudgetWizard__planRow--savings")!.textContent ?? "";
 
 /** Start → income → housing → saving → plan. */
 const walkToPlan = () => {
@@ -101,13 +105,62 @@ describe("BudgetWizard", () => {
     expect(rows).toHaveLength(DEFAULT_CATEGORIES.length + 1); // + savings
     expect(rows[3].textContent).toContain("Housing");
     expect(rows[3].textContent).toContain("25.0%");
-    expect(rows[3].textContent).toContain("100,000 JPY");
-    expect(rows[rows.length - 1].textContent).toContain("Left to save");
+    expect(byLabel("Housing budget").value).toBe("100000");
+    expect(savingsText()).toContain("Left to save");
+
+    // The pie: a slice per category (plus savings), each named in its tooltip, and a key.
+    const chart = document.querySelector('svg[role="img"]')!;
+    expect(chart.getAttribute("aria-label")).toMatch(/^Income split: Housing & utilities 28\.8%/);
+    const titles = Array.from(chart.querySelectorAll("title")).map((t) => t.textContent);
+    expect(titles).toContain("Housing: 25.0% · 100,000 JPY");
+    expect(titles.some((t) => t?.startsWith("Left to save:"))).toBe(true);
+    expect(document.querySelector('[aria-label="Chart key"]')!.textContent).toContain("Lifestyle");
+    expect(document.body.textContent).toContain("suggestion you can change");
 
     const before = planAmounts();
     click(button("re-roll"));
     expect(planAmounts()).not.toEqual(before);
-    expect(planAmounts()[3]).toBe("100,000 JPY"); // fixed costs don't move
+    expect(planAmounts()[3]).toBe("100000"); // fixed costs don't move
+  });
+
+  it("lets amounts be edited in place, keeping them within the income", () => {
+    const onUse = render(defaults());
+    walkToPlan();
+    // Free up Travel entirely: savings grow by what it had.
+    const travel = Number(byLabel("Travel budget").value);
+    const savingsBefore = Number(
+      savingsText()
+        .match(/([\d,]+) JPY/)![1]
+        .replace(/,/g, ""),
+    );
+    type(byLabel("Travel budget"), "");
+    expect(savingsText()).toContain(`${(savingsBefore + travel).toLocaleString("en-US")} JPY`);
+
+    // Housing 25% → 50%, and the % follows.
+    type(byLabel("Housing budget"), "200,000");
+    expect(document.querySelectorAll(".BudgetWizard__planRow")[3].textContent).toContain("50.0%");
+
+    // Past the income: explained, and the plan can't be used.
+    type(byLabel("Housing budget"), "900000");
+    expect(document.body.textContent).toContain("more than your income of 400,000 JPY");
+    expect(button("Use this plan").disabled).toBe(true);
+
+    // Not a number: explained, and blocked.
+    type(byLabel("Housing budget"), "abc");
+    expect(document.body.textContent).toContain("Enter each amount as a number");
+    expect(button("Use this plan").disabled).toBe(true);
+
+    type(byLabel("Housing budget"), "120000");
+    click(button("Use this plan"));
+    expect(onUse.mock.calls[0][0].amounts).toMatchObject({ housing: 120_000, travel: 0 });
+  });
+
+  it("re-rolling replaces the user's edits", () => {
+    render(defaults());
+    walkToPlan();
+    type(byLabel("Housing budget"), "123");
+    click(button("re-roll"));
+    expect(byLabel("Housing budget").value).toBe("100000");
   });
 
   it("explains when housing and utilities leave nothing to plan with", () => {

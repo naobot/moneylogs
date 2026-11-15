@@ -1,6 +1,7 @@
 import { LedgerCategory } from "@/types/ledger";
 import { DEFAULT_CATEGORIES, normaliseCategoryName } from "@/utils/ledger";
-import { applyCategoryOps, CategoryOp, MAX_CATEGORIES } from "@/utils/ledgerCategories";
+import { parseAmount } from "@/utils/ledgerEntries";
+import { applyCategoryOps, CategoryOp, MAX_BUDGET, MAX_CATEGORIES } from "@/utils/ledgerCategories";
 
 /**
  * The budget helper: turns income, housing, utilities and a saving style into suggested
@@ -62,6 +63,46 @@ const BASE_WEIGHTS: Record<string, number> = {
   other: 8,
 };
 const DISCRETIONARY = new Set(["food", "shopping", "entertainment", "travel"]);
+
+/** How the plan groups categories for its chart: what's fixed, needed, chosen, kept. */
+export type PlanGroup = "fixed" | "essentials" | "lifestyle" | "savings";
+
+export const PLAN_GROUPS: ReadonlyArray<{ id: PlanGroup; label: string }> = [
+  { id: "fixed", label: "Housing & utilities" },
+  { id: "essentials", label: "Essentials" },
+  { id: "lifestyle", label: "Lifestyle" },
+  { id: "savings", label: "Left to save" },
+];
+
+/** The chart group of a default category id ("savings" is its own pseudo-row). */
+export const planGroupOf = (id: string): PlanGroup =>
+  id === "savings"
+    ? "savings"
+    : (FIXED_IDS as ReadonlyArray<string>).includes(id)
+      ? "fixed"
+      : DISCRETIONARY.has(id)
+        ? "lifestyle"
+        : "essentials";
+
+/** One slice of the plan's pie: a category (or savings), its group, value and label. */
+export type PieDatum = { id: string; name: string; group: PlanGroup; value: number; label: string };
+
+export type PieSlice = PieDatum & { start: number; end: number };
+
+/** Slices in group order, as angles in radians clockwise from 12 o'clock; zeros dropped. */
+export const pieSlices = (data: ReadonlyArray<PieDatum>): PieSlice[] => {
+  const order = PLAN_GROUPS.map((g) => g.id);
+  const shown = data
+    .filter((d) => d.value > 0)
+    .sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
+  const total = shown.reduce((s, d) => s + d.value, 0);
+  let angle = 0;
+  return shown.map((d) => {
+    const start = angle;
+    angle += (d.value / total) * 2 * Math.PI;
+    return { ...d, start, end: angle };
+  });
+};
 
 /** At least this share of income is left for everyday categories; savings give way. */
 export const MIN_EVERYDAY_SHARE = 0.15;
@@ -166,6 +207,47 @@ export const planBudget = ({
     // Each % is rounded on its own, so the column can sum to 99.9 or 100.1.
     savings: { amount: savingsAmount, pct: pctOf(savingsAmount, income) },
     savingsCapped,
+  };
+};
+
+export type EditedRow = PlanRow & {
+  /** What the amount field shows: the user's text if edited, else the suggestion. */
+  raw: string;
+  invalid: boolean;
+};
+
+export type EditedPlan = {
+  rows: EditedRow[];
+  savings: { amount: number; pct: number };
+  /** How far the amounts go past the income (0 when they fit). */
+  over: number;
+  hasInvalid: boolean;
+};
+
+/**
+ * The suggested plan with the user's in-place edits (raw field text by category id)
+ * applied: amounts and %s recomputed, savings taking whatever's left. Empty counts as
+ * zero; anything else must be a number. The total may not pass the income.
+ */
+export const editPlan = (
+  rows: ReadonlyArray<PlanRow>,
+  edits: Record<string, string>,
+  income: number,
+): EditedPlan => {
+  const edited = rows.map((row) => {
+    const raw = edits[row.id] ?? String(row.amount);
+    const parsed = raw.trim() === "" ? 0 : parseAmount(raw);
+    const invalid = !(Number.isFinite(parsed) && parsed >= 0 && parsed <= MAX_BUDGET);
+    const amount = invalid ? 0 : Math.round(parsed * 100) / 100;
+    return { id: row.id, raw, invalid, amount, pct: pctOf(amount, income) };
+  });
+  const spent = edited.reduce((s, r) => s + r.amount, 0);
+  const left = Math.round((income - spent) * 100) / 100;
+  return {
+    rows: edited,
+    savings: { amount: Math.max(0, left), pct: pctOf(Math.max(0, left), income) },
+    over: Math.max(0, -left),
+    hasInvalid: edited.some((r) => r.invalid),
   };
 };
 
