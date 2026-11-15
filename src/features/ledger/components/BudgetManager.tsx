@@ -6,7 +6,9 @@ import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { CURRENCIES } from "@/utils/currency";
 import { activeCategories } from "@/utils/ledger";
+import { AcceptedPlan, BudgetWizard } from "@/features/ledger/budgetWizard/BudgetWizard";
 import {
+  applyCategoryOps,
   BudgetDrafts,
   budgetDraftKey,
   budgetDraftOps,
@@ -46,12 +48,54 @@ const BudgetManagerDialog = ({
   // Kept across currency switches, so edits in one currency survive a look at another.
   const [drafts, setDrafts] = useState<BudgetDrafts>({});
   const [saveFailed, setSaveFailed] = useState(false);
+  const [mode, setMode] = useState<"budgets" | "wizard">("budgets");
+  // Category changes a budget-helper plan needs (reset to the defaults), saved with Save.
+  const [pendingOps, setPendingOps] = useState<CategoryOp[]>([]);
 
-  const active = activeCategories(categories);
+  const planned = pendingOps.length ? applyCategoryOps(categories, pendingOps) : categories;
+  const active = activeCategories(planned);
   const currencyFor = (category: LedgerCategory) =>
     picked[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
-  const ops = budgetDraftOps(categories, drafts);
+  const ops = [...pendingOps, ...budgetDraftOps(planned, drafts)];
   const hasErrors = Object.values(drafts).some((raw) => budgetFieldError(raw));
+
+  // Fill the fields from the plan (as unsaved drafts) and queue the category reset.
+  const applyPlan = ({ resetOps, currency, amounts }: AcceptedPlan) => {
+    setPendingOps(resetOps);
+    setDrafts((d) => ({
+      ...d,
+      ...Object.fromEntries(
+        Object.entries(amounts).map(([id, amount]) => [
+          budgetDraftKey(id, currency),
+          amount > 0 ? String(amount) : "",
+        ]),
+      ),
+    }));
+    setPicked((p) => ({
+      ...p,
+      ...Object.fromEntries(Object.keys(amounts).map((id) => [id, currency])),
+    }));
+    setSaveFailed(false);
+    setMode("budgets");
+  };
+
+  if (mode === "wizard") {
+    return (
+      <Modal isOpen onClose={onClose} className="BudgetManager">
+        <Modal.Header striped title="Budget helper">
+          Budget helper
+        </Modal.Header>
+        <Modal.Body>
+          <BudgetWizard
+            categories={planned}
+            defaultCurrency={preferredBudgetCurrency(categories, defaultCurrency)}
+            onCancel={() => setMode("budgets")}
+            onUse={applyPlan}
+          />
+        </Modal.Body>
+      </Modal>
+    );
+  }
 
   const handleSave = async () => {
     try {
@@ -72,6 +116,15 @@ const BudgetManagerDialog = ({
         <p className="BudgetManager__hint">
           Monthly limits per category. Leave one empty for no budget.
         </p>
+        <button type="button" className="BudgetManager__helper" onClick={() => setMode("wizard")}>
+          Need help setting a budget?
+        </button>
+        {pendingOps.length > 0 && (
+          <p className="BudgetManager__notice" role="status">
+            Filled in from the budget helper. Adjust anything you like. Your categories will be
+            reset to the defaults when you save.
+          </p>
+        )}
         <ul className="BudgetManager__list" aria-label="Category budgets">
           {active.map((category) => (
             <li key={category.id} className="BudgetManager__row">

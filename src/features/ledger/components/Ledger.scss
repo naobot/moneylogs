@@ -444,9 +444,37 @@
 // Monthly budgets per category: name left, amount and its currency right.
 .BudgetManager {
   &__hint {
-    margin: 0 0 0.5em;
+    margin: 0 0 0.25em;
     font-size: 0.8em;
     opacity: 0.7;
+  }
+
+  // Entry to the budget helper: a quiet text link, not a framed button.
+  &__helper {
+    display: block;
+    margin: 0 0 0.75em;
+    padding: 0;
+    font: inherit;
+    font-size: 0.85em;
+    color: var(--ink);
+    background: none;
+    border: none;
+    text-decoration: underline dashed;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration-style: solid;
+    }
+  }
+
+  // After using a helper plan: what Save will do.
+  &__notice {
+    margin: 0 0 0.75em;
+    padding: 0.5em 0.75em;
+    border: var(--border-rule) dashed var(--ink);
+    font-size: 0.8em;
   }
 
   &__list {

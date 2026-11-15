@@ -29,8 +29,6 @@ import {
   WizardState,
 } from "./wizardSteps";
 
-import "./CreateLogWizard.scss";
-
 const initialState = (defaultCurrency: Currency): WizardState => ({
   mode: null,
   title: "",
@@ -157,15 +155,15 @@ export const CreateLogWizard = () => {
       body = (
         <>
           <h3 className="Wizard__question">What kind of log are you starting?</h3>
-          <div className="CreateLogWizard__choices" role="radiogroup" aria-label="Log type">
+          <div className="Wizard__choices" role="radiogroup" aria-label="Log type">
             {MODE_OPTIONS.map((option) => (
               <button
                 key={option.mode}
                 type="button"
                 role="radio"
                 aria-checked={state.mode === option.mode}
-                className={cx("CreateLogWizard__choice", {
-                  "CreateLogWizard__choice--selected": state.mode === option.mode,
+                className={cx("Wizard__choice", {
+                  "Wizard__choice--selected": state.mode === option.mode,
                 })}
                 onClick={() => chooseMode(option.mode)}
               >
