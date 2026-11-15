@@ -191,7 +191,10 @@ const SpendingChart = <P extends ChartPoint>({
             {series.map((p, i) => (
               <text
                 key={`wd-${p.key}`}
-                className="SpendingChart__weekday"
+                className={cx("SpendingChart__weekday", {
+                  // Saturday and Sunday in bold, so S/S stand apart from the weekdays.
+                  "SpendingChart__weekday--weekend": p.date.day() === 0 || p.date.day() === 6,
+                })}
                 x={xCenter(i)}
                 y={BASELINE + 14}
                 textAnchor="middle"
