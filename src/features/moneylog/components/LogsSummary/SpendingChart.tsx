@@ -29,15 +29,18 @@ interface SpendingChartProps<P extends ChartPoint> {
   itemNoun?: [string, string];
   /** Axis labels for the first/last points: a short date, or a month for monthly series. */
   axisFormat?: "day" | "month";
+  /** Daily series: each bucket's weekday initial (M T W T F S S) under it. */
+  weekdays?: boolean;
 }
 
 // Fixed viewBox; CSS scales the SVG responsively (uniform, so strokes stay crisp).
 const VW = 640;
 const VH = 240;
-const PAD = { top: 16, right: 10, bottom: 28, left: 10 };
+const PAD = { top: 16, right: 10, left: 10 };
 const PLOT_W = VW - PAD.left - PAD.right;
-const PLOT_H = VH - PAD.top - PAD.bottom;
-const BASELINE = PAD.top + PLOT_H;
+// Room under the baseline for the date labels, plus a row of weekday initials if shown.
+const PAD_BOTTOM = 28;
+const PAD_BOTTOM_WEEKDAYS = 44;
 
 const fmt = (value: number, currency: Currency) =>
   `${value.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${currency}`;
@@ -66,7 +69,10 @@ const SpendingChart = <P extends ChartPoint>({
   barRadius = 4,
   itemNoun = ["post", "posts"],
   axisFormat = "day",
+  weekdays = false,
 }: SpendingChartProps<P>) => {
+  const PLOT_H = VH - PAD.top - (weekdays ? PAD_BOTTOM_WEEKDAYS : PAD_BOTTOM);
+  const BASELINE = PAD.top + PLOT_H;
   const { formatShortDate, formatMonth } = useDateFormat();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<number | null>(null);
@@ -85,20 +91,14 @@ const SpendingChart = <P extends ChartPoint>({
   const xCenter = (i: number) => PAD.left + band * i + band / 2;
   const yOf = (v: number) => PAD.top + PLOT_H * (1 - v / yMax);
 
-  const linePath = useMemo(() => {
-    if (mode !== "cumulative" || n === 0) return "";
-    return series
-      .map((p, i) => `${i === 0 ? "M" : "L"}${xCenter(i)},${yOf(p.cumulative)}`)
-      .join(" ");
-  }, [series, mode, n, yMax]);
-
-  const areaPath = useMemo(() => {
-    if (mode !== "cumulative" || n === 0) return "";
-    const top = series
-      .map((p, i) => `${i === 0 ? "M" : "L"}${xCenter(i)},${yOf(p.cumulative)}`)
-      .join(" ");
-    return `${top} L${xCenter(n - 1)},${BASELINE} L${xCenter(0)},${BASELINE} Z`;
-  }, [series, mode, n, yMax]);
+  // Cheap to build (one point per bucket), so not memoised.
+  const linePath =
+    mode === "cumulative" && n > 0
+      ? series.map((p, i) => `${i === 0 ? "M" : "L"}${xCenter(i)},${yOf(p.cumulative)}`).join(" ")
+      : "";
+  const areaPath = linePath
+    ? `${linePath} L${xCenter(n - 1)},${BASELINE} L${xCenter(0)},${BASELINE} Z`
+    : "";
 
   const updateTooltip = (index: number, evt: React.MouseEvent) => {
     const rect = wrapperRef.current?.getBoundingClientRect();
@@ -185,13 +185,33 @@ const SpendingChart = <P extends ChartPoint>({
           y2={BASELINE}
         />
 
+        {/* weekday initials, one under each bucket (each bar's label already says the day) */}
+        {weekdays && (
+          <g aria-hidden="true">
+            {series.map((p, i) => (
+              <text
+                key={`wd-${p.key}`}
+                className={cx("SpendingChart__weekday", {
+                  // Saturday and Sunday in bold, so S/S stand apart from the weekdays.
+                  "SpendingChart__weekday--weekend": p.date.day() === 0 || p.date.day() === 6,
+                })}
+                x={xCenter(i)}
+                y={BASELINE + 14}
+                textAnchor="middle"
+              >
+                {p.date.format("dd").charAt(0)}
+              </text>
+            ))}
+          </g>
+        )}
+
         {/* x labels */}
         {labelIdx.map((i) => (
           <text
             key={`xl-${i}`}
             className="SpendingChart__xtick"
             x={xCenter(i)}
-            y={BASELINE + 16}
+            y={BASELINE + (weekdays ? 32 : 16)}
             textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
           >
             {series[i] &&
