@@ -27,8 +27,8 @@ type BudgetManagerProps = {
 };
 
 /**
- * Monthly budgets per category, one currency at a time. Fields are drafts until Save,
- * where the changed ones become category ops replayed onto the latest server copy.
+ * Monthly budgets per category, each with its own currency. Fields are drafts until
+ * Save, where the changed ones become category ops replayed onto the latest server copy.
  */
 export const BudgetManager = (props: BudgetManagerProps) =>
   // Remount on open so each session starts from the saved budgets with no drafts.
@@ -41,14 +41,15 @@ const BudgetManagerDialog = ({
   onSave,
   isSaving,
 }: BudgetManagerProps) => {
-  const [currency, setCurrency] = useState<Currency>(() =>
-    preferredBudgetCurrency(categories, defaultCurrency),
-  );
+  // Each row's picked currency; unpicked rows show the one they already budget in.
+  const [picked, setPicked] = useState<Record<string, Currency>>({});
   // Kept across currency switches, so edits in one currency survive a look at another.
   const [drafts, setDrafts] = useState<BudgetDrafts>({});
   const [saveFailed, setSaveFailed] = useState(false);
 
   const active = activeCategories(categories);
+  const currencyFor = (category: LedgerCategory) =>
+    picked[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
   const ops = budgetDraftOps(categories, drafts);
   const hasErrors = Object.values(drafts).some((raw) => budgetFieldError(raw));
 
@@ -68,34 +69,27 @@ const BudgetManagerDialog = ({
         Budgets
       </Modal.Header>
       <Modal.Body>
-        <div className="BudgetManager__intro">
-          <p className="BudgetManager__hint">
-            Monthly limits per category. Leave one empty for no budget.
-          </p>
-          <select
-            aria-label="Budget currency"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as Currency)}
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
+        <p className="BudgetManager__hint">
+          Monthly limits per category. Leave one empty for no budget.
+        </p>
         <ul className="BudgetManager__list" aria-label="Category budgets">
           {active.map((category) => (
             <li key={category.id} className="BudgetManager__row">
               <span className="BudgetManager__name keep-case">{category.name}</span>
               <BudgetField
                 category={category}
-                currency={currency}
+                currency={currencyFor(category)}
                 drafts={drafts}
                 onChange={(raw) => {
                   setSaveFailed(false);
-                  setDrafts((d) => ({ ...d, [budgetDraftKey(category.id, currency)]: raw }));
+                  setDrafts((d) => ({
+                    ...d,
+                    [budgetDraftKey(category.id, currencyFor(category))]: raw,
+                  }));
                 }}
+                onCurrencyChange={(currency) =>
+                  setPicked((p) => ({ ...p, [category.id]: currency }))
+                }
               />
             </li>
           ))}
@@ -125,8 +119,8 @@ const BudgetManagerDialog = ({
 };
 
 /**
- * One category's monthly budget in one currency: a right-aligned amount, with an
- * optional currency picker beside it (the Budgets window picks currency once, above).
+ * One category's monthly budget in one currency: a right-aligned amount with a currency
+ * picker beside it, or a fixed currency label when no onCurrencyChange is given.
  */
 export const BudgetField = ({
   category,

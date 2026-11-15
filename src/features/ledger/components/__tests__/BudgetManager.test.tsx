@@ -65,10 +65,15 @@ describe("BudgetManager", () => {
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-  it("shows one amount per active category, in the currency most budgets use", () => {
-    // Transport's EUR budget outnumbers no-one else's, so EUR is shown first.
-    expect((byLabel("Budget currency") as unknown as HTMLSelectElement).value).toBe("EUR");
+  const currencyOf = (name: string) =>
+    byLabel(`Budget currency for ${name}`) as unknown as HTMLSelectElement;
+
+  it("shows each active category's amount and its own currency", () => {
+    expect(byLabel("Budget currency")).toBeNull(); // no window-wide picker
+    // Transport already budgets in EUR; Food has none yet, so the log's default.
+    expect(currencyOf("Transport").value).toBe("EUR");
     expect(field("Transport").value).toBe("80");
+    expect(currencyOf("Food").value).toBe("JPY");
     expect(field("Food").value).toBe("");
     expect(byLabel("Monthly budget for Old")).toBeNull();
     // No per-field "set" step, only Save.
@@ -78,17 +83,18 @@ describe("BudgetManager", () => {
 
   it("saves typed, changed and cleared amounts across currencies in one go", async () => {
     type(field("Food"), "30,000");
-    select(byLabel("Budget currency") as unknown as HTMLSelectElement, "JPY");
+    select(currencyOf("Food"), "EUR");
     expect(field("Food").value).toBe("");
-    type(field("Food"), "25000");
-    select(byLabel("Budget currency") as unknown as HTMLSelectElement, "EUR");
+    type(field("Food"), "250");
+    expect(currencyOf("Transport").value).toBe("EUR"); // other rows unaffected
+    select(currencyOf("Food"), "JPY");
     expect(field("Food").value).toBe("30,000"); // kept across the switch
     type(field("Transport"), "");
 
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
-      { type: "setBudget", id: "food", currency: "JPY", amount: 25000 },
-      { type: "setBudget", id: "food", currency: "EUR", amount: 30000 },
+      { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
+      { type: "setBudget", id: "food", currency: "EUR", amount: 250 },
       { type: "setBudget", id: "transport", currency: "EUR", amount: null },
     ]);
     expect(onClose).toHaveBeenCalled();
