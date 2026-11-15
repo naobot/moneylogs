@@ -27,6 +27,12 @@ export const MAX_BUDGET = 1_000_000_000;
 export const isValidBudgetAmount = (amount: number): boolean =>
   Number.isFinite(amount) && amount > 0 && amount <= MAX_BUDGET;
 
+/** True when any active category has a positive monthly budget, in any currency. */
+export const hasAnyBudget = (categories: ReadonlyArray<LedgerCategory>): boolean =>
+  categories.some(
+    (c) => !c.archived && Object.values(c.budget ?? {}).some((amount) => (amount ?? 0) > 0),
+  );
+
 const sameName = (a: string, b: string) =>
   normaliseCategoryName(a).toLowerCase() === normaliseCategoryName(b).toLowerCase();
 

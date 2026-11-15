@@ -38,7 +38,7 @@ export const LEDGER_TOUR_STEPS: readonly LedgerTourStep[] = [
   { target: "stats", text: "Totals, trends and budgets live in stats.", align: "end" },
   {
     target: "categories",
-    text: "Rename categories and set monthly budgets here.",
+    text: "Rename, reorder and add categories here.",
     align: "end",
   },
   {

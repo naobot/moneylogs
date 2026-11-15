@@ -199,6 +199,14 @@
   flex-direction: column;
   gap: 1em;
 
+  // Dims the whole screen while an entry is being edited.
+  &__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    background-color: var(--scrim);
+  }
+
   &__day {
     ul {
       list-style: none;
@@ -232,9 +240,14 @@
       }
     }
 
+    // Lifted above the scrim (see &__scrim) with a little room above when scrolled to.
     &--editing {
       display: block;
+      position: relative;
+      z-index: var(--z-selected);
       padding: 0.5em 0;
+      border-bottom: none;
+      scroll-margin-top: 0.5em;
     }
   }
 
@@ -393,42 +406,21 @@
     white-space: nowrap;
   }
 
-  // Inline budget editor: wraps onto its own line under the category row.
-  &__budget {
+  // Rarely-needed row actions (archive), expanded under the row by its ⋯ button.
+  &__more {
     flex-basis: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 0.4em;
-    padding: 0.4em 0 0.2em 1.5em;
-    font-size: 0.85em;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5em;
+    padding: 0.2em 0 0.2em 1.5em;
 
-    &__list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-
-      li {
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-      }
-    }
-
-    &__form {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4em;
-
-      input {
-        width: 9em;
-        text-align: right;
-      }
-
-      select {
-        font: inherit;
-        border-radius: var(--radius-none);
-      }
+    small {
+      flex: 1;
+      min-width: 12em;
+      font-size: 0.8em;
+      opacity: 0.7;
     }
   }
 
@@ -443,6 +435,80 @@
   }
 }
 
+// Monthly budgets per category: one row per active category, its editor always open.
+.BudgetManager {
+  &__hint {
+    margin: 0 0 0.5em;
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25em 1em;
+    padding: 0.5em 0;
+    border-bottom: var(--border-hairline) dashed var(--ink);
+  }
+
+  &__name {
+    flex: 0 0 8em;
+    min-width: 0;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  &__editor {
+    flex: 1;
+    min-width: 14em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+    font-size: 0.85em;
+  }
+
+  &__amounts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4em;
+
+    input {
+      width: 9em;
+      text-align: right;
+    }
+
+    select {
+      font: inherit;
+      border-radius: var(--radius-none);
+    }
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-size: 0.8em;
+  }
+}
+
 // Always-on stats: a one-line strip (totals + category bar) that expands into a panel.
 .LedgerStats {
   border: var(--border-rule) solid var(--ink);
@@ -454,19 +520,39 @@
     gap: 0.4em 1em;
     width: 100%;
     @include surfaces.strip(0.5em 0.75em);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    text-decoration: none;
     box-sizing: border-box;
+
+    // Totals + category bar: the link to the stats page.
+    &__link {
+      display: flex;
+      flex: 1;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4em 1em;
+      min-width: 0;
+      color: inherit;
+      text-decoration: none;
+    }
 
     &__totals {
       font-weight: 700;
     }
 
     &__budget {
+      font: inherit;
       font-size: 0.8em;
       white-space: nowrap;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline dashed;
+        text-underline-offset: 0.2em;
+      }
 
       // Over budget: inverted within the strip.
       &--over {
@@ -477,9 +563,33 @@
       }
     }
 
+    // No budget yet: an editable (dashed) prompt, quieter than the totals.
+    &__cta {
+      font: inherit;
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      color: inherit;
+      background: none;
+      border: var(--border-hairline) dashed currentColor;
+      border-radius: var(--radius-none);
+      padding: 0.1em 0.5em;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--ink);
+        background: var(--paper);
+        border-style: solid;
+      }
+    }
+
     &__toggle {
       margin-left: auto;
       font-size: 0.8em;
+      color: inherit;
+      text-decoration: none;
     }
   }
 
@@ -568,6 +678,11 @@
     margin: 0;
     font-size: 0.75em;
     opacity: 0.7;
+  }
+
+  &__noBudget {
+    margin: 0;
+    font-size: 0.85em;
   }
 
   &__budget {

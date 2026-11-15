@@ -3,6 +3,7 @@ import {
   applyCategoryOp,
   applyCategoryOps,
   categoryNameError,
+  hasAnyBudget,
   MAX_CATEGORIES,
   newCategoryId,
   normaliseOrder,
@@ -196,5 +197,21 @@ describe("setBudget", () => {
       { type: "setBudget", id: "food", currency: "JPY", amount: 20000 },
     ]);
     expect(result[0]).toMatchObject({ name: "Eating out", budget: { JPY: 20000 } });
+  });
+});
+
+describe("hasAnyBudget", () => {
+  it("is false with no budgets, empty budgets, or budgets only on archived categories", () => {
+    expect(hasAnyBudget(cats())).toBe(false);
+    expect(hasAnyBudget([{ id: "food", name: "Food", order: 0, budget: {} }])).toBe(false);
+    expect(
+      hasAnyBudget([{ id: "old", name: "Old", order: 0, archived: true, budget: { JPY: 5000 } }]),
+    ).toBe(false);
+  });
+
+  it("is true when an active category has a budget in any currency", () => {
+    expect(hasAnyBudget([...cats(), { id: "x", name: "X", order: 4, budget: { EUR: 50 } }])).toBe(
+      true,
+    );
   });
 });
