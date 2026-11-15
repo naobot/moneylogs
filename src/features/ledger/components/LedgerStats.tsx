@@ -122,7 +122,7 @@ export const LedgerStatsStrip = ({
       )}
       {!isLoading && noBudget && (
         <button type="button" className="LedgerStats__strip__cta" onClick={onEditBudget}>
-          <Icon type="wallet" size={14} />
+          <Icon type="wallet" size={20} />
           set budget
         </button>
       )}

@@ -131,6 +131,8 @@ describe("CategoryManager", () => {
     expect(document.querySelector('[role="tooltip"]')?.textContent).toContain(
       "hides this category when adding entries",
     );
+    // Layered above the modal it was opened from, not behind it.
+    expect(document.querySelector('[role="tooltip"]')!.className).toContain("Popover--inModal");
     act(() => archive.blur());
     expect(document.querySelector('[role="tooltip"]')).toBeNull();
   });

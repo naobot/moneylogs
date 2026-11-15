@@ -471,6 +471,7 @@ h6,
     display: inline-flex;
     align-items: center;
     gap: 0.35em;
+    padding: 0 0.5em 0 0.25em; // the icon sets the height
   }
 
   // The icon flips with the button when it inverts.

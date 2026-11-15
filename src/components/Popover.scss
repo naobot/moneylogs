@@ -11,6 +11,11 @@
   border-radius: var(--radius-none);
   font-family: var(--font-mono);
 
+  // Opened from inside a modal: above the modal, not hidden behind it.
+  &--inModal {
+    z-index: var(--z-modal-popover);
+  }
+
   // Tooltips: read-only, never in the pointer's way.
   &--passive {
     pointer-events: none;

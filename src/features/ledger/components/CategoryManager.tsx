@@ -428,7 +428,7 @@ const ActionButton = ({
           }
         }}
       >
-        <Icon type={icon} size={14} />
+        <Icon type={icon} size={20} />
         {children}
       </SharedRowButton>
       {tip && (
