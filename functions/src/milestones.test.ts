@@ -7,7 +7,7 @@ import {
   milestoneAchievementId,
 } from "./milestones";
 import { STARTER_COIN, STREAK_COINS } from "./coins";
-import { KNICK_KNACK_FINDS } from "./knickknacks";
+import { findableIn, KNICK_KNACK_FINDS } from "./knickknacks";
 import { giftBlock } from "./giftsPlan";
 import { MILESTONE_ACHIEVEMENTS } from "../../src/features/ledger/buddy/knickknacks/milestoneAchievements";
 
@@ -31,6 +31,13 @@ describe("milestones", () => {
 
   it("each come with an achievement the app knows", () => {
     expect(Object.keys(MILESTONE_ACHIEVEMENTS).sort()).toEqual(milestoneIds);
+  });
+
+  it("leave special knick-knacks giftable and never found by chance", () => {
+    expect(giftBlock({ seenAt: 1, source: "special", item: "mini_robot_charm" })).toBeNull();
+    for (let month = 1; month <= 12; month++) {
+      expect(findableIn({ month, timezone: "America/Toronto" })).not.toContain("mini_robot_charm");
+    }
   });
 
   it("are never giftable", () => {

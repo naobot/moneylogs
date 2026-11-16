@@ -11,9 +11,11 @@ export type KnickKnackId = keyof typeof ART;
 /**
  * Rare items turn up less often than the others in season (weights live server-side).
  * Milestone items are never found by chance: the buddy hands them over with an
- * achievement (functions/src/milestones.ts), and they can't be gifted.
+ * achievement (functions/src/milestones.ts), and they can't be gifted. Special items
+ * aren't found by chance either: they're granted by hand
+ * (functions/scripts/grant-special.ts), and can be gifted like any find.
  */
-export type Rarity = "common" | "rare" | "milestone";
+export type Rarity = "common" | "rare" | "milestone" | "special";
 
 export type KnickKnackInfo = {
   name: string;
@@ -163,6 +165,12 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     seasons: [],
     found:
       "a friendship bracelet for your first friend! i made it myself. well, mostly i tangled it~",
+  },
+  mini_robot_charm: {
+    name: "mini robot charm",
+    rarity: "special",
+    seasons: [],
+    found: "a little robot charm! it winked at me. i think we're friends now ♪",
   },
 };
 
