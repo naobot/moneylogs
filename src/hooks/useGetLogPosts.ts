@@ -13,6 +13,7 @@ import {
 import { db } from "@/config/firebase-config";
 import { LogPost } from "@/types/user";
 import { invalidateCommentCache } from "./useGetLogPostComments";
+import { reportError } from "@/utils/reportError";
 
 // Active groups open on a real-time window of the most recent posts. Long-running
 // sessions can accumulate far more than this, so the window is grown a page at a
@@ -110,7 +111,7 @@ export const useGetLogPosts = ({ groupId, isArchived = false }: UseGetLogPostsPa
         })
         .catch((error: unknown) => {
           if (cancelled) return;
-          console.error("❌ error fetching archived log posts:", error);
+          reportError(error, { feature: "log_post", action: "load_archived_posts" });
           setState({
             posts: [],
             isLoading: false,
@@ -195,7 +196,7 @@ export const useGetLogPosts = ({ groupId, isArchived = false }: UseGetLogPostsPa
         });
       },
       (error) => {
-        console.error("❌ real-time listener error:", error);
+        reportError(error, { feature: "log_post", action: "listen_posts" });
         setState({
           posts: [],
           isLoading: false,

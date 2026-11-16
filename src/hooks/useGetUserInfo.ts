@@ -5,6 +5,7 @@ import { ArchivedLogsMap } from "@/utils/archivedLogs";
 import type { NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
 import type { Currency } from "@/types/user";
+import { reportError } from "@/utils/reportError";
 
 export type MoneyLog = {
   id: number;
@@ -202,7 +203,7 @@ export const useGetUserInfo = (userId: string) => {
       (err) => {
         setError(err);
         setIsLoading(false);
-        console.error("❌ Error in current user real-time listener:", err);
+        reportError(err, { feature: "account", action: "listen_current_user" });
       },
     );
 

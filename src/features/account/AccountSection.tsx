@@ -6,7 +6,7 @@ import { auth } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
-import { getResetEmailErrorMessage } from "@/features/auth/accountErrors";
+import { getResetEmailErrorMessage, isExpectedAccountError } from "@/features/auth/accountErrors";
 import dayjs from "@/utils/configuredDayjs";
 import { useDateFormat } from "@/utils/dateFormat";
 
@@ -15,6 +15,7 @@ import { ChangePasswordModal } from "./ChangePasswordModal";
 import { DeleteAccountModal } from "./DeleteAccountModal";
 
 import "./AccountSection.scss";
+import { reportError } from "@/utils/reportError";
 
 /** Account details, then the account actions as a row of buttons. */
 export const AccountSection = () => {
@@ -40,7 +41,9 @@ export const AccountSection = () => {
       showToast(`Reset link sent to ${email}`, "success");
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      console.error("Failed to send password reset email:", code);
+      if (!isExpectedAccountError(code)) {
+        reportError(err, { feature: "account", action: "send_password_reset" });
+      }
       showToast(getResetEmailErrorMessage(code));
     } finally {
       setResetPending(false);

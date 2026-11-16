@@ -11,6 +11,7 @@ import { Group } from "@/features/moneylog/components/Group";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import { reportError } from "@/utils/reportError";
 
 export const InvitePage = () => {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export const InvitePage = () => {
         void navigate("/");
       }
     } catch (error) {
-      console.error("Failed to join group:", error);
+      reportError(error, { feature: "log_group", action: "join_group" });
     }
   };
 

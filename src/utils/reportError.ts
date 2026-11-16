@@ -16,7 +16,11 @@ export type Feature =
   | "ledger"
   | "notifications"
   | "reactions"
-  | "dashboard";
+  | "dashboard"
+  | "account"
+  | "log_group"
+  | "log_actions"
+  | "log_analytics";
 
 type ReportContext = {
   feature: Feature;

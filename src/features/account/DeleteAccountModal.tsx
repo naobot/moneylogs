@@ -9,11 +9,13 @@ import {
   confirmsAccountDeletion,
   DELETE_ACCOUNT_CONFIRMATION,
   getDeleteAccountErrorMessage,
+  isExpectedAccountError,
 } from "@/features/auth/accountErrors";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import { reportError } from "@/utils/reportError";
 
 const deleteAccountCallable = httpsCallable<void, { deleted: boolean }>(functions, "deleteAccount");
 
@@ -53,13 +55,17 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
       await deleteAccountCallable();
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      console.error("Failed to delete account:", code);
+      if (!isExpectedAccountError(code)) {
+        reportError(err, { feature: "account", action: "delete_account" });
+      }
       setError(getDeleteAccountErrorMessage(code));
       setPending(false);
       return;
     }
     // The Auth account is gone server-side; clear the local session too.
-    await signOut(auth).catch((err) => console.error("Sign out after deletion failed:", err));
+    await signOut(auth).catch((err) =>
+      reportError(err, { feature: "account", action: "sign_out_after_delete", level: "warning" }),
+    );
     showToast("Your account has been deleted.", "success");
     void navigate("/login", { replace: true });
   };
