@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import cx from "classnames";
 
-import { AVATAR_SIZE, avatarInitial, initialAvatarGrid, normaliseAvatar } from "@/utils/avatar";
+import {
+  AVATAR_SIZE,
+  avatarInitial,
+  initialAvatarGrid,
+  MINI_AVATAR_SIZE,
+  miniAvatar,
+  normaliseAvatar,
+} from "@/utils/avatar";
 import { pixelPath } from "@/utils/pixelArt";
 
 import "./Avatar.scss";
@@ -11,8 +18,11 @@ type AvatarProps = {
   avatar?: readonly string[] | null;
   /** Whose avatar: used for the label and the fallback initial. */
   name?: string | null;
-  /** Whole multiples of the 30-grid only, so pixels stay crisp. */
-  size?: 30 | 60;
+  /**
+   * 30 or 60: the 30-grid at 1× or 2×. 15: the mini avatar, a 15×15 shrink of the grid
+   * at 1×. All whole multiples, so pixels stay crisp.
+   */
+  size?: 15 | 30 | 60;
   className?: string;
 };
 
@@ -24,11 +34,13 @@ type AvatarProps = {
 export const Avatar = ({ avatar, name, size = 30, className }: AvatarProps) => {
   const drawn = normaliseAvatar(avatar);
   const fallback = useMemo(() => (drawn ? null : initialAvatarGrid(name)), [drawn, name]);
-  const grid = drawn ?? fallback;
-  const d = useMemo(() => (grid ? pixelPath(grid) : ""), [grid]);
+  const full = drawn ?? fallback;
+  const mini = size === MINI_AVATAR_SIZE;
+  const d = useMemo(() => (full ? pixelPath(mini ? miniAvatar(full) : full) : ""), [full, mini]);
+  const gridSize = mini ? MINI_AVATAR_SIZE : AVATAR_SIZE;
   const label = name ? `${name}'s avatar` : "avatar";
 
-  if (!grid) {
+  if (!full) {
     return (
       <span
         className={cx("Avatar", "Avatar--empty", `Avatar--${size}`, className)}
@@ -43,7 +55,7 @@ export const Avatar = ({ avatar, name, size = 30, className }: AvatarProps) => {
   return (
     <svg
       className={cx("Avatar", `Avatar--${size}`, { "Avatar--initial": !drawn }, className)}
-      viewBox={`0 0 ${AVATAR_SIZE} ${AVATAR_SIZE}`}
+      viewBox={`0 0 ${gridSize} ${gridSize}`}
       width={size}
       height={size}
       shapeRendering="crispEdges"

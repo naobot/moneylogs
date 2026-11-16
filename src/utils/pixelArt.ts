@@ -38,5 +38,23 @@ export const parseGrid = (rows: unknown, size: number): boolean[][] =>
 export const serializeGrid = (cells: readonly (readonly boolean[])[]): string[] =>
   cells.map((row) => row.map((ink) => (ink ? "#" : ".")).join(""));
 
+/**
+ * Shrink a grid by a whole factor: each output pixel is ink if any pixel in its block
+ * is, so 1-pixel outlines survive. Used for the 15×15 mini avatar.
+ */
+export const downsampleGrid = (grid: PixelGrid, factor: number): string[] => {
+  const size = Math.floor(grid.length / factor);
+  return Array.from({ length: size }, (_, y) =>
+    Array.from({ length: size }, (_, x) => {
+      for (let dy = 0; dy < factor; dy++) {
+        for (let dx = 0; dx < factor; dx++) {
+          if (grid[y * factor + dy]?.[x * factor + dx] === "#") return "#";
+        }
+      }
+      return ".";
+    }).join(""),
+  );
+};
+
 /** True when no cell is inked. */
 export const isBlankGrid = (rows: PixelGrid): boolean => rows.every((row) => !row.includes("#"));

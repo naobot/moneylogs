@@ -1,8 +1,12 @@
-import { isBlankGrid, isValidGrid } from "./pixelArt";
+import { downsampleGrid, isBlankGrid, isValidGrid } from "./pixelArt";
 import { GLYPH_HEIGHT, GLYPH_WIDTH, PIXEL_GLYPHS } from "./pixelFont";
 
-/** Avatars are 30×30 one-ink pixel grids, shown at 30px (1×) or 60px (2×). */
+/**
+ * Avatars are 30×30 one-ink pixel grids, shown at 30px (1×) or 60px (2×), or shrunk to
+ * a 15×15 mini avatar shown at 15px (see miniAvatar).
+ */
 export const AVATAR_SIZE = 30;
+export const MINI_AVATAR_SIZE = 15;
 
 /** A stored avatar if it's a drawable 30×30 grid with some ink, else null. */
 export const normaliseAvatar = (value: unknown): string[] | null =>
@@ -18,10 +22,13 @@ export const avatarInitial = (name?: string | null): string => {
   return first.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase() || "?";
 };
 
-/** Glyphs are drawn at 2× inside a 1-cell frame; the baseline sits a little below middle. */
+/**
+ * Glyphs are drawn at 2× inside a 1-cell frame; the baseline sits a little below
+ * middle. Left and top are even so the glyph lands exactly on the 15×15 mini grid.
+ */
 const GLYPH_SCALE = 2;
 const GLYPH_LEFT = (AVATAR_SIZE - GLYPH_WIDTH * GLYPH_SCALE) / 2;
-const GLYPH_TOP = 7;
+const GLYPH_TOP = 8;
 
 /**
  * The fallback avatar as a 30×30 grid: a one-cell frame with the name's initial in the
@@ -41,3 +48,7 @@ export const initialAvatarGrid = (name?: string | null): string[] | null => {
     }).join(""),
   );
 };
+
+/** The 15×15 mini version of an avatar grid (any ink in a 2×2 block inks the pixel). */
+export const miniAvatar = (grid: readonly string[]): string[] =>
+  downsampleGrid(grid, AVATAR_SIZE / MINI_AVATAR_SIZE);

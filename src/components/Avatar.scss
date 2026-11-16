@@ -3,7 +3,14 @@
   display: inline-block;
   flex: none;
   vertical-align: middle;
-  color: var(--ink);
+  // Follows the text around it, so it stays visible on inverted rows (active or
+  // hovered members, selected chips).
+  color: inherit;
+
+  &--15 {
+    width: 15px;
+    height: 15px;
+  }
 
   &--30 {
     width: 30px;
@@ -20,11 +27,15 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    border: var(--border-hairline) solid var(--ink);
+    border: var(--border-hairline) solid currentColor;
     border-radius: var(--radius-none);
     font-family: var(--font-mono);
     font-weight: 700;
     line-height: 1;
+  }
+
+  &--empty#{&}--15 {
+    font-size: 9px;
   }
 
   &--empty#{&}--30 {
