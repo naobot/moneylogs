@@ -98,7 +98,9 @@ describe("useGetGroupUsers chunk merge", () => {
   // (re)registers the per-chunk user listeners.
   const deliverMembers = (members: string[]) => {
     chunkListeners = [];
-    act(() => groupListener!({ data: () => ({ members }) }));
+    // Like the real group doc: users/{id} references, not bare ids.
+    const refs = members.map((id) => ({ id, path: `users/${id}` }));
+    act(() => groupListener!({ data: () => ({ members: refs }) }));
   };
 
   const fireChunks = (listeners: ChunkListener[]) => {
@@ -182,5 +184,33 @@ describe("useGetGroupUsers chunk merge", () => {
     expect(latestUsers).not.toBe(usersAfterFirst);
     expect(latestUsers.find((u) => u.id === "m0")!.displayName).toBe("Renamed");
     expect(renderCount).toBeGreaterThan(rendersAfterFirst);
+  });
+
+  it("queries profiles by plain id, never by users/ reference", () => {
+    mount();
+    deliverMembers(MEMBER_IDS);
+    const queried = chunkListeners.flatMap((l) => l.chunk);
+    expect(queried).toEqual(MEMBER_IDS);
+    expect(queried.every((v) => typeof v === "string")).toBe(true);
+  });
+
+  it("stops loading when a members query fails", () => {
+    vi.mocked(onSnapshot).mockImplementation((ref: unknown, cb: unknown, onError?: unknown) => {
+      if ((ref as { __group?: boolean })?.__group) {
+        groupListener = cb as (snapshot: unknown) => void;
+      } else {
+        (onError as (e: Error) => void)(new Error("Missing or insufficient permissions."));
+      }
+      return vi.fn();
+    });
+    let state: { isLoading: boolean; error: string | null } | null = null;
+    const ErrorProbe = () => {
+      const { isLoading, error } = useGetGroupUsers(GROUP_ID);
+      state = { isLoading, error };
+      return null;
+    };
+    act(() => root.render(<ErrorProbe />));
+    deliverMembers(["m0"]);
+    expect(state).toEqual({ isLoading: false, error: "Missing or insufficient permissions." });
   });
 });

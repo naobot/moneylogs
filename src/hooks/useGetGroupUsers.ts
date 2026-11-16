@@ -122,8 +122,15 @@ export const useGetGroupUsers = (groupId: string) => {
 
         teardownMemberListeners();
 
+        // Members are stored as users/{id} references, but we read the matching
+        // profiles/{id} docs, so query by plain id. Passing the references would make
+        // Firestore look up users/ docs, which only their owner may read.
+        const memberIds: string[] = memberRefs
+          .map((ref: { id?: string; path?: string }) => ref?.id ?? ref?.path?.split("/").pop())
+          .filter((id: string | undefined): id is string => !!id);
+
         // Chunk members into groups of 10 (Firestore 'in' query limit)
-        const chunks = chunkArray(memberRefs, 10);
+        const chunks = chunkArray(memberIds, 10);
 
         if (chunks.length === 0) {
           setUsers([]);
@@ -145,57 +152,66 @@ export const useGetGroupUsers = (groupId: string) => {
         chunks.forEach((chunk, chunkIndex) => {
           const chunkQuery = query(collection(db, "profiles"), where("__name__", "in", chunk));
 
-          const unsubscribe = onSnapshot(chunkQuery, (snapshot) => {
-            const chunkUsers: FullUserData[] = [];
+          const unsubscribe = onSnapshot(
+            chunkQuery,
+            (snapshot) => {
+              const chunkUsers: FullUserData[] = [];
 
-            snapshot.forEach((doc: DocumentSnapshot) => {
-              const userData = doc.data();
-              if (userData) {
-                chunkUsers.push({
-                  id: doc.id,
-                  ...userData,
-                } as FullUserData);
+              snapshot.forEach((doc: DocumentSnapshot) => {
+                const userData = doc.data();
+                if (userData) {
+                  chunkUsers.push({
+                    id: doc.id,
+                    ...userData,
+                  } as FullUserData);
+                }
+              });
+
+              console.log(`📡 received ${chunkUsers.length} users from query ${chunkIndex + 1}`);
+
+              chunkResults[chunkIndex] = chunkUsers;
+              receivedChunks.add(chunkIndex);
+
+              const allUsers = chunkResults.flat();
+
+              // A member's user doc changes constantly as they view logs, subscribe to
+              // comments, or are seen — but the nav reads those fields only from the
+              // current user (via context), never from other members. Skip all state
+              // updates (which is why this returns before touching them) when only such
+              // fields changed, so an active group doesn't re-render every viewer's nav
+              // on every view. Firestore still bills the snapshot read; cutting that
+              // would need the churny fields moved off the user document.
+              const signature = stableMemberSignature(allUsers);
+              if (signature === appliedSignature) return;
+              appliedSignature = signature;
+
+              // Update state with current users
+              setUsers(allUsers);
+              setIsLoading(false);
+
+              // Only cache once every chunk has reported at least once, so we never
+              // persist a partial member list.
+              if (receivedChunks.size === chunks.length) {
+                const cacheableData: CacheableUserData[] = allUsers.map((user) => ({
+                  id: user.id,
+                  displayName: user.displayName,
+                  displayLocation: user.displayLocation,
+                  timezone: user.timezone,
+                  avatar: user.avatar,
+                  pinnedPosts: user.pinnedPosts,
+                }));
+
+                // Update cache with fresh stable data
+                setCachedUsers(groupId, cacheableData);
               }
-            });
-
-            console.log(`📡 received ${chunkUsers.length} users from query ${chunkIndex + 1}`);
-
-            chunkResults[chunkIndex] = chunkUsers;
-            receivedChunks.add(chunkIndex);
-
-            const allUsers = chunkResults.flat();
-
-            // A member's user doc changes constantly as they view logs, subscribe to
-            // comments, or are seen — but the nav reads those fields only from the
-            // current user (via context), never from other members. Skip all state
-            // updates (which is why this returns before touching them) when only such
-            // fields changed, so an active group doesn't re-render every viewer's nav
-            // on every view. Firestore still bills the snapshot read; cutting that
-            // would need the churny fields moved off the user document.
-            const signature = stableMemberSignature(allUsers);
-            if (signature === appliedSignature) return;
-            appliedSignature = signature;
-
-            // Update state with current users
-            setUsers(allUsers);
-            setIsLoading(false);
-
-            // Only cache once every chunk has reported at least once, so we never
-            // persist a partial member list.
-            if (receivedChunks.size === chunks.length) {
-              const cacheableData: CacheableUserData[] = allUsers.map((user) => ({
-                id: user.id,
-                displayName: user.displayName,
-                displayLocation: user.displayLocation,
-                timezone: user.timezone,
-                avatar: user.avatar,
-                pinnedPosts: user.pinnedPosts,
-              }));
-
-              // Update cache with fresh stable data
-              setCachedUsers(groupId, cacheableData);
-            }
-          });
+            },
+            (err) => {
+              // Don't leave the log waiting on members forever (cached ones stay).
+              console.error(`Failed to load members (query ${chunkIndex + 1}):`, err);
+              setError(err instanceof Error ? err.message : "Failed to fetch users");
+              setIsLoading(false);
+            },
+          );
 
           memberUnsubs.push(unsubscribe);
         });
