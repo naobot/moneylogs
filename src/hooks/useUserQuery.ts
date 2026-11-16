@@ -31,6 +31,7 @@ export type UserFieldsPatch = UpdateData<{
   timezone: string;
   defaultCurrency: Currency;
   onboardingPending: boolean | FieldValue;
+  avatar: string[] | null;
   "tutorials.ledgerTour": FieldValue;
   "tutorials.ledgerNudge": FieldValue;
 }>;

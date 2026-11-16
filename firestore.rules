@@ -23,6 +23,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Public profiles: the mirrorProfile function projects name, location, timezone and
+    // avatar out of users/{id} (same doc id). Readable by anyone, including spectators
+    // on a public log; only the server writes them.
+    match /profiles/{userDocId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Cloud Functions write notifications (the Admin SDK bypasses rules). The owner may
     // read them and stamp readAt, and may create only the ones whose actor is
     // themselves: starting or joining a log.

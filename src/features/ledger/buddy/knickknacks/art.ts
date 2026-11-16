@@ -552,14 +552,4 @@ export const ART = {
   ],
 } as const satisfies Record<string, readonly string[]>;
 
-/** One SVG path of 1-unit rects, a rect per horizontal run of ink. */
-export const pixelPath = (grid: readonly string[]): string => {
-  let d = "";
-  grid.forEach((row, y) => {
-    for (const run of row.matchAll(/#+/g)) {
-      const w = run[0].length;
-      d += `M${run.index} ${y}h${w}v1h-${w}z`;
-    }
-  });
-  return d;
-};
+export { pixelPath } from "@/utils/pixelArt";

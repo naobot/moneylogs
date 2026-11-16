@@ -1,0 +1,48 @@
+.AvatarEditor {
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  &__tools {
+    display: flex;
+    gap: var(--space-2);
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  // The selected tool is shown by inversion, like any other "on" state.
+  &__tool--active {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+  }
+
+  // Dashed frame: an editable surface.
+  &__canvas {
+    display: block;
+    box-sizing: content-box;
+    width: min(300px, calc(100vw - 2 * var(--window-pad) - 16px));
+    aspect-ratio: 1;
+    border: var(--border-rule) dashed var(--ink);
+    border-radius: var(--radius-none);
+    touch-action: none;
+    cursor: crosshair;
+
+    &--eraser {
+      cursor: cell;
+    }
+  }
+
+  &__preview {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-4);
+  }
+
+  &__hint {
+    color: var(--ink-muted);
+    font-size: 0.85em;
+  }
+}

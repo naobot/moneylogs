@@ -6,6 +6,7 @@ import { useMutation } from "@/hooks/useFirebase";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
 
+import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
 import CurrencySelect from "@/components/CurrencySelect";
@@ -14,7 +15,9 @@ import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
 
-/** Display name, location and timezone. */
+import AvatarEditorModal from "./avatar/AvatarEditorModal";
+
+/** Avatar, display name, location and timezone. */
 export const ProfileSection = () => {
   const { showToast } = useToastContext();
   const { trackUserAction } = useReadTracking();
@@ -22,6 +25,7 @@ export const ProfileSection = () => {
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
   const [newTimezone, setNewTimezone] = useState<string>();
+  const [editingAvatar, setEditingAvatar] = useState(false);
   const [newDefaultCurrency, setNewDefaultCurrency] = useState<Currency>(() =>
     ledgerStartCurrency(user),
   );
@@ -84,6 +88,17 @@ export const ProfileSection = () => {
 
   return (
     <>
+      <div className="UserSettings__avatar">
+        <Avatar avatar={user?.avatar} name={user?.displayName} size={60} />
+        <Button
+          text={user?.avatar ? "Edit avatar" : "Draw avatar"}
+          size="sm"
+          buttonStyle="primary-border-lite"
+          onClick={() => setEditingAvatar(true)}
+        />
+      </div>
+      {editingAvatar && <AvatarEditorModal isOpen onClose={() => setEditingAvatar(false)} />}
+
       <div className="UserSettings__form">
         <ControlledInput
           onChange={(e) => setNewDisplayName((e.target as HTMLInputElement).value)}

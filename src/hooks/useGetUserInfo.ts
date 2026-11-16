@@ -63,6 +63,8 @@ export type UserData = {
   onboardingPending?: boolean;
   /** One-time guided tours and nudges this user has already seen. */
   tutorials?: UserTutorials;
+  /** Self-drawn 30×30 pixel avatar ("#"/"." rows), mirrored to profiles/{id}. */
+  avatar?: string[] | null;
 };
 
 export interface CacheableUserData {
@@ -88,6 +90,7 @@ export interface CacheableUserData {
   defaultCurrency?: Currency;
   onboardingPending?: boolean;
   tutorials?: UserTutorials;
+  avatar?: string[] | null;
 }
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -186,6 +189,7 @@ export const useGetUserInfo = (userId: string) => {
             defaultCurrency: userData.defaultCurrency,
             onboardingPending: userData.onboardingPending,
             tutorials: userData.tutorials,
+            avatar: userData.avatar,
           };
 
           setCachedUser(userId, cacheableData);
