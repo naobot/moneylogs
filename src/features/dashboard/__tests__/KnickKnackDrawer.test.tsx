@@ -109,6 +109,27 @@ describe("KnickKnackDrawer", () => {
     expect(container.querySelector('svg[aria-label="tulip"]')).toBeNull();
   });
 
+  it("points a find from a deleted log to a log you still have", () => {
+    state.finds = [find("f1", "heart_leaf", false, "personal-gone")];
+    render([{ id: "l9", title: "Household" } as Ledger]);
+    const link = container.querySelector<HTMLAnchorElement>(".KnickKnackDrawer__waiting")!;
+    expect(link.getAttribute("href")).toBe("/l/l9");
+  });
+
+  it("opens a find in place when you have no financial log for it to point to", () => {
+    state.finds = [find("f2", "heart_leaf", false, "personal-gone")];
+    render([]);
+    expect(container.querySelector("a.KnickKnackDrawer__waiting")).toBeNull();
+    const open = container.querySelector<HTMLButtonElement>("button.KnickKnackDrawer__waiting")!;
+    expect(open.textContent).toContain("left something for you");
+
+    act(() => open.click());
+    expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f2");
+    const unwrapped = container.querySelector(".KnickKnackDrawer__unwrapped")!.textContent;
+    expect(unwrapped).toContain("you unwrapped heart-shaped leaf");
+    expect(unwrapped).not.toContain(" from ");
+  });
+
   it("shows a wrapped gift by who sent it, and unwraps it in place", () => {
     state.finds = [
       { ...find("f5", "holly", false), ledgerId: null, source: "gift", giftedBy: "mina" },

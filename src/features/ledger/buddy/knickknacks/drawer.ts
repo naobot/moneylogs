@@ -10,21 +10,38 @@ const ms = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEG
  * - kept: one slot per item the buddy has shown you, in the order you first got it,
  *   with how many you have;
  * - waiting: finds the buddy hasn't shown you yet, by log, so the drawer can point you
- *   to it without spoiling what's inside;
+ *   to it without spoiling what's inside. Any buddy can show any find, so a find whose
+ *   log you no longer have (deleted, or left), or that has no log, points to one of
+ *   `ledgerIds` (your financial logs, first choice first) instead;
+ * - loose: finds waiting with nowhere to point (you have no financial logs), which the
+ *   drawer lets you open itself;
  * - gifts: gifts from friends you haven't unwrapped yet, oldest first.
  * Finds for items this build doesn't know (a newer catalog) are left out until it updates.
+ * Without `ledgerIds`, every find's own log is trusted.
  */
-export const drawerContents = (finds: ReadonlyArray<KnickKnackFind>) => {
+export const drawerContents = (
+  finds: ReadonlyArray<KnickKnackFind>,
+  ledgerIds?: ReadonlyArray<string>,
+) => {
   const known = new Set<string>(KNICK_KNACK_IDS);
   const slots = new Map<KnickKnackId, DrawerSlot>();
   const waiting = new Map<string, number>();
   const gifts: KnickKnackFind[] = [];
+  const loose: KnickKnackFind[] = [];
+  const mine = ledgerIds ? new Set(ledgerIds) : null;
+  const pointTo = (ledgerId: string | null) =>
+    mine ? (ledgerId && mine.has(ledgerId) ? ledgerId : ledgerIds?.[0]) : ledgerId;
 
   for (const find of [...finds].sort((a, b) => ms(a) - ms(b))) {
     if (!known.has(find.item)) continue;
     if (!find.seenAt) {
-      if (find.source === "gift") gifts.push(find);
-      else if (find.ledgerId) waiting.set(find.ledgerId, (waiting.get(find.ledgerId) ?? 0) + 1);
+      if (find.source === "gift") {
+        gifts.push(find);
+        continue;
+      }
+      const ledgerId = pointTo(find.ledgerId);
+      if (ledgerId) waiting.set(ledgerId, (waiting.get(ledgerId) ?? 0) + 1);
+      else if (mine) loose.push(find);
       continue;
     }
     const slot = slots.get(find.item);
@@ -35,6 +52,7 @@ export const drawerContents = (finds: ReadonlyArray<KnickKnackFind>) => {
   return {
     kept: [...slots.values()],
     waiting: [...waiting].map(([ledgerId, count]) => ({ ledgerId, count })),
+    loose,
     gifts,
   };
 };
