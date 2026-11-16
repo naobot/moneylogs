@@ -422,6 +422,24 @@
     display: inline-flex;
   }
 
+  // A bare icon action (budget, archive): no frame, inverts on hover like any RowButton.
+  &__iconAction {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1em;
+    border: none;
+
+    // The budget field is open below the row.
+    &[aria-expanded="true"] {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+
+      .Icon img {
+        filter: var(--icon-filter-inverse);
+      }
+    }
+  }
+
   // Fixed-cost toggle: quiet when off, full ink when on.
   &__fixed {
     gap: 0.3em;

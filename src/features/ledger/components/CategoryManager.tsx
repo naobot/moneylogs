@@ -236,16 +236,17 @@ const CategoryManagerDialog = ({
                     />
                     <ActionButton
                       icon="wallet"
+                      iconOnly
                       label={`Budget for ${category.name}`}
+                      tip="Set a monthly budget for this category."
                       expanded={budgetingId === category.id}
                       onClick={() =>
                         setBudgetingId((id) => (id === category.id ? null : category.id))
                       }
-                    >
-                      budget
-                    </ActionButton>
+                    />
                     <ActionButton
                       icon="folder"
+                      iconOnly
                       label={`Archive ${category.name}`}
                       disabled={lastActive}
                       tip={
@@ -254,9 +255,7 @@ const CategoryManagerDialog = ({
                           : "Archiving hides this category when adding entries. Past entries keep it, and you can restore it any time."
                       }
                       onClick={() => push({ type: "archive", id: category.id })}
-                    >
-                      archive
-                    </ActionButton>
+                    />
                   </span>
                   {budgetingId === category.id && (
                     <div className="CategoryManager__budget">
@@ -410,11 +409,13 @@ const RowButton = ({
 );
 
 /**
- * A row action with an icon and a one-word label. An optional tip explains it on hover
- * or keyboard focus (touch goes straight to the action).
+ * A row action: an icon and a one-word label, or a bare, borderless icon (`iconOnly`).
+ * An optional tip explains it on hover or keyboard focus (touch goes straight to the
+ * action).
  */
 const ActionButton = ({
   icon,
+  iconOnly,
   label,
   tip,
   expanded,
@@ -425,6 +426,8 @@ const ActionButton = ({
   children,
 }: {
   icon?: IconType;
+  /** Just the icon, with no frame; the label is for screen readers (and the tip). */
+  iconOnly?: boolean;
   label: string;
   tip?: string;
   expanded?: boolean;
@@ -433,7 +436,7 @@ const ActionButton = ({
   className?: string;
   disabled?: boolean;
   onClick: () => void;
-  children: ReactNode;
+  children?: ReactNode;
 }) => {
   const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -454,7 +457,10 @@ const ActionButton = ({
       onPointerLeave={(e) => isMousePointer(e) && close()}
     >
       <SharedRowButton
-        className={cx({ "RowButton--icon": icon }, className)}
+        className={cx(
+          { "RowButton--icon": icon && !iconOnly, CategoryManager__iconAction: iconOnly },
+          className,
+        )}
         aria-label={label}
         aria-expanded={expanded}
         aria-pressed={pressed}
