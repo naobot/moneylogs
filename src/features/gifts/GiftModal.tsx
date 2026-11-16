@@ -13,43 +13,54 @@ import { giftableByItem, giftKnickKnack } from "@/features/ledger/buddy/knickkna
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 
+import { giftLeftLine } from "./giftCopy";
 import "./GiftModal.scss";
 
 type GiftModalProps = {
+  /** The knick-knack picked in the drawer; one copy of it is given. */
+  item: KnickKnackId;
   onClose: () => void;
-  /** Preselect the friend (from their profile). */
+  /** Called after the gift went through. */
+  onGiven?: () => void;
+  /** Preselect the friend (when giving from their profile). */
   toUserDocId?: string;
 };
 
 /**
- * Give one of your knick-knacks to a friend. It leaves your drawer and arrives wrapped
- * in theirs. Only things you found yourself can be given: gifts stay with you.
- * Render it only while open, so it starts fresh each time.
+ * Confirm giving one copy of a knick-knack to a friend. That copy leaves your drawer
+ * and arrives wrapped in theirs; your oldest copy you found yourself is the one that
+ * goes. Render it only while open, so it starts fresh each time.
  */
-export const GiftModal = ({ onClose, toUserDocId }: GiftModalProps) => {
+export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProps) => {
   const { user } = useCurrentUser();
   const { showToast } = useToastContext();
   const { data: finds } = useKnickKnackFinds(user?.id);
   const { friends } = useFriendships();
   const profiles = useProfiles(friends);
-  const ids = { item: useId(), friend: useId() };
+  const friendSelectId = useId();
 
-  const giftable = useMemo(() => giftableByItem(finds), [finds]);
-  const [item, setItem] = useState<KnickKnackId | "">("");
-  const [friend, setFriend] = useState(toUserDocId ?? "");
+  const [friend, setFriend] = useState(
+    toUserDocId && friends.includes(toUserDocId) ? toUserDocId : "",
+  );
   const [pending, setPending] = useState(false);
 
-  const chosenItem = item || giftable[0]?.item || "";
+  const owned = finds.filter((f) => f.item === item && f.seenAt).length;
+  const giftable = useMemo(
+    () => giftableByItem(finds).find((g) => g.item === item)?.finds ?? [],
+    [finds, item],
+  );
   const chosenFriend = friend || friends[0] || "";
   const nameOf = (id: string) => profiles.get(id)?.displayName ?? "…";
+  const itemName = KNICK_KNACKS[item].name.toLowerCase();
 
   const give = async () => {
-    const find = giftable.find((g) => g.item === chosenItem)?.finds[0];
+    const find = giftable[0];
     if (!find || !chosenFriend || pending) return;
     setPending(true);
     try {
       await giftKnickKnack(find.id, chosenFriend);
-      showToast(`Gift sent to ${nameOf(chosenFriend)}`, "success");
+      showToast(`Gave 1 ${itemName} to ${nameOf(chosenFriend)}`, "success");
+      onGiven?.();
       onClose();
     } catch (err) {
       reportError(err, { feature: "friends", action: "gift_knickknack" });
@@ -60,41 +71,26 @@ export const GiftModal = ({ onClose, toUserDocId }: GiftModalProps) => {
     }
   };
 
-  const nothingToGive = !giftable.length;
-  const noFriends = !friends.length;
+  const canGive = giftable.length > 0 && friends.length > 0;
 
   return (
     <Modal isOpen onClose={pending ? undefined : onClose} disabled={pending} className="GiftModal">
-      <Modal.Header title="Give a gift" striped />
+      <Modal.Header title={`Give 1 ${itemName}`} />
       <Modal.Body className="GiftModal__body">
-        {nothingToGive ? (
+        <KnickKnack id={item} size={64} />
+        {!giftable.length ? (
           <p>
-            Nothing to give yet. Only knick-knacks you found yourself can be given; gifts stay with
-            you.
+            Every {itemName} you have was a gift, and gifts can't be passed on. Only knick-knacks
+            you found yourself can be given.
           </p>
-        ) : noFriends ? (
+        ) : !friends.length ? (
           <p>Add a friend first. Gifts can only go to friends.</p>
         ) : (
           <>
-            {chosenItem && <KnickKnack id={chosenItem} size={64} />}
             <div className="GiftModal__rows">
-              <label htmlFor={ids.item}>what</label>
+              <label htmlFor={friendSelectId}>to</label>
               <select
-                id={ids.item}
-                value={chosenItem}
-                onChange={(e) => setItem(e.target.value as KnickKnackId)}
-              >
-                {giftable.map(({ item: id, finds: copies }) => (
-                  <option key={id} value={id}>
-                    {KNICK_KNACKS[id].name}
-                    {copies.length > 1 ? ` (×${copies.length})` : ""}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor={ids.friend}>to</label>
-              <select
-                id={ids.friend}
+                id={friendSelectId}
                 value={chosenFriend}
                 onChange={(e) => setFriend(e.target.value)}
               >
@@ -106,18 +102,19 @@ export const GiftModal = ({ onClose, toUserDocId }: GiftModalProps) => {
               </select>
             </div>
             <p className="GiftModal__note">
-              it leaves your drawer and arrives wrapped in theirs. gifts can't be passed on.
+              {giftLeftLine(itemName, owned)} it arrives wrapped in their drawer, and they can't
+              pass it on.
             </p>
           </>
         )}
       </Modal.Body>
       <Modal.Actions>
         <Modal.CancelButton />
-        {!nothingToGive && !noFriends && (
+        {canGive && (
           <Button
-            text="Give"
+            text={`Give 1 ${itemName}`}
             buttonStyle="primary-border"
-            disabled={!chosenItem || !chosenFriend}
+            disabled={!chosenFriend}
             loading={pending}
             onClick={() => void give()}
           />

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import HelpTip from "@/components/HelpTip";
 import Icon from "@/components/Icon";
@@ -31,25 +31,36 @@ const DELETED_USER = "deleted user";
  * Everything the budget buddies have found for you, on the dashboard. Always there,
  * even empty. Finds the buddy hasn't shown you yet stay wrapped: the drawer only
  * points to the log whose buddy has them. Gifts from friends arrive wrapped too, and
- * unwrap right here.
+ * unwrap right here. With a friend to give to, each knick-knack you found yourself is
+ * a button that gives one copy (after a confirmation). `?giftTo=<userDocId>` (from a
+ * friend's profile) preselects who it goes to.
  */
 export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Ledger> }) => {
   const { user } = useCurrentUser();
   const { hash } = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data, isLoading } = useKnickKnackFinds(user?.id);
   const { friends } = useFriendships();
   const { kept, waiting, gifts } = drawerContents(data);
   const givers = useProfiles(gifts.map((g) => g.giftedBy ?? "").filter(Boolean));
-  const [giving, setGiving] = useState(false);
+  const [giving, setGiving] = useState<KnickKnackId | null>(null);
   const [unwrapped, setUnwrapped] = useState<{ item: KnickKnackId; from: string } | null>(null);
   const titleOf = (id: string) => ledgers.find((l) => l.id === id)?.title;
   const giverName = (id?: string | null) => (id && givers.get(id)?.displayName) || DELETED_USER;
-  const canGive = friends.length > 0 && giftableByItem(data).length > 0;
+  const giftable = useMemo(
+    () => new Set(friends.length ? giftableByItem(data).map((g) => g.item) : []),
+    [data, friends.length],
+  );
+  const giftTo = searchParams.get("giftTo");
+  const givingTo = giftTo && friends.includes(giftTo) ? giftTo : null;
+  const givingToName = useProfiles(givingTo ? [givingTo] : []).get(givingTo ?? "")?.displayName;
+  const stopGivingTo = () => navigate({ search: "", hash: "#knickknacks" }, { replace: true });
 
   // Gift notifications link to /#knickknacks.
   useEffect(() => {
     if (hash === "#knickknacks") {
-      document.getElementById("knickknacks")?.scrollIntoView({ block: "start" });
+      document.getElementById("knickknacks")?.scrollIntoView?.({ block: "start" });
     }
   }, [hash]);
 
@@ -70,12 +81,16 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
       <div className="KnickKnackDrawer__heading">
         <h3 id="dashboard-drawer">knick-knack drawer</h3>
         <HelpTip label="What's the knick-knack drawer?">{KNICK_KNACK_HELP}</HelpTip>
-        {canGive && (
-          <RowButton className="KnickKnackDrawer__give" onClick={() => setGiving(true)}>
-            give a gift
-          </RowButton>
-        )}
       </div>
+      {givingTo && (
+        <div className="KnickKnackDrawer__givingTo" role="status">
+          <span className="keep-case">
+            pick something to give to {givingToName ?? "your friend"}
+            {giftable.size ? "" : ". you don't have anything you found yourself to give yet"}
+          </span>
+          <RowButton onClick={stopGivingTo}>cancel</RowButton>
+        </div>
+      )}
       <div className="KnickKnackDrawer__box">
         {unwrapped && (
           <p className="KnickKnackDrawer__unwrapped keep-case" role="status">
@@ -107,15 +122,33 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
         })}
         {kept.length > 0 ? (
           <ul className="KnickKnackDrawer__items">
-            {kept.map(({ item, count }) => (
-              <li key={item} className="KnickKnackDrawer__item">
-                <KnickKnack id={item} size={64} />
-                <span className="KnickKnackDrawer__name">
-                  {KNICK_KNACKS[item].name}
-                  {count > 1 && <span className="KnickKnackDrawer__count"> ×{count}</span>}
-                </span>
-              </li>
-            ))}
+            {kept.map(({ item, count }) => {
+              const contents = (
+                <>
+                  <KnickKnack id={item} size={64} />
+                  <span className="KnickKnackDrawer__name">
+                    {KNICK_KNACKS[item].name}
+                    {count > 1 && <span className="KnickKnackDrawer__count"> ×{count}</span>}
+                  </span>
+                </>
+              );
+              return (
+                <li key={item}>
+                  {giftable.has(item) ? (
+                    <button
+                      type="button"
+                      className="KnickKnackDrawer__item KnickKnackDrawer__item--giftable"
+                      aria-label={`Give one ${KNICK_KNACKS[item].name.toLowerCase()} to a friend`}
+                      onClick={() => setGiving(item)}
+                    >
+                      {contents}
+                    </button>
+                  ) : (
+                    <div className="KnickKnackDrawer__item">{contents}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           !isLoading &&
@@ -125,8 +158,20 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
             </p>
           )
         )}
+        {giftable.size > 0 && !givingTo && (
+          <p className="KnickKnackDrawer__hint">
+            tap a knick-knack you found to give one to a friend
+          </p>
+        )}
       </div>
-      {giving && <GiftModal onClose={() => setGiving(false)} />}
+      {giving && (
+        <GiftModal
+          item={giving}
+          toUserDocId={givingTo ?? undefined}
+          onClose={() => setGiving(null)}
+          onGiven={givingTo ? stopGivingTo : undefined}
+        />
+      )}
     </section>
   );
 };
