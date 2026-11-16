@@ -8,6 +8,7 @@ import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import EntryForm from "./EntryForm";
+import { reportError } from "@/utils/reportError";
 
 type EntryListProps = {
   entries: ReadonlyArray<LedgerEntry>;
@@ -53,7 +54,7 @@ export const EntryList = ({
       await onDelete(deletingEntry.id);
       setDeletingEntry(null);
     } catch (err) {
-      console.error("Failed to delete entry:", err);
+      reportError(err, { feature: "ledger_entry", action: "delete_entry" });
     }
   };
 

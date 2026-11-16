@@ -4,6 +4,7 @@ import { db } from "@/config/firebase-config";
 import { LedgerEntry } from "@/types/ledger";
 import { sortEntries } from "@/utils/ledgerEntries";
 import { useFirebaseCollection } from "./useFirebase";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Live entries for one month of a ledger, newest first.
@@ -25,7 +26,8 @@ export const useGetLedgerEntries = ({ ledgerId, month }: { ledgerId?: string; mo
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load entries:", result.error);
+    if (result.isError)
+      reportError(result.error, { feature: "ledger_entry", action: "load_entries" });
   }, [result.isError, result.error]);
 
   // Report loading until the first snapshot for this month arrives.

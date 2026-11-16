@@ -6,6 +6,7 @@ import { db, functions } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import { useFirebaseCollection } from "@/hooks/useFirebase";
 import { Friendship, FriendState, friendState, otherUser } from "@/utils/friends";
+import { reportError } from "@/utils/reportError";
 
 /** One person you have a friendship (or pending request) with. */
 export type FriendEntry = { userDocId: string; state: Exclude<FriendState, "none"> };
@@ -28,7 +29,8 @@ export const useFriendships = () => {
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load friends:", result.error);
+    if (result.isError)
+      reportError(result.error, { feature: "friends", action: "load_friendships" });
   }, [result.isError, result.error]);
 
   const entries = useMemo<FriendEntry[]>(

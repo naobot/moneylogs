@@ -5,6 +5,7 @@ import { auth, db } from "@/config/firebase-config";
 import { Ledger } from "@/types/ledger";
 import { sortLedgersNewestFirst } from "@/utils/ledger";
 import { useFirebaseCollection } from "./useFirebase";
+import { reportError } from "@/utils/reportError";
 
 /** Financial logs the signed-in user is a member of, newest first. */
 export const useGetMyLedgers = () => {
@@ -26,7 +27,7 @@ export const useGetMyLedgers = () => {
   useEffect(() => {
     // Surface failures (e.g. a missing index or a rules rejection) instead of silently
     // rendering "no financial logs".
-    if (result.isError) console.error("Failed to load financial logs:", result.error);
+    if (result.isError) reportError(result.error, { feature: "ledger", action: "load_my_ledgers" });
   }, [result.isError, result.error]);
 
   // useFirebaseCollection starts with isLoading=false until its effect runs; report

@@ -12,6 +12,7 @@ import { AppNotification } from "@/types/notification";
 import { NotificationItem } from "@/features/notifications/NotificationItem";
 
 import "@/features/notifications/notifications.scss";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Every notification, newest first. Arriving here marks them all read, but whatever was
@@ -37,7 +38,7 @@ export const Notifications = () => {
     if (markedFor.current === unread.join()) return;
     markedFor.current = unread.join();
     markAllNotificationsRead(userDocId).catch((error) =>
-      console.error("Failed to mark notifications read:", error),
+      reportError(error, { feature: "notifications", action: "mark_all_read", level: "warning" }),
     );
   }, [userDocId, isLoading, items]);
 
@@ -82,7 +83,9 @@ export const Notifications = () => {
             size="sm"
             loading={isLoadingMore}
             onClick={() => {
-              loadMore().catch((error) => console.error("Failed to load notifications:", error));
+              loadMore().catch((error) =>
+                reportError(error, { feature: "notifications", action: "load_more" }),
+              );
             }}
           />
         </div>

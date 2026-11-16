@@ -11,7 +11,12 @@ export type Feature =
   | "ledger_entry"
   | "profile"
   | "log_post"
-  | "friends";
+  | "friends"
+  | "budget_buddy"
+  | "ledger"
+  | "notifications"
+  | "reactions"
+  | "dashboard";
 
 type ReportContext = {
   feature: Feature;

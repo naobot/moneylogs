@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
+import { reportError } from "@/utils/reportError";
 
 /**
  * profiles/{userDocId}: the public face of a user, written only by the mirrorProfile
@@ -43,7 +44,7 @@ export const useProfile = (userDocId?: string) => {
           isLoading: false,
         }),
       (error) => {
-        console.error("Failed to load profile:", error);
+        reportError(error, { feature: "profile", action: "load_profile" });
         setState({ profile: null, isLoading: false });
       },
     );
@@ -79,7 +80,7 @@ export const useProfiles = (userDocIds: ReadonlyArray<string>) => {
           results[index] = snap.docs.map((d) => toProfile(d.id, d.data()));
           setProfiles(new Map(results.flat().map((p) => [p.id, p])));
         },
-        (error) => console.error("Failed to load profiles:", error),
+        (error) => reportError(error, { feature: "profile", action: "load_profiles" }),
       ),
     );
     return () => unsubs.forEach((unsub) => unsub());

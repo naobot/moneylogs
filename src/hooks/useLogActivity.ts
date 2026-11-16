@@ -5,6 +5,7 @@ import { db } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import type { Group } from "@/types/user";
 import { ActivityTarget, logsToCount } from "@/utils/logActivity";
+import { reportError } from "@/utils/reportError";
 
 /** New posts/entries by other people per log id. A log missing from the map shows no badge. */
 export type LogActivity = Record<string, number>;
@@ -68,9 +69,13 @@ export const useLogActivity = ({
           return [target.id, snap.data().count] as const;
         } catch (err) {
           // permission-denied: a ledger deleted moments ago. Anything else (most often a
-          // missing composite index outside production) is worth a console note.
+          // missing composite index) leaves the activity badge blank, so report it.
           if ((err as { code?: string })?.code !== "permission-denied") {
-            console.warn(`Couldn't count new activity for ${target.id}:`, err);
+            reportError(err, {
+              feature: "dashboard",
+              action: "count_new_activity",
+              level: "warning",
+            });
           }
           return null;
         }

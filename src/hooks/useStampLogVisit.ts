@@ -8,6 +8,7 @@ import {
   STAMP_ON_LEAVE_MIN_GAP_MS,
   STAMP_ON_OPEN_MIN_GAP_MS,
 } from "@/utils/logActivity";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Stamps `logLastViewedAt.<logId>` on the user doc when they open a log, and again when
@@ -46,7 +47,7 @@ export const useStampLogVisit = (logId: string | undefined) => {
       if (!shouldStampVisit(lastStampMs, now, minGapMs)) return;
       lastWrites.current[logId] = now;
       stampFn({ userId: userDocId, logId }).catch((err) =>
-        console.error(`Failed to record visit to ${logId}:`, err),
+        reportError(err, { feature: "dashboard", action: "stamp_log_visit", level: "warning" }),
       );
     };
 
