@@ -1,7 +1,6 @@
 import { BuddyFacts, BuddyState } from "./buddyMood";
 import type { CheckIn } from "./buddyCheckIn";
 import { BuddyMood } from "./faces";
-import { KNICK_KNACKS, KnickKnackId } from "./knickknacks/catalog";
 
 /**
  * What the buddy says when clicked. Chatty and a bit vague on purpose: it rounds the
@@ -147,10 +146,18 @@ export const CHECK_IN_LINES: Record<CheckIn, readonly string[]> = {
 };
 
 /** What it says when showing off something it found. */
-export const buddyFindComment = (
-  item: KnickKnackId,
-  { asleep, seed }: Pick<BuddyState, "asleep" | "seed">,
-): string => drowsy(KNICK_KNACKS[item].found, asleep, seed);
+const FIND_TEASERS = [
+  "i found something! wanna see? ♪",
+  "psst… i found something for you. come look!",
+  "look look!! i found a thing~",
+];
+
+/**
+ * What it says when it has a find to show: a teaser only. Clicking the bubble opens the
+ * reveal pop-up, which says what it is.
+ */
+export const buddyFindTeaser = ({ asleep, seed }: Pick<BuddyState, "asleep" | "seed">): string =>
+  drowsy(FIND_TEASERS[seed % FIND_TEASERS.length], asleep, seed);
 
 /** Stable for the day (seed). */
 export const buddyCheckInComment = (

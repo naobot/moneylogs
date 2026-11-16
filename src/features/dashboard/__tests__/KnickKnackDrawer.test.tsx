@@ -31,7 +31,6 @@ vi.mock("@/features/gifts/GiftModal", () => ({
 }));
 
 import { KnickKnackDrawer, KNICK_KNACK_HELP } from "../KnickKnackDrawer";
-import type { Ledger } from "@/types/ledger";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -64,14 +63,18 @@ describe("KnickKnackDrawer", () => {
     document.querySelectorAll(".HelpTip__panel").forEach((el) => el.remove());
   });
 
-  const render = (ledgers: Ledger[] = [], url = "/") =>
+  const render = (url = "/") =>
     act(() =>
       root.render(
         <MemoryRouter initialEntries={[url]}>
-          <KnickKnackDrawer ledgers={ledgers} />
+          <KnickKnackDrawer />
         </MemoryRouter>,
       ),
     );
+  const alerts = () =>
+    Array.from(container.querySelectorAll<HTMLButtonElement>(".KnickKnackDrawer__alert"));
+  const reveal = () => document.querySelector(".KnickKnackReveal");
+  const revealButton = () => reveal()!.querySelector<HTMLButtonElement>(".Modal__footer button")!;
 
   it("is there even when empty, with a note and a help tip", () => {
     render();
@@ -100,51 +103,52 @@ describe("KnickKnackDrawer", () => {
     expect(container.querySelector(".KnickKnackDrawer__empty")).toBeNull();
   });
 
-  it("points to the log whose buddy has an unshown find, without revealing it", () => {
+  it("shows one centred alert for everything your buddy has to show, without revealing it", () => {
     state.finds = [find("f1", "tulip", false, "l9")];
-    render([{ id: "l9", title: "Household" } as Ledger]);
-    const link = container.querySelector<HTMLAnchorElement>(".KnickKnackDrawer__waiting")!;
-    expect(link.getAttribute("href")).toBe("/l/l9");
-    expect(link.textContent).toContain("in Household has something to show you");
+    render();
+    expect(alerts()).toHaveLength(1);
+    expect(alerts()[0].textContent).toBe("your budget buddy has something to show you");
+    expect(alerts()[0].closest(".KnickKnackDrawer__alerts")).not.toBeNull();
+    expect(alerts()[0].querySelector(".KnickKnackDrawer__alertMark")).not.toBeNull();
     expect(container.querySelector('svg[aria-label="tulip"]')).toBeNull();
   });
 
-  it("points a find from a deleted log to a log you still have", () => {
-    state.finds = [find("f1", "heart_leaf", false, "personal-gone")];
-    render([{ id: "l9", title: "Household" } as Ledger]);
-    const link = container.querySelector<HTMLAnchorElement>(".KnickKnackDrawer__waiting")!;
-    expect(link.getAttribute("href")).toBe("/l/l9");
-  });
+  it("reveals finds in a pop-up, marking each seen as it appears, one after another", () => {
+    // From a deleted log, and from no log at all: neither matters to the drawer.
+    state.finds = [
+      find("f1", "heart_leaf", false, "personal-gone"),
+      { ...find("f2", "friendship_bracelet", false), ledgerId: null },
+    ];
+    render();
+    expect(alerts()[0].textContent).toBe("your budget buddy has 2 things to show you");
 
-  it("opens a find in place when you have no financial log for it to point to", () => {
-    state.finds = [find("f2", "heart_leaf", false, "personal-gone")];
-    render([]);
-    expect(container.querySelector("a.KnickKnackDrawer__waiting")).toBeNull();
-    const open = container.querySelector<HTMLButtonElement>("button.KnickKnackDrawer__waiting")!;
-    expect(open.textContent).toContain("left something for you");
+    act(() => alerts()[0].click());
+    expect(reveal()!.textContent).toContain("heart-shaped leaf");
+    expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f1");
+    expect(revealButton().textContent).toMatch(/next \(1 more\)/i);
 
-    act(() => open.click());
+    act(() => revealButton().click());
+    expect(reveal()!.textContent).toContain("friendship bracelet");
     expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f2");
-    const unwrapped = container.querySelector(".KnickKnackDrawer__unwrapped")!.textContent;
-    expect(unwrapped).toContain("you unwrapped heart-shaped leaf");
-    expect(unwrapped).not.toContain(" from ");
+    expect(revealButton().textContent).toMatch(/keep it/i);
+
+    act(() => revealButton().click());
+    expect(reveal()).toBeNull();
   });
 
-  it("shows a wrapped gift by who sent it, and unwraps it in place", () => {
+  it("shows a gift as an alert naming the friend, and unwraps it in the pop-up", () => {
     state.finds = [
       { ...find("f5", "holly", false), ledgerId: null, source: "gift", giftedBy: "mina" },
     ];
     render();
-    const gift = container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__gift")!;
-    expect(gift.textContent).toContain("a gift from Mina");
+    expect(alerts().map((a) => a.textContent)).toEqual(["Mina has sent you something!"]);
     expect(container.querySelector('svg[aria-label="holly"]')).toBeNull();
     expect(container.querySelector(".KnickKnackDrawer__empty")).toBeNull();
 
-    act(() => gift.click());
+    act(() => alerts()[0].click());
     expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f5");
-    expect(container.querySelector(".KnickKnackDrawer__unwrapped")!.textContent).toContain(
-      "holly from Mina",
-    );
+    expect(reveal()!.textContent).toContain("a gift from Mina");
+    expect(reveal()!.textContent).toContain("Mina sent you a holly!");
   });
 
   it("makes found items giftable once you have a friend; gifts you got are not", () => {
@@ -170,7 +174,7 @@ describe("KnickKnackDrawer", () => {
   it("preselects the friend from a profile's send-a-gift link", () => {
     state.friends = ["mina"];
     state.finds = [find("f1", "acorn", true)];
-    render([], "/?giftTo=mina#knickknacks");
+    render("/?giftTo=mina#knickknacks");
     expect(container.querySelector(".KnickKnackDrawer__givingTo")!.textContent).toContain(
       "pick something to give to Mina",
     );
@@ -183,7 +187,7 @@ describe("KnickKnackDrawer", () => {
   it("ignores a giftTo that isn't a friend", () => {
     state.friends = ["mina"];
     state.finds = [find("f1", "acorn", true)];
-    render([], "/?giftTo=stranger");
+    render("/?giftTo=stranger");
     expect(container.querySelector(".KnickKnackDrawer__givingTo")).toBeNull();
   });
 });

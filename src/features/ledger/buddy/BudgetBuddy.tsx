@@ -11,17 +11,15 @@ import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
 import { shiftMonth, todayInTz } from "@/utils/ledger";
 import { buddyMood } from "./buddyMood";
-import { buddyCheckInComment, buddyComment, buddyFindComment } from "./buddyComments";
+import { buddyCheckInComment, buddyComment, buddyFindTeaser } from "./buddyComments";
 import { checkedInToday, CheckIn, eveningCheckIn, markCheckedIn } from "./buddyCheckIn";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
-import { KnickKnackId } from "./knickknacks/catalog";
-import KnickKnack from "./knickknacks/KnickKnack";
+import KnickKnackReveal from "./knickknacks/KnickKnackReveal";
 import { requestQuietDayRoll } from "./knickknacks/quietDay";
 import { requestCheckIn } from "./knickknacks/checkIn";
-import { markFindSeen, useUnseenFind } from "./knickknacks/useUnseenFinds";
+import { KnickKnackFind, useUnseenFind } from "./knickknacks/useUnseenFinds";
 
 import "./BudgetBuddy.scss";
-import { reportError } from "@/utils/reportError";
 
 /** Cheerful faces for the evening check-in. */
 const CHECK_IN_FACES: Record<CheckIn, readonly string[]> = {
@@ -49,12 +47,13 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
  *   until the bubble closes.
  * - In the evening it speaks up by itself, once a day per log, to cheer on a day with
  *   nothing spent yet or one well under the usual.
- * - When it has found a knick-knack (rolled by the server when an entry is logged, or
- *   on a quiet evening with nothing logged), a "!" shows beside it. The next click shows the find in an inverted bubble.
+ * - When it has a knick-knack from this log to show (a seasonal find, or a coin), a "!"
+ *   shows beside it. A click opens a teaser bubble; clicking that opens the reveal
+ *   pop-up, which completes it. Everything else waits in the dashboard's drawer.
  */
 export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categories"> }) => {
   const { user } = useCurrentUser();
-  const find = useUnseenFind(user?.id);
+  const find = useUnseenFind(user?.id, ledger.id);
   const now = useNow();
   const today = todayInTz(user?.timezone, now.valueOf());
   const month = today.slice(0, 7);
@@ -86,12 +85,14 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const [hoverFace, setHoverFace] = useState<string | null>(null);
   // The face is set when the bubble speaks for itself; clicks use the mood's click face.
-  // `find` is set when it's showing off a knick-knack.
+  // `teaser` is set when it's saying it has a find to show.
   const [bubble, setBubble] = useState<{
     text: string;
     face?: string;
-    find?: KnickKnackId;
+    teaser?: boolean;
   } | null>(null);
+  // The find in the reveal pop-up, held so it stays put while seenAt lands.
+  const [revealing, setRevealing] = useState<KnickKnackFind | null>(null);
   const hovers = useRef(0);
   const clicks = useRef(0);
   const { openAfterDelay, cancelOpen } = useHoverIntent({ openDelay: BUDDY_HOVER_DELAY });
@@ -163,16 +164,12 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
       setBubble(null);
       return;
     }
-    if (find && user) {
+    if (find) {
       setBubble({
-        text: buddyFindComment(find.item, state),
+        text: buddyFindTeaser(state),
         face: pick(FACES.delighted.click, state.seed),
-        find: find.item,
+        teaser: true,
       });
-      // The "!" goes once the live query hears back; the bubble stays open meanwhile.
-      markFindSeen(user.id, find.id).catch((error) =>
-        reportError(error, { feature: "budget_buddy", action: "mark_find_seen", level: "warning" }),
-      );
       return;
     }
     setBubble({ text: buddyComment(state, clicks.current) });
@@ -188,8 +185,8 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         type="button"
         className={cx("BudgetBuddy keep-case", `BudgetBuddy--${feeling}`)}
         aria-label={
-          find && !bubble
-            ? "Budget buddy found something! Click to see."
+          find && !revealing
+            ? "Budget buddy found something! Click to hear about it."
             : `Budget buddy: ${feeling}. Click to hear how the month is going.`
         }
         aria-haspopup="dialog"
@@ -206,7 +203,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         >
           {face}
         </span>
-        {find && !bubble?.find && (
+        {find && !revealing && (
           <span className="BudgetBuddy__found" aria-hidden="true">
             <Icon type="warning" size={14} />
           </span>
@@ -217,19 +214,28 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         open={!!bubble}
         onClose={() => setBubble(null)}
         placement="bottom"
-        className={cx("BuddyBubble", { "BuddyBubble--find": bubble?.find })}
+        className={cx("BuddyBubble", { "BuddyBubble--find": bubble?.teaser })}
         role="dialog"
         aria-label="Budget buddy says"
       >
-        {bubble?.find ? (
-          <div className="BuddyBubble__find">
-            <KnickKnack id={bubble.find} size={64} />
-            <p className="BuddyBubble__text keep-case">{bubble.text}</p>
-          </div>
+        {bubble?.teaser && find ? (
+          <button
+            type="button"
+            className="BuddyBubble__teaser BuddyBubble__text keep-case"
+            onClick={() => {
+              setBubble(null);
+              setRevealing(find);
+            }}
+          >
+            {bubble.text}
+          </button>
         ) : (
           <p className="BuddyBubble__text keep-case">{bubble?.text}</p>
         )}
       </Popover>
+      {revealing && user?.id && (
+        <KnickKnackReveal userDocId={user.id} find={revealing} onClose={() => setRevealing(null)} />
+      )}
     </>
   );
 };

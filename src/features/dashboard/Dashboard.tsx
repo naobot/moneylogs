@@ -142,7 +142,7 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
       </div>
 
       <aside className="Dashboard__side">
-        <KnickKnackDrawer ledgers={ledgers} />
+        <KnickKnackDrawer />
       </aside>
     </div>
   );

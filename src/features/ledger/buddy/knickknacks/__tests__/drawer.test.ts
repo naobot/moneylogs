@@ -16,7 +16,7 @@ const find = (item: string, foundMs: number, seen = true, ledgerId = "l1"): Knic
 
 describe("drawerContents", () => {
   it("is empty with no finds", () => {
-    expect(drawerContents([])).toEqual({ kept: [], waiting: [], loose: [], gifts: [] });
+    expect(drawerContents([])).toEqual({ kept: [], waiting: [], gifts: [] });
   });
 
   it("keeps one slot per item, in the order first found, with counts", () => {
@@ -32,50 +32,21 @@ describe("drawerContents", () => {
     ]);
   });
 
-  it("keeps finds the buddy hasn't shown yet wrapped, by log", () => {
-    const { kept, waiting } = drawerContents([
-      find("acorn", 100),
-      find("tulip", 200, false, "l1"),
-      find("daisy", 300, false, "l2"),
-      find("lilac", 400, false, "l1"),
-    ]);
+  it("keeps finds the buddy hasn't shown yet wrapped, oldest first, from any log or none", () => {
+    const tulip = find("tulip", 200, false, "l1");
+    const daisy = find("daisy", 300, false, "l2");
+    const leaf = { ...find("heart_leaf", 150, false), ledgerId: null } as KnickKnackFind;
+    const { kept, waiting } = drawerContents([find("acorn", 100), daisy, tulip, leaf]);
     expect(kept.map((s) => s.item)).toEqual(["acorn"]);
-    expect(waiting).toEqual([
-      { ledgerId: "l1", count: 2 },
-      { ledgerId: "l2", count: 1 },
-    ]);
+    expect(waiting).toEqual([leaf, tulip, daisy]);
   });
 
   it("leaves out items this build doesn't know yet", () => {
     expect(drawerContents([find("moon_rock", 100), find("moon_rock", 200, false)])).toEqual({
       kept: [],
       waiting: [],
-      loose: [],
       gifts: [],
     });
-  });
-
-  it("points finds from a log you no longer have to one you do", () => {
-    const { waiting, loose } = drawerContents(
-      [
-        find("heart_leaf", 100, false, "personal-deleted"),
-        find("tulip", 200, false, "l2"),
-        { ...find("paper_crane", 300, false), ledgerId: null } as KnickKnackFind,
-      ],
-      ["l1", "l2"],
-    );
-    expect(waiting).toEqual([
-      { ledgerId: "l1", count: 2 },
-      { ledgerId: "l2", count: 1 },
-    ]);
-    expect(loose).toEqual([]);
-  });
-
-  it("lets you open finds here when you have no financial log to point to", () => {
-    const stray = find("heart_leaf", 100, false, "personal-deleted");
-    const { waiting, loose } = drawerContents([stray], []);
-    expect(waiting).toEqual([]);
-    expect(loose).toEqual([stray]);
   });
 
   it("keeps unwrapped gifts apart from the buddy's finds", () => {
@@ -88,7 +59,7 @@ describe("drawerContents", () => {
     const opened = { ...wrapped, id: "opened", seenAt: ts(60) } as KnickKnackFind;
     const { kept, waiting, gifts } = drawerContents([wrapped, opened, find("acorn", 10, false)]);
     expect(gifts).toEqual([wrapped]);
-    expect(waiting).toEqual([{ ledgerId: "l1", count: 1 }]);
+    expect(waiting.map((f) => f.item)).toEqual(["acorn"]);
     expect(kept).toEqual([{ item: "holly", count: 1, firstFoundMs: 50 }]);
   });
 });
