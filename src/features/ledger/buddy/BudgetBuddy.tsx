@@ -17,6 +17,7 @@ import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
 import { KnickKnackId } from "./knickknacks/catalog";
 import KnickKnack from "./knickknacks/KnickKnack";
 import { requestQuietDayRoll } from "./knickknacks/quietDay";
+import { requestCheckIn } from "./knickknacks/checkIn";
 import { markFindSeen, useUnseenFind } from "./knickknacks/useUnseenFinds";
 
 import "./BudgetBuddy.scss";
@@ -114,9 +115,15 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
     );
   }, [isSuccess, anchor, checkIn, ledger.id, today, asleep, seed]);
 
+  // Opening the log is the day's check-in, towards the streak that earns coins.
+  const userDocId = user?.id;
+  useEffect(() => {
+    if (!userDocId) return;
+    requestCheckIn({ userDocId, ledgerId: ledger.id, today });
+  }, [userDocId, ledger.id, today]);
+
   // A quiet evening still earns the day's knick-knack roll (logging an entry is the
   // other way). The server decides whether the day's roll is still there.
-  const userDocId = user?.id;
   useEffect(() => {
     if (!isSuccess || checkIn !== "quiet" || !userDocId) return;
     requestQuietDayRoll({ userDocId, ledgerId: ledger.id, today });

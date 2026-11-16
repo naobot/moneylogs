@@ -439,6 +439,7 @@ export { recomputeLedgerMonth } from "./ledger";
 export { deleteLog } from "./deleteLog";
 export { deleteAccount } from "./deleteAccount";
 export { rollQuietDay } from "./rollQuietDay";
+export { checkInLedger } from "./checkIn";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";
 export { mirrorProfile } from "./mirrorProfile";

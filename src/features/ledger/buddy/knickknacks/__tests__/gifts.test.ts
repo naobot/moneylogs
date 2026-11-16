@@ -25,6 +25,10 @@ describe("isGiftable", () => {
     expect(isGiftable(find("acorn", 1, { seenAt: null }))).toBe(false);
     expect(isGiftable(find("acorn", 1, { source: "gift" }))).toBe(false);
   });
+
+  it("keeps coins with whoever earned them", () => {
+    expect(isGiftable(find("copper_coin", 1, { source: "milestone" }))).toBe(false);
+  });
 });
 
 describe("giftableByItem", () => {

@@ -5,10 +5,11 @@ import type { KnickKnackFind } from "./useUnseenFinds";
 
 /**
  * A find can be given to a friend once you've seen it, and only if you found it
- * yourself: gifts can't be passed on. Mirrors functions/src/giftsPlan.ts (canGift).
+ * yourself: gifts can't be passed on, and coins stay with whoever earned them. Mirrors
+ * functions/src/giftsPlan.ts (canGift).
  */
 export const isGiftable = (find: Pick<KnickKnackFind, "seenAt" | "source">): boolean =>
-  find.seenAt != null && find.source !== "gift";
+  find.seenAt != null && find.source !== "gift" && find.source !== "milestone";
 
 const ms = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
 

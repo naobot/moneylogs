@@ -4,6 +4,10 @@ import { db } from "@/config/firebase-config";
 import { Currency, Group, LogPost } from "@/types/user";
 import { absoluteEnd } from "@/utils/groupBoundaries";
 import { IconType } from "@/components/Icon";
+import {
+  CoinAchievementType,
+  isCoinAchievementType,
+} from "@/features/ledger/buddy/knickknacks/coinAchievements";
 
 export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
 
@@ -15,6 +19,21 @@ export type Achievement = {
   currency?: Currency; // undefined for non-currency achievements (e.g. time_traveller)
   unlockedAt: { seconds: number; toDate: () => Date };
 };
+
+/** Comes with one of the buddy's coins; the server writes it (coinAchievements.ts). */
+export type CoinAchievement = {
+  id: string;
+  type: CoinAchievementType;
+  /** The financial log the coin was handed over in. */
+  ledgerId?: string;
+  unlockedAt?: { seconds: number; toDate: () => Date } | null;
+};
+
+/** Everything in users/{id}/achievements: group achievements and coin ones. */
+export type HeldAchievement = Achievement | CoinAchievement;
+
+export const isCoinAchievement = (a: HeldAchievement): a is CoinAchievement =>
+  isCoinAchievementType(a.type);
 
 export const ACHIEVEMENT_META: Record<
   AchievementType,
@@ -51,13 +70,13 @@ const achievementDocId = (groupId: string, type: AchievementType, currency?: str
  * fetch can resolve before that write lands.
  */
 export const mergeGroupAchievements = (
-  held: Achievement[],
+  held: HeldAchievement[],
   newlyUnlocked: Achievement[],
   groupId: string,
 ): Achievement[] => {
   const byId = new Map<string, Achievement>();
   [...held, ...newlyUnlocked]
-    .filter((achievement) => achievement.groupId === groupId)
+    .filter((a): a is Achievement => !isCoinAchievement(a) && a.groupId === groupId)
     .forEach((achievement) => byId.set(achievement.id, achievement));
 
   // Firestore returns the subcollection unordered, so impose one.
@@ -72,18 +91,18 @@ export const mergeGroupAchievements = (
  * completed group's summary, which can be long after the group itself ended, so a
  * recently-viewed old group would otherwise jump above a newer one.
  *
- * Achievements whose group isn't in `groups` fall back to unlockedAt so they still
- * land somewhere deterministic, and ties (several achievements from one group) break
+ * Achievements whose group isn't in `groups`, and coin achievements (no group), fall
+ * back to unlockedAt so they still land somewhere deterministic, and ties (several achievements from one group) break
  * on doc id to keep the order stable between renders.
  */
-export const sortAchievementsByGroupEnd = (
-  achievements: Achievement[],
+export const sortAchievementsByGroupEnd = <T extends HeldAchievement>(
+  achievements: T[],
   groups: Group[],
-): Achievement[] => {
+): T[] => {
   const groupsById = new Map(groups.map((g) => [g.id, g]));
 
-  const endedAt = (achievement: Achievement): number => {
-    const group = groupsById.get(achievement.groupId);
+  const endedAt = (achievement: HeldAchievement): number => {
+    const group = isCoinAchievement(achievement) ? undefined : groupsById.get(achievement.groupId);
     if (group) return absoluteEnd(group).valueOf();
     return (achievement.unlockedAt?.seconds ?? 0) * 1000;
   };
@@ -95,7 +114,7 @@ export const sortAchievementsByGroupEnd = (
 };
 
 export const useGetAchievements = (userId?: string) => {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [achievements, setAchievements] = useState<HeldAchievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -108,7 +127,7 @@ export const useGetAchievements = (userId?: string) => {
     getDocs(achievementsCollection(userId))
       .then((snapshot) => {
         if (cancelled) return;
-        setAchievements(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Achievement));
+        setAchievements(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as HeldAchievement));
         setIsLoading(false);
       })
       .catch(() => {

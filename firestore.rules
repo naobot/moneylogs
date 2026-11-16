@@ -35,7 +35,12 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /users/{userDocId}/achievements/{path=**} {
-      allow read, write: if ownsUserDoc(userDocId);
+      // Coin achievements come with the buddy's coins and only the server writes them
+      // (checkIn.ts); the group ones are still awarded client-side.
+      allow read, delete: if ownsUserDoc(userDocId);
+      allow create, update: if ownsUserDoc(userDocId)
+        && !(request.resource.data.type in
+          ["copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin"]);
     }
 
     // Public profiles: the mirrorProfile function projects name, location, timezone,

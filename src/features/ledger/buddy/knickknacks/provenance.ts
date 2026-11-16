@@ -4,6 +4,7 @@ import type { KnickKnackFind } from "./useUnseenFinds";
 /** How one knick-knack came to its owner. */
 export type Provenance =
   | { kind: "found"; atMs: number | null }
+  | { kind: "earned"; atMs: number | null }
   | { kind: "gift"; atMs: number | null; fromId: string | null };
 
 export const provenanceOf = (find: KnickKnackFind): Provenance =>
@@ -13,16 +14,19 @@ export const provenanceOf = (find: KnickKnackFind): Provenance =>
         atMs: find.giftedAt?.toMillis() ?? null,
         fromId: find.giftedBy ?? null,
       }
-    : { kind: "found", atMs: find.foundAt?.toMillis() ?? null };
+    : {
+        kind: find.source === "milestone" ? "earned" : "found",
+        atMs: find.foundAt?.toMillis() ?? null,
+      };
 
-/** "found 3 Nov" · "gift from mina · 12 Nov" (dates via the viewer's format). */
+/** "found 3 Nov" · "earned 5 Nov" · "gift from mina · 12 Nov" (dates via the viewer's format). */
 export const provenanceLabel = (
   p: Provenance,
   nameOf: (userDocId: string) => string,
   formatDay: (ms: number) => string,
 ): string => {
   const when = p.atMs != null ? formatDay(p.atMs) : null;
-  if (p.kind === "found") return when ? `found ${when}` : "found";
+  if (p.kind !== "gift") return when ? `${p.kind} ${when}` : p.kind;
   const from = `gift from ${p.fromId ? nameOf(p.fromId) : "someone"}`;
   return when ? `${from} · ${when}` : from;
 };

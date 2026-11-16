@@ -29,8 +29,12 @@ const day = (ms: number) => `day${ms}`;
 const names = (id: string) => ({ mina: "Mina" })[id] ?? "deleted user";
 
 describe("provenance", () => {
-  it("reads found and gifted finds", () => {
+  it("reads found, earned and gifted finds", () => {
     expect(provenanceOf(found("acorn", 5))).toEqual({ kind: "found", atMs: 5 });
+    expect(provenanceOf({ ...found("copper_coin", 7), source: "milestone" })).toEqual({
+      kind: "earned",
+      atMs: 7,
+    });
     expect(provenanceOf(gift("acorn", 9, "mina"))).toEqual({
       kind: "gift",
       atMs: 9,
@@ -41,6 +45,7 @@ describe("provenance", () => {
   it("labels them", () => {
     expect(provenanceLabel({ kind: "found", atMs: 5 }, names, day)).toBe("found day5");
     expect(provenanceLabel({ kind: "found", atMs: null }, names, day)).toBe("found");
+    expect(provenanceLabel({ kind: "earned", atMs: 7 }, names, day)).toBe("earned day7");
     expect(provenanceLabel({ kind: "gift", atMs: 9, fromId: "mina" }, names, day)).toBe(
       "gift from Mina · day9",
     );
