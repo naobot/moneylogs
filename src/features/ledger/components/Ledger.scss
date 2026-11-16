@@ -440,10 +440,13 @@
     }
   }
 
-  // Fixed-cost toggle: quiet when off, full ink when on.
+  // Fixed-cost toggle: unframed like the icon actions; quiet when off, full ink when on.
   &__fixed {
+    display: inline-flex;
+    align-items: center;
     gap: 0.3em;
     white-space: nowrap;
+    border: none;
     opacity: 0.7; // muted text floor
 
     &--on {
