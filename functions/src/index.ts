@@ -14,6 +14,8 @@ import {
   recipientReason,
 } from "./notifications";
 import { isNotificationEnabled } from "./notificationPrefs";
+import { awardMilestoneOnce } from "./awardMilestone";
+import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
 
 initializeApp();
 const db = getFirestore();
@@ -65,6 +67,13 @@ export const updatePostMetadata = onDocumentCreated("log_posts/{postId}", async 
   } catch (error) {
     console.error("Error updating post metadata:", error);
   }
+
+  // A first entry in a social log earns the heart-shaped leaf (milestones.ts).
+  try {
+    await awardMilestoneOnce({ db, userId: postData.author.id, item: FIRST_SOCIAL_ENTRY });
+  } catch (error) {
+    console.error("Error awarding first social entry:", error);
+  }
 });
 
 // When a comment is created, update post's latestCommentAt and notify the post's author
@@ -100,10 +109,29 @@ export const updateCommentMetadata = onDocumentCreated(
       console.error("Error updating comment metadata:", error);
     }
 
+    const postSnap = await db
+      .collection("log_posts")
+      .doc(postId)
+      .get()
+      .catch((error) => {
+        console.error("Error reading the commented post:", error);
+        return null;
+      });
+
+    // A first comment on someone else's entry earns the paper crane (milestones.ts).
+    try {
+      const postAuthorId = (postSnap?.get("author") as { id?: unknown } | undefined)?.id;
+      if (isCommentOnOthers(actorId, postAuthorId)) {
+        await awardMilestoneOnce({ db, userId: actorId, item: FIRST_COMMENT_ON_OTHERS });
+      }
+    } catch (error) {
+      console.error("Error awarding first comment:", error);
+    }
+
     // Notifications, separately so a failure here never holds up the metadata above.
     // Comment ids are unique, so a retried trigger overwrites rather than duplicates.
     try {
-      const postSnap = await db.collection("log_posts").doc(postId).get();
+      if (!postSnap) return;
       const post = (postSnap.data() ?? {}) as NotifiablePost;
       const candidates = notificationRecipients(post, actorId);
       if (!candidates.length) return;

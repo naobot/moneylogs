@@ -5,9 +5,9 @@ import { Currency, Group, LogPost } from "@/types/user";
 import { absoluteEnd } from "@/utils/groupBoundaries";
 import { IconType } from "@/components/Icon";
 import {
-  CoinAchievementType,
-  isCoinAchievementType,
-} from "@/features/ledger/buddy/knickknacks/coinAchievements";
+  MilestoneAchievementType,
+  isMilestoneAchievementType,
+} from "@/features/ledger/buddy/knickknacks/milestoneAchievements";
 
 export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
 
@@ -20,20 +20,20 @@ export type Achievement = {
   unlockedAt: { seconds: number; toDate: () => Date };
 };
 
-/** Comes with one of the buddy's coins; the server writes it (coinAchievements.ts). */
-export type CoinAchievement = {
+/** Comes with a milestone knick-knack; the server writes it (milestoneAchievements.ts). */
+export type MilestoneAchievement = {
   id: string;
-  type: CoinAchievementType;
-  /** The financial log the coin was handed over in. */
+  type: MilestoneAchievementType;
+  /** The financial log it was handed over in, if any. */
   ledgerId?: string;
   unlockedAt?: { seconds: number; toDate: () => Date } | null;
 };
 
-/** Everything in users/{id}/achievements: group achievements and coin ones. */
-export type HeldAchievement = Achievement | CoinAchievement;
+/** Everything in users/{id}/achievements: group achievements and milestone ones. */
+export type HeldAchievement = Achievement | MilestoneAchievement;
 
-export const isCoinAchievement = (a: HeldAchievement): a is CoinAchievement =>
-  isCoinAchievementType(a.type);
+export const isMilestoneAchievement = (a: HeldAchievement): a is MilestoneAchievement =>
+  isMilestoneAchievementType(a.type);
 
 export const ACHIEVEMENT_META: Record<
   AchievementType,
@@ -76,7 +76,7 @@ export const mergeGroupAchievements = (
 ): Achievement[] => {
   const byId = new Map<string, Achievement>();
   [...held, ...newlyUnlocked]
-    .filter((a): a is Achievement => !isCoinAchievement(a) && a.groupId === groupId)
+    .filter((a): a is Achievement => !isMilestoneAchievement(a) && a.groupId === groupId)
     .forEach((achievement) => byId.set(achievement.id, achievement));
 
   // Firestore returns the subcollection unordered, so impose one.
@@ -91,7 +91,7 @@ export const mergeGroupAchievements = (
  * completed group's summary, which can be long after the group itself ended, so a
  * recently-viewed old group would otherwise jump above a newer one.
  *
- * Achievements whose group isn't in `groups`, and coin achievements (no group), fall
+ * Achievements whose group isn't in `groups`, and milestone achievements (no group), fall
  * back to unlockedAt so they still land somewhere deterministic, and ties (several achievements from one group) break
  * on doc id to keep the order stable between renders.
  */
@@ -102,7 +102,9 @@ export const sortAchievementsByGroupEnd = <T extends HeldAchievement>(
   const groupsById = new Map(groups.map((g) => [g.id, g]));
 
   const endedAt = (achievement: HeldAchievement): number => {
-    const group = isCoinAchievement(achievement) ? undefined : groupsById.get(achievement.groupId);
+    const group = isMilestoneAchievement(achievement)
+      ? undefined
+      : groupsById.get(achievement.groupId);
     if (group) return absoluteEnd(group).valueOf();
     return (achievement.unlockedAt?.seconds ?? 0) * 1000;
   };

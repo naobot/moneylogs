@@ -1,8 +1,7 @@
 /**
  * Coin knick-knacks: pure rules for checkIn.ts, free of the SDK for root Vitest.
  *
- * Coins aren't found by chance like the seasonal knick-knacks; the buddy hands them over
- * for habits. A copper coin for your first entry in a financial log (everyone's starter),
+ * Coins are milestone knick-knacks (milestones.ts): the buddy hands them over for habits. A copper coin for your first entry in a financial log (everyone's starter),
  * then silver, gold and extra shiny gold for checking in on a financial log so many days
  * in a row. A check-in is opening one of your financial logs, or logging an entry in one.
  * Days are counted in the person's own timezone (user.timezone). Each coin is given once,
@@ -21,12 +20,6 @@ export const STREAK_COINS = [
 ] as const satisfies ReadonlyArray<{ item: KnickKnackId; days: number }>;
 
 export type CoinId = typeof STARTER_COIN | (typeof STREAK_COINS)[number]["item"];
-
-/**
- * Each coin comes with an achievement of the same type (users/{id}/achievements), shown
- * with the coin's art. One per coin, so the id is fixed.
- */
-export const coinAchievementId = (coin: CoinId) => `coin__${coin}`;
 
 /** users/{id}/buddy/streak */
 export type StreakMarker = {

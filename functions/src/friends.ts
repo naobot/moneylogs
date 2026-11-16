@@ -19,6 +19,8 @@ import {
   planRespond,
 } from "./friendsPlan";
 import { isNotificationEnabled } from "./notificationPrefs";
+import { awardMilestoneOnce } from "./awardMilestone";
+import { FIRST_FRIEND } from "./milestones";
 
 /**
  * Friend requests. friendships/{pairId} is read-only to clients, so every change goes
@@ -126,7 +128,8 @@ const run = async (
   plan: (state: ReturnType<typeof friendState>, accept?: boolean) => FriendAction | "invalid",
 ) => {
   const p = await parties(uid, data);
-  return p.db.runTransaction(async (tx) => {
+  let accepted = false;
+  const result = await p.db.runTransaction(async (tx) => {
     const pair = await tx.get(p.pairRef);
     const state = friendState(pair.exists ? pair.data() : undefined, p.me.id);
     const action = plan(state, p.accept);
@@ -134,6 +137,7 @@ const run = async (
       throw new HttpsError("failed-precondition", "There's no request to answer.");
     }
     apply(tx, action, p);
+    accepted = action === "accept";
     const after =
       action === "create"
         ? "outgoing"
@@ -144,6 +148,19 @@ const run = async (
             : state;
     return { state: after };
   });
+
+  // A first friend earns both of you the friendship bracelet (milestones.ts). After the
+  // friendship is saved, and never holding it up.
+  if (accepted) {
+    await Promise.all(
+      [p.me.id, p.other.id].map((userId) =>
+        awardMilestoneOnce({ db: p.db, userId, item: FIRST_FRIEND }).catch((error) =>
+          console.error(`friends: friendship bracelet for ${userId}:`, error),
+        ),
+      ),
+    );
+  }
+  return result;
 };
 
 /** Ask someone to be friends (accepts instead if they already asked you). */
