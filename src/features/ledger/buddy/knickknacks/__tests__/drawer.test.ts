@@ -16,7 +16,7 @@ const find = (item: string, foundMs: number, seen = true, ledgerId = "l1"): Knic
 
 describe("drawerContents", () => {
   it("is empty with no finds", () => {
-    expect(drawerContents([])).toEqual({ kept: [], waiting: [] });
+    expect(drawerContents([])).toEqual({ kept: [], waiting: [], gifts: [] });
   });
 
   it("keeps one slot per item, in the order first found, with counts", () => {
@@ -50,6 +50,21 @@ describe("drawerContents", () => {
     expect(drawerContents([find("moon_rock", 100), find("moon_rock", 200, false)])).toEqual({
       kept: [],
       waiting: [],
+      gifts: [],
     });
+  });
+
+  it("keeps unwrapped gifts apart from the buddy's finds", () => {
+    const wrapped = {
+      ...find("holly", 50, false, "l1"),
+      ledgerId: null,
+      source: "gift",
+      giftedBy: "mina",
+    } as KnickKnackFind;
+    const opened = { ...wrapped, id: "opened", seenAt: ts(60) } as KnickKnackFind;
+    const { kept, waiting, gifts } = drawerContents([wrapped, opened, find("acorn", 10, false)]);
+    expect(gifts).toEqual([wrapped]);
+    expect(waiting).toEqual([{ ledgerId: "l1", count: 1 }]);
+    expect(kept).toEqual([{ item: "holly", count: 1, firstFoundMs: 50 }]);
   });
 });

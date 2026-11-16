@@ -51,7 +51,8 @@ export const useUnseenFind = (userDocId?: string): KnickKnackFind | null => {
     if (isError) console.error("Failed to load the buddy's finds:", error);
   }, [isError, error]);
 
-  const known = data.filter((f) => f.item in KNICK_KNACKS);
+  // Gifts are unwrapped in the drawer, not revealed by the buddy.
+  const known = data.filter((f) => f.item in KNICK_KNACKS && f.source !== "gift");
   if (!known.length) return null;
   return known.reduce((oldest, f) => (foundMs(f) < foundMs(oldest) ? f : oldest));
 };

@@ -4,6 +4,7 @@ import { removeFriend, requestFriend, respondFriend, useFriendships } from "@/ho
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import RowButton from "@/components/RowButton";
+import GiftModal from "@/features/gifts/GiftModal";
 
 import { useFriendAction } from "./useFriendAction";
 
@@ -14,6 +15,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
   const { stateWith, isLoading } = useFriendships();
   const { run, pending } = useFriendAction();
   const [confirmingUnfriend, setConfirmingUnfriend] = useState(false);
+  const [giving, setGiving] = useState(false);
   const state = stateWith(userDocId);
 
   if (isLoading) return null;
@@ -67,11 +69,19 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
       {state === "friends" && (
         <>
           <span className="FriendControls__status FriendControls__status--friends">friends</span>
+          <Button
+            text="Send a gift"
+            size="sm"
+            buttonStyle="primary-border-lite"
+            onClick={() => setGiving(true)}
+          />
           <RowButton disabled={!!pending} onClick={() => setConfirmingUnfriend(true)}>
             unfriend
           </RowButton>
         </>
       )}
+
+      {giving && <GiftModal toUserDocId={userDocId} onClose={() => setGiving(false)} />}
 
       {confirmingUnfriend && (
         <Modal isOpen onClose={() => setConfirmingUnfriend(false)} disabled={!!pending}>

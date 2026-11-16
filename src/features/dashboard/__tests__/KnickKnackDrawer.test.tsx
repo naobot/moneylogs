@@ -6,13 +6,23 @@ import { MemoryRouter } from "react-router-dom";
 const state = vi.hoisted(() => ({
   finds: [] as unknown[],
   isLoading: false,
+  friends: [] as string[],
+  markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
 }));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({ user: { id: "doc-1", userId: "uid-1", timezone: "UTC" } }),
 }));
 vi.mock("@/features/ledger/buddy/knickknacks/useUnseenFinds", () => ({
   useKnickKnackFinds: () => ({ data: state.finds, isLoading: state.isLoading }),
+  markFindSeen: (...args: unknown[]) => state.markFindSeen(...args),
 }));
+vi.mock("@/hooks/useFriendships", () => ({
+  useFriendships: () => ({ friends: state.friends }),
+}));
+vi.mock("@/hooks/useProfiles", () => ({
+  useProfiles: () => new Map([["mina", { id: "mina", displayName: "Mina", avatar: null }]]),
+}));
+vi.mock("@/features/gifts/GiftModal", () => ({ default: () => <div>gift modal</div> }));
 
 import { KnickKnackDrawer, KNICK_KNACK_HELP } from "../KnickKnackDrawer";
 import type { Ledger } from "@/types/ledger";
@@ -35,6 +45,8 @@ describe("KnickKnackDrawer", () => {
   beforeEach(() => {
     state.finds = [];
     state.isLoading = false;
+    state.friends = [];
+    state.markFindSeen.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -89,5 +101,33 @@ describe("KnickKnackDrawer", () => {
     expect(link.getAttribute("href")).toBe("/l/l9");
     expect(link.textContent).toContain("in Household has something to show you");
     expect(container.querySelector('svg[aria-label="tulip"]')).toBeNull();
+  });
+
+  it("shows a wrapped gift by who sent it, and unwraps it in place", () => {
+    state.finds = [
+      { ...find("f5", "holly", false), ledgerId: null, source: "gift", giftedBy: "mina" },
+    ];
+    render();
+    const gift = container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__gift")!;
+    expect(gift.textContent).toContain("a gift from Mina");
+    expect(container.querySelector('svg[aria-label="holly"]')).toBeNull();
+    expect(container.querySelector(".KnickKnackDrawer__empty")).toBeNull();
+
+    act(() => gift.click());
+    expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f5");
+    expect(container.querySelector(".KnickKnackDrawer__unwrapped")!.textContent).toContain(
+      "holly from Mina",
+    );
+  });
+
+  it("offers giving only with a friend and something giftable", () => {
+    state.finds = [find("f1", "acorn", true)];
+    render();
+    expect(container.querySelector(".KnickKnackDrawer__give")).toBeNull();
+
+    state.friends = ["mina"];
+    render();
+    act(() => container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__give")!.click());
+    expect(container.textContent).toContain("gift modal");
   });
 });

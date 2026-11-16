@@ -249,6 +249,26 @@
     }
   }
 
+  // A gift from a friend, still wrapped: a button that unwraps it here.
+  &__gift {
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  &__give {
+    margin-left: auto;
+  }
+
+  &__unwrapped {
+    margin: 0;
+    padding: 0.3em 0.6em;
+    align-self: flex-start;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-size: 0.85em;
+  }
+
   &__empty {
     margin: 0;
     font-size: 0.85em;

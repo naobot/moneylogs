@@ -10,18 +10,21 @@ const ms = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEG
  * - kept: one slot per item the buddy has shown you, in the order you first got it,
  *   with how many you have;
  * - waiting: finds the buddy hasn't shown you yet, by log, so the drawer can point you
- *   to it without spoiling what's inside.
+ *   to it without spoiling what's inside;
+ * - gifts: gifts from friends you haven't unwrapped yet, oldest first.
  * Finds for items this build doesn't know (a newer catalog) are left out until it updates.
  */
 export const drawerContents = (finds: ReadonlyArray<KnickKnackFind>) => {
   const known = new Set<string>(KNICK_KNACK_IDS);
   const slots = new Map<KnickKnackId, DrawerSlot>();
   const waiting = new Map<string, number>();
+  const gifts: KnickKnackFind[] = [];
 
   for (const find of [...finds].sort((a, b) => ms(a) - ms(b))) {
     if (!known.has(find.item)) continue;
     if (!find.seenAt) {
-      if (find.ledgerId) waiting.set(find.ledgerId, (waiting.get(find.ledgerId) ?? 0) + 1);
+      if (find.source === "gift") gifts.push(find);
+      else if (find.ledgerId) waiting.set(find.ledgerId, (waiting.get(find.ledgerId) ?? 0) + 1);
       continue;
     }
     const slot = slots.get(find.item);
@@ -32,5 +35,6 @@ export const drawerContents = (finds: ReadonlyArray<KnickKnackFind>) => {
   return {
     kept: [...slots.values()],
     waiting: [...waiting].map(([ledgerId, count]) => ({ ledgerId, count })),
+    gifts,
   };
 };

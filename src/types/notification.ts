@@ -20,7 +20,8 @@ export type NotificationType =
   | "budget_exceeded"
   | "budget_projected"
   | "friend_request"
-  | "friend_accepted";
+  | "friend_accepted"
+  | "gift_received";
 
 /** Which collection `groupId` points into. Missing on older docs, which are all social. */
 export type LogKind = "social" | "ledger";
@@ -99,8 +100,16 @@ export type FriendNotification = Omit<Base, "groupId" | "groupName" | "logKind">
   logKind?: undefined;
 };
 
+/** A friend gave you a knick-knack. What it is stays a surprise until you unwrap it. */
+export type GiftNotification = Omit<FriendNotification, "type"> & {
+  type: "gift_received";
+  /** The wrapped find in your drawer. */
+  findId: string;
+};
+
 export type AppNotification =
   | FriendNotification
+  | GiftNotification
   | CommentNotification
   | ReactionNotification
   | LogMembershipNotification

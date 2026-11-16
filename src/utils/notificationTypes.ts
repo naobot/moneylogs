@@ -153,6 +153,14 @@ export const NOTIFICATION_TYPES: Specs = {
     describe: (n) => [{ keep: n.actorName }, " accepted your friend request"],
     href: (n) => `/u/${n.actorId}`,
   },
+  gift_received: {
+    label: "Gifts from friends",
+    defaultEnabled: true,
+    icon: "gift",
+    describe: (n) => [{ keep: n.actorName }, " sent you a gift"],
+    detail: () => "it's waiting, wrapped, in your knick-knack drawer",
+    href: () => "/#knickknacks",
+  },
   budget_projected: {
     label: "You're on track to go over this month's budget",
     defaultEnabled: true,
