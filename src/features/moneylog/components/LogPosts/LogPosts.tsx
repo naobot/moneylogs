@@ -19,11 +19,12 @@ import { commentsAreUnseen, postHasUnreadComments } from "@/utils/unread";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
-import Icon, { IconText } from "@/components/Icon";
+import { IconText } from "@/components/Icon";
 import LogPostEditor from "./LogPostEditor";
 import LogPostComments from "./LogPostComments";
 import PostReactions from "./PostReactions";
 import { markdownColorMode, useTheme } from "@/utils/theme";
+import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { useDateFormat } from "@/utils/dateFormat";
 
 type LogPostsProps = {
@@ -252,8 +253,12 @@ const LogPostItemComponent = ({
             {isDigestMode && user && (
               <div className="LogPosts__posts__item__header">
                 <div className="LogPosts__posts__item__header__left">
-                  <Icon type={"user"} />
-                  {user.displayName} {user.displayLocation && <>({user.displayLocation})</>}
+                  <MemberAvatarLink
+                    userDocId={user.id}
+                    name={user.displayName}
+                    suffix={user.displayLocation ? `(${user.displayLocation})` : null}
+                    withName
+                  />
                 </div>
               </div>
             )}

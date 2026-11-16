@@ -32,7 +32,8 @@ import { useTutorial } from "@/contexts/TutorialContext";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { useDateFormat } from "@/utils/dateFormat";
-import { MemberNamesContext } from "./LogPosts/memberNames";
+import { MemberNamesContext, MemberProfilesContext } from "./LogPosts/memberNames";
+import { useProfiles } from "@/hooks/useProfiles";
 import type { PostFocus } from "./LogPosts/LogPosts";
 
 export const Group = ({
@@ -104,6 +105,16 @@ export const Group = ({
   const memberNames = useMemo(
     () => new Map(members.map((member) => [member.id, member.displayName])),
     [members],
+  );
+
+  // Avatars come from the public profiles (users/ docs don't carry them for others).
+  const profiles = useProfiles(useMemo(() => members.map((member) => member.id), [members]));
+  const memberProfiles = useMemo(
+    () =>
+      new Map(
+        [...profiles.values()].map((p) => [p.id, { displayName: p.displayName, avatar: p.avatar }]),
+      ),
+    [profiles],
   );
 
   // Personal end: this user's posting window has closed
@@ -316,189 +327,194 @@ export const Group = ({
 
   return (
     <MemberNamesContext.Provider value={memberNames}>
-      <div className="Group">
-        <div className="Group__header">
-          <div className="Group__header__left">
-            <div className="GroupInterval Group__header__item">
-              {group && (
-                <div className="Group__header__item__time">
-                  {formatShortDate(displayStart)} <small>({formatTime(displayStart)})</small> to{" "}
-                  {formatShortDate(displayEnd)} <small>({formatTime(displayEnd)})</small>
-                </div>
-              )}
-              {!isPostingClosed && endingSoon && (
-                <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />
-              )}
+      <MemberProfilesContext.Provider value={memberProfiles}>
+        <div className="Group">
+          <div className="Group__header">
+            <div className="Group__header__left">
+              <div className="GroupInterval Group__header__item">
+                {group && (
+                  <div className="Group__header__item__time">
+                    {formatShortDate(displayStart)} <small>({formatTime(displayStart)})</small> to{" "}
+                    {formatShortDate(displayEnd)} <small>({formatTime(displayEnd)})</small>
+                  </div>
+                )}
+                {!isPostingClosed && endingSoon && (
+                  <Icon type="warning" fill="white" onClick={() => setShowEndWarningModal(true)} />
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="Group__header__center">
-            {displaySummary && (
-              <div className="Group__header__item Group__header__title">
-                Insights for {group.title}
-              </div>
-            )}
-            {!isPostingClosed &&
-              !displayAll &&
-              isActiveLogMyLog &&
-              !isFutureGroup &&
-              !isSpectator && (
-                <div
-                  className="handler Group__header__item"
-                  style={{ position: "relative" }}
-                  onClick={() => {
-                    isCreateNewEntrySet(true);
-                    onNewEntryClicked();
-                  }}
-                >
-                  {showNewEntryTip && (
-                    <TutorialTooltip
-                      text="Click here to create your first log post"
-                      onDismiss={dismissNewEntryTip}
-                      position="bottom"
-                    />
-                  )}
-                  <IconText type={"document"} fill={"white"} text="new entry" />
+            <div className="Group__header__center">
+              {displaySummary && (
+                <div className="Group__header__item Group__header__title">
+                  Insights for {group.title}
                 </div>
               )}
-            {/* This user is done posting, but later timezones are still logging, so
-                the summary can't be final yet. Takes the "new entry" slot. */}
-            {isPostingClosed && !isReadOnly && !isSpectator && !displaySummary && (
-              <div className="Group__header__item Group__header__pending">
-                Log Summary ready {timeUntilReadOnly(group, now)}
-              </div>
-            )}
-          </div>
-
-          <div className="Group__header__right">
-            {!isSpectator && (
-              <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
-                <IconText type={"gear"} fill={"white"} text="manage" />
-              </div>
-            )}
-            {!isPostingClosed &&
-              !isSpectator &&
-              group?.members?.length < group?.max_participants && (
-                <>
+              {!isPostingClosed &&
+                !displayAll &&
+                isActiveLogMyLog &&
+                !isFutureGroup &&
+                !isSpectator && (
                   <div
                     className="handler Group__header__item"
+                    style={{ position: "relative" }}
                     onClick={() => {
-                      setShowInviteModal(true);
+                      isCreateNewEntrySet(true);
+                      onNewEntryClicked();
                     }}
                   >
-                    <IconText type={"plus"} fill={"white"} text="invite" />
+                    {showNewEntryTip && (
+                      <TutorialTooltip
+                        text="Click here to create your first log post"
+                        onDismiss={dismissNewEntryTip}
+                        position="bottom"
+                      />
+                    )}
+                    <IconText type={"document"} fill={"white"} text="new entry" />
                   </div>
-                  <div className="Group__header__item">
-                    <small>
-                      ({group?.max_participants - group.members?.length} spot
-                      {group?.max_participants - group.members?.length > 1 && "s"} left)
-                    </small>
-                  </div>
-                </>
-              )}
-          </div>
-        </div>
-        <div className="Group__body">
-          {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
-          {logPostRes.isSuccess && !isLoadingMembers && groupId && (
-            <>
-              <LogsMenu
-                logMembers={members}
-                logPosts={logPostRes.posts}
-                displayAll={displayAll}
-                displaySummary={displaySummary}
-                displayUser={displayUser}
-                onChangeUser={handleUserChange}
-                onViewSummary={handleViewSummary}
-                groupId={groupId}
-                isReadOnly={isReadOnly}
-                loadingMemberCount={Math.max(0, (group.members?.length ?? 0) - members.length)}
-              />
-              {isFutureGroup && (
-                <div className="LogPosts">
-                  <div className="LogPosts__error">This group log has not begun yet!</div>
+                )}
+              {/* This user is done posting, but later timezones are still logging, so
+                the summary can't be final yet. Takes the "new entry" slot. */}
+              {isPostingClosed && !isReadOnly && !isSpectator && !displaySummary && (
+                <div className="Group__header__item Group__header__pending">
+                  Log Summary ready {timeUntilReadOnly(group, now)}
                 </div>
               )}
-              {!isFutureGroup && displaySummary && (
-                <LogsSummary
-                  group={group}
-                  groupMembers={members}
+            </div>
+
+            <div className="Group__header__right">
+              {!isSpectator && (
+                <div
+                  className="handler Group__header__item"
+                  onClick={() => setShowManageModal(true)}
+                >
+                  <IconText type={"gear"} fill={"white"} text="manage" />
+                </div>
+              )}
+              {!isPostingClosed &&
+                !isSpectator &&
+                group?.members?.length < group?.max_participants && (
+                  <>
+                    <div
+                      className="handler Group__header__item"
+                      onClick={() => {
+                        setShowInviteModal(true);
+                      }}
+                    >
+                      <IconText type={"plus"} fill={"white"} text="invite" />
+                    </div>
+                    <div className="Group__header__item">
+                      <small>
+                        ({group?.max_participants - group.members?.length} spot
+                        {group?.max_participants - group.members?.length > 1 && "s"} left)
+                      </small>
+                    </div>
+                  </>
+                )}
+            </div>
+          </div>
+          <div className="Group__body">
+            {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
+            {logPostRes.isSuccess && !isLoadingMembers && groupId && (
+              <>
+                <LogsMenu
+                  logMembers={members}
                   logPosts={logPostRes.posts}
-                  isLoading={logPostRes.isLoading}
-                />
-              )}
-              {!isFutureGroup && !displaySummary && (displayAll || displayUser) && (
-                <ActiveLog
-                  group={group}
-                  groupId={groupId}
-                  groupMembers={members}
-                  logPosts={
-                    displayAll
-                      ? logPostRes.posts
-                      : logPostRes.posts.filter((post) => post.author.id == displayUser?.id)
-                  }
                   displayAll={displayAll}
+                  displaySummary={displaySummary}
                   displayUser={displayUser}
-                  userId={displayUser?.userId}
-                  isCreateNewEntry={isCreateNewEntry}
-                  isCreateNewEntrySet={isCreateNewEntrySet}
-                  isMyLog={isActiveLogMyLog}
+                  onChangeUser={handleUserChange}
+                  onViewSummary={handleViewSummary}
+                  groupId={groupId}
                   isReadOnly={isReadOnly}
-                  isPostingClosed={isPostingClosed}
-                  isSpectator={isSpectator}
-                  hasMorePosts={logPostRes.hasMore}
-                  isLoadingMorePosts={logPostRes.isLoadingMore}
-                  onLoadMorePosts={logPostRes.loadMore}
-                  postFocus={postFocus}
+                  loadingMemberCount={Math.max(0, (group.members?.length ?? 0) - members.length)}
                 />
-              )}
-            </>
-          )}
+                {isFutureGroup && (
+                  <div className="LogPosts">
+                    <div className="LogPosts__error">This group log has not begun yet!</div>
+                  </div>
+                )}
+                {!isFutureGroup && displaySummary && (
+                  <LogsSummary
+                    group={group}
+                    groupMembers={members}
+                    logPosts={logPostRes.posts}
+                    isLoading={logPostRes.isLoading}
+                  />
+                )}
+                {!isFutureGroup && !displaySummary && (displayAll || displayUser) && (
+                  <ActiveLog
+                    group={group}
+                    groupId={groupId}
+                    groupMembers={members}
+                    logPosts={
+                      displayAll
+                        ? logPostRes.posts
+                        : logPostRes.posts.filter((post) => post.author.id == displayUser?.id)
+                    }
+                    displayAll={displayAll}
+                    displayUser={displayUser}
+                    userId={displayUser?.userId}
+                    isCreateNewEntry={isCreateNewEntry}
+                    isCreateNewEntrySet={isCreateNewEntrySet}
+                    isMyLog={isActiveLogMyLog}
+                    isReadOnly={isReadOnly}
+                    isPostingClosed={isPostingClosed}
+                    isSpectator={isSpectator}
+                    hasMorePosts={logPostRes.hasMore}
+                    isLoadingMorePosts={logPostRes.isLoadingMore}
+                    onLoadMorePosts={logPostRes.loadMore}
+                    postFocus={postFocus}
+                  />
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      {!isSpectator && groupId && (
-        <LogActionsModal
-          isOpen={showManageModal}
-          onClose={() => setShowManageModal(false)}
-          logId={groupId}
-          logTitle={group.title}
-          kind="social"
-          creatorUid={creatorUid(group, "social")}
-        />
-      )}
-      <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
-        <Modal.Header title={"Invite"}>Invite</Modal.Header>
-        <Modal.Body>
-          <p>
-            Send the following URL to those you want to invite to participate in this log group.
-          </p>
-          <p>Do not share the group URL with anyone you do not want participating!</p>
-          <CopyTextArea value={`${window.location.host}/g/${groupId}/invite`} />
-        </Modal.Body>
-        <Modal.Actions>
-          <Modal.CancelButton text="Close" />
-        </Modal.Actions>
-      </Modal>
-      {!isPostingClosed && endingSoon && (showEndWarningModal || neverViewedWarningModal) && (
-        <Modal isOpen={showEndWarningModal} onClose={() => setShowEndWarningModal(false)}>
-          <Modal.Header title={"Warning"}>Warning</Modal.Header>
+        {!isSpectator && groupId && (
+          <LogActionsModal
+            isOpen={showManageModal}
+            onClose={() => setShowManageModal(false)}
+            logId={groupId}
+            logTitle={group.title}
+            kind="social"
+            creatorUid={creatorUid(group, "social")}
+          />
+        )}
+        <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
+          <Modal.Header title={"Invite"}>Invite</Modal.Header>
           <Modal.Body>
-            <p>This moneylog group is ending soon!</p>
             <p>
-              Your posting window closes at <strong>{formatDateTime(displayEnd)}</strong>.
+              Send the following URL to those you want to invite to participate in this log group.
             </p>
-            <p>You can still read and comment for a period after that.</p>
+            <p>Do not share the group URL with anyone you do not want participating!</p>
+            <CopyTextArea value={`${window.location.host}/g/${groupId}/invite`} />
           </Modal.Body>
           <Modal.Actions>
-            <Modal.ConfirmButton
-              onClick={() => {
-                localStorage.setItem(`ML__${groupId}__agreeWarning`, "1");
-              }}
-              text="OK"
-            />
+            <Modal.CancelButton text="Close" />
           </Modal.Actions>
         </Modal>
-      )}
+        {!isPostingClosed && endingSoon && (showEndWarningModal || neverViewedWarningModal) && (
+          <Modal isOpen={showEndWarningModal} onClose={() => setShowEndWarningModal(false)}>
+            <Modal.Header title={"Warning"}>Warning</Modal.Header>
+            <Modal.Body>
+              <p>This moneylog group is ending soon!</p>
+              <p>
+                Your posting window closes at <strong>{formatDateTime(displayEnd)}</strong>.
+              </p>
+              <p>You can still read and comment for a period after that.</p>
+            </Modal.Body>
+            <Modal.Actions>
+              <Modal.ConfirmButton
+                onClick={() => {
+                  localStorage.setItem(`ML__${groupId}__agreeWarning`, "1");
+                }}
+                text="OK"
+              />
+            </Modal.Actions>
+          </Modal>
+        )}
+      </MemberProfilesContext.Provider>
     </MemberNamesContext.Provider>
   );
 };

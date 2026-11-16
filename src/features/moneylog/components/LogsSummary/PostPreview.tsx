@@ -1,6 +1,6 @@
 import MDEditor from "@uiw/react-md-editor";
 import { LogPost } from "@/types/user";
-import Icon from "@/components/Icon";
+import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 
 interface PostPreviewProps {
@@ -26,8 +26,7 @@ const PostPreview = ({ post, showAuthor = false }: PostPreviewProps) => {
       <MDEditor.Markdown source={post.content} />
       {showAuthor && post.authorName && (
         <div className="PostPreview__footer">
-          <Icon type={"user"} />
-          {post.authorName}
+          <MemberAvatarLink userDocId={post.author?.id} name={post.authorName} withName />
         </div>
       )}
     </div>

@@ -84,3 +84,21 @@
     color: var(--ink-muted);
   }
 }
+
+// An avatar and/or name that opens someone's profile.
+.ProfileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+
+  &--link {
+    text-decoration: none;
+
+    &:hover .ProfileLink__name,
+    &:focus-visible .ProfileLink__name {
+      text-decoration: underline;
+    }
+  }
+}
