@@ -12,13 +12,22 @@ import { db } from "@/config/firebase-config";
 import { useFirebaseCollection } from "@/hooks/useFirebase";
 import { KNICK_KNACKS, KnickKnackId } from "./catalog";
 
-/** users/{userDocId}/knickknacks/{findId}: written by the server when the buddy finds one. */
+/**
+ * users/{userDocId}/knickknacks/{findId}: written by the server when the buddy finds
+ * one, or when a friend gifts one. A missing `source` means found.
+ */
 export type KnickKnackFind = {
   id: string;
   item: KnickKnackId;
-  ledgerId: string;
+  /** The log whose buddy found it; null on gifts. */
+  ledgerId: string | null;
+  /** When it was first found (kept from the giver's find on gifts). */
   foundAt?: Timestamp | null;
   seenAt: Timestamp | null;
+  source?: "found" | "gift";
+  /** Gifts only: the giver's user doc id, and when it was given. */
+  giftedBy?: string | null;
+  giftedAt?: Timestamp | null;
 };
 
 const foundMs = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
@@ -58,6 +67,28 @@ export const useKnickKnackFinds = (userDocId?: string) => {
 
   useEffect(() => {
     if (result.isError) console.error("Failed to load the knick-knack drawer:", result.error);
+  }, [result.isError, result.error]);
+
+  return result;
+};
+
+/**
+ * Someone's kept (seen) finds, for their profile's shelf. Other signed-in people may
+ * read only seen finds (firestore.rules), so the query has to say so.
+ */
+export const usePublicFinds = (userDocId?: string) => {
+  const result = useFirebaseCollection<KnickKnackFind>({
+    queryBuilder: () =>
+      userDocId
+        ? query(collection(db, "users", userDocId, "knickknacks"), where("seenAt", "!=", null))
+        : null,
+    dataTransformer: (docs) => docs.map((d) => ({ id: d.id, ...d.data() }) as KnickKnackFind),
+    dependencies: [userDocId],
+    enabled: !!userDocId,
+  });
+
+  useEffect(() => {
+    if (result.isError) console.error("Failed to load the knick-knack shelf:", result.error);
   }, [result.isError, result.error]);
 
   return result;

@@ -12,3 +12,11 @@
   gap: var(--space-4);
   margin-bottom: var(--space-4);
 }
+
+.UserSettings__profileLink {
+  margin-bottom: var(--space-4);
+
+  p {
+    margin-top: 0;
+  }
+}

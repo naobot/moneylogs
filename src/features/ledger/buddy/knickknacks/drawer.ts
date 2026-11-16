@@ -21,7 +21,7 @@ export const drawerContents = (finds: ReadonlyArray<KnickKnackFind>) => {
   for (const find of [...finds].sort((a, b) => ms(a) - ms(b))) {
     if (!known.has(find.item)) continue;
     if (!find.seenAt) {
-      waiting.set(find.ledgerId, (waiting.get(find.ledgerId) ?? 0) + 1);
+      if (find.ledgerId) waiting.set(find.ledgerId, (waiting.get(find.ledgerId) ?? 0) + 1);
       continue;
     }
     const slot = slots.get(find.item);

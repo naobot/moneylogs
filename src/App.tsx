@@ -30,6 +30,7 @@ import { LedgerInvitePage } from "@/pages/ledger/invite";
 import { About } from "@/pages/about";
 import { Notifications } from "@/pages/notifications";
 import { Welcome } from "@/pages/welcome";
+import { UserProfilePage } from "@/pages/user";
 import { OnboardingGate } from "@/features/onboarding/OnboardingGate";
 
 import "./App.scss";
@@ -111,6 +112,14 @@ const App = () => {
                 element={
                   <CheckAuth>
                     <UserSettings />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/u/:userDocId"
+                element={
+                  <CheckAuth>
+                    <UserProfilePage />
                   </CheckAuth>
                 }
               />

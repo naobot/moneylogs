@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
@@ -9,6 +10,7 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
+import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import CurrencySelect from "@/components/CurrencySelect";
 import TimezoneSelect from "@/components/TimezoneSelect";
 import { Currency } from "@/types/user";
@@ -97,6 +99,15 @@ export const ProfileSection = () => {
           onClick={() => setEditingAvatar(true)}
         />
       </div>
+      {user?.id && (
+        <div className="UserSettings__profileLink">
+          <p>
+            Your profile link. Send it to people you'd like to add as friends, or{" "}
+            <Link to={`/u/${user.id}`}>see your profile</Link>.
+          </p>
+          <CopyTextArea value={`${window.location.host}/u/${user.id}`} />
+        </div>
+      )}
       {editingAvatar && <AvatarEditorModal isOpen onClose={() => setEditingAvatar(false)} />}
 
       <div className="UserSettings__form">

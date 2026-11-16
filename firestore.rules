@@ -50,7 +50,10 @@ service cloud.firestore {
     // read them and mark each one seen, once; only the server creates or deletes them.
     // users/{id}/buddy (the daily roll marker) has no rule: server only.
     match /users/{userDocId}/knickknacks/{findId} {
-      allow read: if ownsUserDoc(userDocId);
+      // The owner sees everything; other signed-in people see the kept (seen) ones on
+      // the owner's profile shelf. List queries must filter on seenAt != null.
+      allow read: if ownsUserDoc(userDocId)
+        || (request.auth != null && resource.data.seenAt != null);
       allow update: if ownsUserDoc(userDocId)
         && resource.data.seenAt == null
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenAt"])
