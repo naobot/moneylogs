@@ -30,6 +30,8 @@ import {
   applyCategoryOps,
   categoryNameError,
   CategoryOp,
+  guessFixed,
+  isFixedCategory,
   MAX_CATEGORIES,
   newCategoryId,
   BudgetDrafts,
@@ -106,10 +108,15 @@ const CategoryManagerDialog = ({
   const addError = newName.trim() ? categoryNameError(newName, draft) : undefined;
   const atCap = draft.length >= MAX_CATEGORIES;
 
+  // Follows a guess from the name as you type, until you flip it yourself.
+  const [newFixedChoice, setNewFixedChoice] = useState<boolean | null>(null);
+  const newFixed = newFixedChoice ?? guessFixed(newName);
+
   const addCategory = () => {
     if (!newName.trim() || addError || atCap) return;
-    push({ type: "add", id: newCategoryId(newName, draft), name: newName });
+    push({ type: "add", id: newCategoryId(newName, draft), name: newName, fixed: newFixed });
     setNewName("");
+    setNewFixedChoice(null);
   };
 
   const renameError = renaming ? categoryNameError(renaming.name, draft, renaming.id) : undefined;
@@ -222,6 +229,11 @@ const CategoryManagerDialog = ({
                     </small>
                   )}
                   <span className="CategoryManager__actions">
+                    <FixedToggle
+                      name={category.name}
+                      fixed={isFixedCategory(category)}
+                      onToggle={(fixed) => push({ type: "setFixed", id: category.id, fixed })}
+                    />
                     <ActionButton
                       icon="wallet"
                       label={`Budget for ${category.name}`}
@@ -286,6 +298,12 @@ const CategoryManagerDialog = ({
             disabled={atCap}
             maxLength={MAX_CATEGORY_NAME_LENGTH + 5}
             onChange={(e) => setNewName(e.target.value)}
+          />
+          <FixedToggle
+            name={newName.trim() || "the new category"}
+            fixed={newFixed}
+            disabled={atCap}
+            onToggle={setNewFixedChoice}
           />
           <Button
             text="Add"
@@ -400,14 +418,19 @@ const ActionButton = ({
   label,
   tip,
   expanded,
+  pressed,
+  className,
   disabled,
   onClick,
   children,
 }: {
-  icon: IconType;
+  icon?: IconType;
   label: string;
   tip?: string;
   expanded?: boolean;
+  /** For toggles. */
+  pressed?: boolean;
+  className?: string;
   disabled?: boolean;
   onClick: () => void;
   children: ReactNode;
@@ -431,9 +454,10 @@ const ActionButton = ({
       onPointerLeave={(e) => isMousePointer(e) && close()}
     >
       <SharedRowButton
-        className="RowButton--icon"
+        className={cx({ "RowButton--icon": icon }, className)}
         aria-label={label}
         aria-expanded={expanded}
+        aria-pressed={pressed}
         aria-describedby={tip && open ? tipId : undefined}
         disabled={disabled}
         onClick={() => {
@@ -450,7 +474,7 @@ const ActionButton = ({
           }
         }}
       >
-        <Icon type={icon} size={20} />
+        {icon && <Icon type={icon} size={20} />}
         {children}
       </SharedRowButton>
       {tip && (
@@ -470,6 +494,34 @@ const ActionButton = ({
     </span>
   );
 };
+
+const FIXED_TIP =
+  "Fixed costs like rent and bills still count toward the budget, but the buddy won't fuss over them or judge the month's pace by them.";
+
+/** A text-mode checkbox marking a category as a fixed cost. */
+const FixedToggle = ({
+  name,
+  fixed,
+  disabled,
+  onToggle,
+}: {
+  name: string;
+  fixed: boolean;
+  disabled?: boolean;
+  onToggle: (fixed: boolean) => void;
+}) => (
+  <ActionButton
+    label={`${name} is a fixed cost`}
+    pressed={fixed}
+    tip={FIXED_TIP}
+    disabled={disabled}
+    className={cx("CategoryManager__fixed", { "CategoryManager__fixed--on": fixed })}
+    onClick={() => onToggle(!fixed)}
+  >
+    <span aria-hidden="true">{fixed ? "[■]" : "[ ]"}</span>
+    fixed
+  </ActionButton>
+);
 
 const SortableRow = ({ id, name, children }: { id: string; name: string; children: ReactNode }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({

@@ -16,6 +16,8 @@ export type LedgerCategory = {
   name: string;
   order: number;
   archived?: boolean; // soft delete so historical entries still resolve
+  /** A fixed cost (rent, bills); unset falls back to the defaults. See isFixedCategory. */
+  fixed?: boolean;
   budget?: CurrencyAmounts; // reserved for budgets (monthly, per currency)
 };
 

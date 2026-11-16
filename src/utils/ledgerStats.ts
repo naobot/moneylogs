@@ -6,6 +6,7 @@ import { formatMonth, resolveCategory, shiftMonth } from "@/utils/ledger";
 import { formatDate } from "@/utils/dateFormat";
 // Single source of truth for monthly aggregation, shared with the Cloud Function.
 import { aggregateMonth, MonthAggregate } from "../../functions/src/ledgerAggregate";
+import { budgetPace, isFixedCategory } from "../../functions/src/ledgerBudget";
 
 export type { MonthAggregate };
 
@@ -266,10 +267,21 @@ export type BudgetSummary = {
   over: boolean;
   /** Days left including today (current month only). */
   daysLeft: number | null;
-  /** What's left per remaining day (current month, not yet over). */
+  /**
+   * What's left per remaining day (current month, not yet over). Fixed costs are set
+   * aside at their budget, so it's what's left for everyday spending.
+   */
   perDayLeft: number | null;
-  /** End-of-month spend at the current daily pace (current month only). */
+  /**
+   * End-of-month spend (current month only): fixed costs at their budget (or what was
+   * spent, if more), everything else at the current daily pace.
+   */
   projected: number | null;
+  /**
+   * Everyday (non-fixed) spending against its budget's share of the days elapsed: 1 is
+   * on pace. Null when only fixed costs have budgets.
+   */
+  pace: number | null;
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -291,14 +303,27 @@ export const budgetSummary = ({
   const { total, byCategory } = budgetsFor(categories, currency);
   if (total <= 0) return null;
 
-  const spent = r2(
-    Object.keys(byCategory).reduce((sum, id) => sum + (agg.byCategory[id]?.[currency] ?? 0), 0),
-  );
-  const remaining = r2(total - spent);
   const daysInMonth = dayjs(`${month}-01`).daysInMonth();
   const isCurrent = month === today.slice(0, 7);
   const elapsed = elapsedDays(month, today);
   const daysLeft = isCurrent ? daysInMonth - elapsed + 1 : null;
+
+  const fixed = new Set(categories.filter(isFixedCategory).map((c) => c.id));
+  const pace = budgetPace({
+    budgets: Object.entries(byCategory),
+    isFixed: (id) => fixed.has(id),
+    spentIn: (id) => agg.byCategory[id]?.[currency] ?? 0,
+    elapsed,
+    days: daysInMonth,
+  });
+  const { spent } = pace;
+  const remaining = r2(total - spent);
+  // With everyday budgets, what's left of those (never more than is left overall, in
+  // case a fixed cost ran over); with only fixed ones, what's left of the whole.
+  const everydayLeft =
+    pace.flexibleBudget > 0
+      ? Math.min(remaining, r2(pace.flexibleBudget - pace.flexibleSpent))
+      : remaining;
 
   return {
     budget: total,
@@ -307,7 +332,19 @@ export const budgetSummary = ({
     used: spent / total,
     over: spent > total,
     daysLeft,
-    perDayLeft: isCurrent && remaining > 0 && daysLeft ? r2(remaining / daysLeft) : null,
-    projected: isCurrent && elapsed > 0 ? r2((spent / elapsed) * daysInMonth) : null,
+    perDayLeft:
+      isCurrent && remaining > 0 && daysLeft ? r2(Math.max(0, everydayLeft) / daysLeft) : null,
+    projected: isCurrent && elapsed > 0 ? pace.projected : null,
+    pace: elapsed > 0 ? pace.pace : null,
   };
 };
+
+/** The biggest category that isn't a fixed cost (what the buddy calls "our favourite"). */
+export const topFlexibleCategory = (
+  agg: Pick<MonthAggregate, "byCategory">,
+  currency: Currency,
+  categories: ReadonlyArray<LedgerCategory>,
+): Share | undefined =>
+  categoryShares(agg, currency, categories).find(
+    (s) => !isFixedCategory(categories.find((c) => c.id === s.id) ?? { id: s.id }),
+  );

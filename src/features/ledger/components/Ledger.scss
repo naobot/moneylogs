@@ -422,6 +422,17 @@
     display: inline-flex;
   }
 
+  // Fixed-cost toggle: quiet when off, full ink when on.
+  &__fixed {
+    gap: 0.3em;
+    white-space: nowrap;
+    opacity: 0.7; // muted text floor
+
+    &--on {
+      opacity: 1;
+    }
+  }
+
   // Inline budget field: its own line under the category row, right-aligned.
   &__budget {
     flex-basis: 100%;

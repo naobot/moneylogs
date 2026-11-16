@@ -87,7 +87,7 @@ describe("CategoryManager", () => {
 
     await act(async () => button("Save").click());
     expect(onSave).toHaveBeenCalledWith([
-      { type: "add", id: "coffee", name: "Coffee" },
+      { type: "add", id: "coffee", name: "Coffee", fixed: false },
       { type: "rename", id: "food", name: "Eating out" },
     ]);
     expect(onClose).toHaveBeenCalled();
@@ -159,5 +159,25 @@ describe("CategoryManager", () => {
     await act(async () => button("Save").click());
     expect(document.body.textContent).toContain("Couldn't save your changes");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("marks categories as fixed, guessing from a new category's name", async () => {
+    const food = byLabel("Food is a fixed cost") as HTMLButtonElement;
+    expect(food.getAttribute("aria-pressed")).toBe("false");
+    act(() => food.click());
+    expect(food.getAttribute("aria-pressed")).toBe("true");
+
+    const name = byLabel("New category name") as HTMLInputElement;
+    type(name, "Rent");
+    expect(byLabel("Rent is a fixed cost").getAttribute("aria-pressed")).toBe("true");
+    // Flipping it overrides the guess.
+    act(() => (byLabel("Rent is a fixed cost") as HTMLButtonElement).click());
+    submit(name);
+
+    await act(async () => button("Save").click());
+    expect(onSave).toHaveBeenCalledWith([
+      { type: "setFixed", id: "food", fixed: true },
+      { type: "add", id: "rent", name: "Rent", fixed: false },
+    ]);
   });
 });

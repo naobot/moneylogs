@@ -7,7 +7,9 @@ import {
   budgetFieldError,
   budgetFieldValue,
   categoryNameError,
+  guessFixed,
   hasAnyBudget,
+  isFixedCategory,
   preferredBudgetCurrency,
   MAX_CATEGORIES,
   newCategoryId,
@@ -272,5 +274,40 @@ describe("budget drafts", () => {
         "JPY",
       ),
     ).toBe("USD");
+  });
+});
+
+describe("fixed categories", () => {
+  it("guesses fixed costs from whole words in the name", () => {
+    for (const name of ["Rent", "Car insurance", "Netflix subscription", "Phone", "Council tax"]) {
+      expect(guessFixed(name)).toBe(true);
+    }
+    for (const name of ["Food", "Rental car", "Taxis", "Gymnastics", ""]) {
+      expect(guessFixed(name)).toBe(false);
+    }
+  });
+
+  it("toggles fixed explicitly, so turning a default off sticks", () => {
+    const list: LedgerCategory[] = [
+      { id: "food", name: "Food", order: 0 },
+      { id: "housing", name: "Housing", order: 1 },
+    ];
+    const off = applyCategoryOp(list, { type: "setFixed", id: "housing", fixed: false });
+    expect(off.find((c) => c.id === "housing")).toMatchObject({ fixed: false });
+    expect(isFixedCategory(off.find((c) => c.id === "housing")!)).toBe(false);
+    const on = applyCategoryOp(list, { type: "setFixed", id: "food", fixed: true });
+    expect(isFixedCategory(on.find((c) => c.id === "food")!)).toBe(true);
+  });
+
+  it("stores fixed on add only when it differs from the default", () => {
+    const list: LedgerCategory[] = [{ id: "food", name: "Food", order: 0 }];
+    const added = applyCategoryOps(list, [
+      { type: "add", id: "rent", name: "Rent", fixed: true },
+      { type: "add", id: "coffee", name: "Coffee", fixed: false },
+      { type: "add", id: "utilities", name: "Utilities", fixed: true },
+    ]);
+    expect(added.find((c) => c.id === "rent")?.fixed).toBe(true);
+    expect(added.find((c) => c.id === "coffee")).not.toHaveProperty("fixed");
+    expect(added.find((c) => c.id === "utilities")).not.toHaveProperty("fixed");
   });
 });

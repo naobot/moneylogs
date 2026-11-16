@@ -2,7 +2,13 @@ import dayjs from "@/utils/configuredDayjs";
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerCategory, LedgerMonth } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
-import { budgetSummary, budgetsFor, buildInsights, elapsedDays } from "@/utils/ledgerStats";
+import {
+  budgetSummary,
+  budgetsFor,
+  buildInsights,
+  elapsedDays,
+  topFlexibleCategory,
+} from "@/utils/ledgerStats";
 import { BuddyMood, MOOD_SCALE, ScaleMood } from "./faces";
 
 /** The buddy sleeps from 23:00 until 07:00 in the viewer's own timezone. */
@@ -26,6 +32,7 @@ export type BuddyFacts = {
   change?: number | null;
   /** Days in a row, up to today, with nothing spent. */
   noSpendDays: number;
+  /** The biggest everyday category; fixed costs (rent, bills) never count. */
   topCategory?: string;
 };
 
@@ -125,14 +132,16 @@ export const buddyMood = ({
   const totals = current?.totals ?? {};
   const agg = current ?? { entryCount: 0, totals: {}, byCategory: {}, byMember: {}, byDay: {} };
 
-  // Every budgeted currency, worst pace first.
+  // Every budgeted currency, worst pace first. Pace is everyday spending only: fixed
+  // costs paid in a lump (rent on the 1st) aren't a sign of going too fast.
   const budgeted = CURRENCIES.flatMap((currency) => {
     if (budgetsFor(categories, currency).total <= 0) return [];
     const summary = budgetSummary({ month, today, currency, agg, categories });
     if (!summary) return [];
-    const pace = summary.used / Math.max(elapsed / days, 1 / days);
-    return [{ currency, summary, pace }];
-  }).sort((a, b) => Number(b.summary.over) - Number(a.summary.over) || b.pace - a.pace);
+    return [{ currency, summary, pace: summary.pace }];
+  }).sort(
+    (a, b) => Number(b.summary.over) - Number(a.summary.over) || (b.pace ?? 0) - (a.pace ?? 0),
+  );
 
   const focus = budgeted[0]?.currency ?? largest(totals);
   const insights = focus
@@ -145,7 +154,7 @@ export const buddyMood = ({
     daysLeft,
     noSpendDays: noSpendStreak(current?.byDay, elapsed),
     change: insights?.vsLastMonth?.change ?? null,
-    topCategory: insights?.topCategory?.name,
+    topCategory: focus ? topFlexibleCategory(agg, focus, categories)?.name : undefined,
   };
 
   if (!current?.entryCount && !budgeted.some((b) => b.summary.spent > 0)) {
@@ -165,7 +174,8 @@ export const buddyMood = ({
     if (summary.over) {
       return { mood: "alarmed", asleep, facts, seed };
     }
-    mood = moodForPace(pace, jitter);
+    // Only fixed costs budgeted: nothing to judge the pace by.
+    mood = pace === null ? "content" : moodForPace(pace, jitter);
     // Too early in the month to be sure it's going that well.
     if (mood === "delighted" && elapsed < 3) mood = "happy";
   } else {

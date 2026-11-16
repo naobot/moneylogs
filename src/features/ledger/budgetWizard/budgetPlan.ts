@@ -1,7 +1,13 @@
 import { LedgerCategory } from "@/types/ledger";
 import { DEFAULT_CATEGORIES, normaliseCategoryName } from "@/utils/ledger";
 import { parseAmount } from "@/utils/ledgerEntries";
-import { applyCategoryOps, CategoryOp, MAX_BUDGET, MAX_CATEGORIES } from "@/utils/ledgerCategories";
+import {
+  applyCategoryOps,
+  CategoryOp,
+  DEFAULT_FIXED_IDS,
+  MAX_BUDGET,
+  MAX_CATEGORIES,
+} from "@/utils/ledgerCategories";
 
 /**
  * The budget helper: turns income, housing, utilities and a saving style into suggested
@@ -49,7 +55,7 @@ export const SAVING_STYLES: ReadonlyArray<SavingStyle> = [
 ];
 
 /** Category ids the plan fixes from the user's answers rather than allotting. */
-export const FIXED_IDS = ["housing", "utilities"] as const;
+export const FIXED_IDS = DEFAULT_FIXED_IDS;
 
 /** Relative shares of what's left after housing, utilities and savings. */
 const BASE_WEIGHTS: Record<string, number> = {

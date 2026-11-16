@@ -20,11 +20,85 @@ export const SECOND_PROJECTION_FROM_DAY = 16;
 
 const HOUR_MS = 3_600_000;
 
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
 export type BudgetCategory = {
   id: string;
   name?: string;
   archived?: boolean;
+  /** A fixed cost (rent, bills). Unset falls back to DEFAULT_FIXED_IDS. */
+  fixed?: boolean;
   budget?: { [currency: string]: number | undefined };
+};
+
+/** Default categories that are fixed costs unless a log says otherwise. */
+export const DEFAULT_FIXED_IDS: ReadonlyArray<string> = ["housing", "utilities"];
+
+/**
+ * Fixed costs count toward the budget like anything else, but they're paid in lumps
+ * (rent on the 1st), so pace and projections treat their budget as already committed
+ * rather than extrapolating from them. An explicit `fixed: false` overrides the default.
+ */
+export const isFixedCategory = (c: Pick<BudgetCategory, "id" | "fixed">): boolean =>
+  c.fixed ?? DEFAULT_FIXED_IDS.includes(c.id);
+
+export type BudgetPace = {
+  /** All budgeted categories. */
+  budget: number;
+  spent: number;
+  /** Budgeted flexible (non-fixed) categories only. */
+  flexibleBudget: number;
+  flexibleSpent: number;
+  /** End-of-month spend: fixed categories at the larger of budget and spent, the rest at pace. */
+  projected: number;
+  /** Flexible spending against the flexible budget's share for the days elapsed (1 = on pace). Null with no flexible budget. */
+  pace: number | null;
+};
+
+/**
+ * Pace and projection for one currency's budgets. Shared with the client's
+ * budgetSummary (src/utils/ledgerStats.ts), so the buddy, stats and alerts agree.
+ */
+export const budgetPace = ({
+  budgets,
+  isFixed,
+  spentIn,
+  elapsed,
+  days,
+}: {
+  /** Budgeted category id → monthly budget, in one currency. */
+  budgets: Iterable<[string, number]>;
+  isFixed: (categoryId: string) => boolean;
+  spentIn: (categoryId: string) => number;
+  /** Days elapsed, including today (at least 1). */
+  elapsed: number;
+  days: number;
+}): BudgetPace => {
+  let budget = 0;
+  let spent = 0;
+  let flexibleBudget = 0;
+  let flexibleSpent = 0;
+  let committed = 0;
+  for (const [id, amount] of budgets) {
+    const inCategory = spentIn(id);
+    budget += amount;
+    spent += inCategory;
+    if (isFixed(id)) {
+      committed += Math.max(amount, inCategory);
+    } else {
+      flexibleBudget += amount;
+      flexibleSpent += inCategory;
+    }
+  }
+  const e = Math.max(1, elapsed);
+  return {
+    budget: r2(budget),
+    spent: r2(spent),
+    flexibleBudget: r2(flexibleBudget),
+    flexibleSpent: r2(flexibleSpent),
+    projected: r2(committed + (flexibleSpent / e) * days),
+    pace: flexibleBudget > 0 ? r2(flexibleSpent) / (flexibleBudget * (e / days)) : null,
+  };
 };
 
 export type BudgetAlertType = "budget_approaching" | "budget_exceeded" | "budget_projected";
@@ -47,8 +121,6 @@ export type BudgetAlert = {
     categoryName?: string;
   };
 };
-
-const r2 = (n: number) => Math.round(n * 100) / 100;
 
 const utcMonth = (ms: number) => new Date(ms).toISOString().slice(0, 7);
 
@@ -139,27 +211,30 @@ export const budgetAlerts = ({
     });
   };
 
+  const fixed = new Set(categories.filter(isFixedCategory).map((c) => c.id));
+
   for (const [currency, budgets] of budgetsByCurrency(categories)) {
-    let total = 0;
-    let spent = 0;
     for (const [categoryId, budget] of budgets) {
-      const inCategory = byCategory[categoryId]?.[currency] ?? 0;
-      total += budget;
-      spent += inCategory;
       threshold(
-        inCategory,
+        byCategory[categoryId]?.[currency] ?? 0,
         budget,
         currency,
         categories.find((c) => c.id === categoryId),
       );
     }
-    total = r2(total);
-    spent = r2(spent);
+    const pace = budgetPace({
+      budgets,
+      isFixed: (id) => fixed.has(id),
+      spentIn: (id) => byCategory[id]?.[currency] ?? 0,
+      elapsed,
+      days,
+    });
+    const { budget: total, spent, projected } = pace;
     threshold(spent, total, currency);
 
-    // Pace: only while still under budget, and not in the first few days.
+    // Pace: only while still under budget, and not in the first few days. Fixed costs
+    // count at their budget, so rent paid on the 1st doesn't look like a spree.
     if (spent <= total && elapsed >= PROJECTION_FROM_DAY) {
-      const projected = r2((spent / elapsed) * days);
       if (projected > total) {
         const slot = elapsed >= SECOND_PROJECTION_FROM_DAY ? "2" : "1";
         alerts.push({
@@ -176,8 +251,8 @@ export const budgetAlerts = ({
 /**
  * How spending in budgeted categories compares with the budget's share for the days
  * elapsed so far: 1 is right on pace, under 1 is under it. The worst budgeted currency
- * counts. Null when nothing has a budget. Feeds the knick-knack find chance, so it's
- * never shown.
+ * counts. Fixed costs are left out (see isFixedCategory). Null when nothing flexible
+ * has a budget. Feeds the knick-knack find chance, so it's never shown.
  */
 export const budgetPaceRatio = ({
   categories,
@@ -190,18 +265,20 @@ export const budgetPaceRatio = ({
   month: string;
   now: number;
 }): number | null => {
-  const budgets = budgetsByCurrency(categories);
-  if (!budgets.size) return null;
-  const share = elapsedDays(month, now) / daysIn(month);
-  let worst = 0;
-  for (const [currency, byId] of budgets) {
-    let total = 0;
-    let spent = 0;
-    for (const [categoryId, budget] of byId) {
-      total += budget;
-      spent += byCategory[categoryId]?.[currency] ?? 0;
-    }
-    worst = Math.max(worst, r2(spent) / (total * share));
+  const fixed = new Set(categories.filter(isFixedCategory).map((c) => c.id));
+  const elapsed = elapsedDays(month, now);
+  const days = daysIn(month);
+  let worst: number | null = null;
+  for (const [currency, budgets] of budgetsByCurrency(categories)) {
+    // Fixed costs don't say anything about pace; currencies with only those are skipped.
+    const { pace } = budgetPace({
+      budgets,
+      isFixed: (id) => fixed.has(id),
+      spentIn: (id) => byCategory[id]?.[currency] ?? 0,
+      elapsed,
+      days,
+    });
+    if (pace !== null) worst = Math.max(worst ?? 0, pace);
   }
   return worst;
 };
