@@ -26,6 +26,10 @@ describe("isGiftable", () => {
     expect(isGiftable(find("acorn", 1, { source: "gift" }))).toBe(false);
   });
 
+  it("lets special knick-knacks be given", () => {
+    expect(isGiftable(find("mini_robot_charm", 1, { source: "special" }))).toBe(true);
+  });
+
   it("keeps coins with whoever earned them", () => {
     expect(isGiftable(find("copper_coin", 1, { source: "milestone" }))).toBe(false);
   });

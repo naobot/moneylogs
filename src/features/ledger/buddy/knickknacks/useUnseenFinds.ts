@@ -16,7 +16,7 @@ import { reportError } from "@/utils/reportError";
 /**
  * users/{userDocId}/knickknacks/{findId}: written by the server when the buddy finds
  * one, when a friend gifts one, or when the buddy hands over a coin (a milestone).
- * A missing `source` means found.
+ * "special" ones are granted by hand. A missing `source` means found.
  */
 export type KnickKnackFind = {
   id: string;
@@ -26,7 +26,7 @@ export type KnickKnackFind = {
   /** When it was first found (kept from the giver's find on gifts). */
   foundAt?: Timestamp | null;
   seenAt: Timestamp | null;
-  source?: "found" | "gift" | "milestone";
+  source?: "found" | "gift" | "milestone" | "special";
   /** Gifts only: the giver's user doc id, and when it was given. */
   giftedBy?: string | null;
   giftedAt?: Timestamp | null;
