@@ -15,17 +15,18 @@ import { reportError } from "@/utils/reportError";
 
 /**
  * users/{userDocId}/knickknacks/{findId}: written by the server when the buddy finds
- * one, or when a friend gifts one. A missing `source` means found.
+ * one, when a friend gifts one, or when the buddy hands over a coin (a milestone).
+ * A missing `source` means found.
  */
 export type KnickKnackFind = {
   id: string;
   item: KnickKnackId;
-  /** The log whose buddy found it; null on gifts. */
+  /** The log whose buddy found it (or handed it over); null on gifts. */
   ledgerId: string | null;
   /** When it was first found (kept from the giver's find on gifts). */
   foundAt?: Timestamp | null;
   seenAt: Timestamp | null;
-  source?: "found" | "gift";
+  source?: "found" | "gift" | "milestone";
   /** Gifts only: the giver's user doc id, and when it was given. */
   giftedBy?: string | null;
   giftedAt?: Timestamp | null;

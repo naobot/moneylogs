@@ -5,7 +5,7 @@ import {
   sortAchievementsByGroupEnd,
   mergeGroupAchievements,
 } from "@/hooks/useAchievements";
-import type { Achievement } from "@/hooks/useAchievements";
+import type { Achievement, CoinAchievement } from "@/hooks/useAchievements";
 import type { Group, LogPost } from "@/types/user";
 
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
@@ -391,6 +391,16 @@ describe("sortAchievementsByGroupEnd", () => {
     expect(sorted.map((a) => a.id)).toEqual(["b", "a"]);
   });
 
+  it("places coin achievements (no group) by when they were unlocked", () => {
+    const coin = {
+      id: "coin__silver_coin",
+      type: "silver_coin",
+      unlockedAt: { seconds: 9_999_999_999, toDate: () => new Date() },
+    } as CoinAchievement;
+    const sorted = sortAchievementsByGroupEnd([achievement("a", "jun", 100), coin], groups);
+    expect(sorted.map((a) => a.id)).toEqual(["coin__silver_coin", "a"]);
+  });
+
   it("does not mutate the input array", () => {
     const input = [achievement("a", "jan", 100), achievement("b", "jun", 100)];
     const before = input.map((a) => a.id);
@@ -439,6 +449,13 @@ describe("mergeGroupAchievements", () => {
   it("orders newly unlocked achievements alongside stored ones, not appended", () => {
     const merged = mergeGroupAchievements([ach("g1__z", "g1")], [ach("g1__a", "g1")], "g1");
     expect(merged.map((x) => x.id)).toEqual(["g1__a", "g1__z"]);
+  });
+
+  it("leaves out coin achievements", () => {
+    const coin = { id: "coin__copper_coin", type: "copper_coin" } as CoinAchievement;
+    expect(mergeGroupAchievements([coin, ach("g1__a", "g1")], [], "g1").map((x) => x.id)).toEqual([
+      "g1__a",
+    ]);
   });
 
   it("returns an empty array when the user holds nothing for the group", () => {

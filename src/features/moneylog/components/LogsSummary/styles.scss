@@ -366,6 +366,16 @@
       }
     }
 
+    // Coin achievements aren't links: no pointer, no hover inversion.
+    &--coin {
+      cursor: default;
+
+      &:hover {
+        background-color: transparent;
+        color: var(--ink);
+      }
+    }
+
     &__icon {
       display: inline-flex;
       align-items: center;

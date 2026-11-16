@@ -2,7 +2,7 @@
  * Pure rules for gifting knick-knacks, kept free of the SDK for root Vitest.
  * A gift moves the find: it leaves the giver's drawer and arrives wrapped (unseen) in
  * the friend's. Only finds the giver found themselves, and has already seen, can go:
- * gifts can't be passed on.
+ * gifts can't be passed on, and coins (source "milestone") stay with whoever earned them.
  */
 
 const DOC_ID = /^[A-Za-z0-9_-]{1,128}$/;
@@ -15,13 +15,15 @@ export const parseGiftRequest = (data: unknown): { findId: string; toUserDocId: 
   return { findId, toUserDocId };
 };
 
-export type GiftBlock = "missing" | "unseen" | "was_gift";
+export type GiftBlock = "missing" | "unseen" | "was_gift" | "milestone";
 
 /** Why a find can't be given, or null if it can. */
 export const giftBlock = (find: Record<string, unknown> | undefined): GiftBlock | null => {
   if (!find) return "missing";
   if (find.seenAt == null) return "unseen";
   if (find.source === "gift") return "was_gift";
+  // Coins are earned, not found: they stay with the person who earned them.
+  if (find.source === "milestone") return "milestone";
   return null;
 };
 

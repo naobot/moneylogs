@@ -8,8 +8,12 @@ import { hemisphereOf, Season, seasonOf } from "./seasons";
 
 export type KnickKnackId = keyof typeof ART;
 
-/** Rare items turn up less often than the others in season (weights live server-side). */
-export type Rarity = "common" | "rare";
+/**
+ * Rare items turn up less often than the others in season (weights live server-side).
+ * Milestone items (the coins) are never found by chance: the buddy hands them over for
+ * habits (functions/src/coins.ts).
+ */
+export type Rarity = "common" | "rare" | "milestone";
 
 export type KnickKnackInfo = {
   name: string;
@@ -116,6 +120,30 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "rare",
     seasons: ["summer"],
     found: "a dragonfly looped right past my nose and landed on the receipts ♪",
+  },
+  copper_coin: {
+    name: "copper coin",
+    rarity: "milestone",
+    seasons: [],
+    found: "a copper coin with a sprout growing out of it! our very first~ i'll water it every day",
+  },
+  silver_coin: {
+    name: "silver coin",
+    rarity: "milestone",
+    seasons: [],
+    found: "ten days in a row!! here, a silver coin. i polished it with my paw ♪",
+  },
+  gold_coin: {
+    name: "gold coin",
+    rarity: "milestone",
+    seasons: [],
+    found: "a whole month!! a real gold coin. i only bit it a little, to check~",
+  },
+  extra_shiny_gold_coin: {
+    name: "extra shiny gold coin",
+    rarity: "milestone",
+    seasons: [],
+    found: "one hundred days!!! the shiniest coin i've ever seen. *squints* ✦",
   },
 };
 

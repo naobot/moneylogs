@@ -9,6 +9,7 @@ import {
 import { BudgetCategory, isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
 import { maybeFindKnickKnack } from "./knickknackFind";
+import { recordCheckIn } from "./checkIn";
 
 /**
  * Keep ledgers/{ledgerId}/months/{YYYY-MM} in sync with its entries.
@@ -21,8 +22,9 @@ import { maybeFindKnickKnack } from "./knickknackFind";
  * For the current month it then sends any budget alerts that are newly due
  * (ledgerBudget.ts).
  *
- * A newly logged entry also gives its author the buddy's roll of the day for a
- * knick-knack (knickknackFind.ts).
+ * A newly logged entry also counts as its author's check-in for the day, which can earn
+ * a coin (checkIn.ts), and gives them the buddy's roll of the day for a knick-knack
+ * (knickknackFind.ts).
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -78,6 +80,16 @@ export const recomputeLedgerMonth = onDocumentWritten(
     // New entries only: editing or deleting one never earns a roll.
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
     if (!before && authorRef && typeof authorRef.id === "string") {
+      try {
+        await recordCheckIn({
+          db,
+          ledgerRef,
+          userRef: db.collection("users").doc(authorRef.id),
+          loggedEntry: true,
+        });
+      } catch (error) {
+        console.error(`recomputeLedgerMonth: check-in for ${ledgerId}:`, error);
+      }
       try {
         await maybeFindKnickKnack({
           db,
