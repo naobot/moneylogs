@@ -33,7 +33,6 @@ import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { useDateFormat } from "@/utils/dateFormat";
 import { MemberNamesContext, MemberProfilesContext } from "./LogPosts/memberNames";
-import { useProfiles } from "@/hooks/useProfiles";
 import type { PostFocus } from "./LogPosts/LogPosts";
 
 export const Group = ({
@@ -96,25 +95,23 @@ export const Group = ({
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false);
 
-  const {
-    users: members,
-    isLoading: isLoadingMembers,
-    userIdToDocRefMap,
-  } = useGetGroupUsers(groupId);
+  const { users: members, isLoading: isLoadingMembers } = useGetGroupUsers(groupId);
 
   const memberNames = useMemo(
     () => new Map(members.map((member) => [member.id, member.displayName])),
     [members],
   );
 
-  // Avatars come from the public profiles (users/ docs don't carry them for others).
-  const profiles = useProfiles(useMemo(() => members.map((member) => member.id), [members]));
+  // Members are public profiles, so their avatars come along.
   const memberProfiles = useMemo(
     () =>
       new Map(
-        [...profiles.values()].map((p) => [p.id, { displayName: p.displayName, avatar: p.avatar }]),
+        members.map((member) => [
+          member.id,
+          { displayName: member.displayName, avatar: member.avatar ?? null },
+        ]),
       ),
-    [profiles],
+    [members],
   );
 
   // Personal end: this user's posting window has closed
@@ -228,20 +225,11 @@ export const Group = ({
       // guard below keeps this to a single write, so it never returns.
       if (isSpectator) return;
       // Only track if we have all required data and user is viewing someone else's logs
-      if (!userIdToDocRefMap || userIdToDocRefMap.size === 0) return;
-      if (
-        !loggedInUser?.userId ||
-        !groupId ||
-        !displayUser?.userId ||
-        !memberIds.includes(displayUser?.id)
-      )
-        return;
-
-      const viewingUserDocRefId = userIdToDocRefMap.get(loggedInUser.userId);
-      const viewedUserDocRefId = userIdToDocRefMap.get(displayUser.userId);
-
-      if (!viewingUserDocRefId || !viewedUserDocRefId) {
-        console.error("User not found in map", { viewingUserDocRefId, viewedUserDocRefId });
+      if (!loggedInUser?.id || !groupId || !displayUser?.id) return;
+      // Both by user doc id; the viewer must be a member and so must the person viewed.
+      const viewingUserDocRefId = loggedInUser.id;
+      const viewedUserDocRefId = displayUser.id;
+      if (!memberIds.includes(viewingUserDocRefId) || !memberIds.includes(viewedUserDocRefId)) {
         return;
       }
 
@@ -280,12 +268,12 @@ export const Group = ({
     };
 
     updateViewTracking();
-    // `members` and `userIdToDocRefMap` belong here, not just the ids: useGetGroupUsers
-    // paints from a localStorage cache that omits `lastUpdated`, so an early run sees
-    // every member as "nothing new" and skips the write. Without these deps the effect
-    // never retries once the real snapshot lands, and the bell stays lit for a log the
-    // user already read. Both are identity-stable unless the member set really changed.
-  }, [displayUser?.userId, loggedInUser?.userId, groupId, members, userIdToDocRefMap]);
+    // `members` belongs here, not just the ids: useGetGroupUsers paints from a
+    // localStorage cache that omits `lastUpdated`, so an early run sees every member as
+    // "nothing new" and skips the write. Without this dep the effect never retries once
+    // the real snapshot lands, and the bell stays lit for a log the user already read.
+    // It's identity-stable unless the member set really changed.
+  }, [displayUser?.id, loggedInUser?.id, groupId, members]);
 
   const handleUserChange = (newUser?: unknown) => {
     if (newUser) {

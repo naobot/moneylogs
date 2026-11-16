@@ -30,10 +30,7 @@ import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 
 import cx from "classnames";
 
-type LogMember = FullUserData & {
-  lastUpdated?: Record<string, { seconds: number }>;
-  displayLocation?: string;
-};
+type LogMember = FullUserData;
 type SerializedMember = LogMember & { hasUnreadPosts: boolean };
 
 interface LogsMenuProps {

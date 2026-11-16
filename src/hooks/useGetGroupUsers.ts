@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { collection, query, where, onSnapshot, doc, DocumentSnapshot } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  DocumentSnapshot,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 
-// type UseGetGroupUsersParams = {
-//   userIds: string[] // Array of user document IDs
-// }
-
+/**
+ * A log member as other members see them: their public profile (profiles/{userDocId},
+ * mirrored from users/ by the mirrorProfile Cloud Function). users/ docs are private to
+ * their owner, so nothing here comes from them.
+ */
 export interface CacheableUserData {
   id: string;
-  userId: string;
   displayName: string;
-  email: string;
-  groups: string[];
-  timezone?: string;
+  displayLocation?: string | null;
+  timezone?: string | null;
+  avatar?: string[] | null;
   pinnedPosts?: {
     [logGroupId: string]: {
       [pinnedPost: string]: string;
@@ -21,9 +29,8 @@ export interface CacheableUserData {
 }
 
 interface RealtimeUserData {
-  viewTracking: Record<string, unknown>;
-  commentSubscriptions: Record<string, unknown>;
-  lastSeen?: Date;
+  /** logId → when they last posted there (drives the "new posts" bell). */
+  lastUpdated?: Record<string, Timestamp>;
 }
 
 export interface FullUserData extends CacheableUserData, RealtimeUserData {}
@@ -68,15 +75,6 @@ export const useGetGroupUsers = (groupId: string) => {
   const [users, setUsers] = useState<FullUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Create user ID to doc ref mapping (for your view tracking)
-  const userIdToDocRefMap = useMemo(() => {
-    const map = new Map<string, string>();
-    users.forEach((user) => {
-      map.set(user.userId || user.id, user.id); // Adjust based on your user object structure
-    });
-    return map;
-  }, [users]);
 
   useEffect(() => {
     // console.log(`getGroupUsers for ${groupId}`)
@@ -145,7 +143,7 @@ export const useGetGroupUsers = (groupId: string) => {
         let appliedSignature: string | null = null;
 
         chunks.forEach((chunk, chunkIndex) => {
-          const chunkQuery = query(collection(db, "users"), where("__name__", "in", chunk));
+          const chunkQuery = query(collection(db, "profiles"), where("__name__", "in", chunk));
 
           const unsubscribe = onSnapshot(chunkQuery, (snapshot) => {
             const chunkUsers: FullUserData[] = [];
@@ -187,12 +185,11 @@ export const useGetGroupUsers = (groupId: string) => {
             if (receivedChunks.size === chunks.length) {
               const cacheableData: CacheableUserData[] = allUsers.map((user) => ({
                 id: user.id,
-                userId: user.userId,
                 displayName: user.displayName,
-                email: user.email,
+                displayLocation: user.displayLocation,
                 timezone: user.timezone,
-                groups: user.groups,
-                // Only include stable fields, exclude viewTracking, etc.
+                avatar: user.avatar,
+                pinnedPosts: user.pinnedPosts,
               }));
 
               // Update cache with fresh stable data
@@ -218,28 +215,18 @@ export const useGetGroupUsers = (groupId: string) => {
 
   return {
     users,
-    userIdToDocRefMap,
     isLoading,
     error,
   };
 };
 
-// Real-time fields that change frequently but that the nav never reads off other
-// members (only off the current user, via context). Excluding them from the change
-// signature lets us ignore snapshots that only touched them.
-const CHURN_ONLY_FIELDS: Array<keyof RealtimeUserData> = [
-  "viewTracking",
-  "commentSubscriptions",
-  "lastSeen",
-];
-
-// A stable string over every member field except the churn-only ones, so two
-// snapshots that differ only in those fields compare equal and are skipped.
+// A string over every member field except the profile's own write stamp, so a
+// snapshot that changes nothing members show is skipped.
 const stableMemberSignature = (users: FullUserData[]): string =>
   JSON.stringify(
     users.map((user) => {
       const stable: Record<string, unknown> = { ...user };
-      for (const field of CHURN_ONLY_FIELDS) delete stable[field];
+      delete stable.updatedAt;
       return stable;
     }),
   );

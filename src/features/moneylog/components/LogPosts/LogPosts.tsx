@@ -599,10 +599,12 @@ const LogPosts = memo(
       }
     }, [isCreateNewEntry, postEditorRef]);
 
+    // Reset when switching to another member's log (by user doc id: other members'
+    // auth uids aren't readable).
     useEffect(() => {
       setSelectedPost(null);
       setShouldForceFresh(false);
-    }, [userId]);
+    }, [user?.id]);
 
     useEffect(() => {
       if (!selectedPost) {

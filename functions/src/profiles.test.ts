@@ -3,6 +3,7 @@ import { publicProfile, sameProfile, sanitizeAvatar } from "./profiles";
 import { normaliseAvatar } from "../../src/utils/avatar";
 
 const blankRow = ".".repeat(30);
+const at = (ms: number) => ({ toMillis: () => ms });
 const inked = ["#".padEnd(30, "."), ...Array(29).fill(blankRow)];
 
 describe("sanitizeAvatar", () => {
@@ -33,6 +34,7 @@ describe("sanitizeAvatar", () => {
 
 describe("publicProfile", () => {
   it("projects only public fields", () => {
+    const posted = at(5);
     const profile = publicProfile({
       displayName: " Mina ",
       displayLocation: "Kyoto",
@@ -40,12 +42,17 @@ describe("publicProfile", () => {
       email: "mina@example.com",
       avatar: inked,
       viewTracking: {},
+      pinnedPosts: { g1: { pinnedPost: "p1" }, g2: "junk" },
+      lastUpdated: { g1: posted, g2: "junk" },
+      commentSubscriptions: { p1: {} },
     });
     expect(profile).toEqual({
       displayName: "Mina",
       displayLocation: "Kyoto",
       timezone: "Asia/Tokyo",
       avatar: inked,
+      pinnedPosts: { g1: { pinnedPost: "p1" } },
+      lastUpdated: { g1: posted },
     });
   });
 
@@ -55,6 +62,8 @@ describe("publicProfile", () => {
       displayLocation: null,
       timezone: null,
       avatar: null,
+      pinnedPosts: {},
+      lastUpdated: {},
     });
   });
 });
@@ -66,5 +75,18 @@ describe("sameProfile", () => {
     expect(sameProfile(a, b)).toBe(true);
     expect(sameProfile(a, publicProfile({ displayName: "Mina" }))).toBe(false);
     expect(sameProfile(a, publicProfile({ displayName: "Mia", avatar: inked }))).toBe(false);
+  });
+
+  it("catches new posts and pins", () => {
+    const base = { displayName: "Mina", lastUpdated: { g1: at(1) } };
+    const a = publicProfile(base);
+    expect(sameProfile(a, publicProfile({ ...base, lastUpdated: { g1: at(1) } }))).toBe(true);
+    expect(sameProfile(a, publicProfile({ ...base, lastUpdated: { g1: at(2) } }))).toBe(false);
+    expect(sameProfile(a, publicProfile({ ...base, lastUpdated: { g1: at(1), g2: at(1) } }))).toBe(
+      false,
+    );
+    expect(
+      sameProfile(a, publicProfile({ ...base, pinnedPosts: { g1: { pinnedPost: "p" } } })),
+    ).toBe(false);
   });
 });

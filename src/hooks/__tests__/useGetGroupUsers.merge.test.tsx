@@ -156,17 +156,17 @@ describe("useGetGroupUsers chunk merge", () => {
     expect(latestUsers.map((u) => u.id).sort()).toEqual([...MEMBER_IDS].sort());
   });
 
-  it("ignores snapshots that only change churny fields, but reflects real changes", () => {
+  it("ignores snapshots that only restamp the profile, but reflects real changes", () => {
     mount();
     deliverMembers(["m0", "m1"]);
     const chunk = chunkListeners[0];
 
-    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ viewTracking: { g: 1 } }))));
+    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ updatedAt: 1 }))));
     const usersAfterFirst = latestUsers;
     const rendersAfterFirst = renderCount;
 
-    // Same profile data, only viewTracking differs — no re-render, same array
-    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ viewTracking: { g: 2 } }))));
+    // Same profile data, only the write stamp differs — no re-render, same array
+    act(() => chunk.cb(makeSnapshot(["m0", "m1"], () => ({ updatedAt: 2 }))));
     expect(latestUsers).toBe(usersAfterFirst);
     expect(renderCount).toBe(rendersAfterFirst);
 
@@ -174,7 +174,7 @@ describe("useGetGroupUsers chunk merge", () => {
     act(() =>
       chunk.cb(
         makeSnapshot(["m0", "m1"], (id) => ({
-          viewTracking: { g: 2 },
+          updatedAt: 3,
           displayName: id === "m0" ? "Renamed" : id,
         })),
       ),

@@ -894,7 +894,9 @@ async function createGroups() {
     }
     console.log(`✅ ${group.title}`);
   }
+  // User docs are private to their owner, so each member writes their own list.
   for (const [member, groups] of groupsOf) {
+    await signInAs(member);
     await updateDoc(userRef(member), { groups });
   }
   return ids;
@@ -1012,6 +1014,7 @@ async function personaliseAlice(
   postIds: Record<string, string>,
   ledgerIds: Record<string, string>,
 ) {
+  await signInAs("alice");
   await updateDoc(userRef("alice"), {
     [`logLastViewedAt.${groupIds.roommates}`]: Timestamp.fromDate(daysAgo(3)),
     [`logLastViewedAt.${ledgerIds.home}`]: Timestamp.fromDate(daysAgo(5)),
