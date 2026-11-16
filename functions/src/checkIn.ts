@@ -35,7 +35,7 @@ export const recordCheckIn = async ({
     if (!next && !due.length) return [];
 
     tx.set(markerRef, { ...next, coins: [...given, ...due] }, { merge: true });
-    for (const item of due) writeMilestone(tx, userRef, item, ledgerRef.id);
+    for (const item of due) writeMilestone(tx, user, item, ledgerRef.id);
     return due;
   });
 

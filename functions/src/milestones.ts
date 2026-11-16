@@ -21,6 +21,9 @@ export const FIRST_FRIEND = "friendship_bracelet" satisfies KnickKnackId;
  */
 export const milestoneAchievementId = (item: string) => `milestone__${item}`;
 
+/** users/{id}/notifications/{id} for a milestone: one per item, like its achievement. */
+export const milestoneNotificationId = (item: string) => `milestone_${item}`;
+
 /** A comment earns the paper crane only on someone else's entry. */
 export const isCommentOnOthers = (commenterId: unknown, postAuthorId: unknown): boolean =>
   typeof commenterId === "string" &&

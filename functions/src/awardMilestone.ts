@@ -1,18 +1,22 @@
-import { DocumentReference, FieldValue, Firestore, Transaction } from "firebase-admin/firestore";
-import { milestoneAchievementId } from "./milestones";
+import { DocumentSnapshot, FieldValue, Firestore, Transaction } from "firebase-admin/firestore";
+import { milestoneAchievementId, milestoneNotificationId } from "./milestones";
+import { isNotificationEnabled } from "./notificationPrefs";
 
 /**
  * Write a milestone knick-knack (source "milestone", so the buddy reveals it and it
- * can't be gifted) and its achievement, inside a transaction the caller has finished
- * reading in.
+ * can't be gifted), its achievement and, unless they've switched it off, a notification,
+ * inside a transaction the caller has finished reading in. `user` is the person's user
+ * doc, read in that transaction.
  */
 export const writeMilestone = (
   tx: Transaction,
-  userRef: DocumentReference,
+  user: DocumentSnapshot,
   item: string,
   ledgerId: string | null,
 ) => {
-  tx.create(userRef.collection("knickknacks").doc(), {
+  const userRef = user.ref;
+  const findRef = userRef.collection("knickknacks").doc();
+  tx.create(findRef, {
     item,
     ledgerId,
     foundAt: FieldValue.serverTimestamp(),
@@ -24,6 +28,17 @@ export const writeMilestone = (
     ...(ledgerId ? { ledgerId } : {}),
     unlockedAt: FieldValue.serverTimestamp(),
   });
+  // What the knick-knack is stays a surprise for the buddy to reveal: the notification
+  // names the achievement only.
+  if (isNotificationEnabled(user.data(), "milestone_earned")) {
+    tx.set(userRef.collection("notifications").doc(milestoneNotificationId(item)), {
+      type: "milestone_earned",
+      item,
+      findId: findRef.id,
+      createdAt: FieldValue.serverTimestamp(),
+      readAt: null,
+    });
+  }
 };
 
 /**
@@ -46,7 +61,7 @@ export const awardMilestoneOnce = async ({
   return db.runTransaction(async (tx) => {
     const [user, held] = await Promise.all([tx.get(userRef), tx.get(achievementRef)]);
     if (!user.exists || held.exists) return false;
-    writeMilestone(tx, userRef, item, (user.get("personalLedgerId") as string | undefined) ?? null);
+    writeMilestone(tx, user, item, (user.get("personalLedgerId") as string | undefined) ?? null);
     return true;
   });
 };

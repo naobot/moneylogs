@@ -124,6 +124,24 @@ describe("describeNotification", () => {
     ).toBe("on track to go over your CAD budget in Household this month");
   });
 
+  it("names the achievement for a milestone, keeping the knick-knack a surprise", () => {
+    const n = {
+      id: "milestone_heart_leaf",
+      type: "milestone_earned",
+      item: "heart_leaf",
+      findId: "f1",
+      createdAt: at("2026-11-10T11:00:00Z"),
+      readAt: null,
+    } as AppNotification;
+    expect(describeNotification(n, NOW)).toEqual(["achievement unlocked: ", { keep: "Off We Go" }]);
+    expect(notificationText(n, NOW)).not.toContain("leaf");
+    expect(notificationDetail(n)).toBe("the budget buddy has something for you");
+    expect(notificationHref(n)).toBe("/#knickknacks");
+    expect(notificationText({ ...n, item: "from_the_future" } as AppNotification, NOW)).toBe(
+      "achievement unlocked: something new",
+    );
+  });
+
   it("falls back to a generic line for a type this build doesn't know", () => {
     const unknown = { ...base, type: "from_the_future" } as unknown as AppNotification;
     expect(notificationText(unknown)).toBe("something happened in Tokyo Trip");
