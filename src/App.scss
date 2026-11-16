@@ -1368,8 +1368,12 @@ h6,
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
-    // Room left of each bubble's tail for the commenter's mini avatar.
+    // Room left of each bubble's tail for the commenter's avatar (bigger on xl).
     margin: 0 0 0 40px;
+
+    @media (min-width: constants.$breakpoint-xl) {
+      margin-left: 55px;
+    }
     padding: 0 0 10px 0;
     min-width: 0;
 
@@ -1539,6 +1543,25 @@ h6,
       left: -33px;
       display: flex;
       color: var(--ink);
+
+      // Mini (15px) by default; the full 30px avatar on the widest screens, where
+      // there's room. Nothing in between: other scales would blur the pixels.
+      .Avatar--30 {
+        display: none;
+      }
+
+      @media (min-width: constants.$breakpoint-xl) {
+        top: calc(var(--comment-tail-top) - 20px);
+        left: -48px;
+
+        .Avatar--15 {
+          display: none;
+        }
+
+        .Avatar--30 {
+          display: inline-block;
+        }
+      }
 
       // Shown exactly where the bubble's tail is (min-width: md), so one avatar shows
       // at every width.

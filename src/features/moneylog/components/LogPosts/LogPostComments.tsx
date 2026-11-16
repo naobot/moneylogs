@@ -12,6 +12,9 @@ import Button from "@/components/Button";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 
+/** The speaking avatar: mini by default, full 30px on the widest screens (App.scss). */
+const SPEAKER_SIZES = [15, 30] as const;
+
 type LogPostCommentsProps = {
   currentLogAuthorId: string;
   postId: string;
@@ -157,7 +160,7 @@ const LogPostComments = ({
                   <MemberAvatarLink
                     userDocId={comment.authorId?.id}
                     name={comment.authorName}
-                    size={15}
+                    size={SPEAKER_SIZES}
                   />
                 </div>
                 <div className="LogPostComments__item__container">
