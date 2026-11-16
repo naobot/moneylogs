@@ -35,3 +35,5 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MONEYLOGS_89EBF }}
           projectId: moneylogs-89ebf
+          # Previews are cleaned up 3 days after a PR's last deploy (default is 7d).
+          expires: 3d
