@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
 import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
-
-const AWAY = 4 * 60 * 60 * 1000;
+import { AWAY_MS as AWAY, useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -17,6 +15,8 @@ const Probe = () => {
 let servedBuildId = "old";
 let now = 1_000;
 let hidden = false;
+let reload: ReturnType<typeof vi.fn>;
+const originalLocation = window.location;
 
 const setHidden = (value: boolean) => {
   hidden = value;
@@ -40,6 +40,12 @@ describe("useAppVersionRefresh wiring", () => {
       json: async () => ({ buildId: servedBuildId }),
     })) as unknown as typeof fetch;
 
+    reload = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload },
+    });
+
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -50,6 +56,7 @@ describe("useAppVersionRefresh wiring", () => {
     container.remove();
     vi.restoreAllMocks();
     delete (document as unknown as { hidden?: boolean }).hidden;
+    Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
   });
 
   const mount = async () => {
@@ -59,32 +66,53 @@ describe("useAppVersionRefresh wiring", () => {
     await act(async () => {}); // flush the boot version fetch
   };
 
-  it("prompts after returning past the away threshold to a new build", async () => {
-    await mount();
+  // Focus a text field, as a browser restores focus to it when the tab returns.
+  const focusField = () => {
+    const input = document.createElement("input");
+    container.appendChild(input);
+    input.focus();
+  };
 
-    await act(async () => setHidden(true)); // tab hidden at now=1000
-    now += AWAY + 1; // ...return 4h+ later
-    servedBuildId = "new"; // ...to a new deploy
-    await act(async () => setHidden(false));
-    await act(async () => {}); // flush the version re-fetch
-
-    expect(latest.updateAvailable).toBe(true);
-  });
-
-  it("does not prompt when returning too soon", async () => {
+  it("reloads after returning past the away threshold", async () => {
     await mount();
 
     await act(async () => setHidden(true));
-    now += AWAY - 1_000; // just under the threshold
+    now += AWAY;
+    await act(async () => setHidden(false));
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reload when returning too soon", async () => {
+    await mount();
+
+    await act(async () => setHidden(true));
+    now += AWAY - 1_000;
     servedBuildId = "new";
     await act(async () => setHidden(false));
     await act(async () => {});
 
+    expect(reload).not.toHaveBeenCalled();
     expect(latest.updateAvailable).toBe(false);
   });
 
-  it("does not prompt when the build is unchanged", async () => {
+  it("prompts instead of reloading when mid-edit and a new build is deployed", async () => {
     await mount();
+    focusField();
+
+    await act(async () => setHidden(true)); // tab hidden at now=1000
+    now += AWAY + 1; // ...return 3h+ later
+    servedBuildId = "new"; // ...to a new deploy
+    await act(async () => setHidden(false));
+    await act(async () => {}); // flush the version re-fetch
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(latest.updateAvailable).toBe(true);
+  });
+
+  it("neither reloads nor prompts when mid-edit and the build is unchanged", async () => {
+    await mount();
+    focusField();
 
     await act(async () => setHidden(true));
     now += AWAY + 1;
@@ -92,6 +120,7 @@ describe("useAppVersionRefresh wiring", () => {
     await act(async () => setHidden(false));
     await act(async () => {});
 
+    expect(reload).not.toHaveBeenCalled();
     expect(latest.updateAvailable).toBe(false);
   });
 });

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// How long the tab must have been hidden before a return checks for a new deploy.
-// Tune here (4 hours). Kept generous so a brief step-away never prompts.
-const AWAY_MS = 4 * 60 * 60 * 1000;
+// How long the tab must have been hidden before a return reloads the app (or, when
+// the person is mid-edit, checks for a new deploy instead). Tune here (3 hours).
+export const AWAY_MS = 3 * 60 * 60 * 1000;
 
 const VERSION_URL = "/version.json";
 
@@ -26,6 +26,48 @@ export const shouldPromptUpdate = ({
   return fetchedBuildId !== bootBuildId;
 };
 
+export type ReturnAction = "none" | "reload" | "check";
+
+// Pure decision for a tab becoming visible again. A long-hidden tab reloads so it
+// comes back with fresh data and the latest build. If a field still holds focus
+// (browsers restore it on return) the person may have unsaved input, so we only
+// check for a new build and let the banner offer the refresh.
+export const decideReturnAction = ({
+  hiddenMs,
+  isEditing,
+  awayMs = AWAY_MS,
+}: {
+  hiddenMs: number;
+  isEditing: boolean;
+  awayMs?: number;
+}): ReturnAction => {
+  if (hiddenMs < awayMs) return "none";
+  return isEditing ? "check" : "reload";
+};
+
+const NON_TEXT_INPUTS = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "hidden",
+  "image",
+  "radio",
+  "range",
+  "reset",
+  "submit",
+]);
+
+// True when focus sits in somewhere the person types (input, textarea, editable).
+export const isEditableElement = (el: Element | null): boolean => {
+  if (!el) return false;
+  if (el instanceof HTMLTextAreaElement) return !el.readOnly && !el.disabled;
+  if (el instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUTS.has(el.type) && !el.readOnly && !el.disabled;
+  }
+  return el instanceof HTMLElement && el.isContentEditable === true;
+};
+
 const fetchBuildId = async (): Promise<string | null> => {
   try {
     const res = await fetch(`${VERSION_URL}?ts=${Date.now()}`, { cache: "no-store" });
@@ -38,8 +80,9 @@ const fetchBuildId = async (): Promise<string | null> => {
 };
 
 /**
- * Surfaces a prompt when the user returns to a long-hidden tab (>= AWAY_MS) and a
- * newer app build has been deployed. Never reloads on its own — the UI decides.
+ * When the user returns to a tab hidden for >= AWAY_MS, reloads the app. If they
+ * were mid-edit, it doesn't reload; instead it surfaces a prompt when a newer build
+ * has been deployed, and the UI decides.
  */
 export const useAppVersionRefresh = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -63,7 +106,16 @@ export const useAppVersionRefresh = () => {
 
       const hiddenMs = hiddenAt.current ? Date.now() - hiddenAt.current : 0;
       hiddenAt.current = null;
-      if (!bootBuildId.current || hiddenMs < AWAY_MS) return;
+
+      const action = decideReturnAction({
+        hiddenMs,
+        isEditing: isEditableElement(document.activeElement),
+      });
+      if (action === "reload") {
+        window.location.reload();
+        return;
+      }
+      if (action !== "check" || !bootBuildId.current) return;
 
       void fetchBuildId().then((fetchedBuildId) => {
         if (cancelled) return;
