@@ -3,6 +3,7 @@ import { collection, documentId, query, where } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { LedgerMonth } from "@/types/ledger";
 import { useFirebaseCollection } from "./useFirebase";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Live monthly summaries (written by the recomputeLedgerMonth function) for an inclusive
@@ -33,7 +34,8 @@ export const useLedgerMonths = ({
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load monthly summaries:", result.error);
+    if (result.isError)
+      reportError(result.error, { feature: "ledger", action: "load_month_summaries" });
   }, [result.isError, result.error]);
 
   const byMonth: Record<string, LedgerMonth> = {};

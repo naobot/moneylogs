@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { CurrencyAmounts } from "@/types/ledger";
+import { reportError } from "@/utils/reportError";
 
 /**
  * One month's totals for several ledgers, from their derived month summaries: one small
@@ -26,7 +27,12 @@ export const useLedgerMonthTotals = (ledgerIds: ReadonlyArray<string>, month: st
           // A ledger that was just deleted can still be in the list for a moment; its
           // summaries are then unreadable (rules look up the ledger). Not an error.
           if ((err as { code?: string })?.code !== "permission-denied") {
-            console.error(`Failed to load ${month} totals for ledger ${id}:`, err);
+            reportError(err, {
+              feature: "dashboard",
+              action: "load_month_totals",
+              level: "warning",
+              extra: { month },
+            });
           }
           return [id, null] as const;
         }

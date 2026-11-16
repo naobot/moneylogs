@@ -1,5 +1,6 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
+import { reportError } from "@/utils/reportError";
 
 const rollQuietDayCallable = httpsCallable<{ ledgerId: string }, { ok: boolean }>(
   functions,
@@ -44,6 +45,6 @@ export const requestQuietDayRoll = ({
   if (askedToday(userDocId, today)) return;
   markAsked(userDocId, today);
   rollQuietDayCallable({ ledgerId }).catch((error) =>
-    console.error("The buddy's quiet-day roll failed:", error),
+    reportError(error, { feature: "budget_buddy", action: "roll_quiet_day", level: "warning" }),
   );
 };

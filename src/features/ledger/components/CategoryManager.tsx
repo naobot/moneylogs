@@ -44,6 +44,7 @@ import { BudgetField } from "./BudgetManager";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import { reportError } from "@/utils/reportError";
 
 type CategoryManagerProps = {
   isOpen: boolean;
@@ -159,7 +160,7 @@ const CategoryManagerDialog = ({
       push({ type: "delete", id });
       setDeleteState({ status: "idle" });
     } catch (err) {
-      console.error("Failed to check category usage:", err);
+      reportError(err, { feature: "ledger", action: "check_category_in_use" });
       setDeleteState({ status: "failed", id });
     }
   };
@@ -169,7 +170,11 @@ const CategoryManagerDialog = ({
       await onSave([...ops, ...budgetOps]);
       onClose();
     } catch (err) {
-      console.error("Failed to save categories:", err);
+      reportError(err, {
+        feature: "ledger",
+        action: "save_categories",
+        extra: { opTypes: [...ops, ...budgetOps].map((op) => op.type) },
+      });
       setSaveFailed(true);
     }
   };

@@ -23,6 +23,7 @@ import {
 import { useMemberNames } from "./memberNames";
 
 import "./PostReactions.scss";
+import { reportError } from "@/utils/reportError";
 
 const EmojiPickerPanel = lazy(() => import("./EmojiPickerPanel"));
 
@@ -84,7 +85,10 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
       await toggleReactionFn({ logPostId: post.id, userDocId: viewerId, emoji, add });
       if (add) trackUserAction("new_reaction");
     } catch (error) {
-      console.error("Error toggling reaction:", error);
+      reportError(error, {
+        feature: "reactions",
+        action: add ? "add_reaction" : "remove_reaction",
+      });
       showToast("Couldn't save your reaction. Try again?", "error");
     }
   };

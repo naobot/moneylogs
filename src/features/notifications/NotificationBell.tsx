@@ -12,6 +12,7 @@ import { unreadBadge } from "@/utils/notificationTypes";
 import { NotificationItem } from "./NotificationItem";
 
 import "./notifications.scss";
+import { reportError } from "@/utils/reportError";
 
 /** How many the hover pop-up lists before "see all". */
 export const POPUP_LIMIT = 6;
@@ -53,7 +54,7 @@ export const NotificationBell = () => {
     setOpen(false);
     if (userDocId) {
       markNotificationRead(userDocId, n).catch((error) =>
-        console.error("Failed to mark notification read:", error),
+        reportError(error, { feature: "notifications", action: "mark_read", level: "warning" }),
       );
     }
   };

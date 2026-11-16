@@ -17,6 +17,7 @@ import {
   CategoryOp,
   preferredBudgetCurrency,
 } from "@/utils/ledgerCategories";
+import { reportError } from "@/utils/reportError";
 
 type BudgetManagerProps = {
   isOpen: boolean;
@@ -102,7 +103,11 @@ const BudgetManagerDialog = ({
       await onSave(ops);
       onClose();
     } catch (err) {
-      console.error("Failed to save budgets:", err);
+      reportError(err, {
+        feature: "ledger",
+        action: "save_budgets",
+        extra: { opCount: ops.length },
+      });
       setSaveFailed(true);
     }
   };

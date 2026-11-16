@@ -9,6 +9,7 @@ import { writeSelfNotification } from "@/hooks/useNotifications";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import { reportError } from "@/utils/reportError";
 
 /**
  * Non-members can't read a financial log (security rules), so the invite screen can't
@@ -54,7 +55,7 @@ export const LedgerInvitePage = () => {
         void navigate(`/l/${ledgerId}`, { replace: true });
       }
     } catch (error) {
-      console.error("Failed to join financial log:", error);
+      reportError(error, { feature: "ledger", action: "join_ledger" });
       setJoinFailed(true);
     }
   };

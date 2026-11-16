@@ -11,6 +11,7 @@ import {
 import { db } from "@/config/firebase-config";
 import { useFirebaseCollection } from "@/hooks/useFirebase";
 import { KNICK_KNACKS, KnickKnackId } from "./catalog";
+import { reportError } from "@/utils/reportError";
 
 /**
  * users/{userDocId}/knickknacks/{findId}: written by the server when the buddy finds
@@ -48,7 +49,7 @@ export const useUnseenFind = (userDocId?: string): KnickKnackFind | null => {
   });
 
   useEffect(() => {
-    if (isError) console.error("Failed to load the buddy's finds:", error);
+    if (isError) reportError(error, { feature: "budget_buddy", action: "load_unseen_finds" });
   }, [isError, error]);
 
   // Gifts are unwrapped in the drawer, not revealed by the buddy.
@@ -67,7 +68,9 @@ export const useKnickKnackFinds = (userDocId?: string) => {
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load the knick-knack drawer:", result.error);
+    if (result.isError) {
+      reportError(result.error, { feature: "budget_buddy", action: "load_knickknack_drawer" });
+    }
   }, [result.isError, result.error]);
 
   return result;
@@ -89,7 +92,9 @@ export const usePublicFinds = (userDocId?: string) => {
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load the knick-knack shelf:", result.error);
+    if (result.isError) {
+      reportError(result.error, { feature: "budget_buddy", action: "load_knickknack_shelf" });
+    }
   }, [result.isError, result.error]);
 
   return result;

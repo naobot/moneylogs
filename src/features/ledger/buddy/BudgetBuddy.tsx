@@ -20,6 +20,7 @@ import { requestQuietDayRoll } from "./knickknacks/quietDay";
 import { markFindSeen, useUnseenFind } from "./knickknacks/useUnseenFinds";
 
 import "./BudgetBuddy.scss";
+import { reportError } from "@/utils/reportError";
 
 /** Cheerful faces for the evening check-in. */
 const CHECK_IN_FACES: Record<CheckIn, readonly string[]> = {
@@ -163,7 +164,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
       });
       // The "!" goes once the live query hears back; the bubble stays open meanwhile.
       markFindSeen(user.id, find.id).catch((error) =>
-        console.error("Failed to mark the buddy's find seen:", error),
+        reportError(error, { feature: "budget_buddy", action: "mark_find_seen", level: "warning" }),
       );
       return;
     }

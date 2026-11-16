@@ -21,6 +21,7 @@ import {
   LATEST_NOTIFICATIONS_LIMIT,
 } from "@/utils/notificationTypes";
 import { useFirebaseCollection } from "./useFirebase";
+import { reportError } from "@/utils/reportError";
 
 const notificationsOf = (userDocId: string) => collection(db, "users", userDocId, "notifications");
 
@@ -49,7 +50,8 @@ export const useLatestNotifications = (userDocId: string | undefined) => {
   });
 
   useEffect(() => {
-    if (result.isError) console.error("Failed to load notifications:", result.error);
+    if (result.isError)
+      reportError(result.error, { feature: "notifications", action: "load_latest" });
   }, [result.isError, result.error]);
 
   const items = userDocId ? result.data : [];
@@ -204,6 +206,13 @@ export const writeSelfNotification = async (args: {
       { ...buildSelfNotification(args), createdAt: serverTimestamp(), readAt: null },
     );
   } catch (error) {
-    console.warn(`Skipped ${args.type} notification:`, error);
+    // Rejoining a log: the rules reject overwriting the existing notification. Expected.
+    if ((error as { code?: string })?.code === "permission-denied") return;
+    reportError(error, {
+      feature: "notifications",
+      action: "write_self_notification",
+      level: "warning",
+      tags: { type: args.type },
+    });
   }
 };
