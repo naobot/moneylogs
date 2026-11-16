@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vite-plus/test";
 import { GLYPH_HEIGHT, GLYPH_WIDTH, PIXEL_GLYPHS } from "../pixelFont";
-import { AVATAR_SIZE, avatarInitial, initialAvatarGrid, normaliseAvatar } from "../avatar";
+import {
+  AVATAR_SIZE,
+  avatarInitial,
+  initialAvatarGrid,
+  miniAvatar,
+  normaliseAvatar,
+} from "../avatar";
 import { PRESET_AVATARS } from "@/features/account/avatar/presets";
 
 describe("pixel font", () => {
@@ -38,9 +44,9 @@ describe("initialAvatarGrid", () => {
 
   it("scales the glyph 2× and centres it horizontally", () => {
     const grid = initialAvatarGrid("l")!;
-    // "l" row 0 is ".##..": at 2× from x=10 that's x 12-15 on rows 7-8.
-    expect(grid[7].slice(10, 20)).toBe("..####....");
+    // "l" row 0 is ".##..": at 2× from x=10 that's x 12-15 on rows 8-9.
     expect(grid[8].slice(10, 20)).toBe("..####....");
+    expect(grid[9].slice(10, 20)).toBe("..####....");
   });
 
   it("uses the base letter for accents and ? for no name", () => {
@@ -60,5 +66,26 @@ describe("premade avatars", () => {
       expect(normaliseAvatar([...preset.grid]), preset.id).not.toBeNull();
     }
     expect(new Set(PRESET_AVATARS.map((p) => p.grid.join(""))).size).toBe(PRESET_AVATARS.length);
+  });
+});
+
+describe("miniAvatar", () => {
+  it("shrinks to 15×15, keeping 1-pixel lines", () => {
+    const grid = Array.from({ length: AVATAR_SIZE }, (_, y) =>
+      y === 7 ? "#".repeat(AVATAR_SIZE) : ".".repeat(AVATAR_SIZE),
+    );
+    const mini = miniAvatar(grid);
+    expect(mini).toHaveLength(15);
+    expect(mini.every((row) => row.length === 15)).toBe(true);
+    expect(mini[3]).toBe("#".repeat(15));
+    expect(mini.filter((row) => row.includes("#"))).toHaveLength(1);
+  });
+
+  it("shrinks an initial to its 1× glyph in a 1-pixel frame", () => {
+    const mini = miniAvatar(initialAvatarGrid("l")!);
+    expect(mini[0]).toBe("#".repeat(15));
+    expect(mini[14]).toBe("#".repeat(15));
+    // Glyph rows land 1:1 from row 4, columns 5-9.
+    expect(PIXEL_GLYPHS.l.map((_, i) => mini[4 + i].slice(5, 10))).toEqual([...PIXEL_GLYPHS.l]);
   });
 });

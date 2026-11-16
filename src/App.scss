@@ -1368,7 +1368,12 @@ h6,
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
-    margin: 0 0 0 20px;
+    // Room left of each bubble's tail for the commenter's avatar (bigger on xl).
+    margin: 0 0 0 40px;
+
+    @media (min-width: constants.$breakpoint-xl) {
+      margin-left: 55px;
+    }
     padding: 0 0 10px 0;
     min-width: 0;
 
@@ -1391,6 +1396,10 @@ h6,
   }
 
   &__item {
+    // The tail sits a fixed distance from the top (it used to be 22% down) so the
+    // speaker's avatar can sit right beside it however tall the bubble is.
+    --comment-tail-top: 20px;
+
     position: relative;
     background: var(--paper);
     border-radius: var(--radius-bubble); // sanctioned: speech balloon
@@ -1457,7 +1466,7 @@ h6,
           border-style: solid;
           border-width: 0 12px 12px 0;
           border-color: transparent var(--ink) transparent transparent !important;
-          top: 22%;
+          top: var(--comment-tail-top);
           left: -10px;
           margin-top: -10px;
         }
@@ -1469,7 +1478,7 @@ h6,
           border-style: solid;
           border-width: 0 13px 13px 0;
           border-color: transparent var(--ink) transparent transparent !important;
-          top: 22%;
+          top: var(--comment-tail-top);
           left: -12px;
           margin-top: -11px;
           display: block;
@@ -1492,7 +1501,7 @@ h6,
         border-style: solid;
         border-width: 0 12px 12px 0;
         border-color: transparent var(--paper) transparent transparent;
-        top: 22%;
+        top: var(--comment-tail-top);
         left: -10px;
         margin-top: -10px;
       }
@@ -1504,7 +1513,7 @@ h6,
         border-style: solid;
         border-width: 0 13px 13px 0;
         border-color: transparent var(--ink) transparent transparent;
-        top: 22%;
+        top: var(--comment-tail-top);
         left: -12px;
         margin-top: -11px;
         display: block;
@@ -1524,6 +1533,41 @@ h6,
       flex-direction: column;
       flex-grow: 1;
       min-width: 0;
+    }
+
+    // The commenter's mini avatar, just left of the tail, "speaking" the bubble.
+    // Wide screens only; small screens show it beside the name.
+    > .LogPostComments__speaker {
+      position: absolute;
+      top: calc(var(--comment-tail-top) - 12px);
+      left: -33px;
+      display: flex;
+      color: var(--ink);
+
+      // Mini (15px) by default; the full 30px avatar on the widest screens, where
+      // there's room. Nothing in between: other scales would blur the pixels.
+      .Avatar--30 {
+        display: none;
+      }
+
+      @media (min-width: constants.$breakpoint-xl) {
+        top: calc(var(--comment-tail-top) - 20px);
+        left: -48px;
+
+        .Avatar--15 {
+          display: none;
+        }
+
+        .Avatar--30 {
+          display: inline-block;
+        }
+      }
+
+      // Shown exactly where the bubble's tail is (min-width: md), so one avatar shows
+      // at every width.
+      @media (max-width: calc(#{constants.$breakpoint-md} - 1px)) {
+        display: none;
+      }
     }
 
     &__body {
@@ -1558,6 +1602,13 @@ h6,
       // the footer text is small, so the default gap reads as cramped.
       .ProfileLink {
         gap: var(--space-4);
+      }
+
+      // Wide screens: the avatar is speaking the bubble, so the footer is just the name.
+      @media (min-width: constants.$breakpoint-md) {
+        .LogPostComments__author > :not(.ProfileLink__name) {
+          display: none;
+        }
       }
     }
   }
