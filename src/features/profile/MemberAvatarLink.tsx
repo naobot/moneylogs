@@ -2,6 +2,7 @@ import Avatar from "@/components/Avatar";
 import { useMemberProfile } from "@/features/moneylog/components/LogPosts/memberNames";
 
 import ProfileLink from "./ProfileLink";
+import ProfilePeek from "./ProfilePeek";
 
 type MemberAvatarLinkProps = {
   userDocId?: string | null;
@@ -14,7 +15,10 @@ type MemberAvatarLinkProps = {
   className?: string;
 };
 
-/** A log member's 30px avatar (and optionally name) linking to their profile. */
+/**
+ * A log member's 30px avatar (and optionally name) linking to their profile. Resting
+ * the mouse on the avatar opens a small profile card (ProfilePeek).
+ */
 export const MemberAvatarLink = ({
   userDocId,
   name,
@@ -31,7 +35,9 @@ export const MemberAvatarLink = ({
       className={className}
       label={withName ? undefined : `${shownName ?? "someone"}'s profile`}
     >
-      <Avatar avatar={profile?.avatar} name={shownName} size={30} />
+      <ProfilePeek userDocId={userDocId} name={shownName}>
+        <Avatar avatar={profile?.avatar} name={shownName} size={30} />
+      </ProfilePeek>
       {withName && (
         <span className="ProfileLink__name keep-case">
           {shownName}

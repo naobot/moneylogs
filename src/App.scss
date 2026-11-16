@@ -1553,6 +1553,12 @@ h6,
     &__footer {
       font-size: 0.7em;
       text-align: right;
+
+      // A little more air between the commenter's avatar and name than elsewhere:
+      // the footer text is small, so the default gap reads as cramped.
+      .ProfileLink {
+        gap: var(--space-4);
+      }
     }
   }
 }

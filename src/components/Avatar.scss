@@ -3,7 +3,9 @@
   display: inline-block;
   flex: none;
   vertical-align: middle;
-  color: var(--ink);
+  // Follows the text around it, so it stays visible on inverted rows (active or
+  // hovered members, selected chips).
+  color: inherit;
 
   &--30 {
     width: 30px;
@@ -20,7 +22,7 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    border: var(--border-hairline) solid var(--ink);
+    border: var(--border-hairline) solid currentColor;
     border-radius: var(--radius-none);
     font-family: var(--font-mono);
     font-weight: 700;

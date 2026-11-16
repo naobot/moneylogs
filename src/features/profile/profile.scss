@@ -123,3 +123,61 @@
     }
   }
 }
+
+// Hover card on an avatar: a mini profile with a quick friend action.
+.ProfilePeek__anchor {
+  display: inline-flex;
+}
+
+.ProfilePeek {
+  width: 16em;
+  max-width: calc(100vw - 32px);
+  padding: var(--space-4);
+  border: var(--border-rule) solid var(--ink);
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  &__who {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  &__more {
+    margin-left: auto;
+    font-size: 0.9em;
+  }
+
+  &__friends {
+    padding: 0.1em 0.5em;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-weight: 700;
+  }
+
+  &__muted {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}
