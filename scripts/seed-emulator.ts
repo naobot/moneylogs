@@ -32,6 +32,7 @@ import {
   DocumentReference,
 } from "firebase/firestore";
 import { timelineNotificationsFor } from "../functions/src/logTimeline";
+import { PRESET_AVATARS } from "../src/features/account/avatar/presets";
 
 // This script runs under tsx (Node); `process` is provided by the runtime but
 // this file is outside the app tsconfig, so declare the bit we use.
@@ -89,21 +90,6 @@ const previousMonth = (month: string) => {
 // Every password is test123.
 // ---------------------------------------------------------------------------
 const PASSWORD = "test123";
-
-/**
- * A simple 30×30 one-ink face for seeded avatars ("#" ink, "." paper): a round head
- * outline with two eyes and a mouth, leaning a little so it doesn't look stamped.
- */
-const seedAvatar = (lean: number): string[] =>
-  Array.from({ length: 30 }, (_, y) =>
-    Array.from({ length: 30 }, (_, x) => {
-      const cx = 15 + lean * ((y - 15) / 15);
-      const d = Math.hypot(x - cx, y - 15);
-      const eye = y === 12 && (Math.round(x - cx) === -4 || Math.round(x - cx) === 4);
-      const mouth = y === 19 && Math.abs(x - cx) <= 3;
-      return Math.abs(d - 11) < 0.6 || eye || mouth ? "#" : ".";
-    }).join(""),
-  );
 
 const testUsers = [
   {
@@ -859,9 +845,11 @@ async function createUsers() {
       displayLocation: info.location,
       timezone: info.timezone,
       // A couple of users have drawn avatars; the rest show their initial.
-      ...(info.key === "alice" || info.key === "erik"
-        ? { avatar: seedAvatar(info.key === "alice" ? 2 : -2) }
-        : {}),
+      ...(info.key === "alice"
+        ? { avatar: [...PRESET_AVATARS[1].grid] }
+        : info.key === "erik"
+          ? { avatar: [...PRESET_AVATARS[0].grid] }
+          : {}),
       createdAt: serverTimestamp(),
       groups: [],
     });

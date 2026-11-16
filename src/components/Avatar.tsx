@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import cx from "classnames";
 
-import { AVATAR_SIZE, avatarInitial, normaliseAvatar } from "@/utils/avatar";
+import { AVATAR_SIZE, avatarInitial, initialAvatarGrid, normaliseAvatar } from "@/utils/avatar";
 import { pixelPath } from "@/utils/pixelArt";
 
 import "./Avatar.scss";
@@ -17,11 +17,14 @@ type AvatarProps = {
 };
 
 /**
- * A user's pixel avatar in the current ink (night shift included). With no avatar
- * drawn it shows a hairline-framed square with their initial.
+ * A user's pixel avatar in the current ink (night shift included). With none drawn it
+ * shows their initial in the pixel font inside a frame, or as plain text when the
+ * pixel font has no glyph for it.
  */
 export const Avatar = ({ avatar, name, size = 30, className }: AvatarProps) => {
-  const grid = normaliseAvatar(avatar);
+  const drawn = normaliseAvatar(avatar);
+  const fallback = useMemo(() => (drawn ? null : initialAvatarGrid(name)), [drawn, name]);
+  const grid = drawn ?? fallback;
   const d = useMemo(() => (grid ? pixelPath(grid) : ""), [grid]);
   const label = name ? `${name}'s avatar` : "avatar";
 
@@ -39,7 +42,7 @@ export const Avatar = ({ avatar, name, size = 30, className }: AvatarProps) => {
 
   return (
     <svg
-      className={cx("Avatar", `Avatar--${size}`, className)}
+      className={cx("Avatar", `Avatar--${size}`, { "Avatar--initial": !drawn }, className)}
       viewBox={`0 0 ${AVATAR_SIZE} ${AVATAR_SIZE}`}
       width={size}
       height={size}

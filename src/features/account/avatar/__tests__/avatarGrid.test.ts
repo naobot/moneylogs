@@ -22,7 +22,7 @@ describe("lineCells", () => {
   it("includes both ends and has no gaps", () => {
     const cells = lineCells({ x: 0, y: 0 }, { x: 4, y: 2 });
     expect(cells[0]).toEqual({ x: 0, y: 0 });
-    expect(cells.at(-1)).toEqual({ x: 4, y: 2 });
+    expect(cells[cells.length - 1]).toEqual({ x: 4, y: 2 });
     for (let i = 1; i < cells.length; i++) {
       expect(Math.abs(cells[i].x - cells[i - 1].x)).toBeLessThanOrEqual(1);
       expect(Math.abs(cells[i].y - cells[i - 1].y)).toBeLessThanOrEqual(1);

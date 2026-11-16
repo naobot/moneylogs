@@ -15,6 +15,7 @@ import Modal from "@/components/Modal";
 import RowButton from "@/components/RowButton";
 
 import { Cell, Cells, cellFromPoint, paintLine } from "./avatarGrid";
+import { PRESET_AVATARS } from "./presets";
 import "./AvatarEditorModal.scss";
 
 type Tool = "pen" | "eraser";
@@ -157,6 +158,27 @@ export const AvatarEditorModal = ({ isOpen, onClose }: AvatarEditorModalProps) =
               {t}
             </RowButton>
           ))}
+        </div>
+
+        <div className="AvatarEditor__presets">
+          <span className="AvatarEditor__hint">start from a premade one, or draw your own</span>
+          <div className="AvatarEditor__presetList">
+            {PRESET_AVATARS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={cx("AvatarEditor__preset", {
+                  "AvatarEditor__preset--active":
+                    JSON.stringify(preset.grid) === JSON.stringify(grid),
+                })}
+                aria-label={`Use the premade avatar: ${preset.label}`}
+                disabled={pending}
+                onClick={() => setCells(parseGrid(preset.grid, AVATAR_SIZE))}
+              >
+                <Avatar avatar={preset.grid} name={preset.label} size={30} />
+              </button>
+            ))}
+          </div>
         </div>
 
         <canvas

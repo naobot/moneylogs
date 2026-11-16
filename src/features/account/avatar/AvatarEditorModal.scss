@@ -35,6 +35,40 @@
     }
   }
 
+  &__presets {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__presetList {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  // A premade avatar to start from: hairline-framed, inverted when it's what's drawn.
+  &__preset {
+    display: inline-flex;
+    padding: var(--space-1);
+    border: var(--border-hairline) solid var(--ink);
+    border-radius: var(--radius-none);
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible,
+    &--active {
+      background: var(--inverse-surface);
+      outline: none;
+
+      .Avatar {
+        color: var(--inverse-ink);
+      }
+    }
+  }
+
   &__preview {
     display: flex;
     align-items: flex-end;
