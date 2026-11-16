@@ -151,6 +151,15 @@ const LogPostComments = ({
                   "LogPostComments__item--highlight": comment?.authorId?.id === currentLogAuthorId,
                 })}
               >
+                {/* Wide screens: the commenter "speaks" the bubble from its top left.
+                    Small screens show the avatar beside the name instead (footer). */}
+                <div className="LogPostComments__speaker">
+                  <MemberAvatarLink
+                    userDocId={comment.authorId?.id}
+                    name={comment.authorName}
+                    size={15}
+                  />
+                </div>
                 <div className="LogPostComments__item__container">
                   <div
                     className="LogPostComments__item__body"
@@ -166,7 +175,9 @@ const LogPostComments = ({
                       <MemberAvatarLink
                         userDocId={comment.authorId?.id}
                         name={comment.authorName}
+                        size={15}
                         withName
+                        className="LogPostComments__author"
                       />
                     </div>
                   </div>

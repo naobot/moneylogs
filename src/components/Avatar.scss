@@ -7,6 +7,11 @@
   // hovered members, selected chips).
   color: inherit;
 
+  &--15 {
+    width: 15px;
+    height: 15px;
+  }
+
   &--30 {
     width: 30px;
     height: 30px;
@@ -27,6 +32,10 @@
     font-family: var(--font-mono);
     font-weight: 700;
     line-height: 1;
+  }
+
+  &--empty#{&}--15 {
+    font-size: 9px;
   }
 
   &--empty#{&}--30 {

@@ -12,6 +12,8 @@ type MemberAvatarLinkProps = {
   withName?: boolean;
   /** Extra text after the name, e.g. "(Kyoto)". */
   suffix?: string | null;
+  /** 15 for the mini avatar (comments). */
+  size?: 15 | 30;
   className?: string;
 };
 
@@ -24,6 +26,7 @@ export const MemberAvatarLink = ({
   name,
   withName = false,
   suffix,
+  size = 30,
   className,
 }: MemberAvatarLinkProps) => {
   const profile = useMemberProfile(userDocId);
@@ -36,7 +39,7 @@ export const MemberAvatarLink = ({
       label={withName ? undefined : `${shownName ?? "someone"}'s profile`}
     >
       <ProfilePeek userDocId={userDocId} name={shownName}>
-        <Avatar avatar={profile?.avatar} name={shownName} size={30} />
+        <Avatar avatar={profile?.avatar} name={shownName} size={size} />
       </ProfilePeek>
       {withName && (
         <span className="ProfileLink__name keep-case">
