@@ -10,6 +10,7 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 
 import Button from "@/components/Button";
 import { markdownColorMode, useTheme } from "@/utils/theme";
+import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 
 type LogPostCommentsProps = {
   currentLogAuthorId: string;
@@ -162,7 +163,11 @@ const LogPostComments = ({
                   </div>
                   <div className="LogPostComments__item__footer">
                     <div className="LogPostComments__item__footer__right">
-                      - {comment.authorName}
+                      <MemberAvatarLink
+                        userDocId={comment.authorId?.id}
+                        name={comment.authorName}
+                        withName
+                      />
                     </div>
                   </div>
                 </div>

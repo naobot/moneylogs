@@ -16,6 +16,7 @@ import {
   planSocialExit,
 } from "./deleteAccountPlan";
 import { commentNotificationId, notificationRecipients } from "./notifications";
+import { friendAcceptedNotificationId, friendRequestNotificationId } from "./friendsPlan";
 import { purgeLog } from "./purgeLog";
 
 type Failures = { count: number; record: (what: string) => (err: unknown) => void };
@@ -225,6 +226,27 @@ export const deleteAccount = onCall({ timeoutSeconds: 540, memory: "512MiB" }, a
       bulk
         .update(post.ref, { authorName: DELETED_USER_NAME })
         .catch(failures.record(`anonymise post ${post.id}`));
+    }
+    await bulk.close();
+  }
+
+  // Friendships and requests, and the friend notifications they left in the other
+  // person's inbox. (Their own inbox goes with the user doc below. Gifts they gave stay
+  // with the recipients; the giver then shows as "deleted user".)
+  if (!failures.count) {
+    const pairs = await db.collection("friendships").where("uids", "array-contains", uid).get();
+    const bulk = db.bulkWriter();
+    for (const pair of pairs.docs) {
+      const users = (pair.get("users") ?? []) as string[];
+      for (const other of users.filter((id) => !userDocIds.has(id))) {
+        const inbox = db.collection("users").doc(other).collection("notifications");
+        for (const me of userDocIds) {
+          for (const id of [friendRequestNotificationId(me), friendAcceptedNotificationId(me)]) {
+            bulk.delete(inbox.doc(id)).catch(failures.record(`delete notification ${id}`));
+          }
+        }
+      }
+      bulk.delete(pair.ref).catch(failures.record(`delete friendship ${pair.id}`));
     }
     await bulk.close();
   }

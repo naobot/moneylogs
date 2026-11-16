@@ -34,7 +34,7 @@ type TypeSpec<N extends AppNotification> = {
 type Specs = { [T in NotificationType]: TypeSpec<NotificationOf<T>> };
 
 const logHref = (n: AppNotification) =>
-  n.logKind === "ledger" ? `/l/${n.groupId}` : `/g/${n.groupId}`;
+  !n.groupId ? "/notifications" : n.logKind === "ledger" ? `/l/${n.groupId}` : `/g/${n.groupId}`;
 
 const amount = (value: number, currency: string) => formatAmount(value, currency as Currency);
 
@@ -138,6 +138,28 @@ export const NOTIFICATION_TYPES: Specs = {
     describe: (n) => ["over ", ...budgetSubject(n), " in ", { keep: n.groupName }],
     detail: (n) => `${amount(n.spent, n.currency)} of ${amount(n.budget, n.currency)}`,
     href: (n) => `/l/${n.groupId}/stats?month=${n.month}`,
+  },
+  friend_request: {
+    label: "Friend requests",
+    defaultEnabled: true,
+    icon: "user",
+    describe: (n) => [{ keep: n.actorName }, " wants to be friends"],
+    href: (n) => `/u/${n.actorId}`,
+  },
+  friend_accepted: {
+    label: "Accepted friend requests",
+    defaultEnabled: true,
+    icon: "social",
+    describe: (n) => [{ keep: n.actorName }, " accepted your friend request"],
+    href: (n) => `/u/${n.actorId}`,
+  },
+  gift_received: {
+    label: "Gifts from friends",
+    defaultEnabled: true,
+    icon: "gift",
+    describe: (n) => [{ keep: n.actorName }, " sent you a gift"],
+    detail: () => "it's waiting, wrapped, in your knick-knack drawer",
+    href: () => "/#knickknacks",
   },
   budget_projected: {
     label: "You're on track to go over this month's budget",

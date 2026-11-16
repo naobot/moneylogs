@@ -441,3 +441,6 @@ export { deleteAccount } from "./deleteAccount";
 export { rollQuietDay } from "./rollQuietDay";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";
+export { mirrorProfile } from "./mirrorProfile";
+export { requestFriend, respondFriend, removeFriend } from "./friends";
+export { giftKnickKnack } from "./gifts";

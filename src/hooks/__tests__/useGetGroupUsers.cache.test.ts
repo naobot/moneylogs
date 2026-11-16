@@ -18,17 +18,13 @@ const CACHE_KEY = `groupUsers_${GROUP_ID}`;
 const mockUsers: CacheableUserData[] = [
   {
     id: "user1",
-    userId: "auth_user1",
     displayName: "Alice",
-    email: "alice@example.com",
-    groups: [GROUP_ID],
+    timezone: "UTC",
   },
   {
     id: "user2",
-    userId: "auth_user2",
     displayName: "Bob",
-    email: "bob@example.com",
-    groups: [GROUP_ID],
+    timezone: "UTC",
   },
 ];
 

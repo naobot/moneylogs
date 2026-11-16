@@ -12,6 +12,9 @@ import { AchievementsSection } from "@/features/account/AchievementsSection";
 import { MyLogsSection } from "@/features/account/MyLogsSection";
 import { DisplaySection, displaySummary } from "@/features/account/DisplaySection";
 import { myLogsHint } from "@/features/account/myLogsHint";
+import { FriendsSection } from "@/features/account/FriendsSection";
+import { friendsHint } from "@/features/account/friendsHint";
+import { useFriendships } from "@/hooks/useFriendships";
 import { partitionArchived } from "@/utils/archivedLogs";
 import { partitionByTime } from "@/utils/groupBoundaries";
 import { useTheme } from "@/utils/theme";
@@ -29,6 +32,7 @@ export const UserSettings = () => {
   const { allGroups: groups } = useGetCurrentGroups();
   const { ledgers: allLedgers } = useGetMyLedgers();
   const { achievements } = useGetAchievements(user?.id);
+  const { friends, incoming } = useFriendships();
 
   const { active: activeGroups, archived: archivedGroups } = partitionArchived(groups, user);
   const { active: ledgers, archived: archivedLedgers } = partitionArchived(allLedgers, user);
@@ -63,6 +67,14 @@ export const UserSettings = () => {
           defaultOpen
         >
           <ProfileSection />
+        </Drawer>
+
+        <Drawer
+          id="friends"
+          title="friends"
+          summary={friendsHint({ friends: friends.length, incoming: incoming.length })}
+        >
+          <FriendsSection />
         </Drawer>
 
         <Drawer id="display" title="Display" summary={displaySummary(theme, displayPrefs)}>

@@ -4,3 +4,57 @@
   display: flex;
   flex-direction: column;
 }
+
+// Avatar and its edit button, above the profile fields.
+.UserSettings__avatar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.UserSettings__profileLink {
+  margin-bottom: var(--space-4);
+
+  p {
+    margin-top: 0;
+  }
+}
+
+.FriendsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  h4 {
+    margin: 0 0 var(--space-2);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  // Name left, actions right.
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: var(--space-2);
+    flex: none;
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}

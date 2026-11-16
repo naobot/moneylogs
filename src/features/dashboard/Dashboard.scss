@@ -249,6 +249,61 @@
     }
   }
 
+  // A gift from a friend, still wrapped: a button that unwraps it here.
+  &__gift {
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  // A kept item you can give away: the slot itself is the button.
+  &__item--giftable {
+    width: 100%;
+    padding: var(--space-2) 0;
+    border: var(--border-hairline) dashed transparent;
+    background: none;
+    color: var(--ink);
+    font-family: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--ink);
+      outline: none;
+    }
+  }
+
+  &__givingTo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.3em 0.6em;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-size: 0.85em;
+
+    .RowButton {
+      color: inherit;
+      border-color: currentColor;
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.8em;
+    color: var(--ink-muted);
+  }
+
+  &__unwrapped {
+    margin: 0;
+    padding: 0.3em 0.6em;
+    align-self: flex-start;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-size: 0.85em;
+  }
+
   &__empty {
     margin: 0;
     font-size: 0.85em;

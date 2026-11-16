@@ -26,13 +26,11 @@ import { memberHasUnreadPosts, postHasUnreadComments } from "@/utils/unread";
 import { shouldShowCommentBadge, shouldShowPostBell } from "./navBadges";
 import useDragReorderEnabled from "@/hooks/useDragReorderEnabled";
 import Icon from "@/components/Icon";
+import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 
 import cx from "classnames";
 
-type LogMember = FullUserData & {
-  lastUpdated?: Record<string, { seconds: number }>;
-  displayLocation?: string;
-};
+type LogMember = FullUserData;
 type SerializedMember = LogMember & { hasUnreadPosts: boolean };
 
 interface LogsMenuProps {
@@ -296,6 +294,7 @@ const LogsMenuItemWithComments = ({
       {shouldShowCommentBadge({ ...badgeInput, hasUnreadComments }) && (
         <Icon type={"speech"} size={18} />
       )}
+      <MemberAvatarLink userDocId={member?.id} name={member?.displayName} />
       <div className="LogsMenu__item__content">
         <div className="LogsMenu__item__title">{member?.displayName}</div>
         {member?.displayLocation && (
