@@ -18,7 +18,9 @@ export type NotificationType =
   | "log_ended"
   | "budget_approaching"
   | "budget_exceeded"
-  | "budget_projected";
+  | "budget_projected"
+  | "friend_request"
+  | "friend_accepted";
 
 /** Which collection `groupId` points into. Missing on older docs, which are all social. */
 export type LogKind = "social" | "ledger";
@@ -84,7 +86,21 @@ export type BudgetNotification = Base & {
   categoryName?: string;
 };
 
+/**
+ * About a person rather than a log, so no group fields. `actorId` is their user doc id
+ * (links to their profile).
+ */
+export type FriendNotification = Omit<Base, "groupId" | "groupName" | "logKind"> & {
+  type: "friend_request" | "friend_accepted";
+  actorId: string;
+  actorName: string;
+  groupId?: undefined;
+  groupName?: undefined;
+  logKind?: undefined;
+};
+
 export type AppNotification =
+  | FriendNotification
   | CommentNotification
   | ReactionNotification
   | LogMembershipNotification

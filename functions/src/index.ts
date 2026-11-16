@@ -442,3 +442,4 @@ export { rollQuietDay } from "./rollQuietDay";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";
 export { mirrorProfile } from "./mirrorProfile";
+export { requestFriend, respondFriend, removeFriend } from "./friends";

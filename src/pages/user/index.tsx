@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/useProfiles";
 import { useDateFormat } from "@/utils/dateFormat";
 
 import Avatar from "@/components/Avatar";
+import FriendControls from "@/features/profile/FriendControls";
 import KnickKnackShelf from "@/features/profile/KnickKnackShelf";
 import { sharedGroups } from "@/features/profile/sharedLogs";
 
@@ -67,6 +68,8 @@ export const UserProfilePage = () => {
           </Link>
         )}
       </header>
+
+      {!isMe && <FriendControls userDocId={userDocId} name={profile.displayName} />}
 
       {!isMe && (
         <section className="ProfilePage__section" aria-labelledby="profile-shared">

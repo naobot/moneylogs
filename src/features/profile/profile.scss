@@ -102,3 +102,24 @@
     }
   }
 }
+
+.FriendControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  &__status {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+
+    // Committed: shown solid and inverted, not faded.
+    &--friends {
+      padding: 0.1em 0.5em;
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      font-weight: 700;
+      text-transform: lowercase;
+    }
+  }
+}

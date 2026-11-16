@@ -10,7 +10,8 @@ export type Feature =
   | "create_log"
   | "ledger_entry"
   | "profile"
-  | "log_post";
+  | "log_post"
+  | "friends";
 
 type ReportContext = {
   feature: Feature;
