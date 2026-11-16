@@ -1,0 +1,125 @@
+.ProfilePage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-height: 0;
+  overflow-y: auto;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  &__identity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    flex: 1 1 auto;
+    min-width: 0;
+
+    h2,
+    p {
+      margin: 0;
+    }
+  }
+
+  &__edit {
+    font-size: 0.85em;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__logs {
+    margin: 0;
+    padding-left: 1.2em;
+    list-style: "> ";
+  }
+
+  &__muted {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}
+
+// A profile's kept knick-knacks: the drawer's slots, plus where each copy came from.
+// Dotted frame: things from the past, not editable here.
+.KnickKnackShelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-3);
+  list-style: none;
+  border: var(--border-rule) dotted var(--ink);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3em;
+    text-align: center;
+  }
+
+  &__name {
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: lowercase;
+  }
+
+  &__provenance {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75em;
+    color: var(--ink-muted);
+  }
+}
+
+// An avatar and/or name that opens someone's profile.
+.ProfileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+
+  &--link {
+    text-decoration: none;
+
+    &:hover .ProfileLink__name,
+    &:focus-visible .ProfileLink__name {
+      text-decoration: underline;
+    }
+  }
+}
+
+.FriendControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  &__status {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+
+    // Committed: shown solid and inverted, not faded.
+    &--friends {
+      padding: 0.1em 0.5em;
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      font-weight: 700;
+      text-transform: lowercase;
+    }
+  }
+}

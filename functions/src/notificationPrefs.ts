@@ -16,6 +16,9 @@ export const NOTIFICATION_PREF_DEFAULTS = {
   budget_approaching: true,
   budget_exceeded: true,
   budget_projected: true,
+  friend_request: true,
+  friend_accepted: true,
+  gift_received: true,
   // Per-category budget alerts are noisier than the month's total, so they're opt-in.
   budget_category: false,
 } as const;

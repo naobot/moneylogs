@@ -6,12 +6,28 @@ import { MemoryRouter } from "react-router-dom";
 const state = vi.hoisted(() => ({
   finds: [] as unknown[],
   isLoading: false,
+  friends: [] as string[],
+  markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
 }));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({ user: { id: "doc-1", userId: "uid-1", timezone: "UTC" } }),
 }));
 vi.mock("@/features/ledger/buddy/knickknacks/useUnseenFinds", () => ({
   useKnickKnackFinds: () => ({ data: state.finds, isLoading: state.isLoading }),
+  markFindSeen: (...args: unknown[]) => state.markFindSeen(...args),
+}));
+vi.mock("@/hooks/useFriendships", () => ({
+  useFriendships: () => ({ friends: state.friends }),
+}));
+vi.mock("@/hooks/useProfiles", () => ({
+  useProfiles: () => new Map([["mina", { id: "mina", displayName: "Mina", avatar: null }]]),
+}));
+vi.mock("@/features/gifts/GiftModal", () => ({
+  default: ({ item, toUserDocId }: { item: string; toUserDocId?: string }) => (
+    <div className="mock-gift-modal">
+      give {item} to {toUserDocId ?? "anyone"}
+    </div>
+  ),
 }));
 
 import { KnickKnackDrawer, KNICK_KNACK_HELP } from "../KnickKnackDrawer";
@@ -35,6 +51,8 @@ describe("KnickKnackDrawer", () => {
   beforeEach(() => {
     state.finds = [];
     state.isLoading = false;
+    state.friends = [];
+    state.markFindSeen.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -46,10 +64,10 @@ describe("KnickKnackDrawer", () => {
     document.querySelectorAll(".HelpTip__panel").forEach((el) => el.remove());
   });
 
-  const render = (ledgers: Ledger[] = []) =>
+  const render = (ledgers: Ledger[] = [], url = "/") =>
     act(() =>
       root.render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[url]}>
           <KnickKnackDrawer ledgers={ledgers} />
         </MemoryRouter>,
       ),
@@ -89,5 +107,62 @@ describe("KnickKnackDrawer", () => {
     expect(link.getAttribute("href")).toBe("/l/l9");
     expect(link.textContent).toContain("in Household has something to show you");
     expect(container.querySelector('svg[aria-label="tulip"]')).toBeNull();
+  });
+
+  it("shows a wrapped gift by who sent it, and unwraps it in place", () => {
+    state.finds = [
+      { ...find("f5", "holly", false), ledgerId: null, source: "gift", giftedBy: "mina" },
+    ];
+    render();
+    const gift = container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__gift")!;
+    expect(gift.textContent).toContain("a gift from Mina");
+    expect(container.querySelector('svg[aria-label="holly"]')).toBeNull();
+    expect(container.querySelector(".KnickKnackDrawer__empty")).toBeNull();
+
+    act(() => gift.click());
+    expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f5");
+    expect(container.querySelector(".KnickKnackDrawer__unwrapped")!.textContent).toContain(
+      "holly from Mina",
+    );
+  });
+
+  it("makes found items giftable once you have a friend; gifts you got are not", () => {
+    state.finds = [
+      find("f1", "acorn", true),
+      { ...find("f2", "holly", true), source: "gift", giftedBy: "mina", ledgerId: null },
+    ];
+    render();
+    expect(container.querySelector(".KnickKnackDrawer__item--giftable")).toBeNull();
+
+    state.friends = ["mina"];
+    render();
+    const buttons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".KnickKnackDrawer__item--giftable"),
+    );
+    expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Give one acorn to a friend",
+    ]);
+    act(() => buttons[0].click());
+    expect(container.querySelector(".mock-gift-modal")!.textContent).toBe("give acorn to anyone");
+  });
+
+  it("preselects the friend from a profile's send-a-gift link", () => {
+    state.friends = ["mina"];
+    state.finds = [find("f1", "acorn", true)];
+    render([], "/?giftTo=mina#knickknacks");
+    expect(container.querySelector(".KnickKnackDrawer__givingTo")!.textContent).toContain(
+      "pick something to give to Mina",
+    );
+    act(() =>
+      container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__item--giftable")!.click(),
+    );
+    expect(container.querySelector(".mock-gift-modal")!.textContent).toBe("give acorn to mina");
+  });
+
+  it("ignores a giftTo that isn't a friend", () => {
+    state.friends = ["mina"];
+    state.finds = [find("f1", "acorn", true)];
+    render([], "/?giftTo=stranger");
+    expect(container.querySelector(".KnickKnackDrawer__givingTo")).toBeNull();
   });
 });

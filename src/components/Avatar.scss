@@ -1,0 +1,37 @@
+// A user's 30×30 pixel avatar, or their initial in a hairline square when none is drawn.
+.Avatar {
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+  color: var(--ink);
+
+  &--30 {
+    width: 30px;
+    height: 30px;
+  }
+
+  &--60 {
+    width: 60px;
+    height: 60px;
+  }
+
+  &--empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: var(--border-hairline) solid var(--ink);
+    border-radius: var(--radius-none);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &--empty#{&}--30 {
+    font-size: 14px;
+  }
+
+  &--empty#{&}--60 {
+    font-size: 28px;
+  }
+}

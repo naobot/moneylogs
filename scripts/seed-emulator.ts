@@ -32,6 +32,7 @@ import {
   DocumentReference,
 } from "firebase/firestore";
 import { timelineNotificationsFor } from "../functions/src/logTimeline";
+import { PRESET_AVATARS } from "../src/features/account/avatar/presets";
 
 // This script runs under tsx (Node); `process` is provided by the runtime but
 // this file is outside the app tsconfig, so declare the bit we use.
@@ -843,6 +844,12 @@ async function createUsers() {
       displayName: info.displayName,
       displayLocation: info.location,
       timezone: info.timezone,
+      // A couple of users have drawn avatars; the rest show their initial.
+      ...(info.key === "alice"
+        ? { avatar: [...PRESET_AVATARS[1].grid] }
+        : info.key === "erik"
+          ? { avatar: [...PRESET_AVATARS[0].grid] }
+          : {}),
       createdAt: serverTimestamp(),
       groups: [],
     });
@@ -887,7 +894,9 @@ async function createGroups() {
     }
     console.log(`✅ ${group.title}`);
   }
+  // User docs are private to their owner, so each member writes their own list.
   for (const [member, groups] of groupsOf) {
+    await signInAs(member);
     await updateDoc(userRef(member), { groups });
   }
   return ids;
@@ -1005,6 +1014,7 @@ async function personaliseAlice(
   postIds: Record<string, string>,
   ledgerIds: Record<string, string>,
 ) {
+  await signInAs("alice");
   await updateDoc(userRef("alice"), {
     [`logLastViewedAt.${groupIds.roommates}`]: Timestamp.fromDate(daysAgo(3)),
     [`logLastViewedAt.${ledgerIds.home}`]: Timestamp.fromDate(daysAgo(5)),

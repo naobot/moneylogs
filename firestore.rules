@@ -14,22 +14,49 @@ service cloud.firestore {
     match /log_posts/{path=**} {
       allow read, write: if true;
     }
-    // User docs and their achievements stay open. Notifications are private to their
-    // owner, so this can't be a users/{path=**} wildcard (rules are OR'd).
+    // The signed-in person owns this user doc (doc ids aren't auth uids).
+    function ownsUserDoc(userDocId) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(userDocId)).data.userId == request.auth.uid;
+    }
+
+    // User docs are private to their owner (email, view tracking, prefs). Everyone else
+    // reads the public profiles/ mirror. The auth uid in `userId` is fixed at creation,
+    // which is what makes ownsUserDoc() trustworthy. Deleting is server-only
+    // (deleteAccount). Subcollections each have their own rules (rules are OR'd, so
+    // this can't be a users/{path=**} wildcard).
     match /users/{userDocId} {
-      allow read, write: if true;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if false;
     }
     match /users/{userDocId}/achievements/{path=**} {
-      allow read, write: if true;
+      allow read, write: if ownsUserDoc(userDocId);
+    }
+
+    // Public profiles: the mirrorProfile function projects name, location, timezone,
+    // avatar, pinned posts and last-posted times out of users/{id} (same doc id).
+    // Readable by anyone, including spectators on a public log; only the server writes
+    // them.
+    match /profiles/{userDocId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // One doc per pair of users, written only by the friend callables. Each side may
+    // read it (list queries filter on uids array-contains their uid).
+    match /friendships/{pairId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.uids;
+      allow write: if false;
     }
 
     // Cloud Functions write notifications (the Admin SDK bypasses rules). The owner may
     // read them and stamp readAt, and may create only the ones whose actor is
     // themselves: starting or joining a log.
-    function ownsUserDoc(userDocId) {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(userDocId)).data.userId == request.auth.uid;
-    }
     match /users/{userDocId}/notifications/{notificationId} {
       allow read, delete: if ownsUserDoc(userDocId);
       allow update: if ownsUserDoc(userDocId)
@@ -42,7 +69,10 @@ service cloud.firestore {
     // read them and mark each one seen, once; only the server creates or deletes them.
     // users/{id}/buddy (the daily roll marker) has no rule: server only.
     match /users/{userDocId}/knickknacks/{findId} {
-      allow read: if ownsUserDoc(userDocId);
+      // The owner sees everything; other signed-in people see the kept (seen) ones on
+      // the owner's profile shelf. List queries must filter on seenAt != null.
+      allow read: if ownsUserDoc(userDocId)
+        || (request.auth != null && resource.data.seenAt != null);
       allow update: if ownsUserDoc(userDocId)
         && resource.data.seenAt == null
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenAt"])
