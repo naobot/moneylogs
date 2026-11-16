@@ -44,8 +44,8 @@ export const writeMilestone = (
 /**
  * Give a one-off milestone unless the person already has its achievement. Triggers are
  * at-least-once, and the check runs in the transaction, so it's never given twice.
- * The buddy in the person's personal log shows it to them (any buddy would, but the
- * drawer points there).
+ * Any buddy shows it; the drawer points to their personal log while they still have
+ * it, and otherwise to another of their logs (drawerContents).
  */
 export const awardMilestoneOnce = async ({
   db,
@@ -61,7 +61,13 @@ export const awardMilestoneOnce = async ({
   return db.runTransaction(async (tx) => {
     const [user, held] = await Promise.all([tx.get(userRef), tx.get(achievementRef)]);
     if (!user.exists || held.exists) return false;
-    writeMilestone(tx, user, item, (user.get("personalLedgerId") as string | undefined) ?? null);
+    // personalLedgerId outlives a deleted personal log (so it's never recreated): only
+    // point there if it's still around. Otherwise no log, and the drawer points to
+    // whichever of the person's logs it can.
+    const personalId = user.get("personalLedgerId") as string | undefined;
+    const personal = personalId ? await tx.get(db.collection("ledgers").doc(personalId)) : null;
+    const ledgerId = personal?.exists && personal.get("deleting") !== true ? personal.id : null;
+    writeMilestone(tx, user, item, ledgerId);
     return true;
   });
 };

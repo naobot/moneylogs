@@ -42,10 +42,13 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
   const [searchParams] = useSearchParams();
   const { data, isLoading } = useKnickKnackFinds(user?.id);
   const { friends } = useFriendships();
-  const { kept, waiting, gifts } = drawerContents(data);
+  const { kept, waiting, loose, gifts } = drawerContents(
+    data,
+    ledgers.map((l) => l.id),
+  );
   const givers = useProfiles(gifts.map((g) => g.giftedBy ?? "").filter(Boolean));
   const [giving, setGiving] = useState<KnickKnackId | null>(null);
-  const [unwrapped, setUnwrapped] = useState<{ item: KnickKnackId; from: string } | null>(null);
+  const [unwrapped, setUnwrapped] = useState<{ item: KnickKnackId; from?: string } | null>(null);
   const titleOf = (id: string) => ledgers.find((l) => l.id === id)?.title;
   const giverName = (id?: string | null) => (id && givers.get(id)?.displayName) || DELETED_USER;
   const giftable = useMemo(
@@ -64,11 +67,16 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
     }
   }, [hash]);
 
-  const unwrap = (gift: KnickKnackFind) => {
+  const unwrap = (find: KnickKnackFind) => {
     if (!user?.id) return;
-    setUnwrapped({ item: gift.item, from: giverName(gift.giftedBy) });
-    markFindSeen(user.id, gift.id).catch((err) =>
-      reportError(err, { feature: "friends", action: "unwrap_gift", level: "warning" }),
+    const gift = find.source === "gift";
+    setUnwrapped({ item: find.item, from: gift ? giverName(find.giftedBy) : undefined });
+    markFindSeen(user.id, find.id).catch((err) =>
+      reportError(err, {
+        feature: gift ? "friends" : "budget_buddy",
+        action: gift ? "unwrap_gift" : "unwrap_find",
+        level: "warning",
+      }),
     );
   };
 
@@ -94,7 +102,8 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
       <div className="KnickKnackDrawer__box">
         {unwrapped && (
           <p className="KnickKnackDrawer__unwrapped keep-case" role="status">
-            you unwrapped {KNICK_KNACKS[unwrapped.item].name.toLowerCase()} from {unwrapped.from}!
+            you unwrapped {KNICK_KNACKS[unwrapped.item].name.toLowerCase()}
+            {unwrapped.from ? ` from ${unwrapped.from}` : ""}!
           </p>
         )}
         {gifts.map((gift) => (
@@ -106,6 +115,18 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
           >
             <Icon type="gift" size={14} />
             <span className="keep-case">a gift from {giverName(gift.giftedBy)}. open it?</span>
+          </button>
+        ))}
+        {/* With no financial log to point to, the find opens right here. */}
+        {loose.map((find) => (
+          <button
+            key={find.id}
+            type="button"
+            className="KnickKnackDrawer__waiting"
+            onClick={() => unwrap(find)}
+          >
+            <Icon type="warning" size={14} />
+            <span className="keep-case">the budget buddy left something for you. open it?</span>
           </button>
         ))}
         {waiting.map(({ ledgerId, count }) => {
