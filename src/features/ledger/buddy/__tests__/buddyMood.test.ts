@@ -208,3 +208,44 @@ describe("noSpendStreak", () => {
     expect(noSpendStreak({}, 4)).toBe(4);
   });
 });
+
+describe("buddyMood with fixed costs", () => {
+  const withHousing: LedgerCategory[] = [
+    { id: "food", name: "Food", order: 0, budget: { CAD: 600 } },
+    { id: "housing", name: "Housing", order: 1, budget: { CAD: 1500 } }, // fixed by default
+    { id: "fun", name: "Fun", order: 2, fixed: true }, // custom fixed, no budget
+  ];
+  const stateOn = (
+    byCategory: Record<string, Record<string, number>>,
+    today = "2026-11-02",
+    categories = withHousing,
+  ) =>
+    buddyMood({
+      ledgerId: "l1",
+      categories,
+      current: monthDoc("2026-11", byCategory, ["01"]),
+      today,
+      localHour: 12,
+    });
+
+  it("isn't worried by rent paid on the 1st", () => {
+    const state = stateOn({ housing: { CAD: 1500 }, food: { CAD: 20 } });
+    expect(["delighted", "happy"]).toContain(state.mood);
+  });
+
+  it("never names a fixed cost as the favourite", () => {
+    expect(
+      stateOn({ housing: { CAD: 1500 }, fun: { CAD: 900 }, food: { CAD: 20 } }).facts,
+    ).toMatchObject({ topCategory: "Food" });
+    expect(stateOn({ housing: { CAD: 1500 } }).facts.topCategory).toBeUndefined();
+  });
+
+  it("is content when only fixed costs have budgets, and still alarmed over budget", () => {
+    const onlyRent: LedgerCategory[] = [
+      { id: "food", name: "Food", order: 0 },
+      { id: "housing", name: "Housing", order: 1, budget: { CAD: 1500 } },
+    ];
+    expect(stateOn({ food: { CAD: 5000 } }, "2026-11-01", onlyRent).mood).toBe("content");
+    expect(stateOn({ housing: { CAD: 1600 } }, "2026-11-01", onlyRent).mood).toBe("alarmed");
+  });
+});

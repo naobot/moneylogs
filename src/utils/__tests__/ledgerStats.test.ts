@@ -229,6 +229,45 @@ describe("budgets", () => {
     expect(s.projected).toBe(258000); // 86,000 over 10 days, 30-day month
   });
 
+  it("sets fixed costs aside for pace, allowance and projection", () => {
+    const categories: LedgerCategory[] = [
+      { id: "food", name: "Food", order: 0, budget: { JPY: 60000 } },
+      { id: "housing", name: "Housing", order: 1, budget: { JPY: 100000 } },
+    ];
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-11-10",
+      currency: "JPY",
+      agg: aggregateEntries([
+        e(100000, "JPY", "housing", "2026-11-01"),
+        e(10000, "JPY", "food", "2026-11-05"),
+      ]),
+      categories,
+    })!;
+    // Totals still include rent; pace and projection treat it as committed.
+    expect(s).toMatchObject({ budget: 160000, spent: 110000, remaining: 50000, over: false });
+    expect(s.projected).toBe(130000); // 100,000 + 10,000 × 3
+    expect(s.pace).toBeCloseTo(0.5); // 10,000 of a third of 60,000
+    expect(s.perDayLeft).toBe(Math.round((50000 / 21) * 100) / 100);
+  });
+
+  it("keeps the everyday allowance to what's left of everyday budgets", () => {
+    const categories: LedgerCategory[] = [
+      { id: "food", name: "Food", order: 0, budget: { JPY: 60000 } },
+      { id: "housing", name: "Housing", order: 1, budget: { JPY: 100000 } },
+    ];
+    // Rent not logged yet: the 100,000 left for it isn't everyday money.
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-11-10",
+      currency: "JPY",
+      agg: aggregateEntries([e(18000, "JPY", "food", "2026-11-05")]),
+      categories,
+    })!;
+    expect(s.perDayLeft).toBe(2000); // 42,000 over 21 days
+    expect(s.projected).toBe(154000);
+  });
+
   it("has no pace figures for past months and reports overspend", () => {
     const s = budgetSummary({
       month: "2026-11",

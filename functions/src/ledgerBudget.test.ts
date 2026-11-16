@@ -3,8 +3,10 @@ import {
   budgetAlerts,
   elapsedDays,
   isCurrentMonth,
+  budgetPace,
   budgetPaceRatio,
   historyPaceRatio,
+  isFixedCategory,
 } from "./ledgerBudget";
 
 const at = (iso: string) => new Date(iso).getTime();
@@ -175,5 +177,69 @@ describe("historyPaceRatio", () => {
     ];
     expect(ratio({ CAD: 150, JPY: 45000 }, history)).toBe(1.5);
     expect(ratio({ CAD: 150, EUR: 9999 }, history)).toBe(0.5);
+  });
+});
+
+describe("fixed costs", () => {
+  const withRent = [
+    { id: "food", name: "Food", budget: { CAD: 600 } },
+    { id: "housing", name: "Housing", budget: { CAD: 1500 } }, // fixed by default
+    { id: "phone", name: "Phone", fixed: true, budget: { CAD: 100 } },
+  ];
+
+  it("defaults housing and utilities to fixed, and an explicit flag wins", () => {
+    expect(isFixedCategory({ id: "housing" })).toBe(true);
+    expect(isFixedCategory({ id: "utilities" })).toBe(true);
+    expect(isFixedCategory({ id: "food" })).toBe(false);
+    expect(isFixedCategory({ id: "housing", fixed: false })).toBe(false);
+    expect(isFixedCategory({ id: "phone", fixed: true })).toBe(true);
+  });
+
+  it("doesn't project rent paid on the 1st as a spree", () => {
+    const alerts = budgetAlerts({
+      ledgerId: "l1",
+      ledgerName: "Household",
+      month: "2026-11",
+      categories: withRent,
+      byCategory: { housing: { CAD: 1500 }, phone: { CAD: 100 }, food: { CAD: 100 } },
+      now: at("2026-11-07T12:00:00Z"),
+    });
+    // Housing at 100% of its own budget still warns, but there's no projection.
+    expect(alerts.some((a) => a.data.type === "budget_projected")).toBe(false);
+  });
+
+  it("projects fixed costs at their budget, and everyday spending at pace", () => {
+    const pace = budgetPace({
+      budgets: [
+        ["food", 600],
+        ["housing", 1500],
+        ["phone", 100],
+      ],
+      isFixed: (id) => id !== "food",
+      spentIn: (id) => ({ food: 300, phone: 120 })[id] ?? 0,
+      elapsed: 10,
+      days: 30,
+    });
+    expect(pace).toMatchObject({
+      budget: 2200,
+      spent: 420,
+      flexibleBudget: 600,
+      flexibleSpent: 300,
+      // 1500 (rent not paid yet) + 120 (phone ran over) + 300 × 3.
+      projected: 2520,
+    });
+    expect(pace.pace).toBeCloseTo(1.5);
+  });
+
+  it("leaves fixed costs out of the find pace, and is null with only those budgeted", () => {
+    const ratio = (cats: typeof withRent) =>
+      budgetPaceRatio({
+        categories: cats,
+        byCategory: { housing: { CAD: 1500 }, food: { CAD: 300 } },
+        month: "2026-11",
+        now: at("2026-11-15T12:00:00Z"),
+      });
+    expect(ratio(withRent)).toBe(1);
+    expect(ratio(withRent.filter((c) => c.id === "housing"))).toBeNull();
   });
 });

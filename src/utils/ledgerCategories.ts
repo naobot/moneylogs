@@ -3,6 +3,10 @@ import { Currency } from "@/types/user";
 import { CURRENCIES, isCurrency } from "@/utils/currency";
 import { parseAmount } from "@/utils/ledgerEntries";
 import { MAX_CATEGORY_NAME_LENGTH, normaliseCategoryName } from "@/utils/ledger";
+// Shared with the Cloud Functions, so budget alerts and the buddy agree on what's fixed.
+import { DEFAULT_FIXED_IDS, isFixedCategory } from "../../functions/src/ledgerBudget";
+
+export { DEFAULT_FIXED_IDS, isFixedCategory };
 
 /** Matches the `categories.size() <= 50` cap in firestore.rules. */
 export const MAX_CATEGORIES = 50;
@@ -13,12 +17,13 @@ export const MAX_CATEGORIES = 50;
  * time don't overwrite each other.
  */
 export type CategoryOp =
-  | { type: "add"; id: string; name: string }
+  | { type: "add"; id: string; name: string; fixed?: boolean }
   | { type: "rename"; id: string; name: string }
   | { type: "move"; id: string; toIndex: number } // index within the active list
   | { type: "archive"; id: string }
   | { type: "unarchive"; id: string }
   | { type: "delete"; id: string }
+  | { type: "setFixed"; id: string; fixed: boolean }
   // Monthly budget for one currency; null removes it.
   | { type: "setBudget"; id: string; currency: Currency; amount: number | null };
 
@@ -100,6 +105,51 @@ export const hasAnyBudget = (categories: ReadonlyArray<LedgerCategory>): boolean
     (c) => !c.archived && Object.values(c.budget ?? {}).some((amount) => (amount ?? 0) > 0),
   );
 
+/** Whole words (or phrases) in a category name that usually mean a fixed cost. */
+const FIXED_WORDS = [
+  "rent",
+  "mortgage",
+  "housing",
+  "utilities",
+  "utility",
+  "bills",
+  "insurance",
+  "phone",
+  "mobile",
+  "internet",
+  "broadband",
+  "wifi",
+  "subscription",
+  "subscriptions",
+  "loan",
+  "loans",
+  "debt",
+  "tuition",
+  "childcare",
+  "daycare",
+  "membership",
+  "memberships",
+  "gym",
+  "tax",
+  "taxes",
+  "strata",
+  "hoa",
+  "electricity",
+  "water",
+  "gas bill",
+];
+
+/**
+ * A first guess at whether a new category is a fixed cost, from its name. Only a
+ * suggestion: the add form pre-sets its toggle with it, and the user can flip it.
+ */
+export const guessFixed = (name: string): boolean => {
+  const words = ` ${normaliseCategoryName(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")} `;
+  return FIXED_WORDS.some((w) => words.includes(` ${w} `));
+};
+
 const sameName = (a: string, b: string) =>
   normaliseCategoryName(a).toLowerCase() === normaliseCategoryName(b).toLowerCase();
 
@@ -162,7 +212,13 @@ export const applyCategoryOp = (
       if (index !== -1 || list.length >= MAX_CATEGORIES) return list;
       if (categoryNameError(op.name, list)) return list;
       const activeCount = list.filter((c) => !c.archived).length;
-      const added = { id: op.id, name: normaliseCategoryName(op.name), order: activeCount - 0.5 };
+      const added: LedgerCategory = {
+        id: op.id,
+        name: normaliseCategoryName(op.name),
+        order: activeCount - 0.5,
+      };
+      // Only stored when it differs from what the id would default to.
+      if (op.fixed !== undefined && op.fixed !== isFixedCategory(added)) added.fixed = op.fixed;
       return normaliseOrder([...list, added]);
     }
     case "rename": {
@@ -202,6 +258,11 @@ export const applyCategoryOp = (
       if (index === -1) return list;
       if (!list[index].archived && list.filter((c) => !c.archived).length <= 1) return list;
       return normaliseOrder(list.filter((c) => c.id !== op.id));
+    }
+    case "setFixed": {
+      if (index === -1) return list;
+      // Stored explicitly, so turning a default fixed category (housing) off sticks.
+      return list.map((c) => (c.id === op.id ? { ...c, fixed: op.fixed } : c));
     }
     case "setBudget": {
       if (index === -1 || !isCurrency(op.currency)) return list;

@@ -422,6 +422,40 @@
     display: inline-flex;
   }
 
+  // Unframed row actions: bare icons (budget, archive) and the fixed toggle. Written as
+  // .X.RowButton so they beat the shared .RowButton frame and padding: App.scss can load
+  // after this file.
+  &__iconAction.RowButton {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1em;
+    border: none;
+
+    // The budget field is open below the row.
+    &[aria-expanded="true"] {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+
+      .Icon img {
+        filter: var(--icon-filter-inverse);
+      }
+    }
+  }
+
+  // Quiet when off, full ink when on.
+  &__fixed.RowButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    white-space: nowrap;
+    border: none;
+    opacity: 0.7; // muted text floor
+  }
+
+  &__fixed--on.RowButton {
+    opacity: 1;
+  }
+
   // Inline budget field: its own line under the category row, right-aligned.
   &__budget {
     flex-basis: 100%;
