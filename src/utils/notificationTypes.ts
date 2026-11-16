@@ -176,7 +176,7 @@ export const NOTIFICATION_TYPES: Specs = {
         ? { keep: MILESTONE_ACHIEVEMENTS[n.item].title }
         : "something new",
     ],
-    detail: () => "the budget buddy has something for you",
+    detail: () => "your budget buddy has something for you",
     href: () => "/#knickknacks",
   },
   budget_projected: {

@@ -91,8 +91,8 @@
     line-height: 1.4;
   }
 
-  // Showing off a find: inverted (emphasis is inversion), the knick-knack on the left
-  // and what it says on the right. The art draws in currentColor, so in the inverse ink.
+  // Saying it has a find to show: inverted (emphasis is inversion), and the words are
+  // the button that opens the reveal pop-up.
   &--find {
     color: var(--inverse-ink);
     background-color: var(--inverse-surface);
@@ -105,13 +105,22 @@
     }
   }
 
-  &__find {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
+  &__teaser {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: underline dashed;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
 
-    .KnickKnack {
-      flex: none;
+    &:hover,
+    &:focus-visible {
+      text-decoration-style: solid;
+      outline: none;
     }
   }
 }

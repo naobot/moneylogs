@@ -35,10 +35,18 @@ export type KnickKnackFind = {
 const foundMs = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
 
 /**
- * The oldest find the user hasn't seen yet, live. Finds for items this build doesn't
- * know (a newer catalog on the server) wait until the app updates.
+ * Whether a buddy can reveal this find: one that came from something done in a financial
+ * log (catalog `fromLog`), not a gift. Everything else is revealed from the drawer.
  */
-export const useUnseenFind = (userDocId?: string): KnickKnackFind | null => {
+export const isLogFind = (find: Pick<KnickKnackFind, "item" | "source">): boolean =>
+  find.source !== "gift" && !!KNICK_KNACKS[find.item]?.fromLog;
+
+/**
+ * The oldest find this log's buddy can show the user, live: unseen, from this log, and
+ * from something done in a log. Finds for items this build doesn't know (a newer catalog
+ * on the server) wait until the app updates.
+ */
+export const useUnseenFind = (userDocId?: string, ledgerId?: string): KnickKnackFind | null => {
   const { data, isError, error } = useFirebaseCollection<KnickKnackFind>({
     queryBuilder: () =>
       userDocId
@@ -53,10 +61,11 @@ export const useUnseenFind = (userDocId?: string): KnickKnackFind | null => {
     if (isError) reportError(error, { feature: "budget_buddy", action: "load_unseen_finds" });
   }, [isError, error]);
 
-  // Gifts are unwrapped in the drawer, not revealed by the buddy.
-  const known = data.filter((f) => f.item in KNICK_KNACKS && f.source !== "gift");
-  if (!known.length) return null;
-  return known.reduce((oldest, f) => (foundMs(f) < foundMs(oldest) ? f : oldest));
+  const mine = data.filter(
+    (f) => f.item in KNICK_KNACKS && f.ledgerId === ledgerId && isLogFind(f),
+  );
+  if (!mine.length) return null;
+  return mine.reduce((oldest, f) => (foundMs(f) < foundMs(oldest) ? f : oldest));
 };
 
 /** Every find the user has, seen or not, live: the knick-knack drawer's contents. */

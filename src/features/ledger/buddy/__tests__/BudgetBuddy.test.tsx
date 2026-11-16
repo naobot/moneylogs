@@ -9,7 +9,8 @@ const state = vi.hoisted(() => ({
   byMonth: {} as Record<string, unknown>,
   isSuccess: true,
   find: null as null | { id: string; item: "acorn"; ledgerId: string; seenAt: null },
-  markFindSeen: vi.fn(() => Promise.resolve()),
+  markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
+  unseenFindArgs: [] as unknown[],
   requestQuietDayRoll: vi.fn(),
   requestCheckIn: vi.fn(),
 }));
@@ -31,7 +32,10 @@ vi.mock("../knickknacks/checkIn", () => ({
   requestCheckIn: state.requestCheckIn,
 }));
 vi.mock("../knickknacks/useUnseenFinds", () => ({
-  useUnseenFind: () => state.find,
+  useUnseenFind: (userDocId?: string, ledgerId?: string) => {
+    state.unseenFindArgs = [userDocId, ledgerId];
+    return state.find;
+  },
   markFindSeen: state.markFindSeen,
 }));
 
@@ -358,14 +362,29 @@ describe("BudgetBuddy finds", () => {
     expect(button().getAttribute("aria-label")).toContain("found something");
   });
 
-  it("shows the find in an inverted bubble on click, and marks it seen", () => {
+  it("only asks for finds from its own log", () => {
+    render();
+    expect(state.unseenFindArgs).toEqual(["u1", ledger.id]);
+  });
+
+  it("teases the find on click, and reveals it in the pop-up from the bubble", () => {
     render();
     act(() => button().click());
     expect(bubble()!.classList.contains("BuddyBubble--find")).toBe(true);
-    expect(bubble()!.querySelector('svg[aria-label="acorn"]')).not.toBeNull();
-    expect(bubble()!.textContent).toContain(KNICK_KNACKS.acorn.found);
+    // The bubble only teases: it doesn't say what it is, and nothing is seen yet.
+    expect(bubble()!.querySelector('svg[aria-label="acorn"]')).toBeNull();
+    expect(state.markFindSeen).not.toHaveBeenCalled();
+
+    act(() => bubble()!.querySelector<HTMLButtonElement>(".BuddyBubble__teaser")!.click());
+    expect(bubble()).toBeNull();
+    const reveal = document.querySelector(".KnickKnackReveal")!;
+    expect(reveal.querySelector('svg[aria-label="acorn"]')).not.toBeNull();
+    expect(reveal.textContent).toContain(KNICK_KNACKS.acorn.found);
     expect(state.markFindSeen).toHaveBeenCalledWith("u1", "f1");
     expect(button().querySelector(".BudgetBuddy__found")).toBeNull();
+
+    act(() => reveal.querySelector<HTMLButtonElement>(".Modal__footer button")!.click());
+    expect(document.querySelector(".KnickKnackReveal")).toBeNull();
   });
 
   it("talks about the month as usual with nothing found", () => {
@@ -374,7 +393,7 @@ describe("BudgetBuddy finds", () => {
     expect(button().querySelector(".BudgetBuddy__found")).toBeNull();
     act(() => button().click());
     expect(bubble()!.classList.contains("BuddyBubble--find")).toBe(false);
-    expect(bubble()!.querySelector("svg")).toBeNull();
+    expect(bubble()!.querySelector(".BuddyBubble__teaser")).toBeNull();
     expect(state.markFindSeen).not.toHaveBeenCalled();
   });
 });

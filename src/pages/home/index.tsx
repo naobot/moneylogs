@@ -50,7 +50,7 @@ export const Home = () => {
         </p>
         {archivedNote}
         <div className="Dashboard">
-          <KnickKnackDrawer ledgers={ledgers} />
+          <KnickKnackDrawer />
         </div>
       </div>
     );

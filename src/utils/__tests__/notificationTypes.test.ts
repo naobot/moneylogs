@@ -135,7 +135,7 @@ describe("describeNotification", () => {
     } as AppNotification;
     expect(describeNotification(n, NOW)).toEqual(["achievement unlocked: ", { keep: "Off We Go" }]);
     expect(notificationText(n, NOW)).not.toContain("leaf");
-    expect(notificationDetail(n)).toBe("the budget buddy has something for you");
+    expect(notificationDetail(n)).toBe("your budget buddy has something for you");
     expect(notificationHref(n)).toBe("/#knickknacks");
     expect(notificationText({ ...n, item: "from_the_future" } as AppNotification, NOW)).toBe(
       "achievement unlocked: something new",

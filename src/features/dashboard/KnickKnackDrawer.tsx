@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import HelpTip from "@/components/HelpTip";
 import Icon from "@/components/Icon";
@@ -7,18 +7,16 @@ import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { useFriendships } from "@/hooks/useFriendships";
 import { useProfiles } from "@/hooks/useProfiles";
-import { Ledger } from "@/types/ledger";
-import { reportError } from "@/utils/reportError";
 import { KNICK_KNACKS, KnickKnackId } from "@/features/ledger/buddy/knickknacks/catalog";
 import { drawerContents } from "@/features/ledger/buddy/knickknacks/drawer";
 import { giftableByItem } from "@/features/ledger/buddy/knickknacks/gifts";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import {
   KnickKnackFind,
-  markFindSeen,
   useKnickKnackFinds,
 } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 import GiftModal from "@/features/gifts/GiftModal";
+import KnickKnackReveal from "@/features/ledger/buddy/knickknacks/KnickKnackReveal";
 
 import "./Dashboard.scss";
 
@@ -27,29 +25,34 @@ export const KNICK_KNACK_HELP =
 
 const DELETED_USER = "deleted user";
 
+/** The bouncing "!" on the drawer's alerts. */
+const AlertMark = () => (
+  <span className="KnickKnackDrawer__alertMark" aria-hidden="true">
+    <Icon type="warning" size={14} />
+  </span>
+);
+
 /**
  * Everything the budget buddies have found for you, on the dashboard. Always there,
- * even empty. Finds the buddy hasn't shown you yet stay wrapped: the drawer only
- * points to the log whose buddy has them. Gifts from friends arrive wrapped too, and
- * unwrap right here. With a friend to give to, each knick-knack you found yourself is
+ * even empty. Finds your buddy hasn't shown you yet, and gifts from friends, wait
+ * behind centred alerts with a bouncing "!"; clicking one opens the reveal pop-up,
+ * which is what completes the event. With a friend to give to, each knick-knack you found yourself is
  * a button that gives one copy (after a confirmation). `?giftTo=<userDocId>` (from a
  * friend's profile) preselects who it goes to.
  */
-export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Ledger> }) => {
+export const KnickKnackDrawer = () => {
   const { user } = useCurrentUser();
   const { hash } = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data, isLoading } = useKnickKnackFinds(user?.id);
   const { friends } = useFriendships();
-  const { kept, waiting, loose, gifts } = drawerContents(
-    data,
-    ledgers.map((l) => l.id),
-  );
+  const { kept, waiting, gifts } = drawerContents(data);
   const givers = useProfiles(gifts.map((g) => g.giftedBy ?? "").filter(Boolean));
   const [giving, setGiving] = useState<KnickKnackId | null>(null);
-  const [unwrapped, setUnwrapped] = useState<{ item: KnickKnackId; from?: string } | null>(null);
-  const titleOf = (id: string) => ledgers.find((l) => l.id === id)?.title;
+  // What the reveal pop-up is showing: a snapshot of the queue (finds leave `waiting` as
+  // soon as they're marked seen) and where it's up to.
+  const [reveal, setReveal] = useState<{ queue: KnickKnackFind[]; at: number } | null>(null);
   const giverName = (id?: string | null) => (id && givers.get(id)?.displayName) || DELETED_USER;
   const giftable = useMemo(
     () => new Set(friends.length ? giftableByItem(data).map((g) => g.item) : []),
@@ -66,19 +69,6 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
       document.getElementById("knickknacks")?.scrollIntoView?.({ block: "start" });
     }
   }, [hash]);
-
-  const unwrap = (find: KnickKnackFind) => {
-    if (!user?.id) return;
-    const gift = find.source === "gift";
-    setUnwrapped({ item: find.item, from: gift ? giverName(find.giftedBy) : undefined });
-    markFindSeen(user.id, find.id).catch((err) =>
-      reportError(err, {
-        feature: gift ? "friends" : "budget_buddy",
-        action: gift ? "unwrap_gift" : "unwrap_find",
-        level: "warning",
-      }),
-    );
-  };
 
   return (
     <section
@@ -100,47 +90,36 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
         </div>
       )}
       <div className="KnickKnackDrawer__box">
-        {unwrapped && (
-          <p className="KnickKnackDrawer__unwrapped keep-case" role="status">
-            you unwrapped {KNICK_KNACKS[unwrapped.item].name.toLowerCase()}
-            {unwrapped.from ? ` from ${unwrapped.from}` : ""}!
-          </p>
+        {(waiting.length > 0 || gifts.length > 0) && (
+          <div className="KnickKnackDrawer__alerts">
+            {waiting.length > 0 && (
+              <button
+                type="button"
+                className="KnickKnackDrawer__alert"
+                onClick={() => setReveal({ queue: waiting, at: 0 })}
+              >
+                <AlertMark />
+                <span className="keep-case">
+                  your budget buddy has{" "}
+                  {waiting.length > 1 ? `${waiting.length} things` : "something"} to show you
+                </span>
+              </button>
+            )}
+            {gifts.map((gift) => (
+              <button
+                key={gift.id}
+                type="button"
+                className="KnickKnackDrawer__alert"
+                onClick={() => setReveal({ queue: [gift], at: 0 })}
+              >
+                <AlertMark />
+                <span className="keep-case">
+                  {giverName(gift.giftedBy)} has sent you something!
+                </span>
+              </button>
+            ))}
+          </div>
         )}
-        {gifts.map((gift) => (
-          <button
-            key={gift.id}
-            type="button"
-            className="KnickKnackDrawer__waiting KnickKnackDrawer__gift"
-            onClick={() => unwrap(gift)}
-          >
-            <Icon type="gift" size={14} />
-            <span className="keep-case">a gift from {giverName(gift.giftedBy)}. open it?</span>
-          </button>
-        ))}
-        {/* With no financial log to point to, the find opens right here. */}
-        {loose.map((find) => (
-          <button
-            key={find.id}
-            type="button"
-            className="KnickKnackDrawer__waiting"
-            onClick={() => unwrap(find)}
-          >
-            <Icon type="warning" size={14} />
-            <span className="keep-case">the budget buddy left something for you. open it?</span>
-          </button>
-        ))}
-        {waiting.map(({ ledgerId, count }) => {
-          const title = titleOf(ledgerId);
-          return (
-            <Link key={ledgerId} to={`/l/${ledgerId}`} className="KnickKnackDrawer__waiting">
-              <Icon type="warning" size={14} />
-              <span className="keep-case">
-                the budget buddy{title ? ` in ${title}` : ""} has{" "}
-                {count > 1 ? `${count} things` : "something"} to show you
-              </span>
-            </Link>
-          );
-        })}
         {kept.length > 0 ? (
           <ul className="KnickKnackDrawer__items">
             {kept.map(({ item, count }) => {
@@ -191,6 +170,20 @@ export const KnickKnackDrawer = ({ ledgers = [] }: { ledgers?: ReadonlyArray<Led
           toUserDocId={givingTo ?? undefined}
           onClose={() => setGiving(null)}
           onGiven={givingTo ? stopGivingTo : undefined}
+        />
+      )}
+      {reveal && user?.id && (
+        <KnickKnackReveal
+          userDocId={user.id}
+          find={reveal.queue[reveal.at]}
+          fromName={
+            reveal.queue[reveal.at].source === "gift"
+              ? giverName(reveal.queue[reveal.at].giftedBy)
+              : undefined
+          }
+          remaining={reveal.queue.length - reveal.at - 1}
+          onNext={() => setReveal({ ...reveal, at: reveal.at + 1 })}
+          onClose={() => setReveal(null)}
         />
       )}
     </section>
