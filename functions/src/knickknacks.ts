@@ -11,7 +11,7 @@
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type Hemisphere = "north" | "south";
-/** Milestone items (the coins) are never found by chance: see coins.ts. */
+/** Milestone items are never found by chance: see milestones.ts. */
 export type Rarity = "common" | "rare" | "milestone";
 
 /** How often each rarity is picked, relative to the others in season. */
@@ -38,6 +38,9 @@ export const KNICK_KNACK_FINDS = {
   silver_coin: { seasons: [], rarity: "milestone" },
   gold_coin: { seasons: [], rarity: "milestone" },
   extra_shiny_gold_coin: { seasons: [], rarity: "milestone" },
+  heart_leaf: { seasons: [], rarity: "milestone" },
+  paper_crane: { seasons: [], rarity: "milestone" },
+  friendship_bracelet: { seasons: [], rarity: "milestone" },
 } as const satisfies Record<string, { seasons: readonly Season[]; rarity: Rarity }>;
 
 export type KnickKnackId = keyof typeof KNICK_KNACK_FINDS;

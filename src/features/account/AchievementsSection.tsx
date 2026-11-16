@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
-import { ACHIEVEMENT_META, HeldAchievement, isCoinAchievement } from "@/hooks/useAchievements";
+import { ACHIEVEMENT_META, HeldAchievement, isMilestoneAchievement } from "@/hooks/useAchievements";
 import Icon from "@/components/Icon";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
-import { COIN_ACHIEVEMENTS } from "@/features/ledger/buddy/knickknacks/coinAchievements";
+import { MILESTONE_ACHIEVEMENTS } from "@/features/ledger/buddy/knickknacks/milestoneAchievements";
 
 import "@/features/moneylog/components/LogsSummary/styles.scss";
 
@@ -16,8 +16,8 @@ export const AchievementsSection = ({ achievements }: AchievementsSectionProps) 
   if (achievements.length === 0) {
     return (
       <p className="GroupArchive__empty">
-        No achievements yet. They are awarded when a log group ends, and for keeping up a financial
-        log.
+        No achievements yet. They are awarded when a log group ends, and for habits like keeping up
+        a financial log.
       </p>
     );
   }
@@ -25,21 +25,21 @@ export const AchievementsSection = ({ achievements }: AchievementsSectionProps) 
   return (
     <div className="AchievementsList">
       {achievements.map((achievement) => {
-        if (isCoinAchievement(achievement)) {
-          // Coins aren't tied to one log, so the tile isn't a link.
-          const coin = COIN_ACHIEVEMENTS[achievement.type];
+        if (isMilestoneAchievement(achievement)) {
+          // Milestones aren't tied to one log, so the tile isn't a link.
+          const milestone = MILESTONE_ACHIEVEMENTS[achievement.type];
           return (
             <div
               key={achievement.id}
-              className="AchievementsList__item AchievementsList__item--coin"
-              aria-label={`${coin.title}: ${coin.description}`}
+              className="AchievementsList__item AchievementsList__item--milestone"
+              aria-label={`${milestone.title}: ${milestone.description}`}
             >
               <span className="AchievementsList__item__icon" aria-hidden="true">
                 <KnickKnack id={achievement.type} size={64} />
               </span>
               <div className="AchievementsList__item__text">
-                <strong>{coin.title}</strong>
-                <span>{coin.description}</span>
+                <strong>{milestone.title}</strong>
+                <span>{milestone.description}</span>
               </div>
             </div>
           );

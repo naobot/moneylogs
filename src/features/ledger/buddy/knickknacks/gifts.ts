@@ -5,7 +5,8 @@ import type { KnickKnackFind } from "./useUnseenFinds";
 
 /**
  * A find can be given to a friend once you've seen it, and only if you found it
- * yourself: gifts can't be passed on, and coins stay with whoever earned them. Mirrors
+ * yourself: gifts can't be passed on, and milestone knick-knacks
+ * (the ones that come with an achievement) stay with whoever earned them. Mirrors
  * functions/src/giftsPlan.ts (canGift).
  */
 export const isGiftable = (find: Pick<KnickKnackFind, "seenAt" | "source">): boolean =>

@@ -1,20 +1,13 @@
-import { DocumentReference, FieldValue, Firestore, getFirestore } from "firebase-admin/firestore";
+import { DocumentReference, Firestore, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import {
-  coinAchievementId,
-  coinsDue,
-  nextStreak,
-  parseCheckInRequest,
-  StreakMarker,
-} from "./coins";
+import { coinsDue, nextStreak, parseCheckInRequest, StreakMarker } from "./coins";
 import { dayIn } from "./knickknacks";
+import { writeMilestone } from "./awardMilestone";
 
 /**
  * Count a check-in on a financial log towards the person's streak, and hand over any coin
  * it earns (coins.ts). The streak lives at users/{id}/buddy/streak, which clients can't
- * read or write. Coins land in users/{id}/knickknacks like any find, with
- * source "milestone", so the log's buddy reveals them, and each comes with an achievement
- * (which clients can't write for coins: firestore.rules).
+ * read or write. Each coin comes with its achievement (awardMilestone.ts).
  */
 export const recordCheckIn = async ({
   db,
@@ -42,20 +35,7 @@ export const recordCheckIn = async ({
     if (!next && !due.length) return [];
 
     tx.set(markerRef, { ...next, coins: [...given, ...due] }, { merge: true });
-    for (const item of due) {
-      tx.create(userRef.collection("knickknacks").doc(), {
-        item,
-        ledgerId: ledgerRef.id,
-        foundAt: FieldValue.serverTimestamp(),
-        seenAt: null,
-        source: "milestone",
-      });
-      tx.set(userRef.collection("achievements").doc(coinAchievementId(item)), {
-        type: item,
-        ledgerId: ledgerRef.id,
-        unlockedAt: FieldValue.serverTimestamp(),
-      });
-    }
+    for (const item of due) writeMilestone(tx, user, item, ledgerRef.id);
     return due;
   });
 

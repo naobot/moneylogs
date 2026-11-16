@@ -366,8 +366,8 @@
       }
     }
 
-    // Coin achievements aren't links: no pointer, no hover inversion.
-    &--coin {
+    // Milestone achievements aren't links: no pointer, no hover inversion.
+    &--milestone {
       cursor: default;
 
       &:hover {

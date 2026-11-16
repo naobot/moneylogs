@@ -5,7 +5,7 @@ import {
   sortAchievementsByGroupEnd,
   mergeGroupAchievements,
 } from "@/hooks/useAchievements";
-import type { Achievement, CoinAchievement } from "@/hooks/useAchievements";
+import type { Achievement, MilestoneAchievement } from "@/hooks/useAchievements";
 import type { Group, LogPost } from "@/types/user";
 
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
@@ -396,7 +396,7 @@ describe("sortAchievementsByGroupEnd", () => {
       id: "coin__silver_coin",
       type: "silver_coin",
       unlockedAt: { seconds: 9_999_999_999, toDate: () => new Date() },
-    } as CoinAchievement;
+    } as MilestoneAchievement;
     const sorted = sortAchievementsByGroupEnd([achievement("a", "jun", 100), coin], groups);
     expect(sorted.map((a) => a.id)).toEqual(["coin__silver_coin", "a"]);
   });
@@ -452,7 +452,7 @@ describe("mergeGroupAchievements", () => {
   });
 
   it("leaves out coin achievements", () => {
-    const coin = { id: "coin__copper_coin", type: "copper_coin" } as CoinAchievement;
+    const coin = { id: "coin__copper_coin", type: "copper_coin" } as MilestoneAchievement;
     expect(mergeGroupAchievements([coin, ach("g1__a", "g1")], [], "g1").map((x) => x.id)).toEqual([
       "g1__a",
     ]);

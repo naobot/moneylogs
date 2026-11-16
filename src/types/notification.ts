@@ -21,7 +21,8 @@ export type NotificationType =
   | "budget_projected"
   | "friend_request"
   | "friend_accepted"
-  | "gift_received";
+  | "gift_received"
+  | "milestone_earned";
 
 /** Which collection `groupId` points into. Missing on older docs, which are all social. */
 export type LogKind = "social" | "ledger";
@@ -107,8 +108,24 @@ export type GiftNotification = Omit<FriendNotification, "type"> & {
   findId: string;
 };
 
+/**
+ * An achievement that came with a milestone knick-knack. Names the achievement only:
+ * the knick-knack stays a surprise for the budget buddy to reveal.
+ */
+export type MilestoneNotification = Omit<Base, "groupId" | "groupName" | "logKind"> & {
+  type: "milestone_earned";
+  /** The knick-knack id, which is also the achievement's type. */
+  item: string;
+  /** The find in your drawer. */
+  findId: string;
+  groupId?: undefined;
+  groupName?: undefined;
+  logKind?: undefined;
+};
+
 export type AppNotification =
   | FriendNotification
+  | MilestoneNotification
   | GiftNotification
   | CommentNotification
   | ReactionNotification

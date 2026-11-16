@@ -35,12 +35,15 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /users/{userDocId}/achievements/{path=**} {
-      // Coin achievements come with the buddy's coins and only the server writes them
-      // (checkIn.ts); the group ones are still awarded client-side.
+      // Milestone achievements come with a knick-knack and only the server writes them
+      // (functions/src/awardMilestone.ts); the group ones are still awarded client-side.
+      // Their types are the knick-knacks' ids (MILESTONE_ACHIEVEMENTS).
       allow read, delete: if ownsUserDoc(userDocId);
       allow create, update: if ownsUserDoc(userDocId)
-        && !(request.resource.data.type in
-          ["copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin"]);
+        && !(request.resource.data.type in [
+          "copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin",
+          "heart_leaf", "paper_crane", "friendship_bracelet"
+        ]);
     }
 
     // Public profiles: the mirrorProfile function projects name, location, timezone,

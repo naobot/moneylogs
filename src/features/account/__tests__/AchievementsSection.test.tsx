@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
 
 import { AchievementsSection } from "@/features/account/AchievementsSection";
-import type { Achievement, CoinAchievement } from "@/hooks/useAchievements";
+import type { Achievement, MilestoneAchievement } from "@/hooks/useAchievements";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -25,8 +25,8 @@ describe("AchievementsSection", () => {
     container.remove();
   });
 
-  it("shows a coin achievement with the coin's large art, not as a link", () => {
-    const coin = { id: "coin__gold_coin", type: "gold_coin" } as CoinAchievement;
+  it("shows a milestone achievement with its knick-knack's large art, not as a link", () => {
+    const coin = { id: "coin__gold_coin", type: "gold_coin" } as MilestoneAchievement;
     const group = {
       id: "g1__time_traveller",
       type: "time_traveller",
@@ -41,7 +41,7 @@ describe("AchievementsSection", () => {
       ),
     );
 
-    const tile = container.querySelector(".AchievementsList__item--coin")!;
+    const tile = container.querySelector(".AchievementsList__item--milestone")!;
     expect(tile.tagName).toBe("DIV");
     expect(tile.textContent).toContain("A Whole Month");
     const art = tile.querySelector("svg.KnickKnack")!;

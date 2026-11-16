@@ -4,6 +4,10 @@ import { Currency } from "@/types/user";
 import { formatAmount } from "@/utils/ledgerEntries";
 import { postLinkHref } from "@/utils/postLink";
 import {
+  isMilestoneAchievementType,
+  MILESTONE_ACHIEVEMENTS,
+} from "@/features/ledger/buddy/knickknacks/milestoneAchievements";
+import {
   AppNotification,
   BudgetNotification,
   NotificationPrefKey,
@@ -159,6 +163,20 @@ export const NOTIFICATION_TYPES: Specs = {
     icon: "gift",
     describe: (n) => [{ keep: n.actorName }, " sent you a gift"],
     detail: () => "it's waiting, wrapped, in your knick-knack drawer",
+    href: () => "/#knickknacks",
+  },
+  milestone_earned: {
+    label: "Achievements that come with a knick-knack",
+    defaultEnabled: true,
+    icon: "gift",
+    describe: (n) => [
+      "achievement unlocked: ",
+      // An item from a newer catalog still gets a line, just without its title.
+      isMilestoneAchievementType(n.item)
+        ? { keep: MILESTONE_ACHIEVEMENTS[n.item].title }
+        : "something new",
+    ],
+    detail: () => "the budget buddy has something for you",
     href: () => "/#knickknacks",
   },
   budget_projected: {

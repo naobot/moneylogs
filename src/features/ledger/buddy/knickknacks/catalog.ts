@@ -10,8 +10,8 @@ export type KnickKnackId = keyof typeof ART;
 
 /**
  * Rare items turn up less often than the others in season (weights live server-side).
- * Milestone items (the coins) are never found by chance: the buddy hands them over for
- * habits (functions/src/coins.ts).
+ * Milestone items are never found by chance: the buddy hands them over with an
+ * achievement (functions/src/milestones.ts), and they can't be gifted.
  */
 export type Rarity = "common" | "rare" | "milestone";
 
@@ -144,6 +144,25 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found: "one hundred days!!! the shiniest coin i've ever seen. *squints* ✦",
+  },
+  heart_leaf: {
+    name: "heart-shaped leaf",
+    rarity: "milestone",
+    seasons: [],
+    found: "your first entry with friends! i found a heart-shaped leaf to celebrate ♡",
+  },
+  paper_crane: {
+    name: "paper crane",
+    rarity: "milestone",
+    seasons: [],
+    found: "a paper crane flew in with your first comment! i promise not to chase it… *wiggle*",
+  },
+  friendship_bracelet: {
+    name: "friendship bracelet",
+    rarity: "milestone",
+    seasons: [],
+    found:
+      "a friendship bracelet for your first friend! i made it myself. well, mostly i tangled it~",
   },
 };
 

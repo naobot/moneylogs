@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { COIN_ACHIEVEMENTS } from "../../src/features/ledger/buddy/knickknacks/coinAchievements";
 import {
-  coinAchievementId,
   CoinId,
   coinsDue,
   dayBefore,
@@ -21,12 +19,6 @@ describe("coins", () => {
       const findable: string[] = findableIn({ month, timezone: "America/Toronto" });
       expect(findable.filter((id) => (coins as string[]).includes(id))).toEqual([]);
     }
-  });
-
-  it("each come with an achievement the app knows", () => {
-    const coins: CoinId[] = [STARTER_COIN, ...STREAK_COINS.map((c) => c.item)];
-    expect(Object.keys(COIN_ACHIEVEMENTS).sort()).toEqual([...coins].sort());
-    expect(coinAchievementId("gold_coin")).toBe("coin__gold_coin");
   });
 
   it("finds the day before, across months and years", () => {
