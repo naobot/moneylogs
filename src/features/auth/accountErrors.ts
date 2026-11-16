@@ -1,3 +1,19 @@
+// Mistakes the user can fix themselves (a mistyped password, retrying too fast);
+// anything else on /me is worth reporting.
+const EXPECTED_ACCOUNT_CODES = new Set([
+  "auth/invalid-credential",
+  "auth/wrong-password",
+  "auth/missing-password",
+  "auth/weak-password",
+  "auth/password-does-not-meet-requirements",
+  "auth/requires-recent-login",
+  "auth/too-many-requests",
+  "functions/failed-precondition", // deleteAccount: the sign-in check went stale
+]);
+
+export const isExpectedAccountError = (code?: string): boolean =>
+  !!code && EXPECTED_ACCOUNT_CODES.has(code);
+
 /**
  * Messages for account changes made while signed in (/me). Kept apart from the login
  * messages because "incorrect email or password" would be wrong here: only the current

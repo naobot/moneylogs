@@ -9,6 +9,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
+import { reportError } from "@/utils/reportError";
 
 /**
  * A log member as other members see them: their public profile (profiles/{userDocId},
@@ -207,7 +208,11 @@ export const useGetGroupUsers = (groupId: string) => {
             },
             (err) => {
               // Don't leave the log waiting on members forever (cached ones stay).
-              console.error(`Failed to load members (query ${chunkIndex + 1}):`, err);
+              reportError(err, {
+                feature: "log_group",
+                action: "load_members",
+                extra: { chunk: chunkIndex + 1 },
+              });
               setError(err instanceof Error ? err.message : "Failed to fetch users");
               setIsLoading(false);
             },

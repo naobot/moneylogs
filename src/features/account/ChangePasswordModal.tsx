@@ -7,6 +7,7 @@ import useValidatePassword from "@/features/auth/hooks/useValidatePassword";
 import {
   getPasswordChangeErrorMessage,
   validatePasswordChange,
+  isExpectedAccountError,
 } from "@/features/auth/accountErrors";
 import { describePasswordRequirements } from "@/features/auth/passwordRequirements";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
@@ -14,6 +15,7 @@ import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 import Modal from "@/components/Modal";
+import { reportError } from "@/utils/reportError";
 
 type PasswordFieldProps = {
   label: string;
@@ -101,7 +103,9 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
       onClose();
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      console.error("Failed to change password:", code);
+      if (!isExpectedAccountError(code)) {
+        reportError(err, { feature: "account", action: "change_password" });
+      }
       setError(getPasswordChangeErrorMessage(code));
     } finally {
       setPending(false);

@@ -27,6 +27,7 @@ import "./styles.scss";
 import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import Button from "@/components/Button";
 import Tabs, { TabItem } from "@/components/Tabs";
+import { reportError } from "@/utils/reportError";
 
 interface LogsSummaryProps {
   group: Group;
@@ -141,7 +142,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
         // Start the analytics processing
         await processAnalytics({ groupId: group.id, groupEnd: group.end });
       } catch (error) {
-        console.error("Failed to start analytics processing:", error);
+        reportError(error, { feature: "log_analytics", action: "process_group_analytics" });
         setAnalyticsError(error instanceof Error ? error.message : "Unknown error");
         setProcessingState(null);
         // setHasStartedProcessing(false) // Reset on error so user can retry
@@ -181,7 +182,13 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
       .then((unlocked) => {
         if (!cancelled && unlocked.length > 0) setNewAchievements(unlocked);
       })
-      .catch((err) => console.error("Failed to award achievements:", err));
+      .catch((err) =>
+        reportError(err, {
+          feature: "log_analytics",
+          action: "award_achievements",
+          level: "warning",
+        }),
+      );
 
     return () => {
       cancelled = true;

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { Comment } from "@/types/user";
+import { reportError } from "@/utils/reportError";
 
 type EventListener = (...args: unknown[]) => void;
 
@@ -129,7 +130,7 @@ export const useGetComments = ({ logPostId, forceFresh = false }: UseGetComments
 
       return comments;
     } catch (error) {
-      console.error(`❌ error fetching comments for post ${postId}:`, error);
+      reportError(error, { feature: "log_post", action: "load_comments" });
       if (currentPostIdRef.current === postId) {
         setState({
           data: [],

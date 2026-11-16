@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
+  isExpectedAccountError,
   confirmsAccountDeletion,
   getDeleteAccountErrorMessage,
   getPasswordChangeErrorMessage,
@@ -119,5 +120,25 @@ describe("getDeleteAccountErrorMessage", () => {
   it("invites a retry when the deletion stopped part-way", () => {
     expect(getDeleteAccountErrorMessage("functions/internal")).toMatch(/try again/);
     expect(getDeleteAccountErrorMessage(undefined)).toMatch(/try again/);
+  });
+});
+
+describe("isExpectedAccountError", () => {
+  it("skips mistakes the user can fix", () => {
+    for (const code of [
+      "auth/invalid-credential",
+      "auth/wrong-password",
+      "auth/too-many-requests",
+      "auth/requires-recent-login",
+      "functions/failed-precondition",
+    ]) {
+      expect(isExpectedAccountError(code)).toBe(true);
+    }
+  });
+
+  it("reports everything else, including unknown failures", () => {
+    for (const code of ["functions/internal", "auth/network-request-failed", "", undefined]) {
+      expect(isExpectedAccountError(code)).toBe(false);
+    }
   });
 });

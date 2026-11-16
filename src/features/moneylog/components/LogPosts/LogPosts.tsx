@@ -26,6 +26,7 @@ import PostReactions from "./PostReactions";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { useDateFormat } from "@/utils/dateFormat";
+import { reportError } from "@/utils/reportError";
 
 type LogPostsProps = {
   user: UserData;
@@ -177,7 +178,7 @@ const LogPostItemComponent = ({
         setSelectedPost(null);
       }
     } catch (err) {
-      console.error("Failed to delete log post:", err);
+      reportError(err, { feature: "log_post", action: "delete_post" });
     }
   };
 
@@ -195,7 +196,7 @@ const LogPostItemComponent = ({
 
       setShowPinWarning(false);
     } catch (err) {
-      console.error("Failed to pin log post:", err);
+      reportError(err, { feature: "log_post", action: isPinned ? "unpin_post" : "pin_post" });
     }
   };
 

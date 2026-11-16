@@ -15,6 +15,7 @@ import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 
 import "./LogActions.scss";
+import { reportError } from "@/utils/reportError";
 
 export type LogKind = "social" | "financial";
 
@@ -82,7 +83,11 @@ export const LogActionsModal = ({
       if (onDeleted) onDeleted();
       else void navigate("/", { replace: true });
     } catch (err) {
-      console.error("Failed to delete log:", err);
+      // Who may delete, or a log already gone, is explained in the modal; not a bug.
+      const code = err instanceof FirebaseError ? err.code.replace("functions/", "") : "";
+      if (!["permission-denied", "not-found", "failed-precondition"].includes(code)) {
+        reportError(err, { feature: "log_actions", action: "delete_log", tags: { kind } });
+      }
       setDeleteError(deleteErrorMessage(err));
     }
   };
@@ -107,7 +112,11 @@ export const LogActionsModal = ({
       }
       onClose();
     } catch (err) {
-      console.error("Failed to update archive:", err);
+      reportError(err, {
+        feature: "log_actions",
+        action: archived ? "unarchive" : "archive",
+        tags: { kind },
+      });
       setFailed(true);
     }
   };

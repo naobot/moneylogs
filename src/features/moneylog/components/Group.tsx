@@ -34,6 +34,7 @@ import { creatorUid } from "@/utils/logOwnership";
 import { useDateFormat } from "@/utils/dateFormat";
 import { MemberNamesContext, MemberProfilesContext } from "./LogPosts/memberNames";
 import type { PostFocus } from "./LogPosts/LogPosts";
+import { reportError } from "@/utils/reportError";
 
 export const Group = ({
   group,
@@ -263,7 +264,11 @@ export const Group = ({
           group_id: groupId,
         });
       } catch (error) {
-        console.error("Failed to update view tracking:", error);
+        reportError(error, {
+          feature: "log_group",
+          action: "update_view_tracking",
+          level: "warning",
+        });
       }
     };
 

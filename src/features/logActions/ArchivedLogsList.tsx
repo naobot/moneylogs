@@ -12,6 +12,7 @@ import { ManageLogButton } from "./ManageLogButton";
 import { ManageTarget, manageTargetForGroup, manageTargetForLedger } from "./manageTarget";
 
 import "./LogActions.scss";
+import { reportError } from "@/utils/reportError";
 
 type ArchivedLogsListProps = {
   groups: ReadonlyArray<Group>;
@@ -57,7 +58,7 @@ export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsList
     try {
       await unarchiveLog.mutate({ userId: user.id, logId });
     } catch (err) {
-      console.error("Failed to unarchive:", err);
+      reportError(err, { feature: "log_actions", action: "unarchive_from_list" });
       showToast("Failed to unarchive. Please try again.");
     } finally {
       setPendingId(null);

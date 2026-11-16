@@ -11,6 +11,7 @@ import { useReadTracking } from "@/hooks/useReadTracking";
 import Button from "@/components/Button";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
+import { reportError } from "@/utils/reportError";
 
 /** The speaking avatar: mini by default, full 30px on the widest screens (App.scss). */
 const SPEAKER_SIZES = [15, 30] as const;
@@ -72,7 +73,7 @@ const LogPostComments = ({
 
       newCommentContentSet("");
     } catch (err) {
-      console.error("Failed to add comment:", err);
+      reportError(err, { feature: "log_post", action: "add_comment" });
     }
   };
 
