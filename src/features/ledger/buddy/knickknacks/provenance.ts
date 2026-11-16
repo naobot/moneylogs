@@ -31,29 +31,37 @@ export const provenanceLabel = (
   return when ? `${from} · ${when}` : from;
 };
 
-export type ShelfSlot = { item: KnickKnackId; provenance: Provenance[] };
+/**
+ * One item on a profile's knick-knack shelf: shelves/{userDocId}, written by the
+ * mirrorShelf Cloud Function. Each kept item appears once, with how its first copy came
+ * to its owner: how many of anything someone has is private.
+ */
+export type ShelfSlot = { item: KnickKnackId; provenance: Provenance };
 
-const firstMs = (f: KnickKnackFind) =>
-  (f.source === "gift" ? f.giftedAt : f.foundAt)?.toMillis() ?? Number.MAX_SAFE_INTEGER;
+const KINDS = new Set(["found", "earned", "gift"]);
 
 /**
- * A profile's knick-knack shelf: one slot per kept item in the order its owner first got
- * it, each with how every copy came to them (oldest first). Unseen finds and items this
- * build doesn't know are left out.
+ * A shelf doc's items, checked. Items this build doesn't know (a newer catalog) and
+ * anything malformed are left out.
  */
-export const shelfContents = (finds: ReadonlyArray<KnickKnackFind>): ShelfSlot[] => {
+export const shelfSlots = (items: unknown): ShelfSlot[] => {
+  if (!Array.isArray(items)) return [];
   const known = new Set<string>(KNICK_KNACK_IDS);
-  const slots = new Map<KnickKnackId, ShelfSlot>();
-  for (const find of [...finds].sort((a, b) => firstMs(a) - firstMs(b))) {
-    if (!known.has(find.item) || !find.seenAt) continue;
-    const slot = slots.get(find.item) ?? { item: find.item, provenance: [] };
-    slot.provenance.push(provenanceOf(find));
-    slots.set(find.item, slot);
-  }
-  return [...slots.values()];
+  return items.flatMap((raw): ShelfSlot[] => {
+    const { item, kind, atMs, fromId } = (raw ?? {}) as Record<string, unknown>;
+    if (typeof item !== "string" || !known.has(item) || !KINDS.has(kind as string)) return [];
+    const at = typeof atMs === "number" ? atMs : null;
+    const provenance: Provenance =
+      kind === "gift"
+        ? { kind, atMs: at, fromId: typeof fromId === "string" ? fromId : null }
+        : { kind: kind as "found" | "earned", atMs: at };
+    return [{ item: item as KnickKnackId, provenance }];
+  });
 };
 
-/** Ids of everyone who gave any of these finds, to look up their names. */
-export const giverIds = (finds: ReadonlyArray<KnickKnackFind>): string[] => [
-  ...new Set(finds.flatMap((f) => (f.source === "gift" && f.giftedBy ? [f.giftedBy] : []))),
+/** Ids of everyone who gave anything on a shelf, to look up their names. */
+export const giverIds = (slots: ReadonlyArray<ShelfSlot>): string[] => [
+  ...new Set(
+    slots.flatMap(({ provenance: p }) => (p.kind === "gift" && p.fromId ? [p.fromId] : [])),
+  ),
 ];

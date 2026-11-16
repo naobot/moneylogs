@@ -77,30 +77,6 @@ export const useKnickKnackFinds = (userDocId?: string) => {
   return result;
 };
 
-/**
- * Someone's kept (seen) finds, for their profile's shelf. Other signed-in people may
- * read only seen finds (firestore.rules), so the query has to say so.
- */
-export const usePublicFinds = (userDocId?: string) => {
-  const result = useFirebaseCollection<KnickKnackFind>({
-    queryBuilder: () =>
-      userDocId
-        ? query(collection(db, "users", userDocId, "knickknacks"), where("seenAt", "!=", null))
-        : null,
-    dataTransformer: (docs) => docs.map((d) => ({ id: d.id, ...d.data() }) as KnickKnackFind),
-    dependencies: [userDocId],
-    enabled: !!userDocId,
-  });
-
-  useEffect(() => {
-    if (result.isError) {
-      reportError(result.error, { feature: "budget_buddy", action: "load_knickknack_shelf" });
-    }
-  }, [result.isError, result.error]);
-
-  return result;
-};
-
 /** The owner may set seenAt once (firestore.rules). */
 export const markFindSeen = (userDocId: string, findId: string) =>
   updateDoc(doc(db, "users", userDocId, "knickknacks", findId), { seenAt: serverTimestamp() });

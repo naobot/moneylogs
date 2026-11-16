@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import type { Timestamp } from "firebase/firestore";
-import { giverIds, provenanceLabel, provenanceOf, shelfContents } from "../provenance";
+import { giverIds, provenanceLabel, provenanceOf, shelfSlots } from "../provenance";
 import type { KnickKnackFind } from "../useUnseenFinds";
 
 const ts = (ms: number) => ({ toMillis: () => ms }) as Timestamp;
@@ -55,23 +55,39 @@ describe("provenance", () => {
   });
 });
 
-describe("shelfContents", () => {
-  it("groups kept finds by item in the order first got, oldest copy first", () => {
-    const shelf = shelfContents([
-      found("acorn", 300),
-      gift("holly", 100, "mina"),
-      found("acorn", 200),
-      found("daisy", 50, false),
-      found("not_an_item", 10),
-    ]);
-    expect(shelf.map((s) => s.item)).toEqual(["holly", "acorn"]);
-    expect(shelf[1].provenance).toEqual([
-      { kind: "found", atMs: 200 },
-      { kind: "found", atMs: 300 },
+describe("shelfSlots", () => {
+  it("reads each item once, with its first copy's provenance", () => {
+    expect(
+      shelfSlots([
+        { item: "holly", kind: "gift", atMs: 100, fromId: "mina" },
+        { item: "acorn", kind: "found", atMs: 200, fromId: null },
+        { item: "copper_coin", kind: "earned", atMs: 300, fromId: null },
+      ]),
+    ).toEqual([
+      { item: "holly", provenance: { kind: "gift", atMs: 100, fromId: "mina" } },
+      { item: "acorn", provenance: { kind: "found", atMs: 200 } },
+      { item: "copper_coin", provenance: { kind: "earned", atMs: 300 } },
     ]);
   });
 
+  it("leaves out unknown items and anything malformed", () => {
+    expect(
+      shelfSlots([
+        { item: "not_an_item", kind: "found", atMs: 1 },
+        { item: "acorn", kind: "stolen", atMs: 1 },
+        null,
+        { item: "daisy", kind: "found" },
+      ]),
+    ).toEqual([{ item: "daisy", provenance: { kind: "found", atMs: null } }]);
+    expect(shelfSlots(undefined)).toEqual([]);
+  });
+
   it("lists who gave things", () => {
-    expect(giverIds([gift("a", 1, "mina"), gift("b", 2, "mina"), found("c", 3)])).toEqual(["mina"]);
+    const slots = shelfSlots([
+      { item: "holly", kind: "gift", atMs: 1, fromId: "mina" },
+      { item: "tulip", kind: "gift", atMs: 2, fromId: "mina" },
+      { item: "acorn", kind: "found", atMs: 3 },
+    ]);
+    expect(giverIds(slots)).toEqual(["mina"]);
   });
 });
