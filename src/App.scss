@@ -14,8 +14,16 @@
   display: flex;
   width: 100%;
 
+  // Phones: 14px, a step down from desktop so dense pages (log posts, ledgers) still fit.
   @media (max-width: constants.$breakpoint-sm) {
-    font-size: 0.8em;
+    font-size: 0.875em;
+  }
+}
+
+// Text-led pages (see utils/textDensity) read at a full 16px on phones.
+.Content[data-text="roomy"] {
+  @media (max-width: constants.$breakpoint-sm) {
+    font-size: calc(16em / 14);
   }
 }
 
@@ -136,33 +144,100 @@ html {
   box-sizing: border-box;
 }
 
+// The header: nav icons, the ongoing logs, and the brand (wordmark, theme, sign out).
+// Desktop: one row, brand pushed right. Phones: brand + nav icons on top, and the logs on
+// a scrollable row of their own beneath, so titles stay readable and taps land.
 .MainNav {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.4em;
   width: 100%;
   padding: 0.4em;
   flex-shrink: 0;
 
-  &__item {
-    align-content: center;
-    font-size: 1em;
-
-    &--icon {
-      padding: 0.4em 0 !important;
-    }
+  &__nav,
+  &__logs,
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.8em;
   }
 
-  &__list {
-    display: inline-flex;
-    grid-gap: 0.4em;
+  &__logs {
     padding: 0.4em;
   }
 
-  &__header {
-    a {
-      font-weight: 700;
+  &__brand {
+    margin-left: auto;
+  }
+
+  &__item--icon {
+    padding: 0.4em 0 !important;
+  }
+
+  @media (max-width: constants.$breakpoint-sm) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand nav"
+      "logs logs";
+    gap: 0;
+    padding: var(--space-1) var(--space-3);
+
+    &__nav,
+    &__brand {
+      font-size: 1em;
+    }
+
+    &__nav {
+      grid-area: nav;
+      gap: var(--space-2);
+    }
+
+    &__brand {
+      grid-area: brand;
+      margin-left: 0;
+    }
+
+    // Phones leave the version, theme and sign-out to /about and /me.
+    &__wordmark {
+      font-size: 1.1em;
+
+      small {
+        display: none;
+      }
+    }
+
+    .MainNav__iconPair {
+      display: none;
+    }
+
+    // Comfortable tap targets for the nav icons (the bell included).
+    &__item--icon {
+      min-width: 40px;
+      min-height: 40px;
+      justify-content: center;
+    }
+
+    &__logs {
+      grid-area: logs;
+      font-size: 0.9em;
+      padding: var(--space-2) 0;
+      border-top: var(--border-hairline) solid var(--ink);
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
   }
+}
+
+.MainNav__wordmark {
+  font-weight: 700;
 }
 
 // Adjacent icon-only buttons in the nav (theme toggle + sign out): no gap between them
@@ -335,18 +410,24 @@ h6,
 }
 
 // The nav's log buttons show log titles (user content), so they keep their case.
-.MainNav__list .Button strong {
+.MainNav__logs .Button strong {
   text-transform: none;
   letter-spacing: normal;
   font-size: inherit;
 }
 
-// On small screens a log button collapses to its type icon (social / $), except the log
-// whose page we're on, which keeps its title. The full title stays in the tooltip.
+// On phones every log button keeps its title, cut short with an ellipsis; the row
+// scrolls sideways when they don't all fit. The full title stays in the tooltip.
 .MainNav__log {
+  flex-shrink: 0;
+
   @media (max-width: constants.$breakpoint-sm) {
-    &:not(.Button--active) strong {
-      display: none;
+    max-width: 11em;
+
+    strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }

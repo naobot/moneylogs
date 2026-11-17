@@ -3,6 +3,36 @@
 @use "@/surfaces.scss";
 
 .Ledger {
+  // Phones: the shared log header's three columns can't hold a ledger's actions (manage,
+  // categories, import, invite, spots left), which pushed the page sideways. Kind and
+  // title share the top row; the actions get their own row and wrap.
+  > .Group__header {
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "left center"
+        "right right";
+      grid-gap: 0.5em 1em;
+
+      .Group__header__left {
+        grid-area: left;
+      }
+
+      .Group__header__center {
+        grid-area: center;
+        justify-content: flex-end;
+        min-width: 0;
+      }
+
+      .Group__header__right {
+        grid-area: right;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        row-gap: 0.5em;
+      }
+    }
+  }
+
   &__body {
     display: flex;
     flex-direction: column;
