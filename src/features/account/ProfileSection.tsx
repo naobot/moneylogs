@@ -12,8 +12,9 @@ import Button from "@/components/Button";
 import ControlledInput from "@/components/ControlledInput";
 import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import CurrencySelect from "@/components/CurrencySelect";
-import TimezoneSelect from "@/components/TimezoneSelect";
+import PlacePicker from "@/components/PlacePicker";
 import { Currency } from "@/types/user";
+import { nextDisplayLocation, Place, placeLabel } from "@/utils/citySearch";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
 
@@ -27,6 +28,10 @@ export const ProfileSection = () => {
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
   const [newTimezone, setNewTimezone] = useState<string>();
+  const [newTimezonePlace, setNewTimezonePlace] = useState<string>();
+  // The display location we last filled in from a pick, so later picks keep it in step
+  // until the user writes their own.
+  const [suggestedLocation, setSuggestedLocation] = useState<string>();
   const [editingAvatar, setEditingAvatar] = useState(false);
   const [newDefaultCurrency, setNewDefaultCurrency] = useState<Currency>(() =>
     ledgerStartCurrency(user),
@@ -44,6 +49,7 @@ export const ProfileSection = () => {
       displayName: string;
       displayLocation?: string;
       timezone: string;
+      timezonePlace?: string;
       defaultCurrency: Currency;
     }) => {
       await updateUserProfile.mutate(userData);
@@ -64,10 +70,21 @@ export const ProfileSection = () => {
     if (user?.timezone) {
       setNewTimezone(user?.timezone);
     }
+    setNewTimezonePlace(user?.timezonePlace);
     if (user?.defaultCurrency) {
       setNewDefaultCurrency(user.defaultCurrency);
     }
   }, [user]);
+
+  const handlePickPlace = (place: Place) => {
+    setNewTimezone(place.timezone);
+    setNewTimezonePlace(place.kind === "city" ? placeLabel(place) : undefined);
+    const next = nextDisplayLocation(newDisplayLocation, suggestedLocation, place);
+    if (next !== newDisplayLocation) {
+      setNewDisplayLocation(next);
+      setSuggestedLocation(next);
+    }
+  };
 
   const handleUpdateUserInfo = async () => {
     if (!user?.userId || !newTimezone) return;
@@ -78,6 +95,7 @@ export const ProfileSection = () => {
         displayName: newDisplayName,
         displayLocation: newDisplayLocation ?? undefined,
         timezone: newTimezone,
+        timezonePlace: newTimezonePlace,
         defaultCurrency: newDefaultCurrency,
       });
 
@@ -117,11 +135,21 @@ export const ProfileSection = () => {
           value={newDisplayName}
         />
 
+        <PlacePicker
+          label="I'm based in"
+          timezone={newTimezone}
+          place={newTimezonePlace}
+          onChange={handlePickPlace}
+        />
+
         <ControlledInput
           onChange={(e) => setNewDisplayLocation((e.target as HTMLInputElement).value)}
-          label="Display location"
+          label="Show my location as"
           value={newDisplayLocation}
         />
+        <p className="ProfileFields__hint">
+          Picking a place fills this in. Write your own, or clear it to show nothing.
+        </p>
 
         {newDisplayName.length > 0 && (
           <p>
@@ -131,8 +159,6 @@ export const ProfileSection = () => {
             </strong>
           </p>
         )}
-
-        <TimezoneSelect label="My timezone is" value={newTimezone} onChange={setNewTimezone} />
 
         <CurrencySelect
           id="profile-default-currency"

@@ -42,6 +42,24 @@ export const About = () => {
           .
         </p>
       </div>
+
+      <div>
+        <p>
+          City search uses data from{" "}
+          <a href="https://www.geonames.org" target="_blank" rel="noopener noreferrer">
+            GeoNames
+          </a>
+          , licensed under{" "}
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            CC BY 4.0
+          </a>
+          .
+        </p>
+      </div>
     </div>
   );
 };

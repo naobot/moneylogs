@@ -1,14 +1,13 @@
 import { Currency } from "@/types/user";
 import { isCurrency } from "@/utils/currency";
 
-export type WelcomeStep = "name" | "location" | "timezone" | "display" | "currency";
+export type WelcomeStep = "name" | "location" | "display" | "currency";
 
-export const WELCOME_STEPS: WelcomeStep[] = ["name", "location", "timezone", "display", "currency"];
+export const WELCOME_STEPS: WelcomeStep[] = ["name", "location", "display", "currency"];
 
 export const WELCOME_STEP_LABELS: Record<WelcomeStep, string> = {
   name: "Name",
   location: "Location",
-  timezone: "Timezone",
   display: "Display",
   currency: "Currency",
 };
@@ -17,6 +16,8 @@ export type WelcomeState = {
   displayName: string;
   displayLocation: string;
   timezone: string;
+  /** The place picked for the timezone ("Kyoto, Japan"), if it was a city. */
+  timezonePlace: string;
   defaultCurrency: Currency;
 };
 
@@ -40,10 +41,8 @@ export const isWelcomeStepValid = (step: WelcomeStep, s: WelcomeState): boolean 
     case "name":
       return !displayNameError(s.displayName);
     case "location":
-      // Optional: an empty location is fine.
-      return !displayLocationError(s.displayLocation);
-    case "timezone":
-      return !!s.timezone;
+      // The timezone is needed; the display location is optional.
+      return !!s.timezone && !displayLocationError(s.displayLocation);
     case "display":
       return true;
     case "currency":

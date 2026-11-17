@@ -13,6 +13,7 @@ const complete: WelcomeState = {
   displayName: "Nao",
   displayLocation: "",
   timezone: "Asia/Tokyo",
+  timezonePlace: "",
   defaultCurrency: "JPY",
 };
 
@@ -31,7 +32,7 @@ describe("validators", () => {
   });
 
   it("needs a timezone and a real currency", () => {
-    expect(isWelcomeStepValid("timezone", { ...complete, timezone: "" })).toBe(false);
+    expect(isWelcomeStepValid("location", { ...complete, timezone: "" })).toBe(false);
     expect(isWelcomeStepValid("currency", complete)).toBe(true);
     expect(isWelcomeStepValid("currency", { ...complete, defaultCurrency: "DOGE" as never })).toBe(
       false,
@@ -41,19 +42,19 @@ describe("validators", () => {
 
 describe("reachableWelcomeStep", () => {
   it("allows any step when everything before it is answered", () => {
-    expect(reachableWelcomeStep(4, complete)).toBe(4);
+    expect(reachableWelcomeStep(3, complete)).toBe(3);
     expect(reachableWelcomeStep(2, complete)).toBe(2);
   });
 
   it("clamps out-of-range and junk requests", () => {
-    expect(reachableWelcomeStep(99, complete)).toBe(4);
+    expect(reachableWelcomeStep(99, complete)).toBe(3);
     expect(reachableWelcomeStep(-3, complete)).toBe(0);
     expect(reachableWelcomeStep(NaN, complete)).toBe(0);
   });
 
   it("stops at the first unanswered step", () => {
-    expect(reachableWelcomeStep(4, { ...complete, displayName: "" })).toBe(0);
-    expect(reachableWelcomeStep(4, { ...complete, timezone: "" })).toBe(2);
+    expect(reachableWelcomeStep(3, { ...complete, displayName: "" })).toBe(0);
+    expect(reachableWelcomeStep(3, { ...complete, timezone: "" })).toBe(1);
   });
 });
 

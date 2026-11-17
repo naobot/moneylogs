@@ -31,6 +31,8 @@ export type UserData = {
   userId: string;
   currentLogId: string;
   timezone?: string;
+  /** The place picked for the timezone ("Kyoto, Japan"). Private: not mirrored to profiles. */
+  timezonePlace?: string;
   pinnedPosts?: {
     [logGroupId: string]: {
       [pinnedPost: string]: string;
@@ -80,6 +82,8 @@ export interface CacheableUserData {
   userId: string;
   currentLogId: string;
   timezone?: string;
+  /** The place picked for the timezone ("Kyoto, Japan"). Private: not mirrored to profiles. */
+  timezonePlace?: string;
   pinnedPosts?: {
     [logGroupId: string]: {
       [pinnedPost: string]: string;
@@ -181,6 +185,7 @@ export const useGetUserInfo = (userId: string) => {
             userId: userData.userId,
             currentLogId: userData.currentLogId,
             timezone: userData.timezone,
+            timezonePlace: userData.timezonePlace,
             pinnedPosts: userData.pinnedPosts,
             archivedLogs: userData.archivedLogs,
             // So Home can count new activity before the live listener lands.

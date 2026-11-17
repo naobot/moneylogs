@@ -21,6 +21,7 @@ type UpdateUserProfileArgs = {
   displayName: string;
   displayLocation?: string;
   timezone: string;
+  timezonePlace?: string;
   defaultCurrency?: Currency;
 };
 
@@ -29,6 +30,7 @@ export type UserFieldsPatch = UpdateData<{
   displayName: string;
   displayLocation: string;
   timezone: string;
+  timezonePlace: string | FieldValue;
   defaultCurrency: Currency;
   onboardingPending: boolean | FieldValue;
   avatar: string[] | null;
@@ -67,6 +69,7 @@ export const useUserQuery = () => {
     displayName,
     displayLocation,
     timezone,
+    timezonePlace,
     defaultCurrency,
   }: UpdateUserProfileArgs): Promise<void> => {
     console.log("✍️ executing write on users collection");
@@ -75,6 +78,8 @@ export const useUserQuery = () => {
       displayName,
       displayLocation,
       timezone,
+      // A bare zone has no place; clear any city left from before.
+      timezonePlace: timezonePlace || deleteField(),
       ...(defaultCurrency ? { defaultCurrency } : {}),
     });
   };

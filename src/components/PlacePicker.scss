@@ -1,0 +1,104 @@
+@use "/src/constants.scss";
+
+// City search combobox (PlacePicker.tsx). Sits in the ControlledInput frame; the list
+// drops below the input like CustomDropdown's.
+.ControlledInput.PlacePicker {
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+
+  .PlacePicker__field {
+    display: flex;
+    min-width: 0;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .PlacePicker__combo {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 600px;
+
+    input {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  .PlacePicker__list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: var(--z-overlay);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 18em;
+    overflow-y: auto;
+    background: var(--sheet);
+    border: var(--border-hairline) solid var(--ink);
+  }
+
+  .PlacePicker__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+
+    &--active {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  .PlacePicker__optionText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .PlacePicker__optionName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .PlacePicker__optionDetail,
+  .PlacePicker__optionTime {
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
+
+  .PlacePicker__optionTime {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .PlacePicker__status {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8em;
+    color: var(--ink-muted);
+  }
+
+  .PlacePicker__zone {
+    margin: var(--space-1) 0 0;
+    font-size: 0.8em;
+    color: var(--ink-muted);
+  }
+
+  &--compact {
+    padding: 0;
+
+    .PlacePicker__combo {
+      max-width: none;
+    }
+  }
+}
