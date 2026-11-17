@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
+import { recordCheckIn } from "./checkIn";
 import { recomputeMonth } from "./ledger";
 import {
   ExistingEntry,
@@ -88,7 +89,9 @@ export const checkLedgerImport = onCall(
  * - Idempotent: each row's doc id derives from its external id, and rows are written with
  *   create(), so re-importing an overlapping file skips rows that are already there.
  * - Each touched month is recomputed once here; recomputeLedgerMonth skips the per-entry
- *   recompute for these creates, and imports earn no check-ins, knick-knacks or alerts.
+ *   recompute for these creates.
+ * - An import that creates entries counts as logging once (a check-in, and the copper coin
+ *   for a first entry). It earns no knick-knack rolls or budget alerts.
  *
  * Returns { created, skippedDuplicates }.
  */
@@ -168,6 +171,15 @@ export const importLedgerEntries = onCall(
     // Even on partial failure, keep the summaries in step with whatever did land.
     if (created > 0) {
       for (const month of importMonths(rows)) await recomputeMonth(db, ledgerRef, month);
+
+      // Importing counts as logging entries, once per import: today's check-in, and the
+      // copper coin for a first entry if they don't have it yet. No knick-knack roll or
+      // budget alerts, which would fire per entry.
+      try {
+        await recordCheckIn({ db, ledgerRef, userRef: user.ref, loggedEntry: true });
+      } catch (error) {
+        reportError(error, { action: "check_in", level: "warning" });
+      }
     }
 
     if (failed > 0) {

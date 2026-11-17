@@ -53,7 +53,8 @@ export const recomputeMonth = (
  * (knickknackFind.ts).
  *
  * Entries created by a bulk import (importLedgerEntries) are skipped: that callable
- * recomputes each month once for the batch, and imports earn no rewards or alerts.
+ * recomputes each month once for the batch and records one check-in for the whole import,
+ * and imports earn no knick-knack rolls or budget alerts.
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",

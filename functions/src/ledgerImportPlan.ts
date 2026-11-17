@@ -119,8 +119,9 @@ export const importMonths = (rows: ReadonlyArray<Pick<ImportEntryRow, "date">>):
 
 /**
  * Should recomputeLedgerMonth skip this write? Only the creation of an imported entry: the
- * callable recomputes each month once for the whole batch, and imports never earn check-ins,
- * knick-knacks or budget alerts. Later edits to an imported entry recompute as usual.
+ * callable recomputes each month once and records a single check-in for the whole batch,
+ * and imports never earn knick-knack rolls or budget alerts. Later edits to an imported
+ * entry recompute as usual.
  */
 export const isImportCreate = (
   before: unknown,
