@@ -20,7 +20,11 @@ vi.mock("@/hooks/useFriendships", () => ({
   useFriendships: () => ({ friends: state.friends }),
 }));
 vi.mock("@/hooks/useProfiles", () => ({
-  useProfiles: () => new Map([["mina", { id: "mina", displayName: "Mina", avatar: null }]]),
+  // Like the real hook: only the profiles asked for.
+  useProfiles: (ids: ReadonlyArray<string>) =>
+    new Map(
+      ids.includes("mina") ? [["mina", { id: "mina", displayName: "Mina", avatar: null }]] : [],
+    ),
 }));
 vi.mock("@/features/gifts/GiftModal", () => ({
   default: ({ item, toUserDocId }: { item: string; toUserDocId?: string }) => (
@@ -149,6 +153,24 @@ describe("KnickKnackDrawer", () => {
     expect(state.markFindSeen).toHaveBeenCalledWith("doc-1", "f5");
     expect(reveal()!.textContent).toContain("a gift from Mina");
     expect(reveal()!.textContent).toContain("Mina sent you a holly!");
+  });
+
+  it("keeps naming the friend once the unwrapped gift is marked seen", () => {
+    const gift = {
+      ...find("f5", "holly", false),
+      ledgerId: null,
+      source: "gift",
+      giftedBy: "mina",
+    };
+    state.finds = [gift];
+    render();
+    act(() => alerts()[0].click());
+
+    // The live query delivers seenAt: the gift leaves the unwrapped-gifts list.
+    state.finds = [{ ...gift, seenAt: ts(2) }];
+    render();
+    expect(reveal()!.textContent).toContain("a gift from Mina");
+    expect(reveal()!.textContent).not.toContain("deleted user");
   });
 
   it("makes found items giftable once you have a friend; gifts you got are not", () => {

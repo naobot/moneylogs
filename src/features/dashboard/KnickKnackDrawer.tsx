@@ -48,11 +48,15 @@ export const KnickKnackDrawer = () => {
   const { data, isLoading } = useKnickKnackFinds(user?.id);
   const { friends } = useFriendships();
   const { kept, waiting, gifts } = drawerContents(data);
-  const givers = useProfiles(gifts.map((g) => g.giftedBy ?? "").filter(Boolean));
   const [giving, setGiving] = useState<KnickKnackId | null>(null);
   // What the reveal pop-up is showing: a snapshot of the queue (finds leave `waiting` as
   // soon as they're marked seen) and where it's up to.
   const [reveal, setReveal] = useState<{ queue: KnickKnackFind[]; at: number } | null>(null);
+  // Givers of unopened gifts and of the one being unwrapped: opening a gift marks it seen,
+  // which drops it from `gifts`, but the pop-up still names who sent it.
+  const givers = useProfiles(
+    [...gifts, ...(reveal?.queue ?? [])].map((g) => g.giftedBy ?? "").filter(Boolean),
+  );
   const giverName = (id?: string | null) => (id && givers.get(id)?.displayName) || DELETED_USER;
   const giftable = useMemo(
     () => new Set(friends.length ? giftableByItem(data).map((g) => g.item) : []),

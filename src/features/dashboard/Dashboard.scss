@@ -293,11 +293,8 @@
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     font-size: 0.85em;
-
-    .RowButton {
-      color: inherit;
-      border-color: currentColor;
-    }
+    // Its RowButton keeps its own paper fill and ink, like those on the ledger stats
+    // strip: inheriting the banner's inverse ink painted paper text on paper (blank).
   }
 
   &__hint {
