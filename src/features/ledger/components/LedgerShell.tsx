@@ -20,6 +20,7 @@ import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
 import BudgetManager from "./BudgetManager";
+import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
@@ -61,6 +62,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [showCategories, setShowCategories] = useState(false);
   const [showBudgets, setShowBudgets] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
 
   const spots = spotsLeft(ledger);
@@ -94,6 +96,11 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               <IconText type={"pencil"} fill={"white"} text="categories" />
               {tip("categories")}
             </div>
+            {view === "entries" && (
+              <div className="handler Group__header__item" onClick={() => setShowImport(true)}>
+                <IconText type={"document"} fill={"white"} text="import" />
+              </div>
+            )}
             {spots > 0 && (
               <>
                 <div
@@ -177,6 +184,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         isSaving={saveCategoryOps.isLoading}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
       />
+      <ImportModal isOpen={showImport} ledger={ledger} onClose={() => setShowImport(false)} />
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
         <Modal.Header title={"Invite"}>Invite</Modal.Header>
         <Modal.Body>
