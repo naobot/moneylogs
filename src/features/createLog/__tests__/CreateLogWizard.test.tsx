@@ -93,6 +93,7 @@ describe("CreateLogWizard", () => {
     expect(personal.queriedId).toBe("personal-uid-1");
     const note = container.querySelector(".Wizard__note")!;
     expect(note.textContent).toContain("You already have a financial log just for you");
+    expect(note.textContent).toContain("like a trip");
     expect(note.querySelector("a")!.getAttribute("href")).toBe("/l/personal-uid-1");
     expect(note.querySelector("a")!.textContent).toBe("personal");
   });

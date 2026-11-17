@@ -166,8 +166,8 @@ export const CreateLogWizard = () => {
               <Link to={`/l/${personal.ledger.id}`} className="keep-case">
                 {personal.ledger.title}
               </Link>
-              . Use it for everyday spending. Start a new financial log only for a separate budget,
-              or one you share with others.
+              , for everyday spending. Another one can be handy to keep something separate, like a
+              trip, a household budget shared with a partner, or a side project.
             </p>
           )}
           <div className="Wizard__choices" role="radiogroup" aria-label="Log type">
