@@ -82,7 +82,8 @@ const Modal: React.FC<ModalProps> = ({
 // Header compound component
 interface ModalHeaderProps {
   children?: ReactNode;
-  title?: string;
+  /** Shown instead of children when given. Wrap user content in `.keep-case`. */
+  title?: ReactNode;
   showCloseButton?: boolean;
   className?: string;
   /**

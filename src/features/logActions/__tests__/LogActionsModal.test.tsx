@@ -66,6 +66,14 @@ describe("LogActionsModal", () => {
   const button = (text: string) =>
     Array.from(document.querySelectorAll("button")).find((b) => b.textContent === text);
 
+  it("names the log in the header, in its own case", () => {
+    archivedLogs = {};
+    render();
+    const title = document.querySelector(".Modal__title")!;
+    expect(title.textContent).toBe("Manage Tokyo");
+    expect(title.querySelector(".keep-case")!.textContent).toBe("Tokyo");
+  });
+
   it("archives for the current user only", async () => {
     archivedLogs = {};
     render();
