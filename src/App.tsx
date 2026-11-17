@@ -127,7 +127,7 @@ const App = () => {
               <Route
                 path="/invite/:code"
                 element={
-                  <CheckAuth>
+                  <CheckAuth fallback={<Landing invite="friend" />}>
                     <InviteFriendPage />
                   </CheckAuth>
                 }
@@ -144,7 +144,7 @@ const App = () => {
               <Route
                 path="/g/:groupId/invite"
                 element={
-                  <CheckAuth>
+                  <CheckAuth fallback={<Landing invite="log" />}>
                     <InvitePage />
                   </CheckAuth>
                 }
@@ -168,7 +168,7 @@ const App = () => {
               <Route
                 path="/l/:ledgerId/invite"
                 element={
-                  <CheckAuth>
+                  <CheckAuth fallback={<Landing invite="ledger" />}>
                     <LedgerInvitePage />
                   </CheckAuth>
                 }

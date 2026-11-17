@@ -158,4 +158,46 @@
       margin: 0;
     }
   }
+
+  // Leave room at the bottom so the fixed invite bar never covers the footer.
+  &--invited {
+    padding-bottom: calc(6em + var(--safe-bottom));
+  }
+
+  // Fixed sign-up prompt for visitors who arrived from an invite link. Inverted, like other
+  // emphasis, and pinned to the bottom edge above the page but below modals.
+  &__invite {
+    position: fixed;
+    bottom: calc(var(--space-5) + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-overlay);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3) var(--space-5);
+    width: calc(100% - 2 * var(--space-5));
+    max-width: var(--main-width);
+    box-sizing: border-box;
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-rule) solid var(--ink);
+    background-color: var(--inverse-surface);
+    color: var(--inverse-ink);
+
+    &__text {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    &__login {
+      color: var(--inverse-ink);
+    }
+  }
 }
