@@ -723,6 +723,21 @@ h6,
       display: flex;
       align-items: center;
       width: fit-content;
+
+      // Tool actions (manage, categories, import) show just their icon except on the
+      // widest screens. The word stays for screen readers and as a hover title.
+      // Invite keeps its word everywhere.
+      &--iconOnly .IconText__text {
+        @media (max-width: constants.$breakpoint-xl) {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+        }
+      }
     }
 
     // Longer than the "new entry" label it replaces, so let it wrap centred inside
