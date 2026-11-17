@@ -484,3 +484,4 @@ export { mirrorShelf } from "./mirrorShelf";
 export { requestFriend, respondFriend, removeFriend } from "./friends";
 export { giftKnickKnack } from "./gifts";
 export { scheduleEmailDigest, sendEmailDigests } from "./emailDigest";
+export { emailUnsubscribe } from "./emailUnsubscribe";

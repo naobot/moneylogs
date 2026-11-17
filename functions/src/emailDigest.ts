@@ -4,6 +4,8 @@ import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { DigestNotification, nextDigestAt, renderDigest, selectDigestItems } from "./email/digest";
 import { APP_URL, RESEND_API_KEY, sendEmail } from "./email/resend";
+import { unsubscribeHeaders, unsubscribeUrl } from "./email/unsubscribe";
+import { UNSUBSCRIBE_SECRET, unsubscribeSecret } from "./emailUnsubscribe";
 import { reportError, withSentry } from "./sentry";
 
 /** A first digest (or one after a long pause) looks back at most this far. */
@@ -68,7 +70,11 @@ const verifiedEmailOf = async (authUid: unknown): Promise<string | null> => {
  * overlapping runs can't email anyone twice; a failed send books a retry.
  */
 export const sendEmailDigests = onSchedule(
-  { schedule: "every 60 minutes", timeoutSeconds: 540, secrets: [RESEND_API_KEY] },
+  {
+    schedule: "every 60 minutes",
+    timeoutSeconds: 540,
+    secrets: [RESEND_API_KEY, UNSUBSCRIBE_SECRET],
+  },
   withSentry("sendEmailDigests", async () => {
     const db = getFirestore();
     const now = Date.now();
@@ -112,13 +118,20 @@ export const sendEmailDigests = onSchedule(
         );
         if (!items.length) continue;
 
+        const appUrl = APP_URL.value();
+        const unsubscribe = unsubscribeUrl(appUrl, unsubscribeSecret(), snap.id);
         const email = renderDigest({
           items,
-          appUrl: APP_URL.value(),
+          appUrl,
           displayName: claimed.displayName,
+          unsubscribeUrl: unsubscribe ?? undefined,
         });
         try {
-          await sendEmail({ to, ...email });
+          await sendEmail({
+            to,
+            ...email,
+            headers: unsubscribe ? unsubscribeHeaders(unsubscribe) : undefined,
+          });
           sent += 1;
         } catch (err) {
           // Put the claim back an hour out, keeping the old cutoff so nothing is skipped.
