@@ -124,6 +124,8 @@ export const sendEmailDigests = onSchedule(
           items,
           appUrl,
           displayName: claimed.displayName,
+          timezone: claimed.timezone,
+          now,
           unsubscribeUrl: unsubscribe ?? undefined,
         });
         try {

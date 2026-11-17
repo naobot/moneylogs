@@ -3,8 +3,11 @@ import {
   DIGEST_LINES,
   DIGEST_MAX_ITEMS,
   DigestNotification,
+  digestDate,
   digestLine,
   escapeHtml,
+  groupLines,
+  lineText,
   nextDigestAt,
   renderDigest,
   selectDigestItems,
@@ -93,39 +96,66 @@ describe("digest copy", () => {
     expect(Object.keys(DIGEST_LINES).sort()).toEqual(Object.keys(NOTIFICATION_TYPES).sort());
   });
 
-  it("links to the same places as the inbox", () => {
+  it("links to the same places as the inbox, with names as their own parts", () => {
     expect(
       digestLine(
         item({ type: "comment", actorName: "Ben", postId: "p1", commentId: "c1", excerpt: "hi" }),
       ),
     ).toEqual({
-      text: "Ben commented on your post in Tokyo Trip",
-      detail: "hi",
+      section: "posts",
+      parts: [{ name: "Ben" }, " commented on your post in ", { name: "Tokyo Trip" }],
+      quote: "hi",
       href: "/g/g1?post=p1&comment=c1",
     });
     expect(digestLine(item({ logKind: "ledger" })).href).toBe("/l/g1");
-    expect(
-      digestLine(
-        item({
-          type: "budget_exceeded",
-          month: "2026-11",
-          currency: "CAD",
-          spent: 1200,
-          budget: 1000,
-        }),
-      ),
-    ).toEqual({
-      text: "over your CAD budget in Tokyo Trip",
-      detail: "CA$1,200.00 of CA$1,000.00",
-      href: "/l/g1/stats?month=2026-11",
-    });
-    expect(digestLine(item({ type: "brand_new" })).text).toBe("something happened in Tokyo Trip");
+    const over = digestLine(
+      item({
+        type: "budget_exceeded",
+        month: "2026-11",
+        currency: "CAD",
+        spent: 1200,
+        budget: 1000,
+        categoryName: "Food",
+      }),
+    );
+    expect(lineText(over.parts)).toBe("over the Food CAD budget in Tokyo Trip");
+    expect(over.detail).toBe("CA$1,200.00 of CA$1,000.00");
+    expect(over.href).toBe("/l/g1/stats?month=2026-11");
+    expect(lineText(digestLine(item({ type: "brand_new" })).parts)).toBe(
+      "something happened in Tokyo Trip",
+    );
+  });
+
+  it("groups lines by section, in section order", () => {
+    const lines = [
+      item({ type: "friend_request", actorName: "Ana" }),
+      item({ type: "log_ended" }),
+      item({ type: "comment", actorName: "Ben" }),
+      item({ type: "log_ending" }),
+    ].map(digestLine);
+    expect(groupLines(lines).map((g) => [g.section, g.lines.length])).toEqual([
+      ["logs", 2],
+      ["posts", 1],
+      ["friends & finds", 1],
+    ]);
+  });
+
+  it("dates the digest in the user's zone", () => {
+    // 02:00 UTC on the 18th is still the 17th in Toronto.
+    expect(digestDate(ms("2026-11-18T02:00:00Z"), "America/Toronto")).toBe("tue 17 nov");
+    expect(digestDate(ms("2026-11-18T02:00:00Z"), "Not/AZone")).toBe("wed 18 nov");
   });
 });
 
 describe("renderDigest", () => {
   const render = (over: Partial<Parameters<typeof renderDigest>[0]> = {}) =>
-    renderDigest({ items: [item()], appUrl: "https://app.test/", displayName: "Nao", ...over });
+    renderDigest({
+      items: [item()],
+      appUrl: "https://app.test/",
+      displayName: "Nao",
+      now: ms("2026-11-17T20:00:00Z"),
+      ...over,
+    });
 
   it("counts the notifications in the subject", () => {
     expect(render().subject).toBe("moneylogs: 1 new notification");
@@ -140,6 +170,16 @@ describe("renderDigest", () => {
     expect(text).toContain("https://app.test/me#notifications");
     expect(html).toContain('href="https://app.test/g/g1"');
     expect(text).not.toContain("unsubscribe");
+  });
+
+  it("styles it like an app window, with hosted stripes and fonts", () => {
+    const { html, text } = render();
+    expect(html).toContain("https://app.test/mail/stripe.png");
+    expect(html).toContain("https://app.test/mail/Hack-regular.woff2");
+    expect(html).toContain("prefers-color-scheme: dark");
+    expect(html).toContain("tue 17 nov");
+    expect(text).toContain("== logs ==");
+    expect(text).toContain("> Tokyo Trip is about to end");
   });
 
   it("adds the unsubscribe link when given one", () => {
