@@ -35,6 +35,7 @@ import { useDateFormat } from "@/utils/dateFormat";
 import { MemberNamesContext, MemberProfilesContext } from "./LogPosts/memberNames";
 import type { PostFocus } from "./LogPosts/LogPosts";
 import { reportError } from "@/utils/reportError";
+import { shareUrl } from "@/utils/shareUrl";
 
 export const Group = ({
   group,
@@ -481,7 +482,7 @@ export const Group = ({
               Send the following URL to those you want to invite to participate in this log group.
             </p>
             <p>Do not share the group URL with anyone you do not want participating!</p>
-            <CopyTextArea value={`${window.location.host}/g/${groupId}/invite`} />
+            <CopyTextArea value={shareUrl(`/g/${groupId}/invite`)} />
           </Modal.Body>
           <Modal.Actions>
             <Modal.CancelButton text="Close" />

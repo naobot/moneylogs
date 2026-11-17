@@ -17,6 +17,7 @@ import { Currency } from "@/types/user";
 import { nextDisplayLocation, Place, placeLabel } from "@/utils/citySearch";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
+import { shareUrl } from "@/utils/shareUrl";
 
 import AvatarEditorModal from "./avatar/AvatarEditorModal";
 
@@ -123,7 +124,7 @@ export const ProfileSection = () => {
             Your profile link. Send it to people you'd like to add as friends, or{" "}
             <Link to={`/u/${user.id}`}>see your profile</Link>.
           </p>
-          <CopyTextArea value={`${window.location.host}/u/${user.id}`} />
+          <CopyTextArea value={shareUrl(`/u/${user.id}`)} />
         </div>
       )}
       {editingAvatar && <AvatarEditorModal isOpen onClose={() => setEditingAvatar(false)} />}

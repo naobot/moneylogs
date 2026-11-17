@@ -23,6 +23,7 @@ import BudgetManager from "./BudgetManager";
 import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import { creatorUid } from "@/utils/logOwnership";
+import { shareUrl } from "@/utils/shareUrl";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
@@ -190,7 +191,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         <Modal.Body>
           <p>Send the following URL to anyone you want to share this financial log with.</p>
           <p>Members can see every entry in this log, and add their own.</p>
-          <CopyTextArea value={`${window.location.host}/l/${ledger.id}/invite`} />
+          <CopyTextArea value={shareUrl(`/l/${ledger.id}/invite`)} />
         </Modal.Body>
         <Modal.Actions>
           <Modal.CancelButton text="Close" />
