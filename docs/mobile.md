@@ -13,7 +13,12 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 
 ## Release
 
-- `npm version <x.y.z>` also updates the native versions (`scripts/sync-native-version.mjs`). The build number is major×10000 + minor×100 + patch.
+- `npm version <x.y.z>` also updates the native versions (`scripts/sync-native-version.mjs`). The build number is major×10000 + minor×100 + patch. A unit test (`src/features/native/__tests__/nativeVersion.test.ts`) fails if a bump skipped the sync; run the script to fix it. Play rejects an upload whose build number isn't higher than the last.
+- **Android release:** `npm run android:release` syncs the versions, makes a production build and writes a signed bundle to `android/app/build/outputs/bundle/release/app-release.aab` for upload to Play. It needs the upload key:
+  1. Once, create it: `keytool -genkeypair -v -keystore android/moneylogs-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`.
+  2. Copy `android/keystore.properties.example` to `android/keystore.properties` and fill in the passwords. Both files are git-ignored; keep copies in a password manager.
+  3. In Play Console, enrol in Play App Signing (Google holds the app-signing key; you upload with this key).
+     Without `keystore.properties`, release builds stop with directions rather than producing an unsigned bundle. Debug builds and CI don't need it.
 - To force old builds to update, set `config/app.minNativeVersion` in Firestore. The store links go in the same doc as `iosStoreUrl` and `androidStoreUrl`.
 - App icons and splash screens are drawn from `public/favicon.svg` by `node scripts/generate-native-icons.mjs`; rerun it whenever the favicon changes. It writes the Android vector mark, adaptive icon, splash and legacy launcher PNGs, the iOS app icon, launch image and `SplashBackground` colour, and the store-listing icons in `assets/` (`icon-only.png` 1024, `icon-512.png` for Play). Don't use `@capacitor/assets`: it resamples the pixel art, which blurs it.
 
@@ -25,7 +30,12 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
    - Put the Team ID in `public/.well-known/apple-app-site-association` and set it as the Xcode signing team.
    - Upload an APNs key to Firebase.
    - Switch `aps-environment` to `production` for store builds.
-4. Google Play Console: put the upload-key and Play app-signing SHA-256 fingerprints in `public/.well-known/assetlinks.json`. New personal accounts need 12+ testers for 14 days before production.
+4. Google Play Console:
+   - New personal accounts need a closed test with 12+ testers for 14 days before production, so start early.
+   - Put the upload-key and Play app-signing SHA-256 fingerprints (Play Console → App integrity) in `public/.well-known/assetlinks.json`, then deploy hosting. Until then, moneylogs.app links won't open the app.
+   - Store listing: 512 icon is `assets/icon-512.png`; still needed are a 1024×500 feature graphic and 2+ phone screenshots.
+   - Forms: Data safety (Firebase, Sentry; account deletion link https://moneylogs.app/privacy), Financial features (personal budgeting only; no money moves), content rating, target audience, no ads, and App access (the demo account below).
+   - The app calls Firebase from `https://localhost`. If the Firebase API key is restricted to moneylogs.app in Google Cloud, sign-in fails in the app: check on the first internal-test build.
 5. Demo account for review: `scripts/seed-review-account.ts` (try `--emulator` first).
 6. Store listings: privacy policy at https://moneylogs.app/privacy, privacy and data-safety forms (Firebase, Sentry; no replay in the apps), a demo account with a seeded log for review, and a note that the app moves no money.
 7. Deploy when the epic merges: `firestore:rules` (config, devices), `functions` (`sendPushOnNotification`) and hosting (`.well-known`).
