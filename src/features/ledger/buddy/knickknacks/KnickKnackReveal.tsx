@@ -65,9 +65,9 @@ export const KnickKnackReveal = ({
       </Modal.Body>
       <Modal.Actions>
         {more ? (
-          <Button text={`Next (${remaining} more)`} buttonStyle="primary-border" onClick={onNext} />
+          <Button text={`Next (${remaining} more)`} variant="primary" onClick={onNext} />
         ) : (
-          <Button text="Keep it" buttonStyle="primary-border" onClick={onClose} />
+          <Button text="Keep it" variant="primary" onClick={onClose} />
         )}
       </Modal.Actions>
     </Modal>

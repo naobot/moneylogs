@@ -3,12 +3,23 @@ import cx from "classnames";
 import { Link } from "react-router-dom";
 import Icon, { IconType } from "./Icon";
 
+/**
+ * One look per role, so it's never a per-screen choice:
+ * - primary: the one committing action of a surface (Save, Join, Submit). 2px frame.
+ * - secondary: any other word action (Cancel, Back, Load more). 1px frame.
+ * - toggle: one option of a segmented choice. 1px frame, filled when `isSelected`.
+ * - icon: icon-only chrome (nav icons, theme toggle). No frame.
+ * Filled always means "selected"; emphasis between actions comes from frame weight.
+ */
+export type ButtonVariant = "primary" | "secondary" | "toggle" | "icon";
+
 type ButtonProps = {
   text?: string;
   onClick?: () => void;
   disabled?: boolean;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
-  buttonStyle?: "primary" | "primary-border" | "primary-border-lite";
+  /** sm: inside a section, row or form. md: modal footers and page-level actions. */
+  size?: "sm" | "md";
+  variant?: ButtonVariant;
   loading?: boolean;
   to?: string;
   /** Router state for a `to` link, e.g. `{ view: "register" }` for /login. */
@@ -16,6 +27,7 @@ type ButtonProps = {
   className?: string;
   icon?: IconType;
   title?: string;
+  /** Toggles only: this option is the current one. */
   isSelected?: boolean;
   /** For icon-only buttons whose name should differ from `title`. */
   "aria-label"?: string;
@@ -28,7 +40,7 @@ const Button = forwardRef(
       onClick = () => {},
       disabled = false,
       size = "md",
-      buttonStyle = "primary",
+      variant = "primary",
       loading = false,
       to,
       state,
@@ -42,9 +54,9 @@ const Button = forwardRef(
   ) => {
     const sharedClassName = cx("Button", {
       "Button--disabled": disabled || loading,
-      "Button--active": isSelected,
+      "Button--active": variant === "toggle" && isSelected,
       [`Button--size-${size}`]: size,
-      [`Button--${buttonStyle}`]: buttonStyle,
+      [`Button--${variant}`]: variant,
       [className]: className,
     });
 
@@ -75,6 +87,7 @@ const Button = forwardRef(
         onClick={handleClick}
         className={sharedClassName}
         disabled={disabled || loading}
+        aria-pressed={variant === "toggle" ? isSelected : undefined}
         title={title}
         {...props}
       >

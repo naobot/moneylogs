@@ -99,14 +99,14 @@ const SpendingPanel = ({
               <Button
                 text="bars"
                 size="sm"
-                buttonStyle="primary-border"
+                variant="toggle"
                 isSelected={mode === "bars"}
                 onClick={() => setMode("bars")}
               />
               <Button
                 text="cumulative"
                 size="sm"
-                buttonStyle="primary-border"
+                variant="toggle"
                 isSelected={mode === "cumulative"}
                 onClick={() => setMode("cumulative")}
               />
@@ -119,7 +119,7 @@ const SpendingPanel = ({
                     key={c}
                     text={c}
                     size="sm"
-                    buttonStyle="primary-border"
+                    variant="toggle"
                     isSelected={c === activeCurrency}
                     onClick={() => {
                       setCurrency(c);

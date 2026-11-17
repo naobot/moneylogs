@@ -246,7 +246,6 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
       onBack={() => goTo(stepIndex - 1)}
       onNext={() => void handleNext()}
       nextText={isLast ? (next ? "Finish" : "Take me to my log") : "Next"}
-      nextLarge={isLast}
       nextDisabled={!isWelcomeStepValid(step, state)}
       busy={saving}
     >

@@ -169,7 +169,7 @@ const ModalConfirmButton: React.FC<ModalConfirmButtonProps> = ({
       className={`Modal__button--confirm ${className}`}
       onClick={handleClick}
       text={text}
-      buttonStyle="primary-border"
+      variant="primary"
       disabled={disabled}
     />
   );
@@ -205,7 +205,7 @@ const ModalCancelButton: React.FC<ModalCancelButtonProps> = ({
       className={`Modal__button--cancel ${className}`}
       onClick={handleClick}
       text={text}
-      buttonStyle="primary-border-lite"
+      variant="secondary"
       disabled={disabled}
     />
   );

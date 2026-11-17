@@ -68,6 +68,7 @@ export const NotificationBell = () => {
         onPointerLeave={(e) => isMousePointer(e) && release()}
       >
         <Button
+          variant="icon"
           className="MainNav__item--icon"
           to="/notifications"
           icon="bell"

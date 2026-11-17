@@ -205,7 +205,7 @@ export const AvatarEditorModal = ({ isOpen, onClose }: AvatarEditorModalProps) =
         <Modal.CancelButton />
         <Button
           text="Save avatar"
-          buttonStyle="primary-border"
+          variant="primary"
           disabled={!changed}
           loading={pending}
           onClick={() => void save()}

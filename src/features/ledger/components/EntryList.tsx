@@ -165,7 +165,7 @@ export const EntryList = ({
           <Button
             onClick={() => void confirmDelete()}
             text="Delete"
-            buttonStyle="primary-border"
+            variant="primary"
             loading={isDeleting}
           />
           <Modal.CancelButton text="Nevermind" />

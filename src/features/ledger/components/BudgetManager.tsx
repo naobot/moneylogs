@@ -160,17 +160,12 @@ const BudgetManagerDialog = ({
       <Modal.Actions>
         <Button
           text="Save"
-          buttonStyle="primary-border"
+          variant="primary"
           disabled={ops.length === 0 || hasErrors || isSaving}
           loading={isSaving}
           onClick={() => void handleSave()}
         />
-        <Button
-          text="Cancel"
-          buttonStyle="primary-border-lite"
-          disabled={isSaving}
-          onClick={onClose}
-        />
+        <Button text="Cancel" variant="secondary" disabled={isSaving} onClick={onClose} />
       </Modal.Actions>
     </Modal>
   );

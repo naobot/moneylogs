@@ -69,7 +69,7 @@ export const InviteFriendPage = () => {
         <p>{copy.body}</p>
       </Modal.Body>
       <Modal.Actions>
-        <Button onClick={() => navigate("/")} buttonStyle="primary-border" text="Back" />
+        <Button onClick={() => navigate("/")} variant="secondary" text="Back" />
       </Modal.Actions>
     </Modal>
   );

@@ -312,7 +312,7 @@ const CategoryManagerDialog = ({
           <Button
             text="Add"
             size="sm"
-            buttonStyle="primary-border-lite"
+            variant="secondary"
             disabled={!newName.trim() || !!addError || atCap}
             onClick={addCategory}
           />
@@ -371,17 +371,12 @@ const CategoryManagerDialog = ({
       <Modal.Actions>
         <Button
           text="Save"
-          buttonStyle="primary-border"
+          variant="primary"
           disabled={!isDirty || budgetHasErrors || isSaving}
           loading={isSaving}
           onClick={() => void handleSave()}
         />
-        <Button
-          text="Cancel"
-          buttonStyle="primary-border-lite"
-          disabled={isSaving}
-          onClick={onClose}
-        />
+        <Button text="Cancel" variant="secondary" disabled={isSaving} onClick={onClose} />
       </Modal.Actions>
     </Modal>
   );

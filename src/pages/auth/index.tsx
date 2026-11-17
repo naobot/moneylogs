@@ -24,13 +24,15 @@ export const Auth = () => {
         <Button
           onClick={() => setCurrentView("register")}
           isSelected={currentView === "register"}
-          buttonStyle="primary-border"
+          variant="toggle"
+          size="sm"
           text="I'm a new user"
         />
         <Button
           onClick={() => setCurrentView("login")}
           isSelected={currentView === "login"}
-          buttonStyle="primary-border"
+          variant="toggle"
+          size="sm"
           text="I have an account"
         />
       </div>
