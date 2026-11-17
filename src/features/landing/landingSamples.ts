@@ -119,12 +119,8 @@ export const WITH_FRIENDS = [
     text: "Write a line about why you bought it. Friends can react or leave a comment.",
   },
   {
-    title: "Group logs for trips",
-    text: "Travelling together? Start a group log for the trip. When it ends, everyone sees how it added up.",
-  },
-  {
-    title: "A window into each other's lives",
-    text: "For particularly open friend groups, a group log is a fond, slightly voyeuristic look at what everyone's buying. Extra fun if you live in different cities.",
+    title: "Group logs",
+    text: "Start one for a trip and see how it added up at the end. Particularly open friend groups can keep one going for a fond, slightly voyeuristic look at each other's lives. Extra fun if you live in different cities.",
   },
 ];
 
