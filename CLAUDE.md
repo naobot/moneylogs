@@ -179,7 +179,10 @@ code they cover — concentrated in hooks, auth error handling, spending analyti
 ## Deployment
 
 Two GitHub Actions workflows deploy to Firebase Hosting: one on merge to the default branch, one that
-builds preview channels for pull requests. `index.html` and `version.json` are served `no-cache`; hashed
-assets under `assets/` get a one-year immutable cache. `useAppVersionRefresh` reloads a tab that returns
+builds preview channels for pull requests. Hosting is deployed only by CI (`npm run build` also writes
+`version.json`); deploy rules and functions locally with `--only firestore:rules,functions`, never
+`hosting`, or a stale local `dist/` replaces production. Every path is served `no-cache` by a catch-all
+header rule (header rules match the requested path, so `/` and SPA routes rewritten to `index.html` need
+it); later rules override it: hashed assets under `assets/` get a one-year immutable cache. `useAppVersionRefresh` reloads a tab that returns
 after 3+ hours hidden; if a text field still has focus (possible unsaved input) it instead checks
 `version.json` and shows an `UpdateBanner` when the build is stale.
