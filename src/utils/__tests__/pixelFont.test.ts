@@ -67,6 +67,12 @@ describe("premade avatars", () => {
     }
     expect(new Set(PRESET_AVATARS.map((p) => p.grid.join(""))).size).toBe(PRESET_AVATARS.length);
   });
+
+  it("have unique ids, with the dog offered next to the cat", () => {
+    const ids = PRESET_AVATARS.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.indexOf("dog")).toBe(ids.indexOf("cat") + 1);
+  });
 });
 
 describe("miniAvatar", () => {
