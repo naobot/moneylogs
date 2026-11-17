@@ -884,6 +884,13 @@ h6,
       background-color: var(--inverse-surface);
       border: var(--border-hairline) solid var(--paper);
       pointer-events: none;
+
+      // In the horizontal bar the rows are short (0.6em text), so an overhang would sit
+      // on the row's top frame: tuck the chip into the avatar's corner instead.
+      @media (max-width: constants.$breakpoint-md) {
+        top: 0;
+        right: -4px;
+      }
     }
 
     // The row inverts on hover, so the chip flips back to stay visible.
