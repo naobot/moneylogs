@@ -9,6 +9,7 @@ import {
 import { db } from "@/config/firebase-config";
 import { useMutation } from "./useFirebase";
 import type { Currency } from "@/types/user";
+import type { NotificationPrefKey, NotificationType } from "@/types/notification";
 
 type UpdateViewTrackingArgs = {
   userId: string;
@@ -36,7 +37,11 @@ export type UserFieldsPatch = UpdateData<{
   avatar: string[] | null;
   "tutorials.ledgerTour": FieldValue;
   "tutorials.ledgerNudge": FieldValue;
-}>;
+  emailPaused: boolean;
+}> &
+  // Notification settings are written one key at a time (NotificationsSection).
+  Partial<Record<`notificationPrefs.${NotificationPrefKey}`, boolean>> &
+  Partial<Record<`emailPrefs.${NotificationType}`, boolean>>;
 
 /** Partial write to one user doc (by doc id, not auth uid). */
 export const updateUserFields = async (userDocId: string, patch: UserFieldsPatch) => {

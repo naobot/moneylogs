@@ -149,3 +149,9 @@ export type NotificationOf<T extends NotificationType> = AppNotification extends
 export type NotificationPrefKey = NotificationType | "budget_category";
 
 export type NotificationPrefs = Partial<Record<NotificationPrefKey, boolean>>;
+
+/**
+ * `users.emailPrefs`: which types go into the daily email digest. Unset keys use the
+ * `email` default in utils/notificationTypes. `users.emailPaused` switches all email off.
+ */
+export type EmailPrefs = Partial<Record<NotificationType, boolean>>;
