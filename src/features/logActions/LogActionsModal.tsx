@@ -68,7 +68,19 @@ export const LogActionsModal = ({
 }: LogActionsModalProps) => {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
+  // Deleting is two steps: the button here, then typing the title in a second modal
+  // that takes this one's place (not stacked, so Escape only backs out one step).
+  const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  // Some callers keep this mounted while closed: reopening starts back at Manage.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) {
+      setConfirming(false);
+      setConfirmText("");
+    }
+  }
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deletion = useMutation(async () => deleteLogCallable({ kind, id: logId }));
   const isCreator = !!user && !!creatorUid && user.userId === creatorUid;
@@ -121,11 +133,76 @@ export const LogActionsModal = ({
     }
   };
 
+  const backToManage = () => {
+    setConfirming(false);
+    setConfirmText("");
+    setDeleteError(null);
+  };
+
+  if (confirming) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={deletion.isLoading ? undefined : backToManage}
+        disabled={deletion.isLoading}
+        className="LogActions"
+      >
+        <Modal.Header striped title={`Delete ${noun}`} />
+        <Modal.Body>
+          <section className="LogActions__section">
+            <p>
+              Delete <strong className="keep-case">{logTitle}</strong>?{" "}
+              <strong>This can't be undone.</strong> It's removed for <em>everyone</em> in it.
+            </p>
+            <label className="LogActions__confirm">
+              <span>
+                Type <strong className="keep-case">{logTitle}</strong> to confirm:
+              </span>
+              <input
+                className="LineInput"
+                value={confirmText}
+                autoComplete="off"
+                autoFocus
+                disabled={deletion.isLoading}
+                onChange={(e) => {
+                  setConfirmText(e.target.value);
+                  setDeleteError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleDelete();
+                }}
+              />
+            </label>
+            {deletion.isLoading && (
+              <p role="status">Removing everything. This can take a few seconds…</p>
+            )}
+            {deleteError && <p className="error-message">{deleteError}</p>}
+          </section>
+        </Modal.Body>
+        <Modal.Actions>
+          <Modal.CancelButton text="Back" />
+          <Button
+            text={deletion.isLoading ? "Deleting…" : `Delete ${noun}`}
+            size="sm"
+            loading={deletion.isLoading}
+            disabled={!canDelete}
+            onClick={() => void handleDelete()}
+          />
+        </Modal.Actions>
+      </Modal>
+    );
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={pending ? undefined : onClose} className="LogActions">
-      <Modal.Header striped title="Manage">
-        Manage {logTitle}
-      </Modal.Header>
+      <Modal.Header
+        striped
+        title={
+          <>
+            Manage <span className="keep-case">{logTitle}</span>
+          </>
+        }
+      />
       <Modal.Body>
         <section className="LogActions__section">
           <h4>{archived ? "Archived" : "Archive"}</h4>
@@ -160,36 +237,13 @@ export const LogActionsModal = ({
               <li>it disappears from all members' navigation, lists and history</li>
               <li>any achievements earned in it are removed from members' profiles</li>
             </ul>
-            <label className="LogActions__confirm">
-              <span>
-                Type <strong>{logTitle}</strong> to confirm:
-              </span>
-              <input
-                className="LineInput"
-                value={confirmText}
-                autoComplete="off"
-                disabled={deletion.isLoading}
-                onChange={(e) => {
-                  setConfirmText(e.target.value);
-                  setDeleteError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleDelete();
-                }}
-              />
-            </label>
             <Button
-              text={deletion.isLoading ? "Deleting…" : `Delete ${noun}`}
+              text={`Delete ${noun}`}
               size="sm"
               buttonStyle="primary-border"
-              loading={deletion.isLoading}
-              disabled={!canDelete}
-              onClick={() => void handleDelete()}
+              disabled={pending}
+              onClick={() => setConfirming(true)}
             />
-            {deletion.isLoading && (
-              <p role="status">Removing everything. This can take a few seconds…</p>
-            )}
-            {deleteError && <p className="error-message">{deleteError}</p>}
           </section>
         )}
       </Modal.Body>

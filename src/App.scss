@@ -1775,6 +1775,14 @@ h6,
       color: var(--ink);
       padding: 0 6px;
     }
+
+    // A long title (a log's name) is cut short rather than squeezing out the stripes.
+    .Modal__title {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 
   &__header__fill {
