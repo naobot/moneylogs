@@ -58,6 +58,15 @@
     margin: 0;
   }
 
+  // Something to know before answering: full ink in a 1px frame, unlike the faded hint.
+  &__note {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-hairline) solid var(--ink);
+    font-size: 0.85em;
+    line-height: 1.4;
+  }
+
   &__review {
     display: grid;
     grid-template-columns: max-content 1fr;
