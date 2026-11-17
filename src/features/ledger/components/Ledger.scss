@@ -868,3 +868,37 @@
     }
   }
 }
+
+// Per-currency totals (Totals.tsx): one line with " · " between currencies, or on
+// phones, with more than one currency, a column in smaller type so the row doesn't
+// grow sideways with each currency.
+.Totals {
+  display: inline-flex;
+  flex-wrap: wrap;
+
+  &__amount + &__amount::before {
+    content: "·";
+    padding: 0 0.4em;
+  }
+
+  &--multi {
+    @media (max-width: constants.$breakpoint-sm) {
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 0.8em;
+      line-height: 1.25;
+
+      .Totals__amount + .Totals__amount::before {
+        content: none;
+      }
+    }
+  }
+}
+
+// Day subtotals sit at the right end of the day header.
+.EntryList__day__header .Totals--multi {
+  @media (max-width: constants.$breakpoint-sm) {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
