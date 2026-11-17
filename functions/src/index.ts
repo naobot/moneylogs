@@ -472,7 +472,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
   return backfilledPosts;
 }
 export { recomputeLedgerMonth } from "./ledger";
-export { importLedgerEntries } from "./ledgerImport";
+export { checkLedgerImport, importLedgerEntries } from "./ledgerImport";
 export { deleteLog } from "./deleteLog";
 export { deleteAccount } from "./deleteAccount";
 export { rollQuietDay } from "./rollQuietDay";

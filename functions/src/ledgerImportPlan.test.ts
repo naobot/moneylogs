@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
   MAX_IMPORT_ROWS,
+  findPossibleDuplicates,
+  parseCheckRows,
   importEntryId,
   importMonths,
   isImportCreate,
@@ -107,5 +109,79 @@ describe("isImportCreate", () => {
     expect(isImportCreate({ importBatchId: "b1" }, { importBatchId: "b1" })).toBe(false);
     expect(isImportCreate(undefined, {})).toBe(false);
     expect(isImportCreate({ importBatchId: "b1" }, undefined)).toBe(false);
+  });
+});
+
+describe("parseCheckRows", () => {
+  it("needs no category or note, and rounds amounts", () => {
+    expect(
+      parseCheckRows([{ externalId: "a", date: "2024-11-03", amount: 4.505, currency: "CAD" }]),
+    ).toEqual([{ externalId: "a", date: "2024-11-03", amount: 4.51, currency: "CAD" }]);
+  });
+
+  it("still rejects bad rows", () => {
+    expect(parseCheckRows([row(), row({ amount: 0 })])).toBe("Row 2 is invalid.");
+  });
+});
+
+describe("findPossibleDuplicates", () => {
+  const incoming = (externalId: string, overrides: Record<string, unknown> = {}) => ({
+    externalId,
+    date: "2024-11-03",
+    amount: 4.5,
+    currency: "CAD",
+    ...overrides,
+  });
+  const entry = (id: string, overrides: Record<string, unknown> = {}) => ({
+    id,
+    date: "2024-11-03",
+    amount: 4.5,
+    currency: "CAD",
+    ...overrides,
+  });
+
+  it("matches on day, currency and amount, with the entry's note and author", () => {
+    expect(
+      findPossibleDuplicates(
+        [incoming("a")],
+        [entry("e1", { note: "coffee", authorName: "Mina" })],
+        new Set(),
+      ),
+    ).toEqual({ a: { entryId: "e1", note: "coffee", authorName: "Mina" } });
+  });
+
+  it("ignores entries that differ in any of the three", () => {
+    expect(
+      findPossibleDuplicates(
+        [incoming("a")],
+        [
+          entry("day", { date: "2024-11-04" }),
+          entry("currency", { currency: "JPY" }),
+          entry("amount", { amount: 4.51 }),
+        ],
+        new Set(),
+      ),
+    ).toEqual({});
+  });
+
+  it("pairs one-to-one in file order, so a second identical purchase isn't hidden", () => {
+    expect(
+      findPossibleDuplicates([incoming("a"), incoming("b")], [entry("e1")], new Set()),
+    ).toEqual({ a: { entryId: "e1" } });
+  });
+
+  it("never matches entries this file's earlier rows were imported as", () => {
+    // Two identical coffees; the first was imported before (as imp1).
+    expect(findPossibleDuplicates([incoming("b")], [entry("imp1")], new Set(["imp1"]))).toEqual({});
+  });
+
+  it("tolerates float noise in stored amounts", () => {
+    expect(
+      findPossibleDuplicates(
+        [incoming("a", { amount: 0.3 })],
+        [entry("e1", { amount: 0.1 + 0.2 })],
+        new Set(),
+      ),
+    ).toEqual({ a: { entryId: "e1" } });
   });
 });

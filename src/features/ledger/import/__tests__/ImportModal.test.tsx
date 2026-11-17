@@ -5,14 +5,20 @@ import { Ledger } from "@/types/ledger";
 
 const showToast = vi.fn();
 vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast }) }));
-// Hoisted: importEntries creates its callable at import time.
-const { importCall } = vi.hoisted(() => ({
+// Hoisted: importEntries creates its callables at import time.
+const { importCall, checkCall } = vi.hoisted(() => ({
   importCall: vi.fn(async ({ rows }: { rows: unknown[] }) => ({
     data: { created: rows.length - 1, skippedDuplicates: 1 },
   })),
+  checkCall: vi.fn(async (_req: unknown) => ({
+    data: { alreadyImported: [] as string[], possibleDuplicates: {} as Record<string, unknown> },
+  })),
 }));
 vi.mock("@/config/firebase-config", () => ({ functions: {} }));
-vi.mock("firebase/functions", () => ({ httpsCallable: () => importCall }));
+vi.mock("firebase/functions", () => ({
+  httpsCallable: (_functions: unknown, name: string) =>
+    name === "checkLedgerImport" ? checkCall : importCall,
+}));
 const { reportError, trackStep } = vi.hoisted(() => ({
   reportError: vi.fn(),
   trackStep: vi.fn(),
@@ -50,6 +56,7 @@ describe("ImportModal", () => {
   beforeEach(() => {
     window.localStorage.clear();
     importCall.mockClear();
+    checkCall.mockClear();
     reportError.mockClear();
     trackStep.mockClear();
     showToast.mockClear();
@@ -163,6 +170,8 @@ describe("ImportModal", () => {
       expect(trackStep).toHaveBeenCalledWith("ledger_import", "Import started", {
         source: "moneyforward",
         rows: 2,
+        alreadyImported: 0,
+        duplicatesIncluded: 0,
         mappedCategories: 1,
         skippedCategories: 1,
       });
@@ -222,6 +231,91 @@ describe("ImportModal", () => {
       });
       expect(document.body.textContent).toContain("The import stopped partway");
       expect(onClose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("duplicate check", () => {
+    const check = (data: { alreadyImported?: string[]; possibleDuplicates?: object }) =>
+      checkCall.mockResolvedValueOnce({
+        data: { alreadyImported: [], possibleDuplicates: {}, ...data },
+      } as never);
+
+    it("checks the file's rows before importing, without categories or notes", async () => {
+      await chooseFile(MF);
+      expect(checkCall).toHaveBeenCalledWith({
+        ledgerId: "L1",
+        source: "moneyforward",
+        rows: [
+          { externalId: "mf:a1", date: "2024-11-03", amount: 1280, currency: "JPY" },
+          { externalId: "mf:a2", date: "2024-11-04", amount: 1800, currency: "JPY" },
+          { externalId: "mf:a3", date: "2024-12-01", amount: 500, currency: "JPY" },
+        ],
+      });
+    });
+
+    it("leaves out rows imported before and says how many are new", async () => {
+      check({ alreadyImported: ["mf:a1"] });
+      await chooseFile(MF);
+
+      expect(document.body.textContent).toContain(
+        "1 already imported, so it'll be left out. 2 new.",
+      );
+      // a3 is the only new food row; a2's category is skipped.
+      expect(importButton().textContent).toBe("Import 1");
+      await act(async () => importButton().click());
+      const sent = importCall.mock.calls[0][0] as { rows: Array<{ externalId: string }> };
+      expect(sent.rows.map((r) => r.externalId)).toEqual(["mf:a3"]);
+    });
+
+    it("says when there's nothing new", async () => {
+      check({ alreadyImported: ["mf:a1", "mf:a2", "mf:a3"] });
+      await chooseFile(MF);
+      expect(document.body.textContent).toContain("Nothing new in this file.");
+      expect(importButton().disabled).toBe(true);
+    });
+
+    it("leaves possible duplicates out until ticked", async () => {
+      check({
+        possibleDuplicates: { "mf:a3": { entryId: "e9", note: "7-11", authorName: "Mina" } },
+      });
+      await chooseFile(MF);
+
+      expect(document.body.textContent).toContain("already logged?");
+      expect(document.body.textContent).toContain("matches “7-11” by Mina");
+      expect(importButton().textContent).toBe("Import 1");
+
+      const toggle = document.querySelector<HTMLButtonElement>('[role="checkbox"]')!;
+      expect(toggle.getAttribute("aria-checked")).toBe("false");
+      act(() => toggle.click());
+      expect(toggle.getAttribute("aria-checked")).toBe("true");
+      expect(importButton().textContent).toBe("Import 2");
+    });
+
+    it("waits for the check before allowing an import", async () => {
+      let resolve!: (value: unknown) => void;
+      checkCall.mockReturnValueOnce(new Promise((r) => (resolve = r)) as never);
+      await chooseFile(MF);
+
+      expect(document.body.textContent).toContain("checking which rows are already in this log");
+      expect(importButton().disabled).toBe(true);
+      await act(async () => resolve({ data: { alreadyImported: [], possibleDuplicates: {} } }));
+      expect(importButton().disabled).toBe(false);
+    });
+
+    it("still allows importing when the check fails, and tells Sentry", async () => {
+      const failure = new Error("unavailable");
+      checkCall.mockRejectedValueOnce(failure);
+      await chooseFile(MF);
+
+      expect(document.body.textContent).toContain("Couldn't check this log for duplicates");
+      expect(importButton().textContent).toBe("Import 2");
+      expect(reportError).toHaveBeenCalledWith(failure, {
+        feature: "ledger_import",
+        action: "check_duplicates",
+        level: "warning",
+        tags: { source: "moneyforward" },
+        extra: { rows: 3 },
+      });
     });
   });
 });

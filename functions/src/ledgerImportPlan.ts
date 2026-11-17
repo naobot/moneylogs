@@ -41,9 +41,14 @@ const isRealDate = (date: string): boolean => {
   return d.getUTCDate() === Number(m[3]);
 };
 
-const parseRow = (raw: unknown, categoryIds: ReadonlySet<string>): ImportEntryRow | null => {
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** The fields every row needs, whether it's being checked or imported. */
+export type ImportCheckRow = Pick<ImportEntryRow, "externalId" | "date" | "amount" | "currency">;
+
+const parseCheckRow = (raw: unknown): ImportCheckRow | null => {
   if (!raw || typeof raw !== "object") return null;
-  const { externalId, date, amount, currency, categoryId, note } = raw as Record<string, unknown>;
+  const { externalId, date, amount, currency } = raw as Record<string, unknown>;
   if (
     typeof externalId !== "string" ||
     externalId.length === 0 ||
@@ -54,22 +59,25 @@ const parseRow = (raw: unknown, categoryIds: ReadonlySet<string>): ImportEntryRo
   if (typeof date !== "string" || !isRealDate(date)) return null;
   if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return null;
   if (typeof currency !== "string" || !CURRENCY_RE.test(currency)) return null;
+  return { externalId, date, amount: round2(amount), currency };
+};
+
+const parseRow = (raw: unknown, categoryIds: ReadonlySet<string>): ImportEntryRow | null => {
+  const base = parseCheckRow(raw);
+  if (!base) return null;
+  const { categoryId, note } = raw as Record<string, unknown>;
   if (typeof categoryId !== "string" || !categoryIds.has(categoryId)) return null;
   if (note !== undefined && (typeof note !== "string" || note.length > MAX_NOTE_LENGTH)) {
     return null;
   }
   const trimmed = typeof note === "string" ? note.trim() : "";
-  return {
-    externalId,
-    date,
-    amount: Math.round(amount * 100) / 100,
-    currency,
-    categoryId,
-    ...(trimmed ? { note: trimmed } : {}),
-  };
+  return { ...base, categoryId, ...(trimmed ? { note: trimmed } : {}) };
 };
 
-/** Validate the shape of untrusted callable input. Returns an error message on failure. */
+/**
+ * Validate the shape of untrusted callable input (for both checkLedgerImport and
+ * importLedgerEntries). Returns an error message on failure.
+ */
 export const parseImportRequest = (data: unknown): ImportRequest | string => {
   if (!data || typeof data !== "object") return "Expected { ledgerId, source, rows }.";
   const { ledgerId, source, rows } = data as Record<string, unknown>;
@@ -118,3 +126,62 @@ export const isImportCreate = (
   before: unknown,
   after: { importBatchId?: unknown } | undefined,
 ): boolean => !before && typeof after?.importBatchId === "string";
+
+/** Validate rows for checkLedgerImport, which runs before categories are mapped. */
+export const parseCheckRows = (rows: ReadonlyArray<unknown>): ImportCheckRow[] | string => {
+  const parsed: ImportCheckRow[] = [];
+  for (const [i, raw] of rows.entries()) {
+    const row = parseCheckRow(raw);
+    if (!row) return `Row ${i + 1} is invalid.`;
+    parsed.push(row);
+  }
+  return parsed;
+};
+
+/** An existing ledger entry, as far as duplicate matching needs it. */
+export type ExistingEntry = {
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  note?: string;
+  authorName?: string;
+};
+
+/** What the import preview shows for a row that may already be in the ledger. */
+export type DuplicateMatch = { entryId: string; note?: string; authorName?: string };
+
+/**
+ * Rows that look like spending already in the ledger: same day, currency and amount as an
+ * existing entry that isn't this row's own earlier import (those are matched by id and
+ * skipped outright). Catches a hand-logged copy of a bank row, another member's import of
+ * the same receipt, and a YNAB row whose payee or memo was edited after it was imported.
+ *
+ * One-to-one, in file order: two coffees in the file against one logged coffee flags only
+ * the first, so a genuine second purchase isn't hidden.
+ */
+export const findPossibleDuplicates = (
+  rows: ReadonlyArray<ImportCheckRow>,
+  existing: ReadonlyArray<ExistingEntry>,
+  ownEntryIds: ReadonlySet<string>,
+): Record<string, DuplicateMatch> => {
+  const key = (e: { date: string; currency: string; amount: number }) =>
+    `${e.date}|${e.currency}|${round2(e.amount)}`;
+  const pool = new Map<string, ExistingEntry[]>();
+  for (const entry of existing) {
+    if (ownEntryIds.has(entry.id)) continue;
+    const k = key(entry);
+    pool.set(k, [...(pool.get(k) ?? []), entry]);
+  }
+  const matches: Record<string, DuplicateMatch> = {};
+  for (const row of rows) {
+    const candidate = pool.get(key(row))?.shift();
+    if (!candidate) continue;
+    matches[row.externalId] = {
+      entryId: candidate.id,
+      ...(candidate.note ? { note: candidate.note } : {}),
+      ...(candidate.authorName ? { authorName: candidate.authorName } : {}),
+    };
+  }
+  return matches;
+};

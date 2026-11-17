@@ -7,15 +7,18 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { Ledger } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { activeCategories, formatMonth } from "@/utils/ledger";
-import { formatTotals } from "@/utils/ledgerEntries";
+import dayjs from "@/utils/configuredDayjs";
+import { formatDate } from "@/utils/dateFormat";
+import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
 import { reportError, trackStep } from "@/utils/reportError";
 import { parseCsv } from "./csv";
 import { DateOrder } from "./dates";
 import { ImportErrorCode, ImportFormatError } from "./errors";
-import { ImportProgress, importEntries } from "./importEntries";
+import { ImportProgress, checkImport, importEntries } from "./importEntries";
 import { ParsedImportFile, detectSource, parseImportFile } from "./parseImportFile";
 import {
   CategoryMapping,
+  ImportCheck,
   SKIP,
   initialMapping,
   mapRows,
@@ -23,6 +26,7 @@ import {
   readSavedMapping,
   saveMapping,
   sourceCategories,
+  splitChecked,
 } from "./plan";
 import { decodeBytes } from "./text";
 import { ImportSource, SkipReason } from "./types";
@@ -59,6 +63,9 @@ type ImportModalProps = {
 
 type Parsed = { file: ParsedImportFile } | { error: ParseError; cause?: unknown };
 
+/** The duplicate check's outcome for one parse of the file (a re-parse re-checks). */
+type Checked = { file: ParsedImportFile; result: ImportCheck | "failed" };
+
 /** Column labels only (never row data), trimmed, to spot an export format that changed. */
 const headerColumns = (text: string): string[] =>
   (parseCsv(text.slice(0, 2000))[0] ?? []).slice(0, 20).map((h) => h.trim().slice(0, 30));
@@ -82,6 +89,9 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
   const [picked, setPicked] = useState<CategoryMapping>({});
   const [progress, setProgress] = useState<ImportProgress>();
   const [importFailed, setImportFailed] = useState(false);
+  const [checked, setChecked] = useState<Checked>();
+  // Flagged rows the user ticked to import anyway.
+  const [included, setIncluded] = useState<ReadonlySet<string>>(new Set());
 
   const categories = useMemo(() => ledger.categories ?? [], [ledger.categories]);
   const active = activeCategories(categories);
@@ -139,7 +149,45 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
   }, [parsed, text, fileName, dateOrder]);
 
   const file = parsed && "file" in parsed ? parsed.file : undefined;
-  const sources = useMemo(() => (file ? sourceCategories(file.rows) : []), [file]);
+
+  // Before anything is mapped, ask which rows are already in the ledger.
+  useEffect(() => {
+    if (!file || file.rows.length === 0) return;
+    let cancelled = false;
+    checkImport({ ledgerId: ledger.id, source: file.source, rows: file.rows }).then(
+      (result) => {
+        if (cancelled) return;
+        trackStep("ledger_import", "Import checked", {
+          alreadyImported: result.alreadyImported.size,
+          possibleDuplicates: Object.keys(result.possibleDuplicates).length,
+        });
+        setChecked({ file, result });
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        reportError(err, {
+          feature: "ledger_import",
+          action: "check_duplicates",
+          level: "warning",
+          tags: { source: file.source },
+          extra: { rows: file.rows.length },
+        });
+        setChecked({ file, result: "failed" });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [file, ledger.id]);
+
+  const checkResult = checked && checked.file === file ? checked.result : undefined;
+  const isChecking = !!file && file.rows.length > 0 && checkResult === undefined;
+  const check = checkResult && checkResult !== "failed" ? checkResult : undefined;
+  const split = useMemo(
+    () => (file ? splitChecked(file.rows, check, included) : undefined),
+    [file, check, included],
+  );
+  const sources = useMemo(() => (split ? sourceCategories(split.fresh) : []), [split]);
   const mapping = useMemo<CategoryMapping>(
     () =>
       file
@@ -150,13 +198,21 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
         : {},
     [file, sources, categories, ledger.id, picked],
   );
-  const rows = useMemo(() => (file ? mapRows(file.rows, mapping) : []), [file, mapping]);
+  const rows = useMemo(() => (split ? mapRows(split.toImport, mapping) : []), [split, mapping]);
   const months = useMemo(() => previewByMonth(rows), [rows]);
-  const skippedByMapping = (file?.rows.length ?? 0) - rows.length;
+  const skippedByMapping = (split?.toImport.length ?? 0) - rows.length;
+
+  const toggleIncluded = (externalId: string) =>
+    setIncluded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(externalId)) next.add(externalId);
+      return next;
+    });
 
   const handleFile = async (chosen: File | undefined) => {
     setReadFailed(false);
     setPicked({});
+    setIncluded(new Set());
     setDateOrder(undefined);
     if (!chosen) {
       setText(undefined);
@@ -173,13 +229,15 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
   };
 
   const handleImport = async () => {
-    if (!file || rows.length === 0) return;
+    if (!file || rows.length === 0 || isChecking) return;
     setImportFailed(false);
     saveMapping(ledger.id, file.source, mapping);
     const mappedCategories = Object.values(mapping).filter((id) => id !== SKIP).length;
     trackStep("ledger_import", "Import started", {
       source: file.source,
       rows: rows.length,
+      alreadyImported: split?.alreadyImported ?? 0,
+      duplicatesIncluded: included.size,
       mappedCategories,
       skippedCategories: sources.length - mappedCategories,
     });
@@ -268,6 +326,26 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
               {SOURCE_LABELS[file.source]}
               {skippedSummary && ` (left out: ${skippedSummary})`}.
             </p>
+            {isChecking && (
+              <p className="ImportModal__hint" role="status">
+                checking which rows are already in this log…
+              </p>
+            )}
+            {split && split.alreadyImported > 0 && (
+              <p className="ImportModal__hint">
+                {split.alreadyImported} already imported, so{" "}
+                {split.alreadyImported === 1 ? "it'll be" : "they'll be"} left out.{" "}
+                {split.fresh.length === 0
+                  ? "Nothing new in this file."
+                  : `${split.fresh.length} new.`}
+              </p>
+            )}
+            {checkResult === "failed" && (
+              <p className="ImportModal__hint">
+                Couldn't check this log for duplicates. Rows you imported before will still be
+                skipped.
+              </p>
+            )}
 
             {file.source === "ynab" && (
               <CurrencySelect
@@ -277,6 +355,48 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
                 onChange={setCurrency}
                 disabled={isImporting}
               />
+            )}
+
+            {check && split && split.flagged.length > 0 && (
+              <>
+                <h3 className="ImportModal__heading">already logged?</h3>
+                <p className="ImportModal__hint">
+                  These match an entry in this log on the same day and amount, so they're left out.
+                  Tick any that are separate purchases.
+                </p>
+                <ul className="ImportModal__list" aria-label="Possible duplicates">
+                  {split.flagged.map((row) => {
+                    const match = check.possibleDuplicates[row.externalId];
+                    const on = included.has(row.externalId);
+                    return (
+                      <li key={row.externalId} className="ImportModal__row">
+                        <span className="ImportModal__dupe keep-case">
+                          <span>
+                            {formatDate(dayjs(row.date), { year: false })} ·{" "}
+                            {formatAmount(row.amount, row.currency)}
+                            {row.note && ` · ${row.note}`}
+                          </span>
+                          <small>
+                            matches {match.note ? `“${match.note}”` : "an entry"}
+                            {match.authorName && ` by ${match.authorName}`}
+                          </small>
+                        </span>
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={on}
+                          aria-label={`Import ${row.note ?? "this row"} on ${row.date} anyway`}
+                          className="ImportModal__toggle"
+                          disabled={isImporting}
+                          onClick={() => toggleIncluded(row.externalId)}
+                        >
+                          <span aria-hidden="true">{on ? "[■]" : "[ ]"}</span> import
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
             )}
 
             {sources.length > 0 && (
@@ -346,7 +466,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
         <Button
           text={rows.length > 0 ? `Import ${rows.length}` : "Import"}
           buttonStyle="primary-border"
-          disabled={rows.length === 0 || isImporting}
+          disabled={rows.length === 0 || isImporting || isChecking}
           loading={isImporting}
           onClick={() => void handleImport()}
         />
