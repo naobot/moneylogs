@@ -104,6 +104,8 @@ describe("LogActionsModal", () => {
         confirmInput().dispatchEvent(new Event("input", { bubbles: true }));
       });
     };
+    /** Step one: the Manage modal's button, which opens the confirmation. */
+    const startDelete = () => act(() => deleteButton().click());
 
     beforeEach(() => {
       archivedLogs = {};
@@ -120,19 +122,62 @@ describe("LogActionsModal", () => {
       expect(document.body.textContent).not.toContain("Delete this log group");
     });
 
-    it("warns that it affects everyone and needs the title typed to enable", () => {
+    it("warns that it affects everyone, with the button ready and no field to type in yet", () => {
       render("uid-1");
       expect(document.body.textContent).toContain("can't be undone");
       expect(document.body.textContent).toContain("achievements");
+      expect(deleteButton().disabled).toBe(false);
+      expect(confirmInput()).toBeNull();
+    });
+
+    it("asks for the title in a second modal, which replaces Manage", () => {
+      render("uid-1");
+      startDelete();
+      expect(document.body.textContent).toContain("Delete Tokyo? This can't be undone.");
+      expect(document.body.textContent).not.toContain("Archive for me");
       expect(deleteButton().disabled).toBe(true);
       type("Toky");
       expect(deleteButton().disabled).toBe(true);
       type("tokyo ");
       expect(deleteButton().disabled).toBe(false);
+      expect(deleteCall).not.toHaveBeenCalled();
+    });
+
+    it("goes back to Manage, cleared, without deleting", () => {
+      render("uid-1");
+      startDelete();
+      type("Tokyo");
+      act(() => button("Back")!.click());
+      expect(document.body.textContent).toContain("Archive for me");
+      expect(onClose).not.toHaveBeenCalled();
+      startDelete();
+      expect(confirmInput().value).toBe("");
+      expect(deleteCall).not.toHaveBeenCalled();
+    });
+
+    it("starts at Manage again after being closed and reopened", () => {
+      render("uid-1");
+      startDelete();
+      act(() =>
+        root.render(
+          <LogActionsModal
+            isOpen={false}
+            onClose={onClose}
+            logId="g1"
+            logTitle="Tokyo"
+            kind="social"
+            creatorUid="uid-1"
+          />,
+        ),
+      );
+      render("uid-1");
+      expect(document.body.textContent).toContain("Archive for me");
+      expect(confirmInput()).toBeNull();
     });
 
     it("calls the function, then goes home", async () => {
       render("uid-1");
+      startDelete();
       type("Tokyo");
       await act(async () => deleteButton().click());
       expect(deleteCall).toHaveBeenCalledWith({ kind: "social", id: "g1" });
@@ -154,6 +199,7 @@ describe("LogActionsModal", () => {
           />,
         ),
       );
+      startDelete();
       type("Tokyo");
       await act(async () => deleteButton().click());
       expect(deleteCall).toHaveBeenCalledWith({ kind: "social", id: "g1" });
@@ -165,6 +211,7 @@ describe("LogActionsModal", () => {
       const { FirebaseError } = await import("firebase/app");
       deleteCall.mockRejectedValueOnce(new FirebaseError("functions/permission-denied", "no"));
       render("uid-1");
+      startDelete();
       type("Tokyo");
       await act(async () => deleteButton().click());
       expect(document.body.textContent).toContain("Only the person who created this log");
