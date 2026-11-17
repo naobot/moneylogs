@@ -389,7 +389,7 @@ const LogPostEditor = forwardRef(
           </div>
           <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
             <Button
-              buttonStyle="primary-border-lite"
+              variant="secondary"
               size="sm"
               text={"×"}
               aria-label="Close"
@@ -487,7 +487,7 @@ const LogPostEditor = forwardRef(
             />
           )}
           <Button
-            buttonStyle="primary-border"
+            variant="primary"
             size="sm"
             text="Submit"
             disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}

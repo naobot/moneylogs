@@ -82,7 +82,8 @@ const Modal: React.FC<ModalProps> = ({
 // Header compound component
 interface ModalHeaderProps {
   children?: ReactNode;
-  title?: string;
+  /** Shown instead of children when given. Wrap user content in `.keep-case`. */
+  title?: ReactNode;
   showCloseButton?: boolean;
   className?: string;
   /**
@@ -169,7 +170,7 @@ const ModalConfirmButton: React.FC<ModalConfirmButtonProps> = ({
       className={`Modal__button--confirm ${className}`}
       onClick={handleClick}
       text={text}
-      buttonStyle="primary-border"
+      variant="primary"
       disabled={disabled}
     />
   );
@@ -205,7 +206,7 @@ const ModalCancelButton: React.FC<ModalCancelButtonProps> = ({
       className={`Modal__button--cancel ${className}`}
       onClick={handleClick}
       text={text}
-      buttonStyle="primary-border-lite"
+      variant="secondary"
       disabled={disabled}
     />
   );

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { LedgerCategory, LedgerEntry, LedgerEntryInput } from "@/types/ledger";
 import { resolveCategory } from "@/utils/ledger";
-import { formatAmount, formatTotals, groupEntriesByDay } from "@/utils/ledgerEntries";
+import { formatAmount, groupEntriesByDay } from "@/utils/ledgerEntries";
+import Totals from "./Totals";
 
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
@@ -74,7 +75,7 @@ export const EntryList = ({
           <section key={day.date} className="EntryList__day" aria-label={day.label}>
             <header className="EntryList__day__header">
               <span>{day.label}</span>
-              <span>{formatTotals(day.subtotals)}</span>
+              <Totals totals={day.subtotals} />
             </header>
             <ul>
               {day.entries.map((entry) => {
@@ -165,7 +166,7 @@ export const EntryList = ({
           <Button
             onClick={() => void confirmDelete()}
             text="Delete"
-            buttonStyle="primary-border"
+            variant="primary"
             loading={isDeleting}
           />
           <Modal.CancelButton text="Nevermind" />

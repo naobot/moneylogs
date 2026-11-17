@@ -11,7 +11,7 @@ const UpdateBanner = ({ onRefresh, onDismiss }: UpdateBannerProps) => {
   return (
     <div className="UpdateBanner" role="alert">
       <span className="UpdateBanner__text">A new version is available.</span>
-      <Button text="Refresh" size="sm" buttonStyle="primary-border" onClick={onRefresh} />
+      <Button text="Refresh" size="sm" variant="primary" onClick={onRefresh} />
       <button
         type="button"
         className="UpdateBanner__dismiss"

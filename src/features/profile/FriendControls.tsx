@@ -24,7 +24,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
         <Button
           text="Add friend"
           size="sm"
-          buttonStyle="primary-border"
+          variant="primary"
           loading={pending === "request"}
           onClick={() => void run("request", () => requestFriend(userDocId), "Friend request sent")}
         />
@@ -48,7 +48,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
           <Button
             text="Accept"
             size="sm"
-            buttonStyle="primary-border"
+            variant="primary"
             loading={pending === "accept"}
             disabled={!!pending}
             onClick={() =>
@@ -70,7 +70,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
           <Button
             text="Send a gift"
             size="sm"
-            buttonStyle="primary-border-lite"
+            variant="secondary"
             to={`/?giftTo=${userDocId}#knickknacks`}
           />
           <RowButton disabled={!!pending} onClick={() => setConfirmingUnfriend(true)}>
@@ -92,7 +92,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
             <Modal.CancelButton />
             <Button
               text="Unfriend"
-              buttonStyle="primary-border"
+              variant="primary"
               loading={pending === "unfriend"}
               onClick={() =>
                 void run("unfriend", async () => {

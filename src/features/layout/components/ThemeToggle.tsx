@@ -11,6 +11,7 @@ export const ThemeToggle = () => {
 
   return (
     <Button
+      variant="icon"
       title={isNight ? "Switch to Paper" : "Switch to Night shift"}
       icon={isNight ? "sun" : "moon"}
       onClick={() => setTheme(isNight ? "paper" : "night")}

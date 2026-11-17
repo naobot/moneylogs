@@ -208,11 +208,16 @@
     list-style: none;
   }
 
+  // Every slot gets the same box, giftable (a button) or not, so they line up.
   &__item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.3em;
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--space-2) 0;
+    border: var(--border-hairline) dashed transparent;
     text-align: center;
 
     .KnickKnack {
@@ -269,12 +274,9 @@
 
   // A kept item you can give away: the slot itself is the button.
   &__item--giftable {
-    width: 100%;
-    padding: var(--space-2) 0;
-    border: var(--border-hairline) dashed transparent;
     background: none;
     color: var(--ink);
-    font-family: inherit;
+    font: inherit;
     cursor: pointer;
 
     &:hover,
@@ -293,11 +295,8 @@
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     font-size: 0.85em;
-
-    .RowButton {
-      color: inherit;
-      border-color: currentColor;
-    }
+    // Its RowButton keeps its own paper fill and ink, like those on the ledger stats
+    // strip: inheriting the banner's inverse ink painted paper text on paper (blank).
   }
 
   &__hint {

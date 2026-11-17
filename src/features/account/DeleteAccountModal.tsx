@@ -139,7 +139,7 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
           <Modal.CancelButton />
           <Button
             text={pending ? "Deleting…" : "Delete account"}
-            buttonStyle="primary-border"
+            variant="primary"
             disabled={!canSubmit}
             loading={pending}
             onClick={() => void submit()}

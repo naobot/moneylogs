@@ -376,8 +376,9 @@ html {
 
 // Buttons invert when active or hovered; their icons flip with them.
 .Button--active .Icon img,
-.Button--primary-border:hover .Icon img,
-.Button--primary-border-lite:hover .Icon img {
+.Button--primary:hover:not(.Button--disabled) .Icon img,
+.Button--secondary:hover:not(.Button--disabled) .Icon img,
+.Button--toggle:hover:not(.Button--disabled) .Icon img {
   filter: var(--icon-filter-inverse);
 }
 
@@ -434,6 +435,8 @@ h6,
   }
 }
 
+// Rectangular buttons: one look per role (see Button.tsx). Frame weight carries
+// emphasis (2px primary, 1px secondary/toggle); filled means "selected" and nothing else.
 .Button {
   display: inline-flex;
   grid-gap: 0.2em;
@@ -441,60 +444,38 @@ h6,
   border-radius: var(--radius-none);
   border: none;
   padding: 0.4em;
+  background-color: var(--paper);
+  color: var(--ink);
+
+  &--primary,
+  &--secondary,
+  &--toggle {
+    border: var(--border-hairline) solid var(--ink);
+
+    &:hover:not(.Button--disabled) {
+      background-color: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  &--primary {
+    border-width: var(--border-rule);
+    font-weight: 700;
+  }
+
+  &--icon {
+    background-color: transparent;
+  }
+
+  &--active {
+    background-color: var(--inverse-surface);
+    color: var(--inverse-ink);
+    cursor: default;
+  }
 
   &--disabled {
     cursor: default;
     opacity: 0.3;
-
-    &:hover {
-      border: inherit !important;
-      color: inherit !important;
-      background-color: inherit !important;
-    }
-  }
-
-  &--active {
-    background-color: var(--ink) !important;
-    color: var(--paper) !important;
-    cursor: default;
-  }
-
-  &--primary {
-    background-color: var(--paper);
-    color: var(--ink);
-  }
-
-  &--primary-border {
-    background-color: var(--paper);
-    color: var(--ink);
-    border: var(--border-rule) solid var(--ink);
-    font-weight: 700;
-
-    &:hover {
-      border: var(--border-rule) solid var(--ink) !important;
-      background-color: var(--ink);
-      color: var(--paper);
-    }
-  }
-
-  &--primary-border-lite {
-    background-color: var(--paper);
-    color: var(--ink);
-    border: var(--border-hairline) solid var(--ink);
-
-    &:hover {
-      border: var(--border-hairline) solid var(--ink) !important;
-      background-color: var(--ink);
-      color: var(--paper);
-    }
-  }
-
-  &--past {
-    border-style: dotted !important;
-
-    &:hover {
-      border-style: dotted !important;
-    }
   }
 
   &--size-sm {
@@ -503,20 +484,6 @@ h6,
 
   &--size-md {
     font-size: 1em;
-  }
-
-  &--size-lg {
-    font-size: 1.2em;
-    padding: 0.6em;
-  }
-
-  &--size-xl {
-    font-size: 1.4em;
-    padding: 0.8em;
-  }
-
-  &:hover {
-    border: none;
   }
 }
 
@@ -756,6 +723,21 @@ h6,
       display: flex;
       align-items: center;
       width: fit-content;
+
+      // Tool actions (manage, categories, import) show just their icon except on the
+      // widest screens. The word stays for screen readers and as a hover title.
+      // Invite keeps its word everywhere.
+      &--iconOnly .IconText__text {
+        @media (max-width: constants.$breakpoint-xl) {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+        }
+      }
     }
 
     // Longer than the "new entry" label it replaces, so let it wrap centred inside
@@ -829,6 +811,10 @@ h6,
     overflow-x: auto;
     font-size: 0.6em;
     margin-bottom: 0;
+    // Room between items for the activity chip that overhangs each member's right
+    // edge, and at the end so the last one isn't clipped by the scroll area.
+    grid-gap: var(--space-7);
+    padding-right: var(--space-5);
   }
 
   @media (min-width: constants.$breakpoint-md) and (max-width: constants.$breakpoint-xl) {
@@ -836,6 +822,7 @@ h6,
   }
 
   &__item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.4em;
@@ -847,15 +834,71 @@ h6,
       flex: 1;
     }
 
+    // Only there while the row is hovered (drag needs a mouse anyway, see
+    // useDragReorderEnabled), in the left padding so nothing shifts when it appears.
     &__dragHandle {
+      position: absolute;
+      top: 50%;
+      left: 0.15em;
+      transform: translateY(-50%);
       cursor: grab;
-      opacity: 0.3;
+      opacity: 0;
       font-size: 0.9em;
       user-select: none;
 
       &:active {
         cursor: grabbing;
       }
+    }
+
+    &:hover &__dragHandle {
+      opacity: 0.7; // muted text floor
+    }
+
+    &__avatar {
+      position: relative;
+      display: inline-flex;
+
+      // In the horizontal bar the chip hangs off the row instead (see &__badge).
+      @media (max-width: constants.$breakpoint-md) {
+        position: static;
+      }
+    }
+
+    // New activity: an inverted chip on the avatar's top-right corner.
+    &__badge {
+      position: absolute;
+      top: -5px;
+      right: -7px;
+      display: inline-flex;
+      padding: 1px;
+      background-color: var(--inverse-surface);
+      border: var(--border-hairline) solid var(--paper);
+      pointer-events: none;
+
+      // In the horizontal bar the rows are too short for a corner overhang, so the
+      // chip straddles the row's right frame, vertically centred.
+      @media (max-width: constants.$breakpoint-md) {
+        top: 50%;
+        right: calc(-1 * var(--border-rule));
+        transform: translate(50%, -50%);
+      }
+    }
+
+    // The row inverts on hover, so the chip flips back to stay visible.
+    &:hover &__badge {
+      background-color: var(--paper);
+      border-color: var(--ink);
+
+      .Icon img {
+        filter: var(--icon-filter);
+      }
+    }
+
+    // The 4px "new activity" frame, drawn inside so the row doesn't change size.
+    &--fresh {
+      outline: var(--border-fresh) solid var(--ink);
+      outline-offset: calc(-1 * var(--border-fresh));
     }
 
     &__subtitle {
@@ -1189,6 +1232,12 @@ h6,
           display: inline-flex;
           grid-gap: 0.2rem;
           font-weight: 700;
+
+          // Daily digest author: a little more room between avatar and name, as in
+          // comments.
+          .ProfileLink {
+            gap: var(--space-4);
+          }
 
           /*input {
             max-width: 100px;
@@ -1774,6 +1823,14 @@ h6,
     .Modal__button--close {
       color: var(--ink);
       padding: 0 6px;
+    }
+
+    // A long title (a log's name) is cut short rather than squeezing out the stripes.
+    .Modal__title {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 

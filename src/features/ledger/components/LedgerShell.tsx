@@ -91,15 +91,27 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             <div className="Group__header__item Group__header__title">{ledger.title}</div>
           </div>
           <div className="Group__header__right">
-            <div className="handler Group__header__item" onClick={() => setShowManageModal(true)}>
+            <div
+              className="handler Group__header__item Group__header__item--iconOnly"
+              title="Manage"
+              onClick={() => setShowManageModal(true)}
+            >
               <IconText type={"gear"} fill={"white"} text="manage" />
             </div>
-            <div className="handler Group__header__item" onClick={() => setShowCategories(true)}>
+            <div
+              className="handler Group__header__item Group__header__item--iconOnly"
+              title="Categories"
+              onClick={() => setShowCategories(true)}
+            >
               <IconText type={"pencil"} fill={"white"} text="categories" />
               {tip("categories")}
             </div>
             {view === "entries" && (
-              <div className="handler Group__header__item" onClick={() => setShowImport(true)}>
+              <div
+                className="handler Group__header__item Group__header__item--iconOnly"
+                title="Import"
+                onClick={() => setShowImport(true)}
+              >
                 <IconText type={"document"} fill={"white"} text="import" />
               </div>
             )}

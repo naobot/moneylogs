@@ -465,17 +465,12 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
       <Modal.Actions>
         <Button
           text={rows.length > 0 ? `Import ${rows.length}` : "Import"}
-          buttonStyle="primary-border"
+          variant="primary"
           disabled={rows.length === 0 || isImporting || isChecking}
           loading={isImporting}
           onClick={() => void handleImport()}
         />
-        <Button
-          text="Cancel"
-          buttonStyle="primary-border-lite"
-          disabled={isImporting}
-          onClick={onClose}
-        />
+        <Button text="Cancel" variant="secondary" disabled={isImporting} onClick={onClose} />
       </Modal.Actions>
     </Modal>
   );

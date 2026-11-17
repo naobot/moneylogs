@@ -113,7 +113,7 @@ export const Notifications = () => {
         <div className="Notifications__more">
           <Button
             text="Load more"
-            buttonStyle="primary-border-lite"
+            variant="secondary"
             size="sm"
             loading={isLoadingMore}
             onClick={() => {

@@ -50,12 +50,24 @@ const MainNav = () => {
     <nav className="MainNav">
       <div className="MainNav__nav">
         {!isLoggedIn && location.pathname !== "/login" && (
-          <Button to="/login" text="Sign in" buttonStyle="primary-border-lite" />
+          <Button to="/login" text="Sign in" variant="secondary" />
         )}
         {isLoggedIn && (
           <>
-            <Button className="MainNav__item--icon" to="/" title="Home" icon="home" />
-            <Button className="MainNav__item--icon" to="/me" title="My Preferences" icon="user" />
+            <Button
+              variant="icon"
+              className="MainNav__item--icon"
+              to="/"
+              title="Home"
+              icon="home"
+            />
+            <Button
+              variant="icon"
+              className="MainNav__item--icon"
+              to="/me"
+              title="My Preferences"
+              icon="user"
+            />
             <NotificationBell />
           </>
         )}
@@ -71,7 +83,7 @@ const MainNav = () => {
               title={ledger.title}
               text={ledger.title}
               icon="dollar"
-              buttonStyle="primary-border-lite"
+              variant="toggle"
               className="MainNav__log"
               isSelected={highlightedGroupId == ledger.id}
             />
@@ -85,7 +97,7 @@ const MainNav = () => {
                 title={group.title}
                 text={group.title}
                 icon="social"
-                buttonStyle="primary-border-lite"
+                variant="toggle"
                 className="MainNav__log"
                 isSelected={highlightedGroupId == group?.id}
               />
@@ -101,7 +113,13 @@ const MainNav = () => {
         <span className="MainNav__iconPair">
           <ThemeToggle />
           {isLoggedIn && (
-            <Button title="Sign out" onClick={signOut} loading={signOutPending} icon="exit" />
+            <Button
+              variant="icon"
+              title="Sign out"
+              onClick={signOut}
+              loading={signOutPending}
+              icon="exit"
+            />
           )}
         </span>
       </div>

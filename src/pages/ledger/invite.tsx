@@ -83,13 +83,13 @@ export const LedgerInvitePage = () => {
           {!joinFailed && (
             <Button
               onClick={handleJoin}
-              buttonStyle="primary-border"
+              variant="primary"
               text="Join"
               loading={joinLedger.isLoading}
               disabled={joinLedger.isLoading || !user}
             />
           )}
-          <Button onClick={() => navigate("/")} buttonStyle="primary-border" text="Back" />
+          <Button onClick={() => navigate("/")} variant="secondary" text="Back" />
         </Modal.Actions>
       </Modal>
       <Modal isOpen={showJoinedModal} onClose={() => navigate(`/l/${ledgerId}`)}>
@@ -98,11 +98,7 @@ export const LedgerInvitePage = () => {
           <p>Please set up your user profile.</p>
         </Modal.Body>
         <Modal.Actions>
-          <Button
-            onClick={() => navigate("/me")}
-            buttonStyle="primary-border"
-            text="Set up my profile"
-          />
+          <Button onClick={() => navigate("/me")} variant="primary" text="Set up my profile" />
         </Modal.Actions>
       </Modal>
     </>

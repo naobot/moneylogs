@@ -22,7 +22,6 @@ type WizardProps = {
   /** Hide Next on steps that advance themselves (e.g. picking a card). */
   showNext?: boolean;
   nextText: string;
-  nextLarge?: boolean;
   nextDisabled?: boolean;
   busy?: boolean;
 };
@@ -43,7 +42,6 @@ export const Wizard = ({
   onNext,
   showNext = true,
   nextText,
-  nextLarge,
   nextDisabled,
   busy,
 }: WizardProps) => {
@@ -87,22 +85,16 @@ export const Wizard = ({
 
       <div className="Menu Wizard__actions">
         {stepIndex > 0 ? (
-          <Button text="Back" buttonStyle="primary-border-lite" disabled={busy} onClick={onBack} />
+          <Button text="Back" variant="secondary" disabled={busy} onClick={onBack} />
         ) : (
           onCancel && (
-            <Button
-              text={cancelText}
-              buttonStyle="primary-border-lite"
-              disabled={busy}
-              onClick={onCancel}
-            />
+            <Button text={cancelText} variant="secondary" disabled={busy} onClick={onCancel} />
           )
         )}
         {showNext && (
           <Button
             text={nextText}
-            size={nextLarge ? "lg" : undefined}
-            buttonStyle="primary-border"
+            variant="primary"
             disabled={nextDisabled || busy}
             loading={busy}
             onClick={onNext}

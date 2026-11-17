@@ -160,7 +160,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
           <Modal.CancelButton />
           <Button
             text="Change password"
-            buttonStyle="primary-border"
+            variant="primary"
             disabled={!!problem}
             loading={pending}
             onClick={() => void submit()}

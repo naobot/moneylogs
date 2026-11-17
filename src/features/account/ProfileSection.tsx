@@ -114,7 +114,7 @@ export const ProfileSection = () => {
         <Button
           text={user?.avatar ? "Edit avatar" : "Draw avatar"}
           size="sm"
-          buttonStyle="primary-border-lite"
+          variant="secondary"
           onClick={() => setEditingAvatar(true)}
         />
       </div>
@@ -172,8 +172,7 @@ export const ProfileSection = () => {
       <div className="Menu">
         <Button
           text="Set my user profile"
-          size="lg"
-          buttonStyle="primary-border"
+          variant="primary"
           disabled={!isSubmittable}
           loading={createPending}
           onClick={handleUpdateUserInfo}
