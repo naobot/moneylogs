@@ -97,8 +97,8 @@
       margin: 0 0 var(--space-5);
     }
 
-    .Landing__intro {
-      margin: 0 0 var(--space-5);
+    .Landing__note {
+      margin: var(--space-5) 0 0;
       line-height: 1.5;
     }
 
@@ -125,7 +125,7 @@
         font-weight: 700;
       }
 
-      .Landing__steps--solo & {
+      .Landing__steps--points & {
         // Points, not steps: a text-mode bullet instead of a number.
         &::before {
           content: "[+]";

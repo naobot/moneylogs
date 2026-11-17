@@ -1,19 +1,22 @@
 import { Link } from "react-router-dom";
 
 import Button from "@/components/Button";
+import { EXTERNAL_LINKS } from "@/config/links";
 import { IconText } from "@/components/Icon";
 import { LogCard } from "@/features/dashboard/LogCard";
 import type { AuthLocationState } from "@/features/auth/authRedirect";
 
 import {
   HOW_IT_WORKS,
-  ON_YOUR_OWN,
   SAMPLE_DAY,
   SAMPLE_NOW,
   SAMPLE_POSTS,
   SAMPLE_RECENT,
+  SAMPLE_TRIP_TITLE,
   SAMPLE_UPCOMING,
   SampleCard,
+  TRACKING,
+  WITH_FRIENDS,
 } from "./landingSamples";
 
 import "@/features/dashboard/Dashboard.scss";
@@ -63,19 +66,46 @@ const SampleCards = ({
     />
   ));
 
+/** A grid of short titled points under a heading, the landing page's feature lists. */
+const Points = ({
+  id,
+  heading,
+  points,
+  children,
+}: {
+  id: string;
+  heading: string;
+  points: { title: string; text: string }[];
+  children?: React.ReactNode;
+}) => (
+  <section className="Landing__steps Landing__steps--points" aria-labelledby={id}>
+    <h2 id={id}>{heading}</h2>
+    <ul>
+      {points.map((point) => (
+        <li key={point.title}>
+          <h3>{point.title}</h3>
+          <p>{point.text}</p>
+        </li>
+      ))}
+    </ul>
+    {children}
+  </section>
+);
+
 /**
- * What a logged-out visitor sees at `/`: a short pitch, then Home as it looks once you've
- * joined a few logs (built from the real dashboard cards, filled with made-up logs), a peek
- * inside one log, and how it works. Every example links to registration.
+ * What a logged-out visitor sees at `/`: a short pitch for everyday spending tracking, Home
+ * as it looks with a few logs (built from the real dashboard cards, filled with made-up logs),
+ * the tracking features, the optional social side with a peek inside a group trip log, and
+ * how it works. Every example links to registration.
  */
 export const Landing = () => (
   <div className="Content__body Landing">
     <header className="Landing__hero">
       <h1>moneylogs</h1>
       <p className="Landing__pitch">
-        A private log for you and your friends — or just for you. Post what you spent and why, on a
-        trip, over a long weekend, or month to month at home, in any currency, and see how it all
-        adds up.
+        A calm way to keep track of your spending. Log what you spent and why, in any currency, and
+        see where the month went. Keep it to yourself, or let a few friends follow along — and when
+        you travel together, start a group log for the trip.
       </p>
       <div className="Landing__actions">
         <Button to="/login" state={REGISTER} text="Create an account" />
@@ -111,7 +141,23 @@ export const Landing = () => (
       </div>
     </PreviewWindow>
 
-    <PreviewWindow title={SAMPLE_NOW[0].title} label="Example log entries">
+    <Points id="landing-tracking" heading="Your spending, day to day" points={TRACKING}>
+      <p className="Landing__note">
+        Already tracking somewhere else? Import a CSV export from{" "}
+        <a href={EXTERNAL_LINKS.moneyForward} target="_blank" rel="noopener noreferrer">
+          Money Forward ME
+        </a>{" "}
+        or{" "}
+        <a href={EXTERNAL_LINKS.ynab} target="_blank" rel="noopener noreferrer">
+          YNAB
+        </a>{" "}
+        and pick up where you left off.
+      </p>
+    </Points>
+
+    <Points id="landing-friends" heading="With friends, gently" points={WITH_FRIENDS} />
+
+    <PreviewWindow title={SAMPLE_TRIP_TITLE} label="Example group log entries">
       <div className="Landing__posts">
         <div className="LogPosts__posts__banner LogPosts__posts__item__header">
           <div className="LogPosts__posts__banner__left">{SAMPLE_DAY.label}</div>
@@ -149,22 +195,6 @@ export const Landing = () => (
         ))}
       </div>
     </PreviewWindow>
-
-    <section className="Landing__steps Landing__steps--solo" aria-labelledby="landing-solo">
-      <h2 id="landing-solo">On your own, too</h2>
-      <p className="Landing__intro">
-        Not travelling with anyone? Start a financial log, set it to just you, and use it as your
-        personal spending tracker.
-      </p>
-      <ul>
-        {ON_YOUR_OWN.map((point) => (
-          <li key={point.title}>
-            <h3>{point.title}</h3>
-            <p>{point.text}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
 
     <section className="Landing__steps" aria-labelledby="landing-how">
       <h2 id="landing-how">How it works</h2>
