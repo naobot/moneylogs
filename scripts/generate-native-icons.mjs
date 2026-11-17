@@ -1,0 +1,266 @@
+// Draws every native icon and splash image straight from public/favicon.svg, so the apps
+// show exactly the favicon's pixels. `node scripts/generate-native-icons.mjs`
+//
+// The favicon is 16×16 pixel art. Resampling it (as @capacitor/assets does) blurs its
+// edges, and a redrawn copy drifts from the original; both read as slightly off. So:
+// - Bitmaps are drawn here at whole-number scales (each favicon pixel becomes an exact
+//   N×N block), with no resampling.
+// - On Android the launcher icon and the splash are vector drawables of the same squares,
+//   so they stay sharp at whatever size the launcher or splash screen draws them.
+//
+// Paper and ink come from the favicon; night variants swap them, like Night shift.
+import { deflateSync } from "node:zlib";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { readdirSync } from "node:fs";
+
+const root = resolve(import.meta.dirname, "..");
+const svg = readFileSync(join(root, "public/favicon.svg"), "utf8");
+
+// ---- the favicon as a grid ---------------------------------------------------------
+const GRID = 16;
+const PAPER = /<rect width="16" height="16" fill="(#[0-9a-f]{6})"/i.exec(svg)?.[1];
+const INK = /<g fill="(#[0-9a-f]{6})"/i.exec(svg)?.[1];
+if (!PAPER || !INK) throw new Error("favicon.svg: expected a paper <rect> and an ink <g fill>");
+const inkGroup = svg.slice(svg.indexOf("<g "), svg.indexOf("</g>"));
+const rects = [...inkGroup.matchAll(/<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/g)].map(
+  (m) => m.slice(1).map(Number),
+);
+const ink = Array.from({ length: GRID }, () => Array(GRID).fill(false));
+for (const [x, y, w, h] of rects) {
+  for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) ink[yy][xx] = true;
+}
+
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
+// ---- a tiny PNG writer (RGBA, no dependencies) ------------------------------------
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+const crc32 = (buf) => {
+  let c = 0xffffffff;
+  for (const b of buf) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+};
+const chunk = (type, data) => {
+  const out = Buffer.alloc(12 + data.length);
+  out.writeUInt32BE(data.length, 0);
+  out.write(type, 4, "ascii");
+  data.copy(out, 8);
+  out.writeUInt32BE(crc32(out.subarray(4, 8 + data.length)), 8 + data.length);
+  return out;
+};
+const encodePng = (width, height, pixel) => {
+  const raw = Buffer.alloc((width * 4 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    const row = y * (width * 4 + 1);
+    for (let x = 0; x < width; x++) {
+      const [r, g, b, a] = pixel(x, y);
+      raw.set([r, g, b, a], row + 1 + x * 4);
+    }
+  }
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.set([8, 6, 0, 0, 0], 8); // 8-bit RGBA
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk("IHDR", header),
+    chunk("IDAT", deflateSync(raw)),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+};
+
+/**
+ * A size×size image of the favicon grid at `cell` px per favicon pixel, centred. Pixels
+ * outside the grid get `outside`; `round` clips to a circle (legacy round launcher icon).
+ */
+const drawFavicon = ({
+  size,
+  cell,
+  paper,
+  inkColor,
+  outside = paper,
+  round = false,
+  paperInGrid = true,
+}) => {
+  const offset = Math.floor((size - GRID * cell) / 2);
+  const P = [...rgb(paper), 255];
+  const I = [...rgb(inkColor), 255];
+  const O = outside === null ? [0, 0, 0, 0] : [...rgb(outside), 255];
+  const clear = [0, 0, 0, 0];
+  return encodePng(size, size, (x, y) => {
+    if (round) {
+      const dx = x + 0.5 - size / 2;
+      const dy = y + 0.5 - size / 2;
+      if (dx * dx + dy * dy > (size / 2) ** 2) return clear;
+    }
+    const gx = Math.floor((x - offset) / cell);
+    const gy = Math.floor((y - offset) / cell);
+    const inGrid = x >= offset && y >= offset && gx < GRID && gy < GRID;
+    if (!inGrid) return O;
+    if (ink[gy][gx]) return I;
+    return paperInGrid ? P : O;
+  });
+};
+
+const write = (path, data) => {
+  const full = join(root, path);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, data);
+  console.log(`wrote ${path}`);
+};
+
+// ---- Android: vector mark, adaptive icon, splash -----------------------------------
+// The mark sits in the adaptive icon's 108dp canvas with the 16-grid spanning 60dp, so
+// even its outermost pixels stay inside the 66dp safe circle (and the splash screen's).
+const RES = "android/app/src/main/res";
+const MARK_GRID_DP = 60;
+const markPath = rects.map(([x, y, w, h]) => `M${x},${y}h${w}v${h}h${-w}z`).join("");
+const vector = (fillColor) => `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by scripts/generate-native-icons.mjs from public/favicon.svg. Don't edit. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="${(108 - MARK_GRID_DP) / 2}"
+        android:translateY="${(108 - MARK_GRID_DP) / 2}"
+        android:scaleX="${MARK_GRID_DP / GRID}"
+        android:scaleY="${MARK_GRID_DP / GRID}">
+        <path
+            android:fillColor="${fillColor}"
+            android:pathData="${markPath}" />
+    </group>
+</vector>
+`;
+write(`${RES}/drawable/ic_moneylogs_mark.xml`, vector("@color/moneylogs_ink"));
+write(`${RES}/drawable/splash_mark.xml`, vector("@color/splash_ink"));
+
+const adaptive = `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by scripts/generate-native-icons.mjs. Don't edit. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_moneylogs_mark" />
+    <monochrome android:drawable="@drawable/ic_moneylogs_mark" />
+</adaptive-icon>
+`;
+write(`${RES}/mipmap-anydpi-v26/ic_launcher.xml`, adaptive);
+write(`${RES}/mipmap-anydpi-v26/ic_launcher_round.xml`, adaptive);
+
+const colors = (paper, splashBg, splashInk) => `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by scripts/generate-native-icons.mjs from public/favicon.svg. Don't edit. -->
+<resources>
+    <color name="ic_launcher_background">${paper.toUpperCase()}</color>
+    <color name="moneylogs_ink">${INK.toUpperCase()}</color>
+    <color name="splash_background">${splashBg.toUpperCase()}</color>
+    <color name="splash_ink">${splashInk.toUpperCase()}</color>
+</resources>
+`;
+write(`${RES}/values/ic_launcher_background.xml`, colors(PAPER, PAPER, INK));
+// Night: the splash swaps its inks; the launcher icon stays as it is.
+write(`${RES}/values-night/ic_launcher_background.xml`, colors(PAPER, INK, PAPER));
+
+// Window background while the app starts (and the splash on Android < 12): the same mark,
+// at the size the Android 12+ splash screen draws it, on the splash colour.
+write(
+  `${RES}/drawable/splash.xml`,
+  `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by scripts/generate-native-icons.mjs. Don't edit. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item
+        android:width="288dp"
+        android:height="288dp"
+        android:gravity="center"
+        android:drawable="@drawable/splash_mark" />
+</layer-list>
+`,
+);
+
+// Remove the resampled bitmaps these replace.
+for (const dir of readdirSync(join(root, RES))) {
+  for (const name of ["splash.png", "ic_launcher_foreground.png", "ic_launcher_background.png"]) {
+    const file = join(root, RES, dir, name);
+    try {
+      rmSync(file);
+      console.log(`removed ${RES}/${dir}/${name}`);
+    } catch {
+      // not there
+    }
+  }
+}
+
+// Legacy launcher icons (Android 7.x, before adaptive icons): whole-number scales.
+const LEGACY = { ldpi: 36, mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
+for (const [density, size] of Object.entries(LEGACY)) {
+  const cell = Math.floor(size / GRID);
+  write(
+    `${RES}/mipmap-${density}/ic_launcher.png`,
+    drawFavicon({ size, cell, paper: PAPER, inkColor: INK }),
+  );
+  write(
+    `${RES}/mipmap-${density}/ic_launcher_round.png`,
+    drawFavicon({ size, cell, paper: PAPER, inkColor: INK, round: true }),
+  );
+}
+
+// ---- iOS: app icon and launch screen -----------------------------------------------
+const XC = "ios/App/App/Assets.xcassets";
+// App Store / home screen icon: the favicon at 64× (opaque, as Apple requires).
+write(
+  `${XC}/AppIcon.appiconset/AppIcon-512@2x.png`,
+  drawFavicon({ size: 1024, cell: 64, paper: PAPER, inkColor: INK }),
+);
+// Launch screen: shown centred at its own size (LaunchScreen.storyboard), 8pt per pixel,
+// on the SplashBackground colour. Dark appearance swaps the inks.
+for (const scale of [1, 2, 3]) {
+  const cell = 8 * scale;
+  const size = GRID * cell;
+  write(
+    `${XC}/Splash.imageset/Default@${scale}x~universal~anyany.png`,
+    drawFavicon({ size, cell, paper: PAPER, inkColor: INK }),
+  );
+  write(
+    `${XC}/Splash.imageset/Default@${scale}x~universal~anyany-dark.png`,
+    drawFavicon({ size, cell, paper: INK, inkColor: PAPER }),
+  );
+}
+const iosColor = (hex) => {
+  const [r, g, b] = rgb(hex);
+  return {
+    "color-space": "srgb",
+    components: { red: `${r}`, green: `${g}`, blue: `${b}`, alpha: "1.000" },
+  };
+};
+write(
+  `${XC}/SplashBackground.colorset/Contents.json`,
+  JSON.stringify(
+    {
+      colors: [
+        { idiom: "universal", color: iosColor(PAPER) },
+        {
+          idiom: "universal",
+          appearances: [{ appearance: "luminosity", value: "dark" }],
+          color: iosColor(INK),
+        },
+      ],
+      info: { author: "xcode", version: 1 },
+    },
+    null,
+    2,
+  ) + "\n",
+);
+
+// ---- Store listing sources ---------------------------------------------------------
+// App Store (1024) and Play Store (512) icons, plus the splash art, for uploads.
+write("assets/icon-only.png", drawFavicon({ size: 1024, cell: 64, paper: PAPER, inkColor: INK }));
+write("assets/icon-512.png", drawFavicon({ size: 512, cell: 32, paper: PAPER, inkColor: INK }));
+write("assets/splash.png", drawFavicon({ size: 384, cell: 24, paper: PAPER, inkColor: INK }));
+write("assets/splash-dark.png", drawFavicon({ size: 384, cell: 24, paper: INK, inkColor: PAPER }));
+for (const stale of ["assets/icon-foreground.png", "assets/icon-background.png"]) {
+  rmSync(join(root, stale), { force: true });
+}

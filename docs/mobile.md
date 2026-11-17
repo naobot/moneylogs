@@ -15,7 +15,7 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 
 - `npm version <x.y.z>` also updates the native versions (`scripts/sync-native-version.mjs`). The build number is major×10000 + minor×100 + patch.
 - To force old builds to update, set `config/app.minNativeVersion` in Firestore. The store links go in the same doc as `iosStoreUrl` and `androidStoreUrl`.
-- Icon and splash sources are in `assets/` (made from `public/favicon.svg`). Regenerate with `npx @capacitor/assets@4.0.0 generate --ios --android` and the colour flags used in the epic PR.
+- App icons and splash screens are drawn from `public/favicon.svg` by `node scripts/generate-native-icons.mjs`; rerun it whenever the favicon changes. It writes the Android vector mark, adaptive icon, splash and legacy launcher PNGs, the iOS app icon, launch image and `SplashBackground` colour, and the store-listing icons in `assets/` (`icon-only.png` 1024, `icon-512.png` for Play). Don't use `@capacitor/assets`: it resamples the pixel art, which blurs it.
 
 ## Checklist (outside the code)
 

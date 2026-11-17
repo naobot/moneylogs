@@ -29,7 +29,7 @@ moneylogs/
 ├── src/                    # React application
 ├── functions/              # Firebase Cloud Functions (separate package)
 ├── ios/, android/          # Capacitor native projects (see docs/mobile.md)
-├── assets/                 # App icon + splash sources for @capacitor/assets
+├── assets/                 # Store-listing icons + splash art (scripts/generate-native-icons.mjs)
 ├── docs/mobile.md          # Mobile dev, release and store checklist
 ├── capacitor.config.ts     # Native app config
 ├── public/                 # Static assets, custom SVG icon set
