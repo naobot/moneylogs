@@ -829,6 +829,10 @@ h6,
     overflow-x: auto;
     font-size: 0.6em;
     margin-bottom: 0;
+    // Room between items for the activity chip that overhangs each member's right
+    // edge, and at the end so the last one isn't clipped by the scroll area.
+    grid-gap: var(--space-7);
+    padding-right: var(--space-5);
   }
 
   @media (min-width: constants.$breakpoint-md) and (max-width: constants.$breakpoint-xl) {
@@ -872,6 +876,11 @@ h6,
     &__avatar {
       position: relative;
       display: inline-flex;
+
+      // In the horizontal bar the chip hangs off the row instead (see &__badge).
+      @media (max-width: constants.$breakpoint-md) {
+        position: static;
+      }
     }
 
     // New activity: an inverted chip on the avatar's top-right corner.
@@ -885,11 +894,12 @@ h6,
       border: var(--border-hairline) solid var(--paper);
       pointer-events: none;
 
-      // In the horizontal bar the rows are short (0.6em text), so an overhang would sit
-      // on the row's top frame: tuck the chip into the avatar's corner instead.
+      // In the horizontal bar the rows are too short for a corner overhang, so the
+      // chip straddles the row's right frame, vertically centred.
       @media (max-width: constants.$breakpoint-md) {
-        top: 0;
-        right: -4px;
+        top: 50%;
+        right: calc(-1 * var(--border-rule));
+        transform: translate(50%, -50%);
       }
     }
 
