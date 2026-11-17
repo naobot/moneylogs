@@ -13,7 +13,7 @@ export const EMAIL_FROM = defineString("EMAIL_FROM", {
   default: "moneylogs <digest@example.com>",
 });
 /** Where links in emails point, without a trailing slash. */
-export const APP_URL = defineString("APP_URL", { default: "https://moneylogs-89ebf.web.app" });
+export const APP_URL = defineString("APP_URL", { default: "https://moneylogs.app" });
 
 export type OutgoingEmail = {
   to: string;
