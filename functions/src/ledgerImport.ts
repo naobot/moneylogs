@@ -1,7 +1,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
-import { recomputeMonth } from "./ledger";
+import { alertBudgetsIfCurrent, recomputeMonth, rewardLoggedEntry } from "./ledger";
+import { BudgetCategory } from "./ledgerBudget";
 import {
   ExistingEntry,
   findPossibleDuplicates,
@@ -88,7 +89,10 @@ export const checkLedgerImport = onCall(
  * - Idempotent: each row's doc id derives from its external id, and rows are written with
  *   create(), so re-importing an overlapping file skips rows that are already there.
  * - Each touched month is recomputed once here; recomputeLedgerMonth skips the per-entry
- *   recompute for these creates, and imports earn no check-ins, knick-knacks or alerts.
+ *   recompute for these creates.
+ * - An import that creates entries counts as logging once: a check-in (the copper coin
+ *   for a first entry), the buddy's knick-knack roll of the day, and any budget alerts
+ *   the current month now needs.
  *
  * Returns { created, skippedDuplicates }.
  */
@@ -167,7 +171,24 @@ export const importLedgerEntries = onCall(
 
     // Even on partial failure, keep the summaries in step with whatever did land.
     if (created > 0) {
-      for (const month of importMonths(rows)) await recomputeMonth(db, ledgerRef, month);
+      // What the entry trigger does per entry, done once for the batch: it skips these.
+      for (const month of importMonths(rows)) {
+        const aggregate = await recomputeMonth(db, ledgerRef, month);
+        await alertBudgetsIfCurrent({
+          db,
+          ledgerRef,
+          ledger: ledger.data() ?? {},
+          month,
+          aggregate,
+        });
+      }
+      // Importing counts as logging: check-in (copper coin) and the knick-knack roll.
+      await rewardLoggedEntry({
+        db,
+        ledgerRef,
+        authorRef: user.ref,
+        categories: (ledger.get("categories") ?? []) as BudgetCategory[],
+      });
     }
 
     if (failed > 0) {

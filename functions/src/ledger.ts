@@ -1,5 +1,11 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { getFirestore, FieldValue, DocumentReference, Firestore } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  FieldValue,
+  DocumentData,
+  DocumentReference,
+  Firestore,
+} from "firebase-admin/firestore";
 import {
   affectedMonths,
   aggregateFieldsChanged,
@@ -38,6 +44,65 @@ export const recomputeMonth = (
 };
 
 /**
+ * Send the month's newly due budget alerts, if it's the current month. Best-effort: a
+ * failure is reported, never thrown, so it can't hold up the summary or an import.
+ */
+export const alertBudgetsIfCurrent = async ({
+  db,
+  ledgerRef,
+  ledger,
+  month,
+  aggregate,
+}: {
+  db: Firestore;
+  ledgerRef: DocumentReference;
+  ledger: DocumentData;
+  month: string;
+  aggregate: MonthAggregate;
+}): Promise<void> => {
+  if (!isCurrentMonth(month, Date.now())) return;
+  try {
+    await notifyLedgerBudgets({ db, ledgerRef, ledger, month, byCategory: aggregate.byCategory });
+  } catch (error) {
+    reportError(error, { action: "budget_alerts", level: "warning", extra: { month } });
+  }
+};
+
+/**
+ * What logging spending earns its author: today's check-in (and the copper coin for a first
+ * entry), then the buddy's roll of the day for a knick-knack. Both count once per day, so
+ * calling this once for a whole import earns the same as logging by hand. Best-effort:
+ * failures are reported, never thrown.
+ */
+export const rewardLoggedEntry = async ({
+  db,
+  ledgerRef,
+  authorRef,
+  categories,
+}: {
+  db: Firestore;
+  ledgerRef: DocumentReference;
+  authorRef: DocumentReference;
+  categories: ReadonlyArray<BudgetCategory>;
+}): Promise<void> => {
+  try {
+    await recordCheckIn({
+      db,
+      ledgerRef,
+      userRef: db.collection("users").doc(authorRef.id),
+      loggedEntry: true,
+    });
+  } catch (error) {
+    reportError(error, { action: "check_in", level: "warning" });
+  }
+  try {
+    await maybeFindKnickKnack({ db, ledgerRef, authorRef, categories });
+  } catch (error) {
+    reportError(error, { action: "knickknack_roll", level: "warning" });
+  }
+};
+
+/**
  * Keep ledgers/{ledgerId}/months/{YYYY-MM} in sync with its entries.
  *
  * Each affected month is fully recomputed from its entries inside a transaction rather than
@@ -52,8 +117,9 @@ export const recomputeMonth = (
  * a coin (checkIn.ts), and gives them the buddy's roll of the day for a knick-knack
  * (knickknackFind.ts).
  *
- * Entries created by a bulk import (importLedgerEntries) are skipped: that callable
- * recomputes each month once for the batch, and imports earn no rewards or alerts.
+ * Entries created by a bulk import (importLedgerEntries) are skipped: that callable does
+ * the same work once for the whole batch (each month recomputed and alerted once, one
+ * check-in and knick-knack roll).
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -79,45 +145,24 @@ export const recomputeLedgerMonth = onDocumentWritten(
 
     for (const month of affectedMonths(before, after)) {
       const aggregate = await recomputeMonth(db, ledgerRef, month);
-
-      if (!isCurrentMonth(month, Date.now())) continue;
-      // Separately, so a failure here never holds up the summary above.
-      try {
-        await notifyLedgerBudgets({
-          db,
-          ledgerRef,
-          ledger: ledgerSnap.data() ?? {},
-          month,
-          byCategory: aggregate.byCategory,
-        });
-      } catch (error) {
-        reportError(error, { action: "budget_alerts", level: "warning", extra: { month } });
-      }
+      await alertBudgetsIfCurrent({
+        db,
+        ledgerRef,
+        ledger: ledgerSnap.data() ?? {},
+        month,
+        aggregate,
+      });
     }
 
     // New entries only: editing or deleting one never earns a roll.
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
     if (!before && authorRef && typeof authorRef.id === "string") {
-      try {
-        await recordCheckIn({
-          db,
-          ledgerRef,
-          userRef: db.collection("users").doc(authorRef.id),
-          loggedEntry: true,
-        });
-      } catch (error) {
-        reportError(error, { action: "check_in", level: "warning" });
-      }
-      try {
-        await maybeFindKnickKnack({
-          db,
-          ledgerRef,
-          authorRef,
-          categories: (ledgerSnap.get("categories") ?? []) as BudgetCategory[],
-        });
-      } catch (error) {
-        reportError(error, { action: "knickknack_roll", level: "warning" });
-      }
+      await rewardLoggedEntry({
+        db,
+        ledgerRef,
+        authorRef,
+        categories: (ledgerSnap.get("categories") ?? []) as BudgetCategory[],
+      });
     }
   }),
 );
