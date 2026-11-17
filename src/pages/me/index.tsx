@@ -12,6 +12,8 @@ import { AchievementsSection } from "@/features/account/AchievementsSection";
 import { MyLogsSection } from "@/features/account/MyLogsSection";
 import { DisplaySection, displaySummary } from "@/features/account/DisplaySection";
 import { myLogsHint } from "@/features/account/myLogsHint";
+import { NotificationsSection } from "@/features/account/NotificationsSection";
+import { notificationsSummary } from "@/features/account/notificationSettings";
 import { FriendsSection } from "@/features/account/FriendsSection";
 import { friendsHint } from "@/features/account/friendsHint";
 import { useFriendships } from "@/hooks/useFriendships";
@@ -81,6 +83,10 @@ export const UserSettings = () => {
 
         <Drawer id="display" title="Display" summary={displaySummary(theme, displayPrefs)}>
           <DisplaySection />
+        </Drawer>
+
+        <Drawer id="notifications" title="notifications" summary={notificationsSummary(user)}>
+          <NotificationsSection />
         </Drawer>
 
         <Drawer id="account" title="Account" summary={user?.email}>
