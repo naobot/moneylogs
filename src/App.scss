@@ -811,6 +811,10 @@ h6,
     overflow-x: auto;
     font-size: 0.6em;
     margin-bottom: 0;
+    // Room between items for the activity chip that overhangs each member's right
+    // edge, and at the end so the last one isn't clipped by the scroll area.
+    grid-gap: var(--space-7);
+    padding-right: var(--space-5);
   }
 
   @media (min-width: constants.$breakpoint-md) and (max-width: constants.$breakpoint-xl) {
@@ -818,6 +822,7 @@ h6,
   }
 
   &__item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.4em;
@@ -829,15 +834,71 @@ h6,
       flex: 1;
     }
 
+    // Only there while the row is hovered (drag needs a mouse anyway, see
+    // useDragReorderEnabled), in the left padding so nothing shifts when it appears.
     &__dragHandle {
+      position: absolute;
+      top: 50%;
+      left: 0.15em;
+      transform: translateY(-50%);
       cursor: grab;
-      opacity: 0.3;
+      opacity: 0;
       font-size: 0.9em;
       user-select: none;
 
       &:active {
         cursor: grabbing;
       }
+    }
+
+    &:hover &__dragHandle {
+      opacity: 0.7; // muted text floor
+    }
+
+    &__avatar {
+      position: relative;
+      display: inline-flex;
+
+      // In the horizontal bar the chip hangs off the row instead (see &__badge).
+      @media (max-width: constants.$breakpoint-md) {
+        position: static;
+      }
+    }
+
+    // New activity: an inverted chip on the avatar's top-right corner.
+    &__badge {
+      position: absolute;
+      top: -5px;
+      right: -7px;
+      display: inline-flex;
+      padding: 1px;
+      background-color: var(--inverse-surface);
+      border: var(--border-hairline) solid var(--paper);
+      pointer-events: none;
+
+      // In the horizontal bar the rows are too short for a corner overhang, so the
+      // chip straddles the row's right frame, vertically centred.
+      @media (max-width: constants.$breakpoint-md) {
+        top: 50%;
+        right: calc(-1 * var(--border-rule));
+        transform: translate(50%, -50%);
+      }
+    }
+
+    // The row inverts on hover, so the chip flips back to stay visible.
+    &:hover &__badge {
+      background-color: var(--paper);
+      border-color: var(--ink);
+
+      .Icon img {
+        filter: var(--icon-filter);
+      }
+    }
+
+    // The 4px "new activity" frame, drawn inside so the row doesn't change size.
+    &--fresh {
+      outline: var(--border-fresh) solid var(--ink);
+      outline-offset: calc(-1 * var(--border-fresh));
     }
 
     &__subtitle {
@@ -1171,6 +1232,12 @@ h6,
           display: inline-flex;
           grid-gap: 0.2rem;
           font-weight: 700;
+
+          // Daily digest author: a little more room between avatar and name, as in
+          // comments.
+          .ProfileLink {
+            gap: var(--space-4);
+          }
 
           /*input {
             max-width: 100px;
