@@ -836,6 +836,7 @@ h6,
   }
 
   &__item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.4em;
@@ -847,15 +848,58 @@ h6,
       flex: 1;
     }
 
+    // Only there while the row is hovered (drag needs a mouse anyway, see
+    // useDragReorderEnabled), in the left padding so nothing shifts when it appears.
     &__dragHandle {
+      position: absolute;
+      top: 50%;
+      left: 0.15em;
+      transform: translateY(-50%);
       cursor: grab;
-      opacity: 0.3;
+      opacity: 0;
       font-size: 0.9em;
       user-select: none;
 
       &:active {
         cursor: grabbing;
       }
+    }
+
+    &:hover &__dragHandle {
+      opacity: 0.7; // muted text floor
+    }
+
+    &__avatar {
+      position: relative;
+      display: inline-flex;
+    }
+
+    // New activity: an inverted chip on the avatar's top-right corner.
+    &__badge {
+      position: absolute;
+      top: -5px;
+      right: -7px;
+      display: inline-flex;
+      padding: 1px;
+      background-color: var(--inverse-surface);
+      border: var(--border-hairline) solid var(--paper);
+      pointer-events: none;
+    }
+
+    // The row inverts on hover, so the chip flips back to stay visible.
+    &:hover &__badge {
+      background-color: var(--paper);
+      border-color: var(--ink);
+
+      .Icon img {
+        filter: var(--icon-filter);
+      }
+    }
+
+    // The 4px "new activity" frame, drawn inside so the row doesn't change size.
+    &--fresh {
+      outline: var(--border-fresh) solid var(--ink);
+      outline-offset: calc(-1 * var(--border-fresh));
     }
 
     &__subtitle {

@@ -273,12 +273,19 @@ const LogsMenuItemWithComments = ({
     isViewingThisMember,
     memberHasUnreadPosts: member.hasUnreadPosts,
   };
+  // At most one: the post bell wins for other members (see navBadges).
+  const badge = shouldShowPostBell(badgeInput)
+    ? { icon: "notification" as const, label: "new posts" }
+    : shouldShowCommentBadge({ ...badgeInput, hasUnreadComments })
+      ? { icon: "speech" as const, label: "new comments" }
+      : null;
 
   return (
     <div
       className={cx("LogsMenu__item", {
         "LogsMenu__item--active": isViewingThisMember,
         "LogsMenu__item--first": isOwnItem,
+        "LogsMenu__item--fresh": badge,
       })}
       onClick={() => onChangeUser(member)}
     >
@@ -287,11 +294,16 @@ const LogsMenuItemWithComments = ({
           ⣿
         </span>
       )}
-      {shouldShowPostBell(badgeInput) && <Icon type="notification" />}
-      {shouldShowCommentBadge({ ...badgeInput, hasUnreadComments }) && (
-        <Icon type={"speech"} size={18} />
-      )}
-      <MemberAvatarLink userDocId={member?.id} name={member?.displayName} />
+      {/* New activity: a chip on the avatar's corner, plus the row's 4px frame. */}
+      <span className="LogsMenu__item__avatar">
+        <MemberAvatarLink userDocId={member?.id} name={member?.displayName} />
+        {badge && (
+          <span className="LogsMenu__item__badge" title={badge.label}>
+            <Icon type={badge.icon} size={12} fill="white" />
+            <span className="sr-only">{badge.label}</span>
+          </span>
+        )}
+      </span>
       <div className="LogsMenu__item__content">
         <div className="LogsMenu__item__title">{member?.displayName}</div>
         {member?.displayLocation && (
