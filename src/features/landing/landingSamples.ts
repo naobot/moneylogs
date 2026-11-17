@@ -22,12 +22,12 @@ export type SamplePost = {
   comments: number;
 };
 
+// Personal tracking leads; shared and trip logs follow.
 export const SAMPLE_NOW: SampleCard[] = [
   {
-    title: "Lisbon long weekend",
-    kind: "log group",
-    details: ["ends in 2 days", memberLabel(4)],
-    badge: formatNewCount(5, "social"),
+    title: "My spending",
+    kind: "financial",
+    details: ["November: 642.18 CAD", memberLabel(1)],
   },
   {
     title: "Flat 2B",
@@ -36,9 +36,10 @@ export const SAMPLE_NOW: SampleCard[] = [
     badge: formatNewCount(2, "financial"),
   },
   {
-    title: "My spending",
-    kind: "financial",
-    details: ["November: 642.18 CAD", memberLabel(1)],
+    title: "Lisbon long weekend",
+    kind: "log group",
+    details: ["ends in 2 days", memberLabel(4)],
+    badge: formatNewCount(5, "social"),
   },
 ];
 
@@ -53,7 +54,9 @@ export const SAMPLE_RECENT: SampleCard[] = [
   { title: "Spring cleanout", details: ["ended Apr 30"] },
 ];
 
-/** One day of the "Lisbon long weekend" log, for the peek inside a log. */
+/** One day of the "Lisbon long weekend" group log, for the peek inside a log. */
+export const SAMPLE_TRIP_TITLE = "Lisbon long weekend";
+
 export const SAMPLE_DAY = {
   label: "Sat, Nov 8",
   total: "86.40 EUR",
@@ -81,11 +84,11 @@ export const SAMPLE_POSTS: SamplePost[] = [
   },
 ];
 
-/** Solo use: a financial log kept to yourself. */
-export const ON_YOUR_OWN = [
+/** The main pitch: an everyday spending tracker. */
+export const TRACKING = [
   {
     title: "An ongoing tracker",
-    text: "A financial log has no end date. Log each purchase as it happens, in any currency.",
+    text: "Log each purchase as it happens, in any currency. Your log has no end date.",
   },
   {
     title: "Categories and budgets",
@@ -97,25 +100,45 @@ export const ON_YOUR_OWN = [
   },
   {
     title: "Private until you share it",
-    text: "Keep it to yourself, or invite a partner or flatmates later if there's room.",
+    text: "It's yours alone unless you invite someone in.",
+  },
+];
+
+/** The gentle social side: optional, small-circle, no audience. */
+export const WITH_FRIENDS = [
+  {
+    title: "Friends, not followers",
+    text: "Add people you actually know with a personal invite link. There's no public feed.",
+  },
+  {
+    title: "Share a log",
+    text: "Invite a partner or flatmates into a financial log and track the household together.",
+  },
+  {
+    title: "Reactions and comments",
+    text: "Write a line about why you bought it. Friends can react or leave a comment.",
+  },
+  {
+    title: "Group logs for trips",
+    text: "Travelling together? Start a group log for the trip. When it ends, everyone sees how it added up.",
   },
 ];
 
 export const HOW_IT_WORKS = [
   {
-    title: "Start a log",
-    text: "One for a trip, a weekend, a no-spend month — or an ongoing financial log for a shared flat, or just for you.",
-  },
-  {
-    title: "Invite your people",
-    text: "Share a link. Friends who aren't ready to post can still follow along as spectators.",
+    title: "Start your log",
+    text: "An ongoing financial log, just for you. Bring your history from another app if you have one.",
   },
   {
     title: "Post as you go",
-    text: "What you spent, in any currency, and why. Others react and comment.",
+    text: "What you spent, in any currency, and why.",
   },
   {
-    title: "See how it added up",
-    text: "Once a log ends, everyone gets the totals, the hot posts and how the group spent.",
+    title: "Bring people in, if you like",
+    text: "Share a log with your household, or start a group log for a trip or a no-spend month.",
+  },
+  {
+    title: "See how it adds up",
+    text: "Monthly stats and budgets for your own spending, and totals and hot posts when a group log ends.",
   },
 ];
