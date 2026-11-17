@@ -11,13 +11,14 @@ import { updateUserFields } from "@/hooks/useUserQuery";
 import { sanitizeRedirect } from "@/features/auth/authRedirect";
 import { DisplaySection } from "@/features/account/DisplaySection";
 import dayjs from "@/utils/configuredDayjs";
+import { nextDisplayLocation, Place, placeLabel } from "@/utils/citySearch";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { personalLedgerId } from "@/utils/personalLedger";
 import { reportError, trackStep } from "@/utils/reportError";
 
 import ControlledInput from "@/components/ControlledInput";
 import CurrencySelect from "@/components/CurrencySelect";
-import TimezoneSelect from "@/components/TimezoneSelect";
+import PlacePicker from "@/components/PlacePicker";
 import Wizard from "@/components/Wizard/Wizard";
 
 import {
@@ -44,12 +45,13 @@ const initialState = (user: UserData): WelcomeState => ({
   displayName: user.displayName ?? "",
   displayLocation: user.displayLocation ?? "",
   timezone: user.timezone || guessTimezone(),
+  timezonePlace: user.timezonePlace ?? "",
   defaultCurrency: ledgerStartCurrency(user),
 });
 
 /**
- * First-run setup for a new account, one question per step: name, location, timezone,
- * display, default currency. Each step is saved as you go, so a refresh resumes where you
+ * First-run setup for a new account, one question per step: name, where you're based
+ * (which sets the timezone), display, default currency. Each step is saved as you go, so a refresh resumes where you
  * were. Finishing makes your personal log in your currency and takes you there (or on to
  * the invite you signed up from).
  */
@@ -68,6 +70,19 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
   const [state, setState] = useState<WelcomeState>(() => initialState(user));
   const update = (patch: Partial<WelcomeState>) => setState((prev) => ({ ...prev, ...patch }));
   const [saving, setSaving] = useState(false);
+  // The display location last filled in from a pick, so it follows later picks until the
+  // user writes their own.
+  const [suggestedLocation, setSuggestedLocation] = useState<string>();
+
+  const pickPlace = (place: Place) => {
+    const displayLocation = nextDisplayLocation(state.displayLocation, suggestedLocation, place);
+    if (displayLocation !== state.displayLocation) setSuggestedLocation(displayLocation);
+    update({
+      timezone: place.timezone,
+      timezonePlace: place.kind === "city" ? placeLabel(place) : "",
+      displayLocation,
+    });
+  };
   const [failed, setFailed] = useState(false);
 
   // The step lives in the URL so a refresh resumes and the back button walks back.
@@ -92,10 +107,11 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
         return;
       }
       case "location":
-        await updateUserFields(user.id, { displayLocation: state.displayLocation.trim() });
-        return;
-      case "timezone":
-        await updateUserFields(user.id, { timezone: state.timezone });
+        await updateUserFields(user.id, {
+          timezone: state.timezone,
+          timezonePlace: state.timezonePlace || deleteField(),
+          displayLocation: state.displayLocation.trim(),
+        });
         return;
       case "display":
         return;
@@ -166,8 +182,18 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
       body = (
         <>
           <h3 className="Wizard__question">where are you based?</h3>
+          <PlacePicker
+            label="I'm based in"
+            timezone={state.timezone}
+            place={state.timezonePlace}
+            onChange={pickPlace}
+          />
+          <p className="Wizard__hint">
+            {state.timezonePlace ? "" : "We guessed your timezone from this device. "}Posts and
+            entries are dated in it, and travelling posts can still use their own.
+          </p>
           <ControlledInput
-            label="Display location"
+            label="Show my location as"
             value={state.displayLocation}
             onChange={(e) => update({ displayLocation: e.target.value })}
             isError={!!displayLocationError(state.displayLocation)}
@@ -178,24 +204,7 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
             <strong className="keep-case">
               {state.displayName.trim() || "you"} ({state.displayLocation.trim() || "Tokyo"})
             </strong>
-            . Leave it blank to skip.
-          </p>
-        </>
-      );
-      break;
-
-    case "timezone":
-      body = (
-        <>
-          <h3 className="Wizard__question">what's your timezone?</h3>
-          <TimezoneSelect
-            label="My timezone is"
-            value={state.timezone}
-            onChange={(timezone) => update({ timezone })}
-          />
-          <p className="Wizard__hint">
-            We guessed from this device. Posts and entries are dated in it, and travelling posts can
-            still use their own.
+            . Write your own, or leave it blank to show nothing.
           </p>
         </>
       );

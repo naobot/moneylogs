@@ -15,7 +15,7 @@ Key architectural values: single source of truth, cost-effectiveness at current 
 | Styling         | Sass (`.scss`), co-located with components              |
 | Editor          | `@uiw/react-md-editor` (markdown log posts)             |
 | Drag & drop     | `@dnd-kit`                                              |
-| Dates           | dayjs + `react-timezone-select`                         |
+| Dates / places  | dayjs + bundled GeoNames city search (`PlacePicker`)    |
 | Monitoring      | Sentry (`@sentry/react`, with session replay)           |
 | Hosting / CI    | Firebase Hosting via GitHub Actions                     |
 

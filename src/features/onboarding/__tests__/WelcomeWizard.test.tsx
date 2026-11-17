@@ -27,6 +27,24 @@ vi.mock("@/config/firebase-config", () => ({ auth: { currentUser: { uid: "uid-1"
 vi.mock("@/features/account/DisplaySection", () => ({
   DisplaySection: () => <div id="display-section" />,
 }));
+// A two-city list instead of the real ~1 MB one.
+vi.mock("@/hooks/usePlaceIndex", async () => {
+  const { buildPlaceIndex } = await import("@/utils/citySearch");
+  const index = buildPlaceIndex(
+    {
+      v: 1,
+      tz: ["Asia/Tokyo", "Europe/Paris"],
+      regions: ["Kyoto", "Île-de-France"],
+      countries: { JP: "Japan", FR: "France" },
+      rows: [
+        ["Kyoto", "JP", 0, 0],
+        ["Paris", "FR", 1, 1],
+      ],
+    },
+    [],
+  );
+  return { usePlaceIndex: () => ({ status: "ready", index }) };
+});
 
 import { WelcomeWizard } from "@/features/onboarding/WelcomeWizard";
 
@@ -100,15 +118,15 @@ describe("WelcomeWizard", () => {
     expect(updateProfile).toHaveBeenCalledWith(expect.anything(), { displayName: "Nao" });
 
     expect(question()).toMatch(/where are you based/);
-    // Location is optional.
+    // The timezone is already set; the display location is optional.
     expect(button("Next")!.disabled).toBe(false);
-    typeInto("Display location", "Tokyo");
+    typeInto("Show my location as", "Tokyo");
     await click("Next");
-    expect(updateUserFields).toHaveBeenLastCalledWith("doc-1", { displayLocation: "Tokyo" });
-
-    expect(question()).toMatch(/timezone/);
-    await click("Next");
-    expect(updateUserFields).toHaveBeenLastCalledWith("doc-1", { timezone: "Asia/Tokyo" });
+    expect(updateUserFields).toHaveBeenLastCalledWith("doc-1", {
+      timezone: "Asia/Tokyo",
+      timezonePlace: "<deleteField>",
+      displayLocation: "Tokyo",
+    });
 
     expect(question()).toMatch(/how should things look/);
     expect(container.querySelector("#display-section")).not.toBeNull();
@@ -135,19 +153,56 @@ describe("WelcomeWizard", () => {
     expect(container.querySelector("#landed")?.textContent).toBe("ledger");
   });
 
+  const pickPlace = (typed: string, option: string) => {
+    typeInto("I'm based in", typed);
+    const li = Array.from(container.querySelectorAll<HTMLLIElement>("[role=option]")).find((el) =>
+      el.textContent?.includes(option),
+    );
+    act(() => {
+      li!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    });
+  };
+  const fieldValue = (label: string) =>
+    Array.from(container.querySelectorAll(".ControlledInput"))
+      .find((el) => el.querySelector("label")?.textContent === label)!
+      .querySelector("input")!.value;
+
+  it("sets the timezone from a picked city and suggests it as the location", async () => {
+    render("/welcome?step=1");
+    pickPlace("par", "Paris, France");
+    expect(fieldValue("I'm based in")).toBe("Paris, France");
+    expect(fieldValue("Show my location as")).toBe("Paris, France");
+
+    // The suggestion follows another pick...
+    pickPlace("kyo", "Kyoto, Japan");
+    expect(fieldValue("Show my location as")).toBe("Kyoto, Japan");
+
+    // ...until the user writes their own.
+    typeInto("Show my location as", "Kansai");
+    pickPlace("par", "Paris, France");
+    expect(fieldValue("Show my location as")).toBe("Kansai");
+
+    await click("Next");
+    expect(updateUserFields).toHaveBeenLastCalledWith("doc-1", {
+      timezone: "Europe/Paris",
+      timezonePlace: "Paris, France",
+      displayLocation: "Kansai",
+    });
+  });
+
   it("resumes at the step in the URL after a refresh", () => {
-    render("/welcome?step=3");
+    render("/welcome?step=2");
     expect(question()).toMatch(/how should things look/);
   });
 
   it("carries on to where they were headed", async () => {
-    render(`/welcome?step=4&next=${encodeURIComponent("/g/abc/invite")}`);
+    render(`/welcome?step=3&next=${encodeURIComponent("/g/abc/invite")}`);
     await click("Finish");
     expect(container.querySelector("#landed")?.textContent).toBe("invite");
   });
 
   it("ignores an off-site next", async () => {
-    render(`/welcome?step=4&next=${encodeURIComponent("//evil.com")}`);
+    render(`/welcome?step=3&next=${encodeURIComponent("//evil.com")}`);
     await click("Take me to my log");
     expect(container.querySelector("#landed")?.textContent).toBe("ledger");
   });

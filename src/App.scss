@@ -1229,6 +1229,26 @@ h6,
     display: none;
   }
 
+  // The location icon, as a real button so it's reachable by keyboard.
+  &__placeToggle {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  // The inline city search that sets a travelling post's timezone.
+  &__place {
+    align-items: center;
+    gap: var(--space-3);
+
+    .PlacePicker {
+      flex: 1;
+    }
+  }
+
   // On the smallest screens the date/time, amount and currency inputs cannot
   // shrink further while staying legible, so stack the editor header into two
   // rows instead of overflowing off-screen: date/time + close on top, the

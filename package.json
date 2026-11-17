@@ -29,7 +29,6 @@
     "react-dom": "^18.3.1",
     "react-firebase-hooks": "^5.1.1",
     "react-router-dom": "^7.0.2",
-    "react-timezone-select": "^3.2.8",
     "sentry": "^0.37.0"
   },
   "devDependencies": {

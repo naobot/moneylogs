@@ -62,7 +62,9 @@ export const UserSettings = () => {
           id="profile"
           title="Profile"
           summary={
-            user?.timezone ? `${user.displayName ?? ""} · ${user.timezone}` : "set your timezone"
+            user?.timezone
+              ? `${user.displayName ?? ""} · ${user.timezonePlace || user.timezone}`
+              : "set your timezone"
           }
           defaultOpen
         >
