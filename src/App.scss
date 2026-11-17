@@ -145,7 +145,7 @@ html {
 }
 
 // The header: nav icons, the ongoing logs, and the brand (wordmark, theme, sign out).
-// Desktop: one row, brand pushed right. Phones: brand + nav icons on top, and the logs on
+// Desktop: one row, brand pushed right. Phones: nav icons + brand on top, and the logs on
 // a scrollable row of their own beneath, so titles stay readable and taps land.
 .MainNav {
   display: flex;
@@ -178,9 +178,10 @@ html {
 
   @media (max-width: constants.$breakpoint-sm) {
     display: grid;
-    grid-template-columns: 1fr auto;
+    // Same order as desktop: nav icons left, wordmark right.
+    grid-template-columns: auto 1fr;
     grid-template-areas:
-      "brand nav"
+      "nav brand"
       "logs logs";
     gap: 0;
     padding: var(--space-1) var(--space-3);
@@ -197,6 +198,7 @@ html {
 
     &__brand {
       grid-area: brand;
+      justify-content: flex-end;
       margin-left: 0;
     }
 
