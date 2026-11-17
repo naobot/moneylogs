@@ -1,6 +1,7 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { sameShelf, ShelfFind, ShelfItem, shelfOf } from "./shelf";
+import { withSentry } from "./sentry";
 
 /**
  * Keep shelves/{userDocId} in step with users/{id}/knickknacks: a find kept (seen),
@@ -10,7 +11,7 @@ import { sameShelf, ShelfFind, ShelfItem, shelfOf } from "./shelf";
  */
 export const mirrorShelf = onDocumentWritten(
   "users/{userDocId}/knickknacks/{findId}",
-  async (event) => {
+  withSentry("mirrorShelf", async (event) => {
     const { userDocId } = event.params;
     const db = getFirestore();
     const userRef = db.collection("users").doc(userDocId);
@@ -31,5 +32,5 @@ export const mirrorShelf = onDocumentWritten(
     const current = (shelf.get("items") ?? []) as ShelfItem[];
     if (shelf.exists && sameShelf(current, items)) return;
     await shelfRef.set({ items, updatedAt: FieldValue.serverTimestamp() });
-  },
+  }),
 );

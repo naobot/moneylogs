@@ -21,6 +21,7 @@ import {
 import { isNotificationEnabled } from "./notificationPrefs";
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_FRIEND } from "./milestones";
+import { reportError, withSentryCall } from "./sentry";
 
 /**
  * Friend requests. friendships/{pairId} is read-only to clients, so every change goes
@@ -155,7 +156,7 @@ const run = async (
     await Promise.all(
       [p.me.id, p.other.id].map((userId) =>
         awardMilestoneOnce({ db: p.db, userId, item: FIRST_FRIEND }).catch((error) =>
-          console.error(`friends: friendship bracelet for ${userId}:`, error),
+          reportError(error, { action: "award_friend_milestone", level: "warning" }),
         ),
       ),
     );
@@ -164,19 +165,25 @@ const run = async (
 };
 
 /** Ask someone to be friends (accepts instead if they already asked you). */
-export const requestFriend = onCall((request) =>
-  run(request.auth?.uid, request.data, (state) => planRequest(state)),
+export const requestFriend = onCall(
+  withSentryCall("requestFriend", (request) =>
+    run(request.auth?.uid, request.data, (state) => planRequest(state)),
+  ),
 );
 
 /** Accept or decline a request someone sent you. */
-export const respondFriend = onCall((request) =>
-  run(request.auth?.uid, request.data, (state, accept) => {
-    if (accept === undefined) throw new HttpsError("invalid-argument", "Expected { accept }.");
-    return planRespond(state, accept);
-  }),
+export const respondFriend = onCall(
+  withSentryCall("respondFriend", (request) =>
+    run(request.auth?.uid, request.data, (state, accept) => {
+      if (accept === undefined) throw new HttpsError("invalid-argument", "Expected { accept }.");
+      return planRespond(state, accept);
+    }),
+  ),
 );
 
 /** Cancel your request, decline theirs, or unfriend. */
-export const removeFriend = onCall((request) =>
-  run(request.auth?.uid, request.data, (state) => planRemove(state)),
+export const removeFriend = onCall(
+  withSentryCall("removeFriend", (request) =>
+    run(request.auth?.uid, request.data, (state) => planRemove(state)),
+  ),
 );

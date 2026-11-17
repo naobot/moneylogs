@@ -8,6 +8,7 @@ import {
   parseImportRequest,
   parseImportRows,
 } from "./ledgerImportPlan";
+import { reportError, withSentryCall } from "./sentry";
 
 /** gRPC status for a create() on a document that already exists. */
 const ALREADY_EXISTS = 6;
@@ -25,7 +26,7 @@ const ALREADY_EXISTS = 6;
  */
 export const importLedgerEntries = onCall(
   { timeoutSeconds: 120, memory: "512MiB" },
-  async (request) => {
+  withSentryCall("importLedgerEntries", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to import entries.");
 
@@ -102,9 +103,9 @@ export const importLedgerEntries = onCall(
     }
 
     if (failed > 0) {
-      console.error(`importLedgerEntries: ${failed}/${rows.length} writes failed`, {
-        ledgerId: req.ledgerId,
-        importBatchId,
+      reportError(new Error(`${failed}/${rows.length} import writes failed`), {
+        action: "import_writes",
+        extra: { importBatchId, failed, created, total: rows.length },
       });
       throw new HttpsError(
         "internal",
@@ -112,5 +113,5 @@ export const importLedgerEntries = onCall(
       );
     }
     return { created, skippedDuplicates };
-  },
+  }),
 );

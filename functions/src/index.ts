@@ -16,6 +16,7 @@ import {
 import { isNotificationEnabled } from "./notificationPrefs";
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
+import { reportError, withSentry, withSentryCall } from "./sentry";
 
 initializeApp();
 const db = getFirestore();
@@ -35,52 +36,55 @@ type PostMetadata = { authorDisplayName: string; postTimezone?: string };
 type CurrencyPercentiles = { p25: number; p50: number; p75: number };
 
 // When a post is created, update both post metadata AND user tracking
-export const updatePostMetadata = onDocumentCreated("log_posts/{postId}", async (event) => {
-  const postData = event.data?.data();
-  const { postId } = event.params;
+export const updatePostMetadata = onDocumentCreated(
+  "log_posts/{postId}",
+  withSentry("updatePostMetadata", async (event) => {
+    const postData = event.data?.data();
+    const { postId } = event.params;
 
-  if (!postData?.author || !postData?.group) return;
+    if (!postData?.author || !postData?.group) return;
 
-  const timestamp = FieldValue.serverTimestamp();
+    const timestamp = FieldValue.serverTimestamp();
 
-  try {
-    // Batch these operations to use the same timestamp
-    const batch = db.batch();
+    try {
+      // Batch these operations to use the same timestamp
+      const batch = db.batch();
 
-    batch.update(db.collection("log_posts").doc(postId), {
-      createdAt: timestamp,
-    });
+      batch.update(db.collection("log_posts").doc(postId), {
+        createdAt: timestamp,
+      });
 
-    // Update the user's lastUpdated field
-    batch.update(db.collection("users").doc(postData.author.id), {
-      [`lastUpdated.${postData.group.id}`]: timestamp,
-    });
+      // Update the user's lastUpdated field
+      batch.update(db.collection("users").doc(postData.author.id), {
+        [`lastUpdated.${postData.group.id}`]: timestamp,
+      });
 
-    // Update the user's comment subscription (they're auto-subscribed to their own posts)
-    batch.update(db.collection("users").doc(postData.author.id), {
-      [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp,
-    });
+      // Update the user's comment subscription (they're auto-subscribed to their own posts)
+      batch.update(db.collection("users").doc(postData.author.id), {
+        [`commentSubscriptions.${postId}.lastViewedAt`]: timestamp,
+      });
 
-    await batch.commit();
+      await batch.commit();
 
-    console.log(`Updated user metadata for post ${postId}`);
-  } catch (error) {
-    console.error("Error updating post metadata:", error);
-  }
+      console.log(`Updated user metadata for post ${postId}`);
+    } catch (error) {
+      reportError(error, { action: "post_metadata" });
+    }
 
-  // A first entry in a social log earns the heart-shaped leaf (milestones.ts).
-  try {
-    await awardMilestoneOnce({ db, userId: postData.author.id, item: FIRST_SOCIAL_ENTRY });
-  } catch (error) {
-    console.error("Error awarding first social entry:", error);
-  }
-});
+    // A first entry in a social log earns the heart-shaped leaf (milestones.ts).
+    try {
+      await awardMilestoneOnce({ db, userId: postData.author.id, item: FIRST_SOCIAL_ENTRY });
+    } catch (error) {
+      reportError(error, { action: "award_first_entry", level: "warning" });
+    }
+  }),
+);
 
 // When a comment is created, update post's latestCommentAt and notify the post's author
 // and comment subscribers (see notifications.ts).
 export const updateCommentMetadata = onDocumentCreated(
   "log_posts/{postId}/comments/{commentId}",
-  async (event) => {
+  withSentry("updateCommentMetadata", async (event) => {
     const commentData = event.data?.data();
     const { postId, commentId } = event.params;
 
@@ -106,7 +110,7 @@ export const updateCommentMetadata = onDocumentCreated(
 
       console.log(`Updated comment metadata for post ${postId}`);
     } catch (error) {
-      console.error("Error updating comment metadata:", error);
+      reportError(error, { action: "comment_metadata" });
     }
 
     const postSnap = await db
@@ -114,7 +118,7 @@ export const updateCommentMetadata = onDocumentCreated(
       .doc(postId)
       .get()
       .catch((error) => {
-        console.error("Error reading the commented post:", error);
+        reportError(error, { action: "read_commented_post", level: "warning" });
         return null;
       });
 
@@ -125,7 +129,7 @@ export const updateCommentMetadata = onDocumentCreated(
         await awardMilestoneOnce({ db, userId: actorId, item: FIRST_COMMENT_ON_OTHERS });
       }
     } catch (error) {
-      console.error("Error awarding first comment:", error);
+      reportError(error, { action: "award_first_comment", level: "warning" });
     }
 
     // Notifications, separately so a failure here never holds up the metadata above.
@@ -171,133 +175,137 @@ export const updateCommentMetadata = onDocumentCreated(
         await batch.commit();
       }
     } catch (error) {
-      console.error("Error writing comment notifications:", error);
+      reportError(error, { action: "comment_notifications", level: "warning" });
     }
-  },
+  }),
 );
 
-export const processUploadedImage = onObjectFinalized(async (event) => {
-  const filePath = event.data.name;
-  const bucket = event.data.bucket;
+export const processUploadedImage = onObjectFinalized(
+  withSentry("processUploadedImage", async (event) => {
+    const filePath = event.data.name;
+    const bucket = event.data.bucket;
 
-  if (!filePath?.startsWith("uploads/")) return;
+    if (!filePath?.startsWith("uploads/")) return;
 
-  const pathParts = filePath.split("/");
-  // Expected: uploads/{groupId}/{postId}/{filename}
-  if (pathParts.length < 4) return;
+    const pathParts = filePath.split("/");
+    // Expected: uploads/{groupId}/{postId}/{filename}
+    if (pathParts.length < 4) return;
 
-  const [, groupId, postId, filename] = pathParts;
-  const contentType = event.data.contentType;
+    const [, groupId, postId, filename] = pathParts;
+    const contentType = event.data.contentType;
 
-  if (!groupId || !postId || !filename) return;
-  if (!contentType?.startsWith("image/")) return;
+    if (!groupId || !postId || !filename) return;
+    if (!contentType?.startsWith("image/")) return;
 
-  const adminStorage = getStorage();
-  const inputFile = adminStorage.bucket(bucket).file(filePath);
+    const adminStorage = getStorage();
+    const inputFile = adminStorage.bucket(bucket).file(filePath);
 
-  try {
-    const [inputBuffer] = await inputFile.download();
-
-    const outputBuffer = await sharp(inputBuffer)
-      .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toBuffer();
-
-    const filenameNoExt = filename.replace(/\.[^.]+$/, "");
-    const outputPath = `images/${groupId}/${postId}/${filenameNoExt}.webp`;
-    const outputFile = adminStorage.bucket(bucket).file(outputPath);
-
-    await outputFile.save(outputBuffer, {
-      metadata: { contentType: "image/webp" },
-    });
-    await outputFile.makePublic();
-
-    const downloadUrl = `https://storage.googleapis.com/${bucket}/${outputPath}`;
-
-    const postRef = db.collection("log_posts").doc(postId);
-    await postRef.update({
-      images: FieldValue.arrayUnion(downloadUrl),
-      pendingImageCount: FieldValue.increment(-1),
-    });
-
-    const postSnap = await postRef.get();
-    const remaining = postSnap.data()?.pendingImageCount ?? 0;
-    if (remaining <= 0) {
-      await postRef.update({ imagesProcessing: false });
-    }
-
-    await inputFile.delete();
-
-    console.log(`Processed image for post ${postId}: ${outputPath}`);
-  } catch (error) {
-    console.error(`Failed to process image ${filePath}:`, error);
-    // Flip imagesProcessing off so the UI doesn't hang indefinitely
     try {
-      await db.collection("log_posts").doc(postId).update({ imagesProcessing: false });
-    } catch (updateError) {
-      console.error("Failed to clear imagesProcessing flag:", updateError);
+      const [inputBuffer] = await inputFile.download();
+
+      const outputBuffer = await sharp(inputBuffer)
+        .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      const filenameNoExt = filename.replace(/\.[^.]+$/, "");
+      const outputPath = `images/${groupId}/${postId}/${filenameNoExt}.webp`;
+      const outputFile = adminStorage.bucket(bucket).file(outputPath);
+
+      await outputFile.save(outputBuffer, {
+        metadata: { contentType: "image/webp" },
+      });
+      await outputFile.makePublic();
+
+      const downloadUrl = `https://storage.googleapis.com/${bucket}/${outputPath}`;
+
+      const postRef = db.collection("log_posts").doc(postId);
+      await postRef.update({
+        images: FieldValue.arrayUnion(downloadUrl),
+        pendingImageCount: FieldValue.increment(-1),
+      });
+
+      const postSnap = await postRef.get();
+      const remaining = postSnap.data()?.pendingImageCount ?? 0;
+      if (remaining <= 0) {
+        await postRef.update({ imagesProcessing: false });
+      }
+
+      await inputFile.delete();
+
+      console.log(`Processed image for post ${postId}: ${outputPath}`);
+    } catch (error) {
+      reportError(error, { action: "process_image", extra: { filePath } });
+      // Flip imagesProcessing off so the UI doesn't hang indefinitely
+      try {
+        await db.collection("log_posts").doc(postId).update({ imagesProcessing: false });
+      } catch (updateError) {
+        reportError(updateError, { action: "clear_images_processing" });
+      }
     }
-  }
-});
+  }),
+);
 
-export const processGroupAnalytics = onCall(async (request) => {
-  const { groupId, groupEnd } = request.data;
+export const processGroupAnalytics = onCall(
+  withSentryCall("processGroupAnalytics", async (request) => {
+    const { groupId, groupEnd } = request.data;
 
-  if (!groupId) {
-    throw new Error("Group ID is required");
-  }
+    if (!groupId) {
+      throw new Error("Group ID is required");
+    }
 
-  try {
-    // Set up progress tracking
-    await updateProgress(groupId, "Gathering group data...", 10);
+    try {
+      // Set up progress tracking
+      await updateProgress(groupId, "Gathering group data...", 10);
 
-    // Fetch all log posts for this group
-    const logPosts = await fetchGroupLogPosts(groupId);
-    await updateProgress(groupId, "Processing spending data...", 40);
+      // Fetch all log posts for this group
+      const logPosts = await fetchGroupLogPosts(groupId);
+      await updateProgress(groupId, "Processing spending data...", 40);
 
-    const postsMetadata = await backfillPostMetadata(logPosts);
+      const postsMetadata = await backfillPostMetadata(logPosts);
 
-    // Calculate raw analytics
-    const analytics = {
-      isCalculated: true,
-      processedAt: FieldValue.serverTimestamp(),
-      raw: calculateRawAnalytics(logPosts, groupEnd),
-      posts: postsMetadata,
-    };
+      // Calculate raw analytics
+      const analytics = {
+        isCalculated: true,
+        processedAt: FieldValue.serverTimestamp(),
+        raw: calculateRawAnalytics(logPosts, groupEnd),
+        posts: postsMetadata,
+      };
 
-    await updateProgress(groupId, "Saving results...", 80);
+      await updateProgress(groupId, "Saving results...", 80);
 
-    // Update group document
-    await db.collection("log_groups").doc(groupId).update({ analytics });
+      // Update group document
+      await db.collection("log_groups").doc(groupId).update({ analytics });
 
-    await updateProgress(groupId, "Complete!", 100);
+      await updateProgress(groupId, "Complete!", 100);
 
-    // Clean up the processing document after a short delay
-    setTimeout(async () => {
+      // Clean up the processing document after a short delay
+      setTimeout(async () => {
+        try {
+          await db.collection("processing").doc(groupId).delete();
+          console.log(`Cleaned up processing document for group ${groupId}`);
+        } catch (cleanupError) {
+          reportError(cleanupError, { action: "analytics_cleanup", level: "warning" });
+          // Don't throw here - the main operation succeeded
+        }
+      }, 5000); // 5 second delay to ensure client sees "Complete!" status
+
+      return { success: true };
+    } catch (error) {
+      reportError(error, { action: "group_analytics" });
+
+      // Also cleanup on failure
       try {
         await db.collection("processing").doc(groupId).delete();
-        console.log(`Cleaned up processing document for group ${groupId}`);
       } catch (cleanupError) {
-        console.warn(`Failed to cleanup processing document for ${groupId}:`, cleanupError);
-        // Don't throw here - the main operation succeeded
+        reportError(cleanupError, { action: "analytics_cleanup", level: "warning" });
       }
-    }, 5000); // 5 second delay to ensure client sees "Complete!" status
 
-    return { success: true };
-  } catch (error) {
-    console.error("Analytics processing failed:", error);
-
-    // Also cleanup on failure
-    try {
-      await db.collection("processing").doc(groupId).delete();
-    } catch (cleanupError) {
-      console.warn(`Failed to cleanup processing document after error:`, cleanupError);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Analytics processing failed: ${errorMessage}`);
     }
-
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    throw new Error(`Analytics processing failed: ${errorMessage}`);
-  }
-});
+  }),
+);
 
 // Helper functions
 async function updateProgress(groupId: string, step: string, percentage: number) {
@@ -437,7 +445,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
         userDataMap.set(authorId, userDoc.data() as UserDoc);
       }
     } catch (error) {
-      console.warn(`Failed to fetch user data for ${authorId}:`, error);
+      reportError(error, { action: "backfill_author", level: "warning", extra: { authorId } });
     }
   });
 

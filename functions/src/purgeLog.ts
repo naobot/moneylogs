@@ -2,6 +2,7 @@ import { HttpsError } from "firebase-functions/v2/https";
 import { DocumentData, DocumentReference, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { LogKind, storagePrefixes, uniqueDocIds, userFieldsToDelete } from "./deleteLogPlan";
+import { reportError } from "./sentry";
 
 export type PurgeResult = { posts: number; participants: number };
 
@@ -26,7 +27,7 @@ export const purgeLog = async (
   const NOT_FOUND = 5;
   const recordFailure = (what: string) => (err: unknown) => {
     failedWrites++;
-    console.error(`purgeLog: failed to ${what}:`, err);
+    reportError(err, { action: "purge_write", extra: { what } });
   };
   const memberRefs = (data.members ?? []) as DocumentReference[];
   let postIds: string[] = [];
@@ -60,7 +61,7 @@ export const purgeLog = async (
       // A participant whose user doc is gone has nothing to clean up.
       if (err?.code !== NOT_FOUND) {
         failedWrites++;
-        console.error(`purgeLog: failed to clean up user ${userDocId}:`, err);
+        reportError(err, { action: "purge_user_refs", extra: { userDocId } });
       }
     });
     const achievements = await userRef.collection("achievements").where("groupId", "==", id).get();
@@ -89,7 +90,7 @@ export const purgeLog = async (
       try {
         await bucket.deleteFiles({ prefix });
       } catch (err) {
-        console.warn(`Could not delete storage prefix ${prefix}:`, err);
+        reportError(err, { action: "purge_storage", level: "warning", extra: { prefix } });
       }
     }
   }
