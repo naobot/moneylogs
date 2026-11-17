@@ -53,6 +53,28 @@ describe("pushCopy", () => {
     ).toBe("On track to go over your JPY budget this month.");
   });
 
+  it("covers friends, gifts and milestones, titled by the app", () => {
+    expect(pushCopy({ type: "friend_request", actorId: "u1", actorName: "Ana" })).toEqual({
+      title: "moneylogs",
+      body: "Ana wants to be friends",
+    });
+    expect(pushCopy({ type: "friend_accepted", actorName: "Ana" })?.body).toBe(
+      "Ana accepted your friend request",
+    );
+    expect(pushCopy({ type: "gift_received", actorName: "Ben", findId: "f1" })).toEqual({
+      title: "moneylogs",
+      body: "Ben sent you a gift. It's waiting, wrapped, in your knick-knack drawer.",
+    });
+    expect(pushCopy({ type: "milestone_earned", item: "copper_coin", findId: "f2" })).toEqual({
+      title: "moneylogs",
+      body: "Achievement unlocked: your budget buddy has something for you.",
+    });
+  });
+
+  it("falls back when a friend's name is missing", () => {
+    expect(pushCopy({ type: "friend_request" })?.body).toBe("Someone wants to be friends");
+  });
+
   it("doesn't push notes about your own actions or unknown types", () => {
     expect(pushCopy({ type: "log_created", groupName: "Lisbon" })).toBeNull();
     expect(pushCopy({ type: "log_joined", groupName: "Lisbon" })).toBeNull();
