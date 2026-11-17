@@ -3,7 +3,9 @@ import {
   arrayUnion,
   collection,
   deleteDoc,
+  deleteField,
   doc,
+  FieldValue,
   increment,
   serverTimestamp,
   Timestamp,
@@ -25,7 +27,10 @@ export type LogData = {
   content: string;
   currency: Currency;
   postDate: number;
-  timezone?: string;
+  /** A travelling post's own zone. On edit, null clears it back to the author's. */
+  timezone?: string | null;
+  /** The city picked for that zone ("Kyoto"); null or empty clears it. */
+  timezonePlace?: string | null;
 };
 
 type ToggleReactionArgs = {
@@ -61,9 +66,13 @@ export const useLogPostQuery = () => {
 
     const postData: Partial<{
       timezone: string;
+      timezonePlace: string;
     }> = {};
 
-    if (logData.timezone !== undefined) postData.timezone = logData.timezone;
+    if (logData.timezone) {
+      postData.timezone = logData.timezone;
+      if (logData.timezonePlace) postData.timezonePlace = logData.timezonePlace;
+    }
 
     const batch = writeBatch(db);
     const postRef = doc(collection(db, "log_posts"));
@@ -98,7 +107,8 @@ export const useLogPostQuery = () => {
       postDate: Timestamp;
       amount: number;
       currency: string;
-      timezone: string;
+      timezone: string | FieldValue;
+      timezonePlace: string | FieldValue;
     }> = {};
 
     if (logData.content !== undefined) updateData.content = logData.content;
@@ -106,7 +116,10 @@ export const useLogPostQuery = () => {
       updateData.postDate = Timestamp.fromMillis(logData.postDate);
     if (logData.amount !== undefined) updateData.amount = logData.amount;
     if (logData.currency !== undefined) updateData.currency = logData.currency;
-    if (logData.timezone !== undefined) updateData.timezone = logData.timezone;
+    if (logData.timezone !== undefined) {
+      updateData.timezone = logData.timezone || deleteField();
+      updateData.timezonePlace = (logData.timezone && logData.timezonePlace) || deleteField();
+    }
 
     console.log("✍️ executing write on log_posts collection");
     await updateDoc(doc(db, "log_posts", postId), updateData);

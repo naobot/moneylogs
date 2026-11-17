@@ -11,7 +11,6 @@ import React, {
 } from "react";
 import dayjs from "dayjs";
 import MDEditor, { commands, type ExecuteState, TextAreaTextApi } from "@uiw/react-md-editor";
-import { allTimezones, useTimezoneSelect } from "react-timezone-select";
 
 import { useCurrentUser } from "@/contexts";
 import { Currency } from "@/types/user";
@@ -22,13 +21,15 @@ import { reportError } from "@/utils/reportError";
 import { useToastContext } from "@/hooks/useToastContext";
 import TutorialTooltip from "@/components/TutorialTooltip";
 import { useTutorial } from "@/contexts/TutorialContext";
-import { getAutoPostTimezone } from "@/utils/timezone";
+import { cityFromZone, getAutoPostTimezone, postZoneLabel } from "@/utils/timezone";
+import { Place } from "@/utils/citySearch";
 
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
+import PlacePicker from "@/components/PlacePicker";
+import RowButton from "@/components/RowButton";
 
 import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
-import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 
 const DRAFT_KEY = "ML__logPostDraft";
@@ -46,6 +47,7 @@ const LogPostEditor = forwardRef(
       content = "",
       amount = 0,
       timezone = null,
+      timezonePlace = null,
       currency = "JPY" as Currency,
       date = Date.now(),
     }: {
@@ -61,6 +63,7 @@ const LogPostEditor = forwardRef(
       date?: number;
       isPinned?: boolean;
       timezone?: string | null;
+      timezonePlace?: string | null;
     },
     ref: React.ForwardedRef<HTMLDivElement>,
   ) => {
@@ -80,16 +83,13 @@ const LogPostEditor = forwardRef(
     const [newTimezone, setNewTimezone] = useState<string | null>(
       timezone ?? user?.timezone ?? null,
     );
+    const [newTimezonePlace, setNewTimezonePlace] = useState<string | null>(timezonePlace);
     const [showTimezone, setShowTimezone] = useState(!!timezone);
     const [isAutoTimezone, setIsAutoTimezone] = useState(false);
+    const [pickingPlace, setPickingPlace] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const editorApiRef = useRef<TextAreaTextApi | null>(null);
-
-    const { options, parseTimezone } = useTimezoneSelect({
-      labelStyle: "original",
-      timezones: allTimezones,
-    });
 
     const { trackUserAction } = useReadTracking();
     const { uploadInlineImage, isUploading } = useImageUpload();
@@ -172,6 +172,7 @@ const LogPostEditor = forwardRef(
             content: newEntryContent,
             postDate: newEntryDate,
             timezone: newTimezone ?? undefined,
+            timezonePlace: newTimezone ? newTimezonePlace : null,
           },
         });
 
@@ -204,7 +205,9 @@ const LogPostEditor = forwardRef(
             currency: selectedCurrency,
             content: newEntryContent,
             postDate: newEntryDate,
-            timezone: newTimezone ?? undefined,
+            // null clears a travelling zone back to the profile's.
+            timezone: newTimezone,
+            timezonePlace: newTimezone ? newTimezonePlace : null,
           },
         });
 
@@ -243,10 +246,20 @@ const LogPostEditor = forwardRef(
       newEntryContentSet(value ?? null);
     };
 
-    const handleClickLocation = (option: DropdownOption) => {
-      setNewTimezone(option.value);
+    const handlePickPlace = (place: Place) => {
+      setNewTimezone(place.timezone);
+      // Posts show the short city name ("Kyoto · GMT+9").
+      setNewTimezonePlace(place.kind === "city" ? place.name : null);
       setShowTimezone(true);
       setIsAutoTimezone(false);
+      setPickingPlace(false);
+    };
+
+    const handleClearPlace = () => {
+      setNewTimezone(null);
+      setNewTimezonePlace(null);
+      setIsAutoTimezone(false);
+      setPickingPlace(false);
     };
 
     useEffect(() => {
@@ -262,6 +275,7 @@ const LogPostEditor = forwardRef(
 
         if (detectedTimezone) {
           setNewTimezone(detectedTimezone);
+          setNewTimezonePlace(null);
           setShowTimezone(true);
           setIsAutoTimezone(true);
         } else {
@@ -311,9 +325,16 @@ const LogPostEditor = forwardRef(
                   position="bottom"
                 />
               )}
-              <CustomDropdown options={options} onSelect={handleClickLocation}>
+              <button
+                type="button"
+                className="LogPostEditor__placeToggle"
+                aria-label="Set where this post was written"
+                aria-expanded={pickingPlace}
+                title="Set where this post was written"
+                onClick={() => setPickingPlace((v) => !v)}
+              >
                 <Icon type={"location"} />
-              </CustomDropdown>
+              </button>
             </div>
             <div style={{ position: "relative" }}>
               {activeEditorTip === "date" && (
@@ -380,15 +401,39 @@ const LogPostEditor = forwardRef(
             />
           </div>
         </div>
-        {showTimezone && newTimezone && (
-          <div className="LogPosts__posts__item__header">
-            <div className="LogPosts__posts__item__header__left">
-              <div className="TimezoneSetter">
-                {parseTimezone(newTimezone)?.label ?? newTimezone}
-                {isAutoTimezone && " (auto-detected)"}
+        {pickingPlace ? (
+          <div className="LogPosts__posts__item__header LogPostEditor__place">
+            <PlacePicker
+              compact
+              autoFocus
+              label="Written in"
+              placeholder="Type a city"
+              timezone={newTimezone}
+              place={newTimezone ? (newTimezonePlace ?? cityFromZone(newTimezone)) : null}
+              onChange={handlePickPlace}
+            />
+            <RowButton onClick={() => setPickingPlace(false)}>Done</RowButton>
+          </div>
+        ) : (
+          showTimezone &&
+          newTimezone && (
+            <div className="LogPosts__posts__item__header">
+              <div className="LogPosts__posts__item__header__left">
+                <div className="TimezoneSetter keep-case">
+                  {postZoneLabel(newTimezone, newTimezonePlace, newEntryDate)}
+                  {isAutoTimezone && " (auto-detected)"}
+                </div>
+                <RowButton
+                  glyph
+                  aria-label="Use my profile timezone"
+                  title="Use my profile timezone"
+                  onClick={handleClearPlace}
+                >
+                  ×
+                </RowButton>
               </div>
             </div>
-          </div>
+          )
         )}
         <div className="LogPosts__posts__item__body" style={{ position: "relative" }}>
           {activeEditorTip === "body" && (

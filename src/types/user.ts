@@ -103,6 +103,8 @@ export type Log = {
 
 export type LogPost = {
   timezone?: string;
+  /** The city picked for a travelling post's zone ("Kyoto"); else the zone's own city shows. */
+  timezonePlace?: string;
   id: string;
   createdAt: Timestamp;
   postDate: Timestamp; // editable date
