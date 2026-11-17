@@ -20,8 +20,8 @@ describe("Night shift (visual)", () => {
         <UpdateBanner onRefresh={noop} onDismiss={noop} />
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <Button text="primary" />
-          <Button text="bordered" buttonStyle="primary-border" />
-          <Button text="lite" buttonStyle="primary-border-lite" />
+          <Button text="secondary" variant="secondary" />
+          <Button text="selected" variant="toggle" isSelected />
           <RowButton>manage</RowButton>
         </div>
         <div>

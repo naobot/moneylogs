@@ -163,13 +163,7 @@ export const EntryForm = ({
             ))}
           </select>
           {onCancel && (
-            <Button
-              buttonStyle="primary-border-lite"
-              size="sm"
-              text={"×"}
-              title="Close"
-              onClick={onCancel}
-            />
+            <Button variant="secondary" size="sm" text={"×"} title="Close" onClick={onCancel} />
           )}
         </div>
       </div>
@@ -187,7 +181,7 @@ export const EntryForm = ({
         </label>
         <Button
           text={mode === "add" ? "Add" : "Save"}
-          buttonStyle="primary-border"
+          variant="primary"
           size="sm"
           disabled={!canSave}
           loading={mode === "edit" && isSaving}

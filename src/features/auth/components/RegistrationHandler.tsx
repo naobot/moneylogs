@@ -88,7 +88,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
           text="Register"
           disabled={!email || !password || !isValid}
           loading={registrationPending}
-          buttonStyle="primary-border"
+          variant="primary"
         />
       </div>
     </>

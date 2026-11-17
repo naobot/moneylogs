@@ -270,7 +270,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
                 handleSelectTestOtherLogs(option.value);
               }}
             >
-              <Button text="Select user" />
+              <Button text="Select user" variant="secondary" />
             </CustomDropdown>
           </div>
         )}

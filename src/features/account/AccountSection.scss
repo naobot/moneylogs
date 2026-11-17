@@ -55,18 +55,6 @@
   }
 }
 
-// Sign out is the highlighted action: inverted, flipping back on hover. Two classes so
-// it wins over .Button--primary-border.
-.Button.AccountSection__signOut {
-  background-color: var(--ink);
-  color: var(--paper);
-
-  &:hover {
-    background-color: var(--paper);
-    color: var(--ink);
-  }
-}
-
 .ChangePassword {
   &__body {
     display: flex;

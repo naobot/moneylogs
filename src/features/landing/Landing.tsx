@@ -148,7 +148,7 @@ export const Landing = ({ invite }: { invite?: InviteKind }) => {
         </p>
         <div className="Landing__actions">
           <Button to="/login" state={register} text="Create an account" />
-          <Button to="/login" state={login} text="Sign in" buttonStyle="primary-border" />
+          <Button to="/login" state={login} text="Sign in" variant="secondary" />
         </div>
       </header>
 
@@ -251,7 +251,7 @@ export const Landing = ({ invite }: { invite?: InviteKind }) => {
         {!invite && <p>Got an invite link? Open it, sign up, and you'll go straight to it.</p>}
         <div className="Landing__actions">
           <Button to="/login" state={register} text="Create an account" />
-          <Button to="/about" text="About" buttonStyle="primary-border" />
+          <Button to="/about" text="About" variant="secondary" />
         </div>
       </footer>
 

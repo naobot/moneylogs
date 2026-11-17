@@ -196,7 +196,7 @@ export const LedgerStatsPanel = ({
               key={c}
               text={c}
               size="sm"
-              buttonStyle="primary-border"
+              variant="toggle"
               isSelected={c === currency}
               onClick={() => setPicked(c)}
             />
@@ -255,14 +255,14 @@ export const LedgerStatsPanel = ({
               <Button
                 text="daily"
                 size="sm"
-                buttonStyle="primary-border"
+                variant="toggle"
                 isSelected={chartMode === "bars"}
                 onClick={() => setChartMode("bars")}
               />
               <Button
                 text="running total"
                 size="sm"
-                buttonStyle="primary-border"
+                variant="toggle"
                 isSelected={chartMode === "cumulative"}
                 onClick={() => setChartMode("cumulative")}
               />

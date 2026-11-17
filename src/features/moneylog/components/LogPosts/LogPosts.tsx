@@ -346,11 +346,7 @@ const LogPostItemComponent = ({
           </p>
         </Modal.Body>
         <Modal.Actions>
-          <Button
-            onClick={() => handleDeletePost(post.id)}
-            text="Delete"
-            buttonStyle="primary-border"
-          />
+          <Button onClick={() => handleDeletePost(post.id)} text="Delete" variant="primary" />
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
@@ -363,7 +359,7 @@ const LogPostItemComponent = ({
           <p>Your currently pinned post will return to being a regular post.</p>
         </Modal.Body>
         <Modal.Actions>
-          <Button onClick={() => handlePinPost(post.id)} text="Pin" buttonStyle="primary-border" />
+          <Button onClick={() => handlePinPost(post.id)} text="Pin" variant="primary" />
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
@@ -681,16 +677,16 @@ const LogPosts = memo(
                 text="Daily"
                 onClick={() => isWeeklyViewSet(false)}
                 isSelected={!isWeeklyView}
-                size="md"
-                buttonStyle="primary-border"
+                size="sm"
+                variant="toggle"
               />
               <Button
                 className={"LogPosts__menu__button"}
                 text="Weekly"
                 onClick={() => isWeeklyViewSet(true)}
                 isSelected={isWeeklyView}
-                size="md"
-                buttonStyle="primary-border"
+                size="sm"
+                variant="toggle"
               />
             </div>
           </>}*/}
@@ -800,7 +796,7 @@ const LogPosts = memo(
                   <Button
                     text="Load older posts"
                     size="md"
-                    buttonStyle="primary-border"
+                    variant="primary"
                     onClick={() => onLoadMore?.()}
                   />
                 )}

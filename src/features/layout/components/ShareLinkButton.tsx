@@ -23,7 +23,7 @@ const ShareLinkButton = ({ title, url }: { title: string; url: string }) => {
       className="ShareLinkButton"
       text="SHARE"
       size="sm"
-      buttonStyle="primary-border"
+      variant="secondary"
       onClick={() => void share()}
     />
   );

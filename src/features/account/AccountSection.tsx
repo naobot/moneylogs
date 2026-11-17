@@ -70,14 +70,14 @@ export const AccountSection = () => {
         <Button
           text="Change password"
           size="sm"
-          buttonStyle="primary-border"
+          variant="secondary"
           onClick={() => setChangingPassword(true)}
         />
         <Button
           text="Reset password"
           title={email ? `Email a reset link to ${email}` : "Email me a reset link"}
           size="sm"
-          buttonStyle="primary-border"
+          variant="secondary"
           disabled={!email}
           loading={resetPending}
           onClick={() => void sendReset()}
@@ -85,8 +85,7 @@ export const AccountSection = () => {
         <Button
           text="Sign out"
           size="sm"
-          buttonStyle="primary-border"
-          className="AccountSection__signOut"
+          variant="secondary"
           loading={signOutPending}
           onClick={signOut}
         />
@@ -98,7 +97,7 @@ export const AccountSection = () => {
         <Button
           text="Delete account"
           size="sm"
-          buttonStyle="primary-border"
+          variant="secondary"
           onClick={() => setDeletingAccount(true)}
         />
       </section>

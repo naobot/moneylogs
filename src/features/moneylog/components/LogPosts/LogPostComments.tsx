@@ -227,8 +227,8 @@ const LogPostComments = ({
             </div>
             <div className="LogPostComments__item__footer">
               <Button
-                size="xs"
-                buttonStyle="primary-border-lite"
+                size="sm"
+                variant="secondary"
                 text="Comment"
                 onClick={handleAddComment}
                 disabled={!newCommentContent || addComment?.isLoading}

@@ -376,8 +376,9 @@ html {
 
 // Buttons invert when active or hovered; their icons flip with them.
 .Button--active .Icon img,
-.Button--primary-border:hover .Icon img,
-.Button--primary-border-lite:hover .Icon img {
+.Button--primary:hover:not(.Button--disabled) .Icon img,
+.Button--secondary:hover:not(.Button--disabled) .Icon img,
+.Button--toggle:hover:not(.Button--disabled) .Icon img {
   filter: var(--icon-filter-inverse);
 }
 
@@ -434,6 +435,8 @@ h6,
   }
 }
 
+// Rectangular buttons: one look per role (see Button.tsx). Frame weight carries
+// emphasis (2px primary, 1px secondary/toggle); filled means "selected" and nothing else.
 .Button {
   display: inline-flex;
   grid-gap: 0.2em;
@@ -441,60 +444,38 @@ h6,
   border-radius: var(--radius-none);
   border: none;
   padding: 0.4em;
+  background-color: var(--paper);
+  color: var(--ink);
+
+  &--primary,
+  &--secondary,
+  &--toggle {
+    border: var(--border-hairline) solid var(--ink);
+
+    &:hover:not(.Button--disabled) {
+      background-color: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  &--primary {
+    border-width: var(--border-rule);
+    font-weight: 700;
+  }
+
+  &--icon {
+    background-color: transparent;
+  }
+
+  &--active {
+    background-color: var(--inverse-surface);
+    color: var(--inverse-ink);
+    cursor: default;
+  }
 
   &--disabled {
     cursor: default;
     opacity: 0.3;
-
-    &:hover {
-      border: inherit !important;
-      color: inherit !important;
-      background-color: inherit !important;
-    }
-  }
-
-  &--active {
-    background-color: var(--ink) !important;
-    color: var(--paper) !important;
-    cursor: default;
-  }
-
-  &--primary {
-    background-color: var(--paper);
-    color: var(--ink);
-  }
-
-  &--primary-border {
-    background-color: var(--paper);
-    color: var(--ink);
-    border: var(--border-rule) solid var(--ink);
-    font-weight: 700;
-
-    &:hover {
-      border: var(--border-rule) solid var(--ink) !important;
-      background-color: var(--ink);
-      color: var(--paper);
-    }
-  }
-
-  &--primary-border-lite {
-    background-color: var(--paper);
-    color: var(--ink);
-    border: var(--border-hairline) solid var(--ink);
-
-    &:hover {
-      border: var(--border-hairline) solid var(--ink) !important;
-      background-color: var(--ink);
-      color: var(--paper);
-    }
-  }
-
-  &--past {
-    border-style: dotted !important;
-
-    &:hover {
-      border-style: dotted !important;
-    }
   }
 
   &--size-sm {
@@ -503,20 +484,6 @@ h6,
 
   &--size-md {
     font-size: 1em;
-  }
-
-  &--size-lg {
-    font-size: 1.2em;
-    padding: 0.6em;
-  }
-
-  &--size-xl {
-    font-size: 1.4em;
-    padding: 0.8em;
-  }
-
-  &:hover {
-    border: none;
   }
 }
 

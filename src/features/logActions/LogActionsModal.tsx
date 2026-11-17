@@ -214,7 +214,7 @@ export const LogActionsModal = ({
           <Button
             text={archived ? "Unarchive" : "Archive for me"}
             size="sm"
-            buttonStyle="primary-border"
+            variant="secondary"
             loading={pending}
             disabled={!user || pending}
             onClick={() => void toggleArchive()}
@@ -240,9 +240,10 @@ export const LogActionsModal = ({
             <Button
               text={`Delete ${noun}`}
               size="sm"
-              buttonStyle="primary-border"
-              disabled={pending}
-              onClick={() => setConfirming(true)}
+              variant="secondary"
+              loading={pending || deletion.isLoading}
+              disabled={!canDelete}
+              onClick={() => void handleDelete()}
             />
           </section>
         )}

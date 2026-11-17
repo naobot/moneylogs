@@ -52,7 +52,7 @@ const PeekCard = ({ userDocId }: { userDocId: string }) => {
           <Button
             text="Add friend"
             size="sm"
-            buttonStyle="primary-border"
+            variant="primary"
             loading={pending === "request"}
             onClick={() =>
               void run("request", () => requestFriend(userDocId), "Friend request sent")
@@ -63,7 +63,7 @@ const PeekCard = ({ userDocId }: { userDocId: string }) => {
           <Button
             text="Accept"
             size="sm"
-            buttonStyle="primary-border"
+            variant="primary"
             loading={pending === "accept"}
             onClick={() =>
               void run("accept", () => respondFriend(userDocId, true), "You're friends now")

@@ -108,13 +108,13 @@ export const InvitePage = () => {
             {group.members.length < group.max_participants && (
               <Button
                 onClick={handleJoinGroup}
-                buttonStyle="primary-border"
+                variant="primary"
                 text="Join"
                 disabled={isProcessingJoin}
               />
             )}
             {group.members.length >= group.max_participants && (
-              <Button onClick={() => navigate("/")} buttonStyle="primary-border" text="Back" />
+              <Button onClick={() => navigate("/")} variant="secondary" text="Back" />
             )}
           </Modal.Actions>
         </Modal>
@@ -128,11 +128,7 @@ export const InvitePage = () => {
             <p>Please set up your user profile.</p>
           </Modal.Body>
           <Modal.Actions>
-            <Button
-              onClick={() => navigate("/me")}
-              buttonStyle="primary-border"
-              text="Set up my profile"
-            />
+            <Button onClick={() => navigate("/me")} variant="primary" text="Set up my profile" />
           </Modal.Actions>
         </Modal>
       )}

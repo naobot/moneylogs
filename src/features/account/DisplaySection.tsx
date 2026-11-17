@@ -61,7 +61,8 @@ const Segmented = <T extends string>({
         <Button
           key={option}
           text={labelFor(option)}
-          buttonStyle="primary-border-lite"
+          variant="toggle"
+          size="sm"
           isSelected={value === option}
           onClick={() => onChange(option)}
         />
@@ -88,14 +89,16 @@ export const DisplaySection = () => {
           <Button
             text={THEME_LABELS.paper}
             icon="sun"
-            buttonStyle="primary-border-lite"
+            variant="toggle"
+            size="sm"
             isSelected={theme === "paper"}
             onClick={() => setTheme("paper")}
           />
           <Button
             text={THEME_LABELS.night}
             icon="moon"
-            buttonStyle="primary-border-lite"
+            variant="toggle"
+            size="sm"
             isSelected={theme === "night"}
             onClick={() => setTheme("night")}
           />

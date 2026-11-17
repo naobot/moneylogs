@@ -53,7 +53,7 @@ const LoginHandler = ({ redirectTo }: { redirectTo?: string }) => {
           text="Login"
           loading={loginPending}
           disabled={!email || !password}
-          buttonStyle="primary-border"
+          variant="primary"
         />
       </div>
     </>

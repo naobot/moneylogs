@@ -312,7 +312,6 @@ export const CreateLogWizard = () => {
       nextText={
         isLast ? (state.mode === "social" ? "Start log group" : "Start financial log") : "Next"
       }
-      nextLarge={isLast}
       nextDisabled={!canAdvance || (isLast && !user?.userId)}
       busy={isSubmitting}
     >

@@ -36,7 +36,6 @@ describe("Wizard (visual)", () => {
         onBack={noop}
         onNext={noop}
         nextText="Create log"
-        nextLarge
         nextDisabled
       >
         <p>Invite friends once the log exists.</p>

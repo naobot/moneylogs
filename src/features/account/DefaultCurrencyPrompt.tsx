@@ -82,16 +82,11 @@ export const DefaultCurrencyPrompt = () => {
       <Modal.Actions>
         <Button
           text="Not now"
-          buttonStyle="primary-border-lite"
+          variant="secondary"
           disabled={saving}
           onClick={() => void save(guess)}
         />
-        <Button
-          text="Save"
-          buttonStyle="primary-border"
-          loading={saving}
-          onClick={() => void save(choice)}
-        />
+        <Button text="Save" variant="primary" loading={saving} onClick={() => void save(choice)} />
       </Modal.Actions>
     </Modal>
   );
