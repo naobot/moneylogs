@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
 import { formatDate, formatTime } from "@/utils/dateFormat";
@@ -7,6 +7,7 @@ import { formatDate, formatTime } from "@/utils/dateFormat";
 import { useCurrentUser } from "@/contexts";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
+import { useGetLedger } from "@/hooks/useGetLedger";
 import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
@@ -148,6 +149,10 @@ export const CreateLogWizard = () => {
   };
 
   const scheduleMessage = scheduleError(state.startDate, state.endDate);
+  // New users already have a solo "personal" financial log (made at sign-up), and some
+  // came here thinking they needed to create one. Point at it while they pick a type,
+  // as long as it still exists (deleted personal logs stay deleted).
+  const personal = useGetLedger(user?.personalLedgerId, step === "type");
 
   let body: ReactNode = null;
   switch (step) {
@@ -155,6 +160,16 @@ export const CreateLogWizard = () => {
       body = (
         <>
           <h3 className="Wizard__question">What kind of log are you starting?</h3>
+          {personal.ledger && (
+            <p className="Wizard__note">
+              You already have a financial log just for you:{" "}
+              <Link to={`/l/${personal.ledger.id}`} className="keep-case">
+                {personal.ledger.title}
+              </Link>
+              . Use it for everyday spending. Start a new financial log only for a separate budget,
+              or one you share with others.
+            </p>
+          )}
           <div className="Wizard__choices" role="radiogroup" aria-label="Log type">
             {MODE_OPTIONS.map((option) => (
               <button

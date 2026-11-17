@@ -6,8 +6,20 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 const createLedgerMutate = vi.fn(async () => "new-ledger");
 const addNewLogGroupMutate = vi.fn(async () => "new-group");
 
+const personal = vi.hoisted(() => ({
+  ledger: { id: "personal-uid-1", title: "personal" } as { id: string; title: string } | undefined,
+  queriedId: undefined as string | undefined,
+}));
 vi.mock("@/contexts", () => ({
-  useCurrentUser: () => ({ user: { id: "doc-1", userId: "uid-1", displayName: "Nao" } }),
+  useCurrentUser: () => ({
+    user: { id: "doc-1", userId: "uid-1", displayName: "Nao", personalLedgerId: "personal-uid-1" },
+  }),
+}));
+vi.mock("@/hooks/useGetLedger", () => ({
+  useGetLedger: (id?: string) => {
+    personal.queriedId = id;
+    return { ledger: id ? personal.ledger : undefined };
+  },
 }));
 vi.mock("@/hooks/useLedgerQuery", () => ({
   useLedgerQuery: () => ({
@@ -29,6 +41,7 @@ describe("CreateLogWizard", () => {
   let root: Root;
 
   beforeEach(() => {
+    personal.ledger = { id: "personal-uid-1", title: "personal" };
     createLedgerMutate.mockClear();
     addNewLogGroupMutate.mockClear();
     container = document.createElement("div");
@@ -74,6 +87,28 @@ describe("CreateLogWizard", () => {
   it("starts by asking for the log type, with no way forward until one is picked", () => {
     expect(question()).toMatch(/What kind of log/);
     expect(button("Next")).toBeUndefined();
+  });
+
+  it("points at the personal log that already exists before asking for a type", () => {
+    expect(personal.queriedId).toBe("personal-uid-1");
+    const note = container.querySelector(".Wizard__note")!;
+    expect(note.textContent).toContain("You already have a financial log just for you");
+    expect(note.querySelector("a")!.getAttribute("href")).toBe("/l/personal-uid-1");
+    expect(note.querySelector("a")!.textContent).toBe("personal");
+  });
+
+  it("says nothing about a personal log that was deleted", () => {
+    personal.ledger = undefined;
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/create"]}>
+          <Routes>
+            <Route path="/create" element={<CreateLogWizard />} />
+          </Routes>
+        </MemoryRouter>,
+      ),
+    );
+    expect(container.querySelector(".Wizard__note")).toBeNull();
   });
 
   it("walks a financial log through basics, currency and review, then creates it", async () => {
