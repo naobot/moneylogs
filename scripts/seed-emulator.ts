@@ -34,6 +34,13 @@ import {
 import { timelineNotificationsFor } from "../functions/src/logTimeline";
 import { PRESET_AVATARS } from "../src/features/account/avatar/presets";
 
+/** A premade avatar's grid by id (not position, which changes as presets are added). */
+const presetGrid = (id: string): string[] => {
+  const preset = PRESET_AVATARS.find((p) => p.id === id);
+  if (!preset) throw new Error(`No preset avatar "${id}"`);
+  return [...preset.grid];
+};
+
 // This script runs under tsx (Node); `process` is provided by the runtime but
 // this file is outside the app tsconfig, so declare the bit we use.
 declare const process: { exit(code?: number): never };
@@ -846,10 +853,12 @@ async function createUsers() {
       timezone: info.timezone,
       // A couple of users have drawn avatars; the rest show their initial.
       ...(info.key === "alice"
-        ? { avatar: [...PRESET_AVATARS[1].grid] }
+        ? { avatar: presetGrid("smile") }
         : info.key === "erik"
-          ? { avatar: [...PRESET_AVATARS[0].grid] }
-          : {}),
+          ? { avatar: presetGrid("cat") }
+          : info.key === "bob"
+            ? { avatar: presetGrid("dog") }
+            : {}),
       createdAt: serverTimestamp(),
       groups: [],
     });
