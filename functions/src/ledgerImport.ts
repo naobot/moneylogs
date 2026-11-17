@@ -1,8 +1,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
-import { recordCheckIn } from "./checkIn";
-import { recomputeMonth } from "./ledger";
+import { alertBudgetsIfCurrent, recomputeMonth, rewardLoggedEntry } from "./ledger";
+import { BudgetCategory } from "./ledgerBudget";
 import {
   ExistingEntry,
   findPossibleDuplicates,
@@ -90,8 +90,9 @@ export const checkLedgerImport = onCall(
  *   create(), so re-importing an overlapping file skips rows that are already there.
  * - Each touched month is recomputed once here; recomputeLedgerMonth skips the per-entry
  *   recompute for these creates.
- * - An import that creates entries counts as logging once (a check-in, and the copper coin
- *   for a first entry). It earns no knick-knack rolls or budget alerts.
+ * - An import that creates entries counts as logging once: a check-in (the copper coin
+ *   for a first entry), the buddy's knick-knack roll of the day, and any budget alerts
+ *   the current month now needs.
  *
  * Returns { created, skippedDuplicates }.
  */
@@ -170,16 +171,24 @@ export const importLedgerEntries = onCall(
 
     // Even on partial failure, keep the summaries in step with whatever did land.
     if (created > 0) {
-      for (const month of importMonths(rows)) await recomputeMonth(db, ledgerRef, month);
-
-      // Importing counts as logging entries, once per import: today's check-in, and the
-      // copper coin for a first entry if they don't have it yet. No knick-knack roll or
-      // budget alerts, which would fire per entry.
-      try {
-        await recordCheckIn({ db, ledgerRef, userRef: user.ref, loggedEntry: true });
-      } catch (error) {
-        reportError(error, { action: "check_in", level: "warning" });
+      // What the entry trigger does per entry, done once for the batch: it skips these.
+      for (const month of importMonths(rows)) {
+        const aggregate = await recomputeMonth(db, ledgerRef, month);
+        await alertBudgetsIfCurrent({
+          db,
+          ledgerRef,
+          ledger: ledger.data() ?? {},
+          month,
+          aggregate,
+        });
       }
+      // Importing counts as logging: check-in (copper coin) and the knick-knack roll.
+      await rewardLoggedEntry({
+        db,
+        ledgerRef,
+        authorRef: user.ref,
+        categories: (ledger.get("categories") ?? []) as BudgetCategory[],
+      });
     }
 
     if (failed > 0) {
