@@ -5,7 +5,7 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { auth } from "@/config/firebase-config";
 import { isNative, nativePlatform } from "@/platform";
-import { useTheme } from "@/utils/theme";
+import { themeTone, useTheme } from "@/utils/theme";
 import { backButtonAction } from "./backButton";
 import { deepLinkPath } from "./deepLink";
 import { FirebaseMessaging } from "@capacitor-firebase/messaging";
@@ -84,12 +84,12 @@ const NativeBridge = () => {
     };
   }, [navigate]);
 
-  // Style.Dark is light text for a dark page (Night shift); Style.Light the reverse.
+  // Style.Dark is light text for a dark-toned theme; Style.Light the reverse.
   useEffect(() => {
     if (!isNative()) return;
-    void StatusBar.setStyle({ style: theme === "night" ? Style.Dark : Style.Light }).catch(
-      () => undefined,
-    );
+    void StatusBar.setStyle({
+      style: themeTone(theme) === "dark" ? Style.Dark : Style.Light,
+    }).catch(() => undefined);
   }, [theme]);
 
   // Keep the splash up until Firebase knows who is signed in, so a signed-in person

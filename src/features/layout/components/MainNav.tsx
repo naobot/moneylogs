@@ -111,7 +111,7 @@ const MainNav = () => {
         {/* Theme toggle and sign-out read as one pair of icons, set close together. On
             phones they're left to /me (Display and Account drawers). */}
         <span className="MainNav__iconPair">
-          <ThemeToggle />
+          <ThemeToggle isLoggedIn={isLoggedIn} />
           {isLoggedIn && (
             <Button
               variant="icon"

@@ -1182,8 +1182,8 @@ h6,
         background-color: var(--inverse-surface);
         font-size: 0.8em;
 
-        .LogPostMenu__item {
-          filter: invert(1);
+        .LogPostMenu__item .Icon img {
+          filter: var(--icon-filter-inverse);
         }
 
         .wmde-markdown {
