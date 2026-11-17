@@ -1,15 +1,40 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { getFirestore, FieldValue, DocumentReference } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, DocumentReference, Firestore } from "firebase-admin/firestore";
 import {
   affectedMonths,
   aggregateFieldsChanged,
   aggregateMonth,
   AggregatableEntry,
+  MonthAggregate,
 } from "./ledgerAggregate";
+import { isImportCreate } from "./ledgerImportPlan";
 import { BudgetCategory, isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
 import { maybeFindKnickKnack } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
+
+/**
+ * Rebuild one months/{YYYY-MM} summary from its entries, in a transaction. Deletes the
+ * summary when the month has no entries left. Shared with importLedgerEntries.
+ */
+export const recomputeMonth = (
+  db: Firestore,
+  ledgerRef: DocumentReference,
+  month: string,
+): Promise<MonthAggregate> => {
+  const monthRef = ledgerRef.collection("months").doc(month);
+  const entriesQuery = ledgerRef.collection("entries").where("month", "==", month);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(entriesQuery);
+    const result = aggregateMonth(snap.docs.map((d) => d.data()));
+    if (result.entryCount === 0) {
+      tx.delete(monthRef);
+    } else {
+      tx.set(monthRef, { month, ...result, computedAt: FieldValue.serverTimestamp() });
+    }
+    return result;
+  });
+};
 
 /**
  * Keep ledgers/{ledgerId}/months/{YYYY-MM} in sync with its entries.
@@ -25,6 +50,9 @@ import { recordCheckIn } from "./checkIn";
  * A newly logged entry also counts as its author's check-in for the day, which can earn
  * a coin (checkIn.ts), and gives them the buddy's roll of the day for a knick-knack
  * (knickknackFind.ts).
+ *
+ * Entries created by a bulk import (importLedgerEntries) are skipped: that callable
+ * recomputes each month once for the batch, and imports earn no rewards or alerts.
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -34,9 +62,10 @@ export const recomputeLedgerMonth = onDocumentWritten(
       | (Partial<AggregatableEntry> & { month?: string })
       | undefined;
     const after = event.data?.after?.data() as
-      | (Partial<AggregatableEntry> & { month?: string })
+      | (Partial<AggregatableEntry> & { month?: string; importBatchId?: string })
       | undefined;
 
+    if (isImportCreate(before, after)) return;
     if (!aggregateFieldsChanged(before, after)) return;
 
     const db = getFirestore();
@@ -48,19 +77,7 @@ export const recomputeLedgerMonth = onDocumentWritten(
     if (!ledgerSnap.exists || ledgerSnap.get("deleting") === true) return;
 
     for (const month of affectedMonths(before, after)) {
-      const monthRef = ledgerRef.collection("months").doc(month);
-      const entriesQuery = ledgerRef.collection("entries").where("month", "==", month);
-
-      const aggregate = await db.runTransaction(async (tx) => {
-        const snap = await tx.get(entriesQuery);
-        const result = aggregateMonth(snap.docs.map((d) => d.data()));
-        if (result.entryCount === 0) {
-          tx.delete(monthRef);
-        } else {
-          tx.set(monthRef, { month, ...result, computedAt: FieldValue.serverTimestamp() });
-        }
-        return result;
-      });
+      const aggregate = await recomputeMonth(db, ledgerRef, month);
 
       if (!isCurrentMonth(month, Date.now())) continue;
       // Separately, so a failure here never holds up the summary above.

@@ -51,6 +51,9 @@ export type LedgerEntry = {
   authorName: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  /** Set on entries brought in by importLedgerEntries (MoneyForward / YNAB). */
+  importSource?: "moneyforward" | "ynab";
+  importBatchId?: string;
 };
 
 // ledgers/{ledgerId}/months/{YYYY-MM} — derived, backend-written summary
