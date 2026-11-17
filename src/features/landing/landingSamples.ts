@@ -115,12 +115,12 @@ export const WITH_FRIENDS = [
     text: "Invite a partner or flatmates into a financial log and track the household together.",
   },
   {
-    title: "Reactions and comments",
-    text: "Write a line about why you bought it. Friends can react or leave a comment.",
+    title: "Every entry is a post",
+    text: "Each purchase is a little microblog post. Write a line or a paragraph about why you bought it, and add a photo if you like. Friends can react or leave a comment.",
   },
   {
     title: "Group logs",
-    text: "Start one for a trip and see how it added up at the end. Particularly open friend groups can keep one going for a fond, slightly voyeuristic look at each other's lives. Extra fun if you live in different cities.",
+    text: "Start one for a trip. Particularly open friend groups can keep one going for a fond, slightly voyeuristic look at each other's lives. Extra fun if you live in different cities.",
   },
 ];
 
