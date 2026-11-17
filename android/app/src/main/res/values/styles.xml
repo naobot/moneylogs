@@ -16,7 +16,11 @@
     </style>
 
 
+    <!-- Launch: the splash shows the favicon's mark (a vector of its exact pixels, from
+         scripts/generate-native-icons.mjs) on paper, or inverted at night. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
     </style>
 </resources>

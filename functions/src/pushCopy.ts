@@ -1,7 +1,8 @@
 /**
  * The title and body of a push notification for an inbox notification.
  *
- * Keep in step with the in-app copy in src/utils/notificationTypes.ts (describe/detail).
+ * Keep in step with the in-app copy in src/utils/notificationTypes.ts (describe/detail)
+ * and the email digest's lines (email/digest.ts).
  * Functions is a separate package, so the wording is restated here as plain text; the
  * link a tap opens is not: the app resolves it from the stored notification.
  */
@@ -26,7 +27,8 @@ const spentOfBudget = (data: Data) =>
 /**
  * Push copy for one notification, or null when it shouldn't be pushed: notes about the
  * recipient's own actions (starting or joining a log) and types this build doesn't know.
- * The log's name is the title; the body says what happened.
+ * The log's name is the title (or "moneylogs" for notes that aren't about a log); the
+ * body says what happened.
  */
 export const pushCopy = (data: Data): PushCopy | null => {
   const title = str(data.groupName) || "moneylogs";
@@ -54,6 +56,19 @@ export const pushCopy = (data: Data): PushCopy | null => {
       return { title, body: `Over ${budgetSubject(data)} (${spentOfBudget(data)}).` };
     case "budget_projected":
       return { title, body: `On track to go over ${budgetSubject(data)} this month.` };
+    case "friend_request":
+      return { title, body: `${actor} wants to be friends` };
+    case "friend_accepted":
+      return { title, body: `${actor} accepted your friend request` };
+    case "gift_received":
+      return {
+        title,
+        body: `${actor} sent you a gift. It's waiting, wrapped, in your knick-knack drawer.`,
+      };
+    case "milestone_earned":
+      // The achievement's title lives in the app's catalog, so the push (like the email
+      // digest) doesn't name it; the knick-knack itself stays a surprise either way.
+      return { title, body: "Achievement unlocked: your budget buddy has something for you." };
     default:
       return null;
   }

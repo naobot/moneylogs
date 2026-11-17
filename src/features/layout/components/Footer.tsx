@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { EXTERNAL_LINKS } from "@/config/links";
 
 const Footer = () => {
@@ -14,6 +15,10 @@ const Footer = () => {
       <a href={EXTERNAL_LINKS.tipJar} target="_blank" rel="noopener noreferrer">
         support me?
       </a>
+      <span className="Footer__sep" aria-hidden="true">
+        ·
+      </span>
+      <Link to="/privacy">privacy</Link>
     </footer>
   );
 };
