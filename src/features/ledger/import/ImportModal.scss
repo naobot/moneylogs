@@ -1,0 +1,78 @@
+.ImportModal {
+  &__hint {
+    margin: 0 0 var(--space-4);
+    font-size: 0.8em;
+    color: var(--ink-muted);
+  }
+
+  // The native file input is hidden behind a dashed, editable-looking drop target.
+  &__file {
+    display: block;
+    margin: 0 0 var(--space-4);
+    padding: var(--space-4);
+    border: var(--border-rule) dashed var(--ink);
+    text-align: center;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+
+    input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    &:focus-within {
+      border-style: solid;
+    }
+  }
+
+  &__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin: 0 0 var(--space-4);
+  }
+
+  &__summary {
+    margin: 0 0 var(--space-4);
+    font-weight: 700;
+  }
+
+  &__heading {
+    margin: var(--space-5) 0 var(--space-2);
+    font-size: 0.9em;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-2) 0;
+    border-bottom: var(--border-hairline) dashed var(--ink);
+  }
+
+  &__name {
+    min-width: 0;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+
+    small {
+      font-weight: 400;
+      color: var(--ink-muted);
+    }
+  }
+
+  &__progress {
+    margin: var(--space-4) 0 0;
+    font-weight: 700;
+  }
+}

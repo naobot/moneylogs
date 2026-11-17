@@ -162,9 +162,11 @@ service cloud.firestore {
       allow delete: if false;
 
       function validEntry(d) {
+        // importSource / importBatchId are set only by the importLedgerEntries function.
         return d.keys().hasOnly(
                ['amount', 'currency', 'categoryId', 'date', 'month', 'note',
-                'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt'])
+                'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt',
+                'importSource', 'importBatchId'])
           && d.keys().hasAll(
                ['amount', 'currency', 'categoryId', 'date', 'month',
                 'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt'])
@@ -186,6 +188,8 @@ service cloud.firestore {
         allow create: if isLedgerMember(ledgerId)
           && ledgerData(ledgerId).get('deleting', false) == false
           && validEntry(request.resource.data)
+          && !('importSource' in request.resource.data)
+          && !('importBatchId' in request.resource.data)
           && request.resource.data.createdAt == request.time;
 
         // Only the author may edit or delete; authorship and createdAt are immutable.
@@ -193,7 +197,9 @@ service cloud.firestore {
           && resource.data.authorUid == request.auth.uid
           && validEntry(request.resource.data)
           && request.resource.data.author == resource.data.author
-          && request.resource.data.createdAt == resource.data.createdAt;
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.get('importSource', null) == resource.data.get('importSource', null)
+          && request.resource.data.get('importBatchId', null) == resource.data.get('importBatchId', null);
 
         allow delete: if isLedgerMember(ledgerId)
           && resource.data.authorUid == request.auth.uid;
