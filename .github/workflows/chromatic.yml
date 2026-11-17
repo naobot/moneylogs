@@ -1,0 +1,34 @@
+name: Chromatic visual tests
+on:
+  pull_request:
+  push:
+    # Builds on these branches become the baselines that PRs are compared against.
+    branches:
+      - develop
+      - main
+permissions:
+  contents: read
+jobs:
+  visual:
+    # Fork PRs can't read the Chromatic token.
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Chromatic walks git history to find each build's baseline.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.18"
+          cache: "npm"
+      - run: npm install -g npm@11.17.0
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Renders the *.visual.test.tsx files in Chromium and saves archives to .vitest/chromatic.
+      - run: npx vp test --project visual
+      # Visual changes are reviewed in Chromatic's own PR check, so they don't fail this job;
+      # render or upload errors still do.
+      - run: npx chromatic --vitest --exit-zero-on-changes
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
