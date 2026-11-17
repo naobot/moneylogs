@@ -33,7 +33,7 @@ describe("Totals", () => {
     expect(container.querySelector(".Totals")!.classList).toContain("Totals--multi");
   });
 
-  it("isn't marked multi with a single currency, so it never stacks", () => {
+  it("isn't marked multi with a single currency, so it keeps full-size type", () => {
     act(() => root.render(<Totals totals={{ CAD: 9 }} />));
     expect(amounts()).toEqual([formatAmount(9, "CAD")]);
     expect(container.querySelector(".Totals")!.classList).not.toContain("Totals--multi");

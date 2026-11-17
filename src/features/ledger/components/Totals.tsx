@@ -4,9 +4,9 @@ import { CurrencyAmounts } from "@/types/ledger";
 import { formatAmount, orderedCurrencies } from "@/utils/ledgerEntries";
 
 /**
- * Per-currency totals, one span each: a " · " separated line, which stacks into a
- * smaller-type column on phones so several currencies don't push the page wide
- * (see `.Totals` in Ledger.scss). Plain-text spots use formatTotals instead.
+ * Per-currency totals, one span each, stacked in a smaller-type column when there's
+ * more than one, so several currencies don't push the page wide (see `.Totals` in
+ * Ledger.scss). Plain-text spots use formatTotals instead.
  */
 export const Totals = ({ totals, className }: { totals: CurrencyAmounts; className?: string }) => {
   const currencies = orderedCurrencies(totals);
