@@ -11,6 +11,7 @@
     "cap:ios": "npm run cap:sync:dev && cap run ios",
     "cap:android": "node scripts/cap-android.mjs",
     "android:forward": "node scripts/cap-android.mjs --forward-only",
+    "capacitor:update:after": "node scripts/relative-spm-symlinks.mjs",
     "version": "node scripts/sync-native-version.mjs && git add ios/App/App.xcodeproj/project.pbxproj android/app/build.gradle",
     "lint": "vp lint .",
     "preview": "vp preview",

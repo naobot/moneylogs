@@ -8,6 +8,7 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 - `npm run cap:sync`: production build → sync. Both set `CAPACITOR_BUILD=1`, so React is bundled rather than loaded from the CDN.
 - Native dev builds reach the Firebase emulators at `localhost`. The iOS simulator shares the Mac's network. On Android, `cap:android` forwards the emulator ports with `adb reverse` after launching (it has to come after: `cap run` restarts adb, which drops forwards). After replugging a phone, run `npm run android:forward`. `VITE_EMULATOR_HOST` overrides the host, but on Android anything other than `localhost` is blocked as mixed content, because the app itself is served from `https://localhost`.
 - Android builds need JDK 17–24 (CI uses 21). Recent Android Studio bundles a newer JDK that this project's Gradle 8.14 can't run on, so point `JAVA_HOME` at one, e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. `cap:android` checks this first.
+- Capacitor recreates the iOS Swift Package symlinks (`ios/App/CapApp-SPM/symlinks/`) with absolute paths on every sync. The `capacitor:update:after` script (`scripts/relative-spm-symlinks.mjs`) rewrites them as relative paths straight afterwards, so they work in any checkout and syncing doesn't dirty the tree.
 - Native-only code sits behind `isNative()` in `@/platform`. Use `@/platform` for storage, the clipboard, links and sharing.
 
 ## Release
