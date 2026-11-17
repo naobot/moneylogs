@@ -199,7 +199,7 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found:
-      "a little envelope from your first invite! someone said yes~ it makes my heart go *flutter flutter*",
+      "a little envelope from your first invite! someone said yes~ i licked the seal myself *mlem*",
     fromLog: false,
   },
   mini_robot_charm: {
