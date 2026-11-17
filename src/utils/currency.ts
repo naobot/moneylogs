@@ -1,4 +1,5 @@
 import { Currency } from "@/types/user";
+import { storage } from "@/platform";
 
 // Display order for currency pickers, shared by social posts and financial entries.
 export const CURRENCIES: Array<Currency> = [
@@ -25,12 +26,8 @@ export const FALLBACK_CURRENCY: Currency = "JPY";
 
 /** The currency last picked in a post editor on this device, if it's still a valid one. */
 export const readLastCurrency = (): Currency | undefined => {
-  try {
-    const last = localStorage.getItem(LAST_CURRENCY_KEY);
-    return isCurrency(last) ? last : undefined;
-  } catch {
-    return undefined;
-  }
+  const last = storage.get(LAST_CURRENCY_KEY);
+  return isCurrency(last) ? last : undefined;
 };
 
 type CurrencyChoice = {

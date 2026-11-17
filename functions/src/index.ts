@@ -486,3 +486,4 @@ export { getInviteCode, acceptInvite } from "./invites";
 export { giftKnickKnack } from "./gifts";
 export { scheduleEmailDigest, sendEmailDigests } from "./emailDigest";
 export { emailUnsubscribe } from "./emailUnsubscribe";
+export { sendPushOnNotification } from "./sendPush";

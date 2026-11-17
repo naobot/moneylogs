@@ -41,9 +41,14 @@ const MainNav = () => {
 
   const { signOut, isPending: signOutPending } = useSignOut();
 
+  const showLogs = isLoggedIn && (ledgers.length > 0 || isLoading || currentGroups.length > 0);
+
+  // Three parts. On desktop they sit in one row (nav, logs, brand). On phones the brand
+  // and nav share the top row, and the logs get a scrollable row of their own beneath.
+  // New logs start from Home or /me, so the header has no "+".
   return (
     <nav className="MainNav">
-      <div className="MainNav__item Menu">
+      <div className="MainNav__nav">
         {!isLoggedIn && location.pathname !== "/login" && (
           <Button to="/login" text="Sign in" buttonStyle="primary-border-lite" />
         )}
@@ -52,46 +57,47 @@ const MainNav = () => {
             <Button className="MainNav__item--icon" to="/" title="Home" icon="home" />
             <Button className="MainNav__item--icon" to="/me" title="My Preferences" icon="user" />
             <NotificationBell />
-            <div className="MainNav__list">
-              <Button title="New Log" to={"/create"} text="+" buttonStyle="primary-border-lite" />
-              {/* Financial logs never end, so they're always listed — independently of
-                  whether the social groups query has loaded. */}
-              {ledgers.map((ledger) => (
-                <Button
-                  key={ledger.id}
-                  to={`/l/${ledger.id}`}
-                  title={ledger.title}
-                  text={ledger.title}
-                  icon="dollar"
-                  buttonStyle="primary-border-lite"
-                  className="MainNav__log"
-                  isSelected={highlightedGroupId == ledger.id}
-                />
-              ))}
-              {isLoading && <div>...</div>}
-              {isSuccess &&
-                currentGroups.map((group) => (
-                  <Button
-                    key={group.id}
-                    to={`/g/${group.id}`}
-                    title={group.title}
-                    text={group.title}
-                    icon="social"
-                    buttonStyle="primary-border-lite"
-                    className="MainNav__log"
-                    isSelected={highlightedGroupId == group?.id}
-                  />
-                ))}
-            </div>
           </>
         )}
       </div>
-      <div className="MainNav__item MainNav__header"></div>
-      <div className="MainNev__item Menu">
-        <Link to={"/about"}>
+      {showLogs && (
+        <div className="MainNav__logs">
+          {/* Financial logs never end, so they're always listed — independently of
+              whether the social groups query has loaded. */}
+          {ledgers.map((ledger) => (
+            <Button
+              key={ledger.id}
+              to={`/l/${ledger.id}`}
+              title={ledger.title}
+              text={ledger.title}
+              icon="dollar"
+              buttonStyle="primary-border-lite"
+              className="MainNav__log"
+              isSelected={highlightedGroupId == ledger.id}
+            />
+          ))}
+          {isLoading && <div>...</div>}
+          {isSuccess &&
+            currentGroups.map((group) => (
+              <Button
+                key={group.id}
+                to={`/g/${group.id}`}
+                title={group.title}
+                text={group.title}
+                icon="social"
+                buttonStyle="primary-border-lite"
+                className="MainNav__log"
+                isSelected={highlightedGroupId == group?.id}
+              />
+            ))}
+        </div>
+      )}
+      <div className="MainNav__brand">
+        <Link to={"/about"} className="MainNav__wordmark">
           moneylogs <small>{__APP_VERSION__}</small>
         </Link>
-        {/* Theme toggle and sign-out read as one pair of icons, set close together. */}
+        {/* Theme toggle and sign-out read as one pair of icons, set close together. On
+            phones they're left to /me (Display and Account drawers). */}
         <span className="MainNav__iconPair">
           <ThemeToggle />
           {isLoggedIn && (

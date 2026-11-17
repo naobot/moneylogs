@@ -36,6 +36,11 @@ import { MemberNamesContext, MemberProfilesContext } from "./LogPosts/memberName
 import type { PostFocus } from "./LogPosts/LogPosts";
 import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
+import { storage } from "@/platform";
+import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
+
+const agreeWarningKey = (groupId: string) => `ML__${groupId}__agreeWarning`;
+const agreedToEndWarning = (groupId: string) => storage.get(agreeWarningKey(groupId)) === "1";
 
 export const Group = ({
   group,
@@ -83,17 +88,8 @@ export const Group = ({
     const end = personalEnd(group, loggedInUser?.timezone);
     return end.isAfter(now) && end.diff(now, "second") < 86400;
   }, [group, loggedInUser?.timezone, now]);
-  const neverViewedWarningModal = useMemo(() => {
-    if (endingSoon) {
-      if (
-        !localStorage.getItem(`ML__${groupId}__agreeWarning`) ||
-        localStorage.getItem(`ML__${groupId}__agreeWarning`) !== "1"
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }, [group, endingSoon, localStorage.getItem(`ML__${groupId}__agreeWarning`)]);
+  // Read on every render: agreeing only writes storage, with no state change of its own.
+  const neverViewedWarningModal = endingSoon && !agreedToEndWarning(groupId);
 
   const [isCreateNewEntry, isCreateNewEntrySet] = useState(false);
 
@@ -205,10 +201,7 @@ export const Group = ({
   }, [postLink, logPostRes.isSuccess, posts, hasMore, isLoadingMore, isLoadingMembers, members]);
 
   useEffect(() => {
-    if (
-      !localStorage.getItem(`ML__${groupId}__agreeWarning`) ||
-      localStorage.getItem(`ML__${groupId}__agreeWarning`) !== "1"
-    ) {
+    if (!agreedToEndWarning(groupId)) {
       setShowEndWarningModal(endingSoon);
     }
   }, [endingSoon]);
@@ -483,6 +476,10 @@ export const Group = ({
             </p>
             <p>Do not share the group URL with anyone you do not want participating!</p>
             <CopyTextArea value={shareUrl(`/g/${groupId}/invite`)} />
+            <ShareLinkButton
+              title={`Join ${group.title} on moneylogs`}
+              url={shareUrl(`/g/${groupId}/invite`)}
+            />
           </Modal.Body>
           <Modal.Actions>
             <Modal.CancelButton text="Close" />
@@ -501,7 +498,7 @@ export const Group = ({
             <Modal.Actions>
               <Modal.ConfirmButton
                 onClick={() => {
-                  localStorage.setItem(`ML__${groupId}__agreeWarning`, "1");
+                  storage.set(agreeWarningKey(groupId), "1");
                 }}
                 text="OK"
               />

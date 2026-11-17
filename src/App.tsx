@@ -16,6 +16,9 @@ import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
+import NativeBridge from "@/features/native/NativeBridge";
+import UpdateRequired from "@/features/native/UpdateRequired";
+import { useRequiredUpdate } from "@/features/native/useRequiredUpdate";
 import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
@@ -27,6 +30,7 @@ import { GroupPage } from "@/pages/group";
 import { InvitePage } from "@/pages/group/invite";
 import { LedgerPage, LedgerStatsPage } from "@/pages/ledger";
 import { LedgerInvitePage } from "@/pages/ledger/invite";
+import { Privacy } from "@/pages/privacy";
 import { About } from "@/pages/about";
 import { Notifications } from "@/pages/notifications";
 import { Welcome } from "@/pages/welcome";
@@ -74,13 +78,25 @@ const App = () => {
   const { updateAvailable, refresh } = useAppVersionRefresh();
   const [updateDismissed, setUpdateDismissed] = useState(false);
   useEnsurePersonalLedger();
+  const requiredUpdate = useRequiredUpdate();
 
   useEffect(() => {
     GlobalErrorHandler.getInstance().initialize(showToast);
   }, [showToast]);
 
+  // The bridge still mounts, so the splash screen hides and the status bar matches.
+  if (requiredUpdate) {
+    return (
+      <Router>
+        <NativeBridge />
+        <UpdateRequired storeUrl={requiredUpdate.storeUrl} />
+      </Router>
+    );
+  }
+
   return (
     <Router>
+      <NativeBridge />
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
       )}
@@ -91,6 +107,7 @@ const App = () => {
             <Routes>
               <Route path="/login" element={<Auth />} />
               <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/create" element={<CreateNewLog />} />
               <Route
                 path="/welcome"

@@ -1,4 +1,5 @@
 import { createContext, useContext, PropsWithChildren, useState } from "react";
+import { storage } from "@/platform";
 
 const STORAGE_KEY = "ML__tutorial_complete";
 
@@ -18,7 +19,7 @@ type TutorialContextValue = {
 const TutorialContext = createContext<TutorialContextValue | null>(null);
 
 export const TutorialProvider = ({ children }: PropsWithChildren) => {
-  const [complete, setComplete] = useState(() => !!localStorage.getItem(STORAGE_KEY));
+  const [complete, setComplete] = useState(() => !!storage.get(STORAGE_KEY));
   const [newEntryTipDismissed, setNewEntryTipDismissed] = useState(false);
   const [editorTipsActive, setEditorTipsActive] = useState(false);
   const [editorStep, setEditorStep] = useState(0);
@@ -41,7 +42,7 @@ export const TutorialProvider = ({ children }: PropsWithChildren) => {
   const dismissTip = () => setEditorStep((prev) => prev + 1);
 
   const completeTutorial = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    storage.set(STORAGE_KEY, "1");
     setComplete(true);
     setEditorTipsActive(false);
   };

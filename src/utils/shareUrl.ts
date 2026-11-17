@@ -1,6 +1,5 @@
 /**
- * An absolute, copy-pastable link to an in-app path, e.g. `https://moneylogs.app/g/abc/invite`.
- * Always https — `window.location.host` alone pastes as a bare host that many apps won't linkify.
+ * An absolute, copy-pastable link to an in-app path. The platform adapter owns it, so a
+ * native build (served from localhost) links to the public domain; see publicUrl.
  */
-export const shareUrl = (path: string, host: string = window.location.host): string =>
-  `https://${host}${path.startsWith("/") ? path : `/${path}`}`;
+export { publicUrl as shareUrl } from "@/platform";

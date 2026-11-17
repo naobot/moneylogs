@@ -24,6 +24,8 @@ import { useDisplayPrefs } from "@/utils/displayPrefs";
 
 import "@/components/ProfileFields.scss";
 import "./me.scss";
+import { PushSection } from "@/features/account/PushSection";
+import { pushAvailable } from "@/features/push/devicePush";
 
 // Personal settings plus everything tied to the account, in drawers. "logs" is linked
 // to from Home as /me#logs, which opens that drawer.
@@ -86,6 +88,8 @@ export const UserSettings = () => {
         </Drawer>
 
         <Drawer id="notifications" title="notifications" summary={notificationsSummary(user)}>
+          {/* Push is a setting of this phone, so it shows only in the native app. */}
+          {pushAvailable() && <PushSection />}
           <NotificationsSection />
         </Drawer>
 

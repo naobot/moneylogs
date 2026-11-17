@@ -1,9 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, setDefaultEventParameters } from "firebase/analytics";
 import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore";
-import { connectAuthEmulator, getAuth } from "firebase/auth";
+import {
+  connectAuthEmulator,
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { isNative } from "@/platform/native";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,7 +23,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// In the native WebView, getAuth's default persistence and popup/redirect helpers don't
+// fit: IndexedDB keeps the session across app restarts, and there are no popups.
+export const auth = isNative()
+  ? initializeAuth(app, { persistence: indexedDBLocalPersistence })
+  : getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
@@ -28,9 +38,10 @@ const environment = import.meta.env.VITE_FIREBASE_ENV ?? "unknown";
 const appVersion = __APP_VERSION__ ?? "unknown";
 const isDevelopment = environment === "development";
 
-const analytics = getAnalytics(app);
+// Firebase Analytics (gtag) only runs on http(s) pages, so native builds go without.
+const analytics = isNative() ? null : getAnalytics(app);
 
-if (typeof window !== "undefined") {
+if (analytics) {
   // Set default parameters for all analytics events
   setDefaultEventParameters({
     environment: environment,
@@ -44,7 +55,13 @@ if (isDevelopment && typeof window !== "undefined") {
   // Only connect if not already connected
   // The emulators run on the dev machine. Reach them at whatever host served the page,
   // so a phone on the LAN (vp dev --host, opened at the machine's IP) talks to them too.
-  const emulatorHost = window.location.hostname || "localhost";
+  // Native builds serve themselves from localhost, which also suits them: the iOS
+  // simulator shares the Mac's network, and on Android (emulator or USB device)
+  // `npm run cap:android` forwards the emulator ports with `adb reverse`. It has to be
+  // localhost there: the page is https://localhost, and the WebView blocks plain-http
+  // requests to any other host as mixed content. VITE_EMULATOR_HOST overrides it.
+  const emulatorHost =
+    import.meta.env.VITE_EMULATOR_HOST || window.location.hostname || "localhost";
   try {
     connectFirestoreEmulator(db, emulatorHost, 8888);
     connectAuthEmulator(auth, `http://${emulatorHost}:9099`);

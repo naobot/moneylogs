@@ -24,7 +24,7 @@ Required installs:
 
 - Firebase CLI (`npm install -g firebase-tools`)
 - Java Runtime Environment (JRE 11 or higher)
-- [JDK 24+](https://www.oracle.com/java/technologies/downloads/#jdk24-mac)
+- [JDK 21–24](https://www.oracle.com/java/technologies/downloads/#jdk24-mac) (the emulators need 21+; the Android build can't run on newer than 24)
 
 Run emulators:
 
@@ -72,7 +72,7 @@ Our emulators are set up to listen on ports **9099**, **8888**, **5522**, and **
 
 #### Java not found
 
-Make sure you have Java and JDK 24+ installed.
+Make sure you have a JDK between 21 and 24 installed. The emulators need 21 or newer, and the Android build's Gradle can't run on anything newer than 24. Android Studio bundles a newer one, so set `JAVA_HOME` explicitly, e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 24)`.
 
 #### Permission errors
 
