@@ -12,6 +12,9 @@
     width: 100%;
     max-width: var(--main-width);
     flex-shrink: 0;
+    // The hero is a <header>, which the base styles don't make border-box: without this
+    // its padding sat on top of the full width and the page scrolled sideways on phones.
+    box-sizing: border-box;
   }
 
   &__hero {
