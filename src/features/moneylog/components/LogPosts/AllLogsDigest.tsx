@@ -240,6 +240,7 @@ const AllLogsDigest = ({
                   currency={(item as LogPost).currency}
                   date={(item as LogPost).postDate?.seconds * 1000}
                   timezone={(item as LogPost).timezone ?? undefined}
+                  timezonePlace={(item as LogPost).timezonePlace ?? null}
                 />
               );
             }

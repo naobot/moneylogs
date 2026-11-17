@@ -1,6 +1,5 @@
 import cx from "classnames";
 import { Dispatch, Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { allTimezones, useTimezoneSelect } from "react-timezone-select";
 import dayjs from "dayjs";
 
 import MDEditor from "@uiw/react-md-editor";
@@ -27,6 +26,7 @@ import { markdownColorMode, useTheme } from "@/utils/theme";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { useDateFormat } from "@/utils/dateFormat";
 import { reportError } from "@/utils/reportError";
+import { postZoneLabel, tzAbbrev } from "@/utils/timezone";
 
 type LogPostsProps = {
   user: UserData;
@@ -120,8 +120,6 @@ const LogPostItemComponent = ({
   const [isShowDeleteWarning, setIsShowDeleteWarning] = useState(false);
   const [showPinWarning, setShowPinWarning] = useState(false);
 
-  const { parseTimezone } = useTimezoneSelect({ labelStyle: "original", timezones: allTimezones });
-
   const isPinned = useMemo(() => {
     return post.id === user?.pinnedPosts?.[groupId]?.pinnedPost;
   }, [user, post]);
@@ -157,7 +155,8 @@ const LogPostItemComponent = ({
     } else {
       const timezone = post?.timezone ?? user?.timezone ?? dayjs.tz.guess();
 
-      return `${formatTime(toTz(post.postDate?.seconds * 1000, timezone))} (${parseTimezone(timezone).abbrev})`;
+      const at = post.postDate?.seconds * 1000;
+      return `${formatTime(toTz(at, timezone))} (${tzAbbrev(timezone, at)})`;
     }
   }, [post, user, prefs]);
 
@@ -265,8 +264,8 @@ const LogPostItemComponent = ({
             )}
             {!isDigestMode && post.timezone && post.timezone !== user.timezone && (
               <div className="LogPosts__posts__item__header">
-                <div className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter">
-                  {parseTimezone(post.timezone).label}
+                <div className="LogPosts__posts__item__header__left LogPosts__posts__item__date TimezoneSetter keep-case">
+                  {postZoneLabel(post.timezone, post.timezonePlace, post.postDate?.seconds * 1000)}
                 </div>
               </div>
             )}
@@ -754,6 +753,7 @@ const LogPosts = memo(
                           (isMyLog ? loggedInUser : user)?.pinnedPosts?.[groupId]?.pinnedPost
                         }
                         timezone={(item as LogPost).timezone ?? undefined}
+                        timezonePlace={(item as LogPost).timezonePlace ?? null}
                       />
                     );
                   }
