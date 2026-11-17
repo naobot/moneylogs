@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
-import { Landing } from "@/features/landing/Landing";
+import { INVITE_MESSAGES, Landing } from "@/features/landing/Landing";
 import { EXTERNAL_LINKS } from "@/config/links";
 import {
   SAMPLE_NOW,
@@ -17,8 +17,13 @@ import {
 
 // Stands in for the auth page: shows which view the link asked for.
 const AuthProbe = () => {
-  const state = useLocation().state as { view?: string } | null;
-  return <div data-testid="auth-view">{state?.view ?? "none"}</div>;
+  const state = useLocation().state as { view?: string; from?: string } | null;
+  return (
+    <>
+      <div data-testid="auth-view">{state?.view ?? "none"}</div>
+      <div data-testid="auth-from">{state?.from ?? "none"}</div>
+    </>
+  );
 };
 
 describe("Landing", () => {
@@ -116,5 +121,71 @@ describe("Landing", () => {
     ).map((h) => h.textContent);
     expect(steps[0]).toBe("Start your log");
     expect(steps).toHaveLength(4);
+  });
+
+  it("has no invite bar for a plain visit", () => {
+    expect(container.querySelector(".Landing__invite")).toBeNull();
+    act(() => linkWithText("create an account")!.click());
+    expect(container.querySelector('[data-testid="auth-from"]')?.textContent).toBe("none");
+  });
+});
+
+describe("Landing from an invite link", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  const renderAt = (path: string, element: React.ReactNode, routePath: string) =>
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path={routePath} element={element} />
+            <Route path="/login" element={<AuthProbe />} />
+          </Routes>
+        </MemoryRouter>,
+      ),
+    );
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  const bar = () => container.querySelector<HTMLElement>(".Landing__invite");
+  const probe = (id: string) => container.querySelector(`[data-testid="${id}"]`)?.textContent;
+
+  it("shows the pitch with a fixed sign-up bar", () => {
+    renderAt("/invite/abc123", <Landing invite="friend" />, "/invite/:code");
+    expect(container.querySelector(".Landing__hero")).not.toBeNull();
+    expect(bar()?.textContent).toContain(INVITE_MESSAGES.friend);
+  });
+
+  it("sends sign-up back to the invite afterwards", () => {
+    renderAt("/g/trip1/invite", <Landing invite="log" />, "/g/:groupId/invite");
+    act(() => bar()!.querySelector<HTMLAnchorElement>("a")!.click());
+    expect(probe("auth-view")).toBe("register");
+    expect(probe("auth-from")).toBe("/g/trip1/invite");
+  });
+
+  it("sends sign-in back to the invite too", () => {
+    renderAt("/l/flat/invite", <Landing invite="ledger" />, "/l/:ledgerId/invite");
+    const signIn = Array.from(bar()!.querySelectorAll<HTMLAnchorElement>("a")).find((a) =>
+      a.textContent?.includes("sign in"),
+    );
+    act(() => signIn!.click());
+    expect(probe("auth-view")).toBe("login");
+    expect(probe("auth-from")).toBe("/l/flat/invite");
+  });
+
+  it("carries the invite through the example cards", () => {
+    renderAt("/invite/abc123", <Landing invite="friend" />, "/invite/:code");
+    act(() => container.querySelector<HTMLAnchorElement>(".LogCard")!.click());
+    expect(probe("auth-from")).toBe("/invite/abc123");
   });
 });

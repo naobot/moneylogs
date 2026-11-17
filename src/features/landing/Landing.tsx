@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import Button from "@/components/Button";
 import { EXTERNAL_LINKS } from "@/config/links";
@@ -23,8 +23,35 @@ import "@/features/dashboard/Dashboard.scss";
 import "@/features/moneylog/components/LogPosts/PostReactions.scss";
 import "./Landing.scss";
 
-const REGISTER: AuthLocationState = { view: "register" };
-const LOGIN: AuthLocationState = { view: "login" };
+/** Which invite link brought a logged-out visitor here, if any. */
+export type InviteKind = "friend" | "log" | "ledger";
+
+export const INVITE_MESSAGES: Record<InviteKind, string> = {
+  friend: "You've been invited to be friends on moneylogs.",
+  log: "You've been invited to a group log.",
+  ledger: "You've been invited to a shared log.",
+};
+
+/** A fixed sign-up prompt for visitors who arrived from an invite link. */
+const InviteBar = ({
+  invite,
+  register,
+  login,
+}: {
+  invite: InviteKind;
+  register: AuthLocationState;
+  login: AuthLocationState;
+}) => (
+  <aside className="Landing__invite" aria-label="Invitation">
+    <p className="Landing__invite__text">{INVITE_MESSAGES[invite]}</p>
+    <div className="Landing__invite__actions">
+      <Button to="/login" state={register} text="Create an account" size="sm" />
+      <Link to="/login" state={login} className="Landing__invite__login">
+        or sign in
+      </Link>
+    </div>
+  </aside>
+);
 
 /** A striped window frame, like the tool modals, around one example screen. */
 const PreviewWindow = ({
@@ -49,15 +76,17 @@ const PreviewWindow = ({
 const SampleCards = ({
   cards,
   size,
+  register,
 }: {
   cards: SampleCard[];
   size: "large" | "small" | "compact";
+  register: AuthLocationState;
 }) =>
   cards.map((card) => (
     <LogCard
       key={card.title}
       to="/login"
-      state={REGISTER}
+      state={register}
       size={size}
       title={card.title}
       kind={card.kind}
@@ -97,125 +126,138 @@ const Points = ({
  * as it looks with a few logs (built from the real dashboard cards, filled with made-up logs),
  * the tracking features, the optional social side with a peek inside a group trip log, and
  * how it works. Every example links to registration.
+ *
+ * Invite routes show it to logged-out visitors too (`invite` set), at the invite URL itself:
+ * a fixed bar offers sign-up, and every auth link carries the invite path as `from` so the
+ * visitor lands back on the invite once they've registered or signed in.
  */
-export const Landing = () => (
-  <div className="Content__body Landing">
-    <header className="Landing__hero">
-      <h1>moneylogs</h1>
-      <p className="Landing__pitch">
-        A calm way to keep track of your spending. Log what you spent and why, in any currency, and
-        see where the month went. Keep it to yourself, or let a few friends follow along — and when
-        you travel together, start a group log for the trip.
-      </p>
-      <div className="Landing__actions">
-        <Button to="/login" state={REGISTER} text="Create an account" />
-        <Button to="/login" state={LOGIN} text="Sign in" buttonStyle="primary-border" />
-      </div>
-    </header>
+export const Landing = ({ invite }: { invite?: InviteKind }) => {
+  const location = useLocation();
+  const from = invite ? location.pathname + location.search + location.hash : undefined;
+  const register: AuthLocationState = { view: "register", from };
+  const login: AuthLocationState = { view: "login", from };
 
-    <PreviewWindow title="Home" label="Example home dashboard">
-      <div className="Dashboard">
-        <section className="Dashboard__section" aria-labelledby="landing-now">
-          <div className="Dashboard__heading">
-            <h3 id="landing-now">Now</h3>
-            <Link to="/login" state={REGISTER} className="Dashboard__action">
-              + start a new log
-            </Link>
-          </div>
-          <div className="Dashboard__grid Dashboard__grid--large">
-            <SampleCards cards={SAMPLE_NOW} size="large" />
-          </div>
-        </section>
-        <section className="Dashboard__section" aria-labelledby="landing-upcoming">
-          <h3 id="landing-upcoming">Coming up</h3>
-          <div className="Dashboard__grid Dashboard__grid--small">
-            <SampleCards cards={SAMPLE_UPCOMING} size="small" />
-          </div>
-        </section>
-        <section className="Dashboard__section" aria-labelledby="landing-recent">
-          <h3 id="landing-recent">Recently ended</h3>
-          <div className="Dashboard__grid Dashboard__grid--compact">
-            <SampleCards cards={SAMPLE_RECENT} size="compact" />
-          </div>
-        </section>
-      </div>
-    </PreviewWindow>
-
-    <Points id="landing-tracking" heading="Your spending, day to day" points={TRACKING}>
-      <p className="Landing__note">
-        Already tracking somewhere else? Import a CSV export from{" "}
-        <a href={EXTERNAL_LINKS.moneyForward} target="_blank" rel="noopener noreferrer">
-          Money Forward ME
-        </a>{" "}
-        or{" "}
-        <a href={EXTERNAL_LINKS.ynab} target="_blank" rel="noopener noreferrer">
-          YNAB
-        </a>{" "}
-        and pick up where you left off.
-      </p>
-    </Points>
-
-    <Points id="landing-friends" heading="With friends, gently" points={WITH_FRIENDS} />
-
-    <PreviewWindow title={SAMPLE_TRIP_TITLE} label="Example group log entries">
-      <div className="Landing__posts">
-        <div className="LogPosts__posts__banner LogPosts__posts__item__header">
-          <div className="LogPosts__posts__banner__left">{SAMPLE_DAY.label}</div>
-          <div className="LogPosts__posts__banner__center">
-            <span>{SAMPLE_DAY.total}</span>
-          </div>
-          <div />
+  return (
+    <div className={`Content__body Landing${invite ? " Landing--invited" : ""}`}>
+      <header className="Landing__hero">
+        <h1>moneylogs</h1>
+        <p className="Landing__pitch">
+          A calm way to keep track of your spending. Log what you spent and why, in any currency,
+          and see where the month went. Keep it to yourself, or let a few friends follow along — and
+          when you travel together, start a group log for the trip.
+        </p>
+        <div className="Landing__actions">
+          <Button to="/login" state={register} text="Create an account" />
+          <Button to="/login" state={login} text="Sign in" buttonStyle="primary-border" />
         </div>
-        {SAMPLE_POSTS.map((post) => (
-          <article className="LogPosts__posts__item" key={post.time}>
-            <div className="LogPosts__posts__item__header">
-              <div className="LogPosts__posts__item__header__left LogPosts__posts__item__date">
-                <IconText type="clock" text={post.time} />
-              </div>
-              <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-                {post.amount}
-              </div>
-              <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
-                <span className="PostReactions">
-                  {post.reactions.map((r) => (
-                    <span className="PostReactions__tally" key={r.emoji}>
-                      <span className="PostReactions__emoji">{r.emoji}</span>
-                      <span className="PostReactions__count">{r.count}</span>
-                    </span>
-                  ))}
-                </span>
-                <IconText type="speech" text={String(post.comments)} size={18} />
-              </div>
-            </div>
-            <div className="LogPosts__posts__item__body">
-              <p className="Landing__post__author">{post.author}</p>
-              <p>{post.text}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-    </PreviewWindow>
+      </header>
 
-    <section className="Landing__steps" aria-labelledby="landing-how">
-      <h2 id="landing-how">How it works</h2>
-      <ol>
-        {HOW_IT_WORKS.map((step) => (
-          <li key={step.title}>
-            <h3>{step.title}</h3>
-            <p>{step.text}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
+      <PreviewWindow title="Home" label="Example home dashboard">
+        <div className="Dashboard">
+          <section className="Dashboard__section" aria-labelledby="landing-now">
+            <div className="Dashboard__heading">
+              <h3 id="landing-now">Now</h3>
+              <Link to="/login" state={register} className="Dashboard__action">
+                + start a new log
+              </Link>
+            </div>
+            <div className="Dashboard__grid Dashboard__grid--large">
+              <SampleCards cards={SAMPLE_NOW} size="large" register={register} />
+            </div>
+          </section>
+          <section className="Dashboard__section" aria-labelledby="landing-upcoming">
+            <h3 id="landing-upcoming">Coming up</h3>
+            <div className="Dashboard__grid Dashboard__grid--small">
+              <SampleCards cards={SAMPLE_UPCOMING} size="small" register={register} />
+            </div>
+          </section>
+          <section className="Dashboard__section" aria-labelledby="landing-recent">
+            <h3 id="landing-recent">Recently ended</h3>
+            <div className="Dashboard__grid Dashboard__grid--compact">
+              <SampleCards cards={SAMPLE_RECENT} size="compact" register={register} />
+            </div>
+          </section>
+        </div>
+      </PreviewWindow>
 
-    <footer className="Landing__cta">
-      <p>Got an invite link? Open it and you'll be asked to sign up first.</p>
-      <div className="Landing__actions">
-        <Button to="/login" state={REGISTER} text="Create an account" />
-        <Button to="/about" text="About" buttonStyle="primary-border" />
-      </div>
-    </footer>
-  </div>
-);
+      <Points id="landing-tracking" heading="Your spending, day to day" points={TRACKING}>
+        <p className="Landing__note">
+          Already tracking somewhere else? Import a CSV export from{" "}
+          <a href={EXTERNAL_LINKS.moneyForward} target="_blank" rel="noopener noreferrer">
+            Money Forward ME
+          </a>{" "}
+          or{" "}
+          <a href={EXTERNAL_LINKS.ynab} target="_blank" rel="noopener noreferrer">
+            YNAB
+          </a>{" "}
+          and pick up where you left off.
+        </p>
+      </Points>
+
+      <Points id="landing-friends" heading="With friends, gently" points={WITH_FRIENDS} />
+
+      <PreviewWindow title={SAMPLE_TRIP_TITLE} label="Example group log entries">
+        <div className="Landing__posts">
+          <div className="LogPosts__posts__banner LogPosts__posts__item__header">
+            <div className="LogPosts__posts__banner__left">{SAMPLE_DAY.label}</div>
+            <div className="LogPosts__posts__banner__center">
+              <span>{SAMPLE_DAY.total}</span>
+            </div>
+            <div />
+          </div>
+          {SAMPLE_POSTS.map((post) => (
+            <article className="LogPosts__posts__item" key={post.time}>
+              <div className="LogPosts__posts__item__header">
+                <div className="LogPosts__posts__item__header__left LogPosts__posts__item__date">
+                  <IconText type="clock" text={post.time} />
+                </div>
+                <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
+                  {post.amount}
+                </div>
+                <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
+                  <span className="PostReactions">
+                    {post.reactions.map((r) => (
+                      <span className="PostReactions__tally" key={r.emoji}>
+                        <span className="PostReactions__emoji">{r.emoji}</span>
+                        <span className="PostReactions__count">{r.count}</span>
+                      </span>
+                    ))}
+                  </span>
+                  <IconText type="speech" text={String(post.comments)} size={18} />
+                </div>
+              </div>
+              <div className="LogPosts__posts__item__body">
+                <p className="Landing__post__author">{post.author}</p>
+                <p>{post.text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </PreviewWindow>
+
+      <section className="Landing__steps" aria-labelledby="landing-how">
+        <h2 id="landing-how">How it works</h2>
+        <ol>
+          {HOW_IT_WORKS.map((step) => (
+            <li key={step.title}>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <footer className="Landing__cta">
+        {!invite && <p>Got an invite link? Open it, sign up, and you'll go straight to it.</p>}
+        <div className="Landing__actions">
+          <Button to="/login" state={register} text="Create an account" />
+          <Button to="/about" text="About" buttonStyle="primary-border" />
+        </div>
+      </footer>
+
+      {invite && <InviteBar invite={invite} register={register} login={login} />}
+    </div>
+  );
+};
 
 export default Landing;
