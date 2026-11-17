@@ -194,6 +194,14 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
       "a friendship bracelet for your first friend! i made it myself. well, mostly i tangled it~",
     fromLog: false,
   },
+  little_envelope: {
+    name: "little envelope",
+    rarity: "milestone",
+    seasons: [],
+    found:
+      "a little envelope from your first invite! someone said yes~ i licked the seal myself *mlem*",
+    fromLog: false,
+  },
   mini_robot_charm: {
     name: "mini robot charm",
     rarity: "special",

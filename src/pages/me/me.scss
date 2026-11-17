@@ -21,6 +21,18 @@
   }
 }
 
+.InviteLink {
+  p {
+    margin-top: 0;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+  }
+}
+
 .FriendsSection {
   display: flex;
   flex-direction: column;

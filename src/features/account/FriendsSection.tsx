@@ -6,6 +6,7 @@ import Avatar from "@/components/Avatar";
 import RowButton from "@/components/RowButton";
 import ProfileLink from "@/features/profile/ProfileLink";
 import { useFriendAction } from "@/features/profile/useFriendAction";
+import InviteLink from "@/features/invites/InviteLink";
 
 const DELETED_USER = "deleted user";
 
@@ -28,8 +29,9 @@ const PersonRow = ({
 );
 
 /**
- * Friends and friend requests on /me. Adding happens from someone's profile (linked
- * from shared logs, or a profile link they sent you); answering happens here too.
+ * Friends and friend requests on /me, with your invite link. Adding happens from someone's
+ * profile (linked from shared logs, or a profile link they sent you) or through your invite
+ * link, which makes whoever opens it your friend; answering requests happens here too.
  */
 export const FriendsSection = () => {
   const { friends, incoming, outgoing, entries, isLoading } = useFriendships();
@@ -40,6 +42,8 @@ export const FriendsSection = () => {
 
   return (
     <div className="FriendsSection">
+      <InviteLink />
+
       {incoming.length > 0 && (
         <div>
           <h4>requests</h4>
@@ -76,8 +80,8 @@ export const FriendsSection = () => {
           </ul>
         ) : (
           <p className="FriendsSection__empty">
-            no friends yet. Open someone's profile from a log you share (tap their avatar), or send
-            them your profile link from the profile drawer.
+            no friends yet. Send someone your invite link above, or open someone's profile from a
+            log you share (tap their avatar).
           </p>
         )}
       </div>

@@ -31,6 +31,7 @@ import { About } from "@/pages/about";
 import { Notifications } from "@/pages/notifications";
 import { Welcome } from "@/pages/welcome";
 import { UserProfilePage } from "@/pages/user";
+import { InviteFriendPage } from "@/pages/invite";
 import { OnboardingGate } from "@/features/onboarding/OnboardingGate";
 
 import "./App.scss";
@@ -120,6 +121,14 @@ const App = () => {
                 element={
                   <CheckAuth>
                     <UserProfilePage />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/invite/:code"
+                element={
+                  <CheckAuth>
+                    <InviteFriendPage />
                   </CheckAuth>
                 }
               />

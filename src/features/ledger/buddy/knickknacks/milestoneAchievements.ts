@@ -34,6 +34,10 @@ export const MILESTONE_ACHIEVEMENTS = {
     title: "Buddy System",
     description: "Made a first friend",
   },
+  little_envelope: {
+    title: "The More the Merrier",
+    description: "Invited someone who became a friend",
+  },
 } as const satisfies Partial<Record<KnickKnackId, { title: string; description: string }>>;
 
 export type MilestoneAchievementType = keyof typeof MILESTONE_ACHIEVEMENTS;

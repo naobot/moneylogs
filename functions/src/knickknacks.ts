@@ -49,6 +49,7 @@ export const KNICK_KNACK_FINDS = {
   heart_leaf: { seasons: [], rarity: "milestone" },
   paper_crane: { seasons: [], rarity: "milestone" },
   friendship_bracelet: { seasons: [], rarity: "milestone" },
+  little_envelope: { seasons: [], rarity: "milestone" },
   mini_robot_charm: { seasons: [], rarity: "special" },
 } as const satisfies Record<string, { seasons: readonly Season[]; rarity: Rarity }>;
 

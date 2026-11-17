@@ -42,7 +42,7 @@ service cloud.firestore {
       allow create, update: if ownsUserDoc(userDocId)
         && !(request.resource.data.type in [
           "copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin",
-          "heart_leaf", "paper_crane", "friendship_bracelet"
+          "heart_leaf", "paper_crane", "friendship_bracelet", "little_envelope"
         ]);
     }
 
@@ -67,6 +67,11 @@ service cloud.firestore {
     match /friendships/{pairId} {
       allow read: if request.auth != null && request.auth.uid in resource.data.uids;
       allow write: if false;
+    }
+
+    // Personal invite links: code → inviter. Only the invite callables touch these.
+    match /invites/{code} {
+      allow read, write: if false;
     }
 
     // Cloud Functions write notifications (the Admin SDK bypasses rules). The owner may
