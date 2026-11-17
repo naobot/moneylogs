@@ -141,15 +141,16 @@ npm run seed-emulator      # Populate emulator with dummy data (not necessary mo
 
 Emulator data is wiped each session. Local `.env` values are not committed.
 
-| Script                            | Does                                           |
-| --------------------------------- | ---------------------------------------------- |
-| `vp dev`                          | Dev server                                     |
-| `vp build`                        | Production build, then stamps `version.json`   |
-| `vp check`                        | Oxlint + TypeScript + React rules              |
-| `vp test`                         | Vitest (run once)                              |
-| `npm run seed-emulator`           | Seed local Firestore                           |
-| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator |
-| `npm run cap:sync`                | Production build → sync native projects        |
+| Script                            | Does                                                      |
+| --------------------------------- | --------------------------------------------------------- |
+| `vp dev`                          | Dev server                                                |
+| `vp build`                        | Production build, then stamps `version.json`              |
+| `vp check`                        | Oxlint + TypeScript + React rules                         |
+| `vp test`                         | Vitest (run once)                                         |
+| `npm run seed-emulator`           | Seed local Firestore                                      |
+| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device |
+| `npm run android:forward`         | Re-forward emulator ports to a replugged Android device   |
+| `npm run cap:sync`                | Production build → sync native projects                   |
 
 Linting and formatting run automatically on staged files pre-commit.
 

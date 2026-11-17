@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { isNative, nativePlatform } from "@/platform/native";
+import { isNative } from "@/platform/native";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -55,12 +55,13 @@ if (isDevelopment && typeof window !== "undefined") {
   // Only connect if not already connected
   // The emulators run on the dev machine. Reach them at whatever host served the page,
   // so a phone on the LAN (vp dev --host, opened at the machine's IP) talks to them too.
-  // A native build serves itself from localhost: the iOS simulator shares the Mac's
-  // network, the Android emulator reaches it at 10.0.2.2, and a real device needs the
-  // Mac's LAN IP in VITE_EMULATOR_HOST.
+  // Native builds serve themselves from localhost, which also suits them: the iOS
+  // simulator shares the Mac's network, and on Android (emulator or USB device)
+  // `npm run cap:android` forwards the emulator ports with `adb reverse`. It has to be
+  // localhost there: the page is https://localhost, and the WebView blocks plain-http
+  // requests to any other host as mixed content. VITE_EMULATOR_HOST overrides it.
   const emulatorHost =
-    import.meta.env.VITE_EMULATOR_HOST ||
-    (nativePlatform() === "android" ? "10.0.2.2" : window.location.hostname || "localhost");
+    import.meta.env.VITE_EMULATOR_HOST || window.location.hostname || "localhost";
   try {
     connectFirestoreEmulator(db, emulatorHost, 8888);
     connectAuthEmulator(auth, `http://${emulatorHost}:9099`);
