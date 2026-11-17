@@ -241,9 +241,8 @@ export const LogActionsModal = ({
               text={`Delete ${noun}`}
               size="sm"
               variant="secondary"
-              loading={pending || deletion.isLoading}
-              disabled={!canDelete}
-              onClick={() => void handleDelete()}
+              disabled={pending}
+              onClick={() => setConfirming(true)}
             />
           </section>
         )}
