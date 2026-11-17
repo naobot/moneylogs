@@ -13,6 +13,11 @@ const { importCall } = vi.hoisted(() => ({
 }));
 vi.mock("@/config/firebase-config", () => ({ functions: {} }));
 vi.mock("firebase/functions", () => ({ httpsCallable: () => importCall }));
+const { reportError, trackStep } = vi.hoisted(() => ({
+  reportError: vi.fn(),
+  trackStep: vi.fn(),
+}));
+vi.mock("@/utils/reportError", () => ({ reportError, trackStep }));
 
 import ImportModal from "../ImportModal";
 
@@ -45,6 +50,8 @@ describe("ImportModal", () => {
   beforeEach(() => {
     window.localStorage.clear();
     importCall.mockClear();
+    reportError.mockClear();
+    trackStep.mockClear();
     showToast.mockClear();
     onClose.mockClear();
     container = document.createElement("div");
@@ -135,5 +142,86 @@ describe("ImportModal", () => {
     });
     expect(document.body.textContent).toContain("1 spending row from YNAB");
     expect(document.querySelector("#import-currency")).not.toBeNull();
+  });
+
+  describe("Sentry reporting", () => {
+    const MF_HEADER = "計算対象,日付,内容,金額（円）,保有金融機関,大項目,中項目,メモ,振替,ID";
+
+    it("stays quiet for a clean file and leaves breadcrumbs through the import", async () => {
+      await chooseFile(MF);
+      await act(async () => importButton().click());
+
+      expect(reportError).not.toHaveBeenCalled();
+      expect(trackStep).toHaveBeenCalledWith("ledger_import", "Import file read", {
+        source: "moneyforward",
+        rows: 3,
+        transfer: 1,
+        income: 0,
+        excluded: 0,
+        invalid: 0,
+      });
+      expect(trackStep).toHaveBeenCalledWith("ledger_import", "Import started", {
+        source: "moneyforward",
+        rows: 2,
+        mappedCategories: 1,
+        skippedCategories: 1,
+      });
+      expect(trackStep).toHaveBeenCalledWith("ledger_import", "Import finished", {
+        created: 1,
+        skippedDuplicates: 1,
+      });
+    });
+
+    it("warns once when a supported export has unreadable rows", async () => {
+      await chooseFile([MF_HEADER, "1,11月3日,ローソン,-1280,カード,食費,,,0,a1"].join("\n"));
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      const [error, context] = reportError.mock.calls[0];
+      expect((error as Error).message).toBe("Import file had unreadable rows");
+      expect(context).toMatchObject({
+        feature: "ledger_import",
+        action: "parse_file",
+        level: "warning",
+        tags: { source: "moneyforward" },
+        extra: { invalid: 1, kept: 0 },
+      });
+      // Column labels only, never row contents.
+      expect(JSON.stringify(context)).not.toContain("ローソン");
+    });
+
+    it("warns when a supported export is missing columns", async () => {
+      await chooseFile("計算対象,日付,振替\n1,2024/01/01,0");
+      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
+        feature: "ledger_import",
+        action: "parse_file",
+        level: "warning",
+        tags: { source: "moneyforward" },
+        extra: { columns: ["計算対象", "日付", "振替"] },
+      });
+    });
+
+    it("doesn't report a file from another app, which is the user's mistake", async () => {
+      await chooseFile("date,amount\n2024-01-01,5");
+      expect(reportError).not.toHaveBeenCalled();
+      expect(trackStep).toHaveBeenCalledWith("ledger_import", "Import file not usable", {
+        reason: "unknown-format",
+      });
+    });
+
+    it("reports a failed import with how far it got", async () => {
+      const failure = Object.assign(new Error("boom"), { code: "functions/internal" });
+      importCall.mockRejectedValueOnce(failure);
+      await chooseFile(MF);
+      await act(async () => importButton().click());
+
+      expect(reportError).toHaveBeenCalledWith(failure, {
+        feature: "ledger_import",
+        action: "import_entries",
+        tags: { source: "moneyforward" },
+        extra: { done: 0, total: 2 },
+      });
+      expect(document.body.textContent).toContain("The import stopped partway");
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -8,11 +8,12 @@ import { Ledger } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { activeCategories, formatMonth } from "@/utils/ledger";
 import { formatTotals } from "@/utils/ledgerEntries";
-import { reportError } from "@/utils/reportError";
+import { reportError, trackStep } from "@/utils/reportError";
+import { parseCsv } from "./csv";
 import { DateOrder } from "./dates";
 import { ImportErrorCode, ImportFormatError } from "./errors";
 import { ImportProgress, importEntries } from "./importEntries";
-import { ParsedImportFile, parseImportFile } from "./parseImportFile";
+import { ParsedImportFile, detectSource, parseImportFile } from "./parseImportFile";
 import {
   CategoryMapping,
   SKIP,
@@ -33,8 +34,11 @@ const SOURCE_LABELS: Record<ImportSource, string> = {
   ynab: "YNAB",
 };
 
-const ERROR_MESSAGES: Record<Exclude<ImportErrorCode, "ambiguous-dates">, string> = {
+type ParseError = ImportErrorCode | "unexpected";
+
+const ERROR_MESSAGES: Record<Exclude<ParseError, "ambiguous-dates">, string> = {
   empty: "That file has no rows to import.",
+  unexpected: "Something went wrong reading that file.",
   "unknown-format": "That doesn't look like a MoneyForward ME or YNAB export.",
   "missing-columns":
     "Some columns the importer needs are missing. Export the file again and import it without editing.",
@@ -53,7 +57,11 @@ type ImportModalProps = {
   onClose: () => void;
 };
 
-type Parsed = { file: ParsedImportFile } | { error: ImportErrorCode };
+type Parsed = { file: ParsedImportFile } | { error: ParseError; cause?: unknown };
+
+/** Column labels only (never row data), trimmed, to spot an export format that changed. */
+const headerColumns = (text: string): string[] =>
+  (parseCsv(text.slice(0, 2000))[0] ?? []).slice(0, 20).map((h) => h.trim().slice(0, 30));
 
 /**
  * Import spending from a MoneyForward ME or YNAB CSV export into this ledger as the
@@ -85,9 +93,50 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
       return { file: parseImportFile(text, { currency, dateOrder }) };
     } catch (err) {
       if (err instanceof ImportFormatError) return { error: err.code };
-      throw err;
+      return { error: "unexpected", cause: err };
     }
   }, [text, currency, dateOrder]);
+
+  // Tell Sentry when a supported app's export no longer reads cleanly (its format may have
+  // changed) or parsing broke. Once per file and date order; never a user's wrong file.
+  const reportedFor = useRef<string>();
+  useEffect(() => {
+    if (!parsed || text === undefined) return;
+    const key = `${fileName}|${text.length}|${dateOrder ?? ""}`;
+    if (reportedFor.current === key) return;
+    reportedFor.current = key;
+
+    if ("file" in parsed) {
+      const { source, rows, skipped } = parsed.file;
+      trackStep("ledger_import", "Import file read", { source, rows: rows.length, ...skipped });
+      if (skipped.invalid > 0) {
+        reportError(new Error("Import file had unreadable rows"), {
+          feature: "ledger_import",
+          action: "parse_file",
+          level: "warning",
+          tags: { source },
+          extra: { invalid: skipped.invalid, kept: rows.length, columns: headerColumns(text) },
+        });
+      }
+    } else if (parsed.error === "missing-columns") {
+      const columns = headerColumns(text);
+      reportError(new Error("Import file is missing expected columns"), {
+        feature: "ledger_import",
+        action: "parse_file",
+        level: "warning",
+        tags: { source: detectSource(columns) ?? "unknown" },
+        extra: { columns },
+      });
+    } else if (parsed.error === "unexpected") {
+      reportError(parsed.cause, {
+        feature: "ledger_import",
+        action: "parse_file",
+        extra: { columns: headerColumns(text) },
+      });
+    } else {
+      trackStep("ledger_import", "Import file not usable", { reason: parsed.error });
+    }
+  }, [parsed, text, fileName, dateOrder]);
 
   const file = parsed && "file" in parsed ? parsed.file : undefined;
   const sources = useMemo(() => (file ? sourceCategories(file.rows) : []), [file]);
@@ -117,7 +166,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
     try {
       setText(decodeBytes(await chosen.arrayBuffer()));
     } catch (err) {
-      reportError(err, { feature: "ledger", action: "import_read_file" });
+      reportError(err, { feature: "ledger_import", action: "read_file" });
       setText(undefined);
       setReadFailed(true);
     }
@@ -127,11 +176,23 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
     if (!file || rows.length === 0) return;
     setImportFailed(false);
     saveMapping(ledger.id, file.source, mapping);
+    const mappedCategories = Object.values(mapping).filter((id) => id !== SKIP).length;
+    trackStep("ledger_import", "Import started", {
+      source: file.source,
+      rows: rows.length,
+      mappedCategories,
+      skippedCategories: sources.length - mappedCategories,
+    });
+    const reached: ImportProgress = { done: 0, total: rows.length };
     try {
       const { created, skippedDuplicates } = await importEntries(
         { ledgerId: ledger.id, source: file.source, rows },
-        setProgress,
+        (next) => {
+          Object.assign(reached, next);
+          setProgress(next);
+        },
       );
+      trackStep("ledger_import", "Import finished", { created, skippedDuplicates });
       showToast(
         skippedDuplicates > 0
           ? `Imported ${created} entries. ${skippedDuplicates} were already here.`
@@ -140,10 +201,12 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
       );
       onClose();
     } catch (err) {
+      // The first `reached.done` rows were saved; a retry skips them.
       reportError(err, {
-        feature: "ledger",
+        feature: "ledger_import",
         action: "import_entries",
-        extra: { source: file.source, rowCount: rows.length },
+        tags: { source: file.source },
+        extra: { done: reached.done, total: reached.total },
       });
       setImportFailed(true);
     }
