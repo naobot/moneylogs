@@ -218,3 +218,24 @@ describe("unread badge", () => {
     expect(unreadBadge(20)).toBe("9+");
   });
 });
+
+describe("isEmailEnabled", () => {
+  it("defaults email on only for the key types", async () => {
+    const { EMAIL_PREF_DEFAULTS } = await import("@/utils/notificationTypes");
+    expect(
+      Object.entries(EMAIL_PREF_DEFAULTS)
+        .filter(([, on]) => on)
+        .map(([t]) => t)
+        .sort(),
+    ).toEqual(["budget_exceeded", "friend_request", "log_ended", "log_ending"]);
+  });
+
+  it("needs email unpaused, the type on in-app, and the email pref on", async () => {
+    const { isEmailEnabled } = await import("@/utils/notificationTypes");
+    expect(isEmailEnabled(undefined, "log_ending")).toBe(true);
+    expect(isEmailEnabled({ emailPaused: true }, "log_ending")).toBe(false);
+    expect(isEmailEnabled({ notificationPrefs: { log_ending: false } }, "log_ending")).toBe(false);
+    expect(isEmailEnabled({ emailPrefs: { comment: true } }, "comment")).toBe(true);
+    expect(isEmailEnabled({ emailPrefs: { log_joined: true } }, "log_joined")).toBe(false);
+  });
+});

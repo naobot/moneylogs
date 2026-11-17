@@ -14,6 +14,10 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/email/unsubscribe",
+        "function": { "functionId": "emailUnsubscribe", "region": "us-central1" }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -26,6 +30,13 @@
       {
         "source": "/version.json",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/mail/**",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Cache-Control", "value": "public, max-age=604800" }
+        ]
       },
       {
         "source": "**/assets/**",

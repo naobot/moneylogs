@@ -10,6 +10,7 @@ import {
 import {
   AppNotification,
   BudgetNotification,
+  EmailPrefs,
   NotificationPrefKey,
   NotificationOf,
   NotificationPrefs,
@@ -28,12 +29,19 @@ type TypeSpec<N extends AppNotification> = {
   label: string;
   /** Whether a user who has never set this preference receives it. */
   defaultEnabled: boolean;
+  /**
+   * Email digest default: "on" or "off" until the user chooses, "never" for types the
+   * user caused themselves (starting or joining a log), which have no email option.
+   */
+  email: EmailDefault;
   icon: IconType;
   describe: (n: N, now: Date) => CopyPart[];
   /** A quote or other secondary line under the main copy. */
   detail?: (n: N) => string | undefined;
   href: (n: N) => string;
 };
+
+export type EmailDefault = "on" | "off" | "never";
 
 type Specs = { [T in NotificationType]: TypeSpec<NotificationOf<T>> };
 
@@ -54,6 +62,7 @@ export const NOTIFICATION_TYPES: Specs = {
   comment: {
     label: "Comments on posts you wrote or follow",
     defaultEnabled: true,
+    email: "off",
     icon: "speech",
     describe: (n) => [
       { keep: n.actorName },
@@ -70,6 +79,7 @@ export const NOTIFICATION_TYPES: Specs = {
   reaction: {
     label: "Reactions to your posts",
     defaultEnabled: true,
+    email: "off",
     icon: "smiley",
     describe: (n) => [
       { keep: n.actorName },
@@ -83,6 +93,7 @@ export const NOTIFICATION_TYPES: Specs = {
   log_created: {
     label: "Logs you start",
     defaultEnabled: true,
+    email: "never",
     icon: "plus",
     describe: (n) => ["you started ", { keep: n.groupName }],
     href: logHref,
@@ -90,6 +101,7 @@ export const NOTIFICATION_TYPES: Specs = {
   log_joined: {
     label: "Logs you join",
     defaultEnabled: true,
+    email: "never",
     icon: "social",
     describe: (n) => ["you joined ", { keep: n.groupName }],
     href: logHref,
@@ -97,6 +109,7 @@ export const NOTIFICATION_TYPES: Specs = {
   log_ending: {
     label: "A log is about to end",
     defaultEnabled: true,
+    email: "on",
     icon: "clock",
     describe: (n, now) => [
       { keep: n.groupName },
@@ -107,6 +120,7 @@ export const NOTIFICATION_TYPES: Specs = {
   log_ended: {
     label: "A log has ended",
     defaultEnabled: true,
+    email: "on",
     icon: "document",
     describe: (n, now) => {
       const summary = n.summaryAt ? dayjs(n.summaryAt.toDate()) : null;
@@ -125,6 +139,7 @@ export const NOTIFICATION_TYPES: Specs = {
   budget_approaching: {
     label: "You're approaching a budget",
     defaultEnabled: true,
+    email: "off",
     icon: "dollar",
     describe: (n) => [
       `${percent(n.spent, n.budget)}% of `,
@@ -138,6 +153,7 @@ export const NOTIFICATION_TYPES: Specs = {
   budget_exceeded: {
     label: "You've gone over a budget",
     defaultEnabled: true,
+    email: "on",
     icon: "warning",
     describe: (n) => ["over ", ...budgetSubject(n), " in ", { keep: n.groupName }],
     detail: (n) => `${amount(n.spent, n.currency)} of ${amount(n.budget, n.currency)}`,
@@ -146,6 +162,7 @@ export const NOTIFICATION_TYPES: Specs = {
   friend_request: {
     label: "Friend requests",
     defaultEnabled: true,
+    email: "on",
     icon: "user",
     describe: (n) => [{ keep: n.actorName }, " wants to be friends"],
     href: (n) => `/u/${n.actorId}`,
@@ -153,6 +170,7 @@ export const NOTIFICATION_TYPES: Specs = {
   friend_accepted: {
     label: "Accepted friend requests",
     defaultEnabled: true,
+    email: "off",
     icon: "social",
     describe: (n) => [{ keep: n.actorName }, " accepted your friend request"],
     href: (n) => `/u/${n.actorId}`,
@@ -160,6 +178,7 @@ export const NOTIFICATION_TYPES: Specs = {
   gift_received: {
     label: "Gifts from friends",
     defaultEnabled: true,
+    email: "off",
     icon: "gift",
     describe: (n) => [{ keep: n.actorName }, " sent you a gift"],
     detail: () => "it's waiting, wrapped, in your knick-knack drawer",
@@ -168,6 +187,7 @@ export const NOTIFICATION_TYPES: Specs = {
   milestone_earned: {
     label: "Achievements that come with a knick-knack",
     defaultEnabled: true,
+    email: "off",
     icon: "gift",
     describe: (n) => [
       "achievement unlocked: ",
@@ -182,6 +202,7 @@ export const NOTIFICATION_TYPES: Specs = {
   budget_projected: {
     label: "You're on track to go over this month's budget",
     defaultEnabled: true,
+    email: "off",
     icon: "dollar",
     describe: (n) => [
       "on track to go over ",
@@ -234,6 +255,31 @@ export const isNotificationEnabled = (
   prefs: NotificationPrefs | undefined,
   key: NotificationPrefKey,
 ): boolean => prefs?.[key] ?? NOTIFICATION_PREF_DEFAULTS[key];
+
+/** Email digest defaults: true only for types whose `email` is "on". */
+export const EMAIL_PREF_DEFAULTS = Object.fromEntries(
+  Object.entries(NOTIFICATION_TYPES).map(([type, spec]) => [type, spec.email === "on"]),
+) as Record<NotificationType, boolean>;
+
+/** Whether a type can be emailed at all (not one the user caused themselves). */
+export const isEmailable = (type: NotificationType): boolean =>
+  NOTIFICATION_TYPES[type].email !== "never";
+
+export type EmailPrefsSource = {
+  notificationPrefs?: NotificationPrefs;
+  emailPrefs?: EmailPrefs;
+  emailPaused?: boolean;
+};
+
+/**
+ * Whether this type goes into the user's email digest. Email is a delivery channel for
+ * inbox items, so a type that's off in-app is never emailed.
+ */
+export const isEmailEnabled = (user: EmailPrefsSource | undefined, type: NotificationType) =>
+  !user?.emailPaused &&
+  isEmailable(type) &&
+  isNotificationEnabled(user?.notificationPrefs, type) &&
+  (user?.emailPrefs?.[type] ?? EMAIL_PREF_DEFAULTS[type]);
 
 /** The latest snapshot holds at most this many, so the badge caps out below it. */
 export const LATEST_NOTIFICATIONS_LIMIT = 20;

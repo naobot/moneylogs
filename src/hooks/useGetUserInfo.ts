@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
-import type { NotificationPrefs } from "@/types/notification";
+import type { EmailPrefs, NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
 import type { Currency } from "@/types/user";
 import { reportError } from "@/utils/reportError";
@@ -58,6 +58,10 @@ export type UserData = {
   logLastViewedAt?: LogLastViewedAtMap;
   /** Per-type notification switches; unset keys use the defaults in utils/notificationTypes. */
   notificationPrefs?: NotificationPrefs;
+  /** Per-type daily email digest switches; unset keys use EMAIL_PREF_DEFAULTS. */
+  emailPrefs?: EmailPrefs;
+  /** Switches all email off (the "unsubscribe from all" link sets it too). */
+  emailPaused?: boolean;
   /** Id of the solo "personal" ledger made for this user (see utils/personalLedger). */
   personalLedgerId?: string;
   /** The currency the user chose as theirs (see utils/currency for how it's applied). */
