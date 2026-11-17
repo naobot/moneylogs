@@ -30,15 +30,60 @@ import { reportError, withSentryCall } from "./sentry";
  * unfriending removes the request notification that's no longer true.
  */
 
-type Parties = {
+export type Parties = {
   db: Firestore;
   me: DocumentSnapshot;
   other: DocumentSnapshot;
   pairRef: DocumentReference;
 };
 
-const inbox = (db: Firestore, userDocId: string) =>
+export const inbox = (db: Firestore, userDocId: string) =>
   db.collection("users").doc(userDocId).collection("notifications");
+
+/** The caller's user doc, or throw. */
+export const callerUserDoc = async (db: Firestore, uid: string): Promise<DocumentSnapshot> => {
+  const mine = await db.collection("users").where("userId", "==", uid).limit(1).get();
+  if (mine.empty) throw new HttpsError("failed-precondition", "No user profile.");
+  return mine.docs[0];
+};
+
+/**
+ * Make two people friends inside a transaction: `create` writes a new, already accepted
+ * pair (`via` says how), otherwise the pending pair is accepted. Either way any request
+ * between them is cleared and `other` is told `me` is now their friend.
+ */
+export const writeAccepted = (
+  tx: Transaction,
+  { db, me, other, pairRef }: Parties,
+  create?: { requester: string; via: string },
+) => {
+  if (create) {
+    const users = [me.id, other.id].sort();
+    const uidOf = (id: string) => (id === me.id ? me.get("userId") : other.get("userId"));
+    tx.set(pairRef, {
+      users,
+      uids: users.map(uidOf),
+      requester: create.requester,
+      via: create.via,
+      status: "accepted",
+      createdAt: FieldValue.serverTimestamp(),
+      acceptedAt: FieldValue.serverTimestamp(),
+    });
+  } else {
+    tx.update(pairRef, { status: "accepted", acceptedAt: FieldValue.serverTimestamp() });
+  }
+  tx.delete(inbox(db, other.id).doc(friendRequestNotificationId(me.id)));
+  tx.delete(inbox(db, me.id).doc(friendRequestNotificationId(other.id)));
+  if (isNotificationEnabled(other.data(), "friend_accepted")) {
+    tx.set(inbox(db, other.id).doc(friendAcceptedNotificationId(me.id)), {
+      type: "friend_accepted",
+      actorId: me.id,
+      actorName: (me.get("displayName") as string | undefined) ?? "someone",
+      createdAt: FieldValue.serverTimestamp(),
+      readAt: null,
+    });
+  }
+};
 
 /** Resolve the caller's and the other person's user docs, or throw. */
 const parties = async (
@@ -50,9 +95,7 @@ const parties = async (
   if (!req) throw new HttpsError("invalid-argument", "Expected { otherUserDocId }.");
 
   const db = getFirestore();
-  const mine = await db.collection("users").where("userId", "==", uid).limit(1).get();
-  if (mine.empty) throw new HttpsError("failed-precondition", "No user profile.");
-  const me = mine.docs[0];
+  const me = await callerUserDoc(db, uid);
   if (me.id === req.otherUserDocId) {
     throw new HttpsError("invalid-argument", "That's you.");
   }
@@ -101,17 +144,7 @@ const apply = (tx: Transaction, action: FriendAction, { db, me, other, pairRef }
       return;
     }
     case "accept":
-      tx.update(pairRef, { status: "accepted", acceptedAt: FieldValue.serverTimestamp() });
-      clearRequests();
-      if (isNotificationEnabled(other.data(), "friend_accepted")) {
-        tx.set(inbox(db, other.id).doc(friendAcceptedNotificationId(me.id)), {
-          type: "friend_accepted",
-          actorId: me.id,
-          actorName: meName,
-          createdAt: FieldValue.serverTimestamp(),
-          readAt: null,
-        });
-      }
+      writeAccepted(tx, { db, me, other, pairRef });
       return;
     case "delete":
       tx.delete(pairRef);

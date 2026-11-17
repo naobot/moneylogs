@@ -254,6 +254,13 @@ export const deleteAccount = onCall(
         }
         bulk.delete(pair.ref).catch(failures.record(`delete friendship ${pair.id}`));
       }
+      // Their invite links stop working.
+      for (const me of userDocIds) {
+        const invites = await db.collection("invites").where("inviterId", "==", me).get();
+        for (const invite of invites.docs) {
+          bulk.delete(invite.ref).catch(failures.record(`delete invite ${invite.id}`));
+        }
+      }
       await bulk.close();
     }
 

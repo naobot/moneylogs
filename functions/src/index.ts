@@ -482,6 +482,7 @@ export { notifyLogTimeline } from "./notifyLogTimeline";
 export { mirrorProfile } from "./mirrorProfile";
 export { mirrorShelf } from "./mirrorShelf";
 export { requestFriend, respondFriend, removeFriend } from "./friends";
+export { getInviteCode, acceptInvite } from "./invites";
 export { giftKnickKnack } from "./gifts";
 export { scheduleEmailDigest, sendEmailDigests } from "./emailDigest";
 export { emailUnsubscribe } from "./emailUnsubscribe";

@@ -14,6 +14,7 @@ import type { KnickKnackId } from "./knickknacks";
 export const FIRST_SOCIAL_ENTRY = "heart_leaf" satisfies KnickKnackId;
 export const FIRST_COMMENT_ON_OTHERS = "paper_crane" satisfies KnickKnackId;
 export const FIRST_FRIEND = "friendship_bracelet" satisfies KnickKnackId;
+export const FIRST_INVITE = "little_envelope" satisfies KnickKnackId;
 
 /**
  * users/{id}/achievements/{id} for a milestone. One per item, so the id is fixed and
