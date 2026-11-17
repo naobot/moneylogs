@@ -32,14 +32,18 @@
     "sentry": "^0.37.0"
   },
   "devDependencies": {
+    "@chromatic-com/vitest": "^1.0.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/firebase": "^2.4.32",
     "@types/lodash": "^4.17.13",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/browser-playwright": "^5.1.0",
+    "chromatic": "^18.14.5",
     "globals": "^15.12.0",
     "jsdom": "^29.1.1",
+    "playwright": "^1.65.1",
     "sass": "^1.83.0",
     "sass-embedded": "^1.83.0",
     "sass-loader": "^16.0.4",
@@ -50,6 +54,10 @@
     "vite-plus": "latest"
   },
   "overrides": {
+    "storybook": {
+      ".": "^10.6.7",
+      "vite-plus": "$vite-plus"
+    },
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vitest": "5.1.0"
   },
@@ -68,5 +76,13 @@
   "engines": {
     "node": ">=24.18.0",
     "npm": ">=11"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.27.7": true,
+    "@firebase/util": false,
+    "@parcel/watcher": false,
+    "fsevents": false,
+    "protobufjs": false
   }
 }

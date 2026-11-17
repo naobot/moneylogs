@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 serviceAccountKey.json
+# Chromatic visual test archives
+.vitest/
