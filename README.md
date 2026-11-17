@@ -1,6 +1,6 @@
 # moneylogs
 
-This is a personal finance microblogging app built in React with [Vite+](https://voidzero.dev/posts/announcing-voidzero-inc). It is currently in closed beta at https://moneylogs-89ebf.web.app/
+This is a personal finance microblogging app built in React with [Vite+](https://voidzero.dev/posts/announcing-voidzero-inc). It is currently in open beta at https://moneylogs.app/
 
 ## Environment variables
 
