@@ -12,7 +12,8 @@ import {
   shiftMonth,
   trailingMonths,
 } from "@/utils/ledger";
-import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
+import { formatAmount } from "@/utils/ledgerEntries";
+import Totals from "./Totals";
 import { hasAnyBudget } from "@/utils/ledgerCategories";
 import {
   aggregateEntries,
@@ -96,7 +97,7 @@ export const LedgerStatsStrip = ({
         aria-label={`${formatMonth(month)} stats`}
       >
         <span className="LedgerStats__strip__totals">
-          {isLoading ? "…" : hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
+          {isLoading ? "…" : hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}
         </span>
         {hasEntries && !isLoading && (
           <CategoryBar
@@ -182,7 +183,7 @@ export const LedgerStatsPanel = ({
     <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>
       <div className="LedgerStats__summary">
         <strong className="LedgerStats__summary__totals">
-          {hasEntries ? formatTotals(agg.totals) : "Nothing spent yet"}
+          {hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}
         </strong>
         {hasEntries && (
           <CategoryBar shares={catShares} currency={currency} categories={categories} />

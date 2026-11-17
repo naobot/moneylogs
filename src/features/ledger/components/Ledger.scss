@@ -868,3 +868,22 @@
     }
   }
 }
+
+// Per-currency totals (Totals.tsx): with more than one currency, a column in smaller
+// type, so the row never grows sideways with each currency.
+.Totals {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  &--multi {
+    font-size: 0.8em;
+    line-height: 1.25;
+  }
+}
+
+// Day subtotals sit at the right end of the day header.
+.EntryList__day__header .Totals {
+  align-items: flex-end;
+  text-align: right;
+}
