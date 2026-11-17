@@ -1,6 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { DocumentReference, FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { timelineNotificationsFor, timelineQueryWindow } from "./logTimeline";
+import { reportError, withSentry } from "./sentry";
 
 // Firestore's gRPC code for a create() whose document already exists.
 const ALREADY_EXISTS = 6;
@@ -14,7 +15,7 @@ const ALREADY_EXISTS = 6;
  */
 export const notifyLogTimeline = onSchedule(
   { schedule: "every 60 minutes", timeoutSeconds: 300 },
-  async () => {
+  withSentry("notifyLogTimeline", async () => {
     const db = getFirestore();
     const now = Date.now();
     const { from, to } = timelineQueryWindow(now);
@@ -61,7 +62,11 @@ export const notifyLogTimeline = onSchedule(
             created++;
           } catch (error) {
             if ((error as { code?: number }).code !== ALREADY_EXISTS) {
-              console.error(`notifyLogTimeline: ${id} for ${member.id}:`, error);
+              reportError(error, {
+                action: "write_notification",
+                level: "warning",
+                extra: { notificationId: id, userDocId: member.id },
+              });
             }
           }
         }
@@ -69,5 +74,5 @@ export const notifyLogTimeline = onSchedule(
     }
 
     console.log(`notifyLogTimeline: ${groups.size} logs near their end, ${created} notified`);
-  },
+  }),
 );

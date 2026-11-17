@@ -12,6 +12,7 @@ import { BudgetCategory, isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
 import { maybeFindKnickKnack } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
+import { reportError, withSentry } from "./sentry";
 
 /**
  * Rebuild one months/{YYYY-MM} summary from its entries, in a transaction. Deletes the
@@ -56,7 +57,7 @@ export const recomputeMonth = (
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
-  async (event) => {
+  withSentry("recomputeLedgerMonth", async (event) => {
     const { ledgerId } = event.params;
     const before = event.data?.before?.data() as
       | (Partial<AggregatableEntry> & { month?: string })
@@ -90,7 +91,7 @@ export const recomputeLedgerMonth = onDocumentWritten(
           byCategory: aggregate.byCategory,
         });
       } catch (error) {
-        console.error(`recomputeLedgerMonth: budget alerts for ${ledgerId}/${month}:`, error);
+        reportError(error, { action: "budget_alerts", level: "warning", extra: { month } });
       }
     }
 
@@ -105,7 +106,7 @@ export const recomputeLedgerMonth = onDocumentWritten(
           loggedEntry: true,
         });
       } catch (error) {
-        console.error(`recomputeLedgerMonth: check-in for ${ledgerId}:`, error);
+        reportError(error, { action: "check_in", level: "warning" });
       }
       try {
         await maybeFindKnickKnack({
@@ -115,8 +116,8 @@ export const recomputeLedgerMonth = onDocumentWritten(
           categories: (ledgerSnap.get("categories") ?? []) as BudgetCategory[],
         });
       } catch (error) {
-        console.error(`recomputeLedgerMonth: knick-knack roll for ${ledgerId}:`, error);
+        reportError(error, { action: "knickknack_roll", level: "warning" });
       }
     }
-  },
+  }),
 );
