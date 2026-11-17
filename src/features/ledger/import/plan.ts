@@ -60,6 +60,46 @@ export const mapRows = (rows: ReadonlyArray<ImportRow>, mapping: CategoryMapping
     return categoryId === SKIP ? [] : [{ ...row, categoryId }];
   });
 
+/** An existing entry an incoming row may duplicate (same day, currency and amount). */
+export type PossibleDuplicate = { entryId: string; note?: string; authorName?: string };
+
+/** What checkLedgerImport found for a file. */
+export type ImportCheck = {
+  /** External ids of rows this user already imported into the ledger. */
+  alreadyImported: ReadonlySet<string>;
+  possibleDuplicates: Readonly<Record<string, PossibleDuplicate>>;
+};
+
+export type CheckedRows = {
+  /** Rows not imported before: the ones to map and decide on. */
+  fresh: ImportRow[];
+  /** Fresh rows that look like spending already in the ledger. */
+  flagged: ImportRow[];
+  /** Fresh rows going ahead: unflagged ones, plus flagged ones the user ticked. */
+  toImport: ImportRow[];
+  alreadyImported: number;
+};
+
+/**
+ * Split a file's rows using the duplicate check. Flagged rows stay out unless the user ticks
+ * them (`included`), since a match on day and amount is likely, not certain. Without a check
+ * (it failed) every row goes ahead; the import still skips this user's earlier imports.
+ */
+export const splitChecked = (
+  rows: ReadonlyArray<ImportRow>,
+  check: ImportCheck | undefined,
+  included: ReadonlySet<string>,
+): CheckedRows => {
+  const fresh = check ? rows.filter((r) => !check.alreadyImported.has(r.externalId)) : [...rows];
+  const isFlagged = (r: ImportRow) => check?.possibleDuplicates[r.externalId] !== undefined;
+  return {
+    fresh,
+    flagged: fresh.filter(isFlagged),
+    toImport: fresh.filter((r) => !isFlagged(r) || included.has(r.externalId)),
+    alreadyImported: rows.length - fresh.length,
+  };
+};
+
 export type MonthPreview = { month: string; count: number; totals: CurrencyAmounts };
 
 /** Per-month counts and totals for the preview, oldest month first. */

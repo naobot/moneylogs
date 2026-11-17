@@ -3,8 +3,11 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { recomputeMonth } from "./ledger";
 import {
+  ExistingEntry,
+  findPossibleDuplicates,
   importEntryId,
   importMonths,
+  parseCheckRows,
   parseImportRequest,
   parseImportRows,
 } from "./ledgerImportPlan";
@@ -12,6 +15,71 @@ import { reportError, withSentryCall } from "./sentry";
 
 /** gRPC status for a create() on a document that already exists. */
 const ALREADY_EXISTS = 6;
+
+/** Firestore's cap on values in one `in` filter. */
+const IN_LIMIT = 30;
+
+/**
+ * Before an import, tell the preview which rows are already in the ledger, so it can count
+ * and show only what's new. Writes nothing.
+ *
+ * - `alreadyImported`: external ids of rows the caller imported before (their deterministic
+ *   entry exists). importLedgerEntries would skip these anyway.
+ * - `possibleDuplicates`: the other rows that match an existing entry on day, currency and
+ *   amount (a hand-logged copy, another member's import), keyed by external id, with that
+ *   entry's note and author so the user can decide.
+ */
+export const checkLedgerImport = onCall(
+  { timeoutSeconds: 60 },
+  withSentryCall("checkLedgerImport", async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in to import entries.");
+
+    const req = parseImportRequest(request.data);
+    if (typeof req === "string") throw new HttpsError("invalid-argument", req);
+    const rows = parseCheckRows(req.rows);
+    if (typeof rows === "string") throw new HttpsError("invalid-argument", rows);
+
+    const db = getFirestore();
+    const ledgerRef = db.collection("ledgers").doc(req.ledgerId);
+    const ledger = await ledgerRef.get();
+    if (!ledger.exists || ledger.get("deleting") === true) {
+      throw new HttpsError("not-found", "That log doesn't exist.");
+    }
+    if (!((ledger.get("memberUids") ?? []) as string[]).includes(uid)) {
+      throw new HttpsError("permission-denied", "Not a member of this log.");
+    }
+
+    const entries = ledgerRef.collection("entries");
+    const refs = rows.map((row) => entries.doc(importEntryId(req.source, uid, row.externalId)));
+    const own = await db.getAll(...refs);
+    const alreadyImported = rows.filter((_, i) => own[i].exists).map((r) => r.externalId);
+    const ownEntryIds = new Set(own.filter((d) => d.exists).map((d) => d.id));
+    const fresh = rows.filter((_, i) => !own[i].exists);
+
+    const months = importMonths(fresh);
+    const existing: ExistingEntry[] = [];
+    for (let i = 0; i < months.length; i += IN_LIMIT) {
+      const snap = await entries.where("month", "in", months.slice(i, i + IN_LIMIT)).get();
+      for (const doc of snap.docs) {
+        const d = doc.data();
+        existing.push({
+          id: doc.id,
+          date: d.date,
+          amount: d.amount,
+          currency: d.currency,
+          ...(typeof d.note === "string" ? { note: d.note } : {}),
+          ...(typeof d.authorName === "string" ? { authorName: d.authorName } : {}),
+        });
+      }
+    }
+
+    return {
+      alreadyImported,
+      possibleDuplicates: findPossibleDuplicates(fresh, existing, ownEntryIds),
+    };
+  }),
+);
 
 /**
  * Bulk-import spending rows (parsed client-side from a MoneyForward or YNAB export) into a

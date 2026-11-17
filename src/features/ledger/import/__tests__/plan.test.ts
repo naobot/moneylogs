@@ -9,6 +9,7 @@ import {
   readSavedMapping,
   saveMapping,
   sourceCategories,
+  splitChecked,
 } from "../plan";
 import { ImportRow } from "../types";
 
@@ -132,5 +133,32 @@ describe("saved mappings", () => {
     expect(readSavedMapping("L1", "ynab")).toEqual({ b: "fun" });
     window.localStorage.setItem("ML__importMapping_L1_ynab", "not json");
     expect(readSavedMapping("L1", "ynab")).toEqual({});
+  });
+});
+
+describe("splitChecked", () => {
+  const rows = [row({ externalId: "a" }), row({ externalId: "b" }), row({ externalId: "c" })];
+
+  it("drops rows imported before and holds back flagged ones until included", () => {
+    const check = {
+      alreadyImported: new Set(["a"]),
+      possibleDuplicates: { c: { entryId: "e1" } },
+    };
+    const held = splitChecked(rows, check, new Set());
+    expect(held.alreadyImported).toBe(1);
+    expect(held.fresh.map((r) => r.externalId)).toEqual(["b", "c"]);
+    expect(held.flagged.map((r) => r.externalId)).toEqual(["c"]);
+    expect(held.toImport.map((r) => r.externalId)).toEqual(["b"]);
+
+    expect(splitChecked(rows, check, new Set(["c"])).toImport.map((r) => r.externalId)).toEqual([
+      "b",
+      "c",
+    ]);
+  });
+
+  it("lets everything through without a check", () => {
+    const split = splitChecked(rows, undefined, new Set());
+    expect(split).toMatchObject({ alreadyImported: 0, flagged: [] });
+    expect(split.toImport).toHaveLength(3);
   });
 });
