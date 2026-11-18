@@ -111,4 +111,16 @@ describe("LoginHandler", () => {
     expect(container.querySelector(".AuthError")).toBeNull();
     expect(mockNavigate).toHaveBeenCalledWith("/me");
   });
+
+  it("opens forgot password with whatever email was typed", () => {
+    const onForgotPassword = vi.fn();
+    act(() => root.render(<LoginHandler onForgotPassword={onForgotPassword} />));
+    act(() => setInputValue(container.querySelector("input")!, " user@example.com "));
+
+    const forgot = Array.from(container.querySelectorAll("button")).find(
+      (b) => b.textContent === "Forgot password",
+    )!;
+    act(() => forgot.click());
+    expect(onForgotPassword).toHaveBeenCalledWith("user@example.com");
+  });
 });

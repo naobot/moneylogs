@@ -40,6 +40,9 @@ export const getPasswordChangeErrorMessage = (code?: string) => {
 
 export const getResetEmailErrorMessage = (code?: string) => {
   switch (code) {
+    case "auth/invalid-email":
+    case "auth/missing-email":
+      return "Please enter a valid email address.";
     case "auth/too-many-requests":
       return "Too many requests. Please wait a while before asking for another link.";
     case "auth/network-request-failed":

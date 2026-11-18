@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { auth } from "@/config/firebase-config";
@@ -7,6 +6,7 @@ import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { getResetEmailErrorMessage, isExpectedAccountError } from "@/features/auth/accountErrors";
+import { sendResetEmail } from "@/features/auth/passwordReset";
 import dayjs from "@/utils/configuredDayjs";
 import { useDateFormat } from "@/utils/dateFormat";
 
@@ -37,7 +37,7 @@ export const AccountSection = () => {
     if (!email || resetPending) return;
     setResetPending(true);
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendResetEmail(auth, email);
       showToast(`Reset link sent to ${email}`, "success");
     } catch (err) {
       const code = (err as { code?: string })?.code;

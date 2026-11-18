@@ -81,5 +81,6 @@ describe("onboardingRedirect", () => {
     expect(onboardingRedirect(pending, { pathname: "/welcome" })).toBeNull();
     expect(onboardingRedirect(pending, { pathname: "/login" })).toBeNull();
     expect(onboardingRedirect(pending, { pathname: "/about" })).toBeNull();
+    expect(onboardingRedirect(pending, { pathname: "/auth/action" })).toBeNull();
   });
 });
