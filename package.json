@@ -1,6 +1,6 @@
 {
   "name": "moneylogs",
-  "version": "5.13.6",
+  "version": "5.13.7",
   "private": true,
   "type": "module",
   "scripts": {
