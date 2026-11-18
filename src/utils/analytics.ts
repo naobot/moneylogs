@@ -40,6 +40,8 @@ export type AnalyticsEvents = {
   add_entry: { shared_log: boolean; has_note: boolean };
   import_entries: { source: string; created: number };
   no_spend_day: Record<string, never>;
+  delete_category: Record<string, never>;
+  remove_budget: Record<string, never>;
 
   // Social / profile
   update_profile: Record<string, never>;
