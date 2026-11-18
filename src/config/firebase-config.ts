@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { initializeAnalytics, setDefaultEventParameters } from "firebase/analytics";
+import { initializeAnalytics, logEvent, setDefaultEventParameters } from "firebase/analytics";
 import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore";
 import {
   connectAuthEmulator,
@@ -10,6 +10,7 @@ import {
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { isNative } from "@/platform/native";
+import { setAnalyticsSink } from "@/utils/analytics";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -60,6 +61,7 @@ if (analytics) {
     app_version: appVersion,
     build_type: isDevelopment ? "development" : "production",
   });
+  setAnalyticsSink((event, params) => logEvent(analytics, event, params));
 }
 export { analytics };
 

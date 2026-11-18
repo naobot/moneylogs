@@ -8,9 +8,6 @@ vi.mock("@/contexts", () => ({
 vi.mock("@/hooks/useLogPostQuery", () => ({
   useLogPostQuery: () => ({ addComment: { mutate: vi.fn(), isLoading: false } }),
 }));
-vi.mock("@/utils/analytics", () => ({
-  track: vi.fn(),
-}));
 vi.mock("@uiw/react-md-editor", () => ({
   default: Object.assign(() => null, { Markdown: () => null }),
 }));

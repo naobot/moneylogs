@@ -1,6 +1,4 @@
-import { logEvent } from "firebase/analytics";
 import { matchPath } from "react-router-dom";
-import { analytics } from "@/config/firebase-config";
 import type { LogKind } from "@/types/notification";
 
 /**
@@ -13,6 +11,11 @@ import type { LogKind } from "@/types/notification";
  *
  * Params other than GA's own (`method`, `content_type`) only show in standard reports
  * once registered as event-scoped custom dimensions; see docs/analytics.md.
+ *
+ * This module doesn't import Firebase: firebase-config hands it a sink at startup. So
+ * shared components (Drawer, CopyTextArea) can call `track` without pulling Firebase
+ * into their own imports, e.g. in visual tests where there's no API key. Until a sink
+ * is set (native apps, tests), events are dropped.
  */
 export type AnalyticsEvents = {
   // Accounts (GA recommended event names)
@@ -58,11 +61,18 @@ export const logKindParam = (kind: LogKind | LogKindParam): LogKindParam =>
   kind === "social" ? "social" : "financial";
 
 type ParamValue = string | number | boolean;
+export type GaParams = Record<string, string | number>;
+export type AnalyticsSink = (event: string, params?: GaParams) => void;
+
+let sink: AnalyticsSink | null = null;
+
+/** Where events go; set once by firebase-config when Analytics is available. */
+export const setAnalyticsSink = (next: AnalyticsSink | null): void => {
+  sink = next;
+};
 
 /** GA stores strings and numbers; booleans become "true"/"false" so reports read cleanly. */
-export const toGaParams = (
-  params: Record<string, ParamValue> | undefined,
-): Record<string, string | number> | undefined =>
+export const toGaParams = (params: Record<string, ParamValue> | undefined): GaParams | undefined =>
   params &&
   Object.fromEntries(
     Object.entries(params).map(([k, v]) => [k, typeof v === "boolean" ? String(v) : v]),
@@ -77,8 +87,7 @@ type ParamArgs<E extends AnalyticsEvent> =
  */
 export const track = <E extends AnalyticsEvent>(event: E, ...[params]: ParamArgs<E>): void => {
   try {
-    if (!analytics) return;
-    logEvent(analytics, event as string, toGaParams(params as Record<string, ParamValue>));
+    sink?.(event, toGaParams(params as Record<string, ParamValue> | undefined));
   } catch {
     // Best-effort.
   }
@@ -123,8 +132,7 @@ export const pageInfo = (pathname: string): PageInfo => {
 export const trackPageView = (pathname: string, signedIn: boolean): void => {
   const { path, title } = pageInfo(pathname);
   try {
-    if (!analytics) return;
-    logEvent(analytics, "page_view", {
+    sink?.("page_view", {
       page_location: `${window.location.origin}${path}`,
       page_path: path,
       page_title: title,

@@ -1,17 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-
-const { logEvent } = vi.hoisted(() => ({ logEvent: vi.fn() }));
-vi.mock("firebase/analytics", () => ({ logEvent }));
-vi.mock("@/config/firebase-config", () => ({ analytics: {} }));
-
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import {
   PAGE_ROUTES,
   logKindParam,
   pageInfo,
+  setAnalyticsSink,
   toGaParams,
   track,
   trackPageView,
 } from "../analytics";
+
+const logEvent = vi.fn();
+beforeEach(() => {
+  logEvent.mockReset();
+  setAnalyticsSink(logEvent);
+});
+afterEach(() => setAnalyticsSink(null));
 
 describe("pageInfo", () => {
   it.each([
@@ -64,11 +67,9 @@ describe("logKindParam", () => {
 });
 
 describe("track", () => {
-  beforeEach(() => logEvent.mockReset());
-
   it("logs the named event with GA-ready params", () => {
     track("add_entry", { shared_log: true, has_note: false });
-    expect(logEvent).toHaveBeenCalledWith({}, "add_entry", {
+    expect(logEvent).toHaveBeenCalledWith("add_entry", {
       shared_log: "true",
       has_note: "false",
     });
@@ -76,7 +77,13 @@ describe("track", () => {
 
   it("logs param-less events", () => {
     track("add_comment");
-    expect(logEvent).toHaveBeenCalledWith({}, "add_comment", undefined);
+    expect(logEvent).toHaveBeenCalledWith("add_comment", undefined);
+  });
+
+  it("drops events until a sink is set", () => {
+    setAnalyticsSink(null);
+    expect(() => track("add_reaction")).not.toThrow();
+    expect(logEvent).not.toHaveBeenCalled();
   });
 
   it("never throws when analytics fails", () => {
@@ -95,11 +102,9 @@ describe("track", () => {
 });
 
 describe("trackPageView", () => {
-  beforeEach(() => logEvent.mockReset());
-
   it("sends the route pattern, not the real path", () => {
     trackPageView("/g/abc123", true);
-    expect(logEvent).toHaveBeenCalledWith({}, "page_view", {
+    expect(logEvent).toHaveBeenCalledWith("page_view", {
       page_location: `${window.location.origin}/g/:groupId`,
       page_path: "/g/:groupId",
       page_title: "social log",
