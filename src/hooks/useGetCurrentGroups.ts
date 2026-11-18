@@ -17,31 +17,10 @@ export type GroupsResponse = {
 };
 
 // Cache utilities
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes (groups change very infrequently)
 const USER_DOC_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours for user doc ID mapping
 
 const getCacheKey = (userId: string) => `currentGroups_${userId}`;
 const getUserDocCacheKey = (userId: string) => `userDocId_${userId}`;
-
-const getCachedGroups = (userId: string): Group[] | null => {
-  try {
-    const cached = storage.get(getCacheKey(userId));
-    if (!cached) return null;
-
-    const { data, timestamp } = JSON.parse(cached);
-    const isExpired = Date.now() - timestamp > CACHE_DURATION;
-
-    if (isExpired) {
-      storage.remove(getCacheKey(userId));
-      return null;
-    }
-
-    console.log("📱 Using cached current groups");
-    return data;
-  } catch {
-    return null;
-  }
-};
 
 const setCachedGroups = (userId: string, groups: Group[]) => {
   try {
@@ -134,16 +113,9 @@ const buildGroupsQuery = (userDocId: string) =>
 export const useGetCurrentGroups = (): GroupsResponse => {
   const [userDocId, setUserDocId] = useState<string | null>(null);
   const [userIdFetchError, setUserIdFetchError] = useState<unknown>(null);
-  const [cachedGroups, setCachedGroupsState] = useState<Group[] | null>(null);
 
   const [firebaseUser, firebaseLoading] = useAuthState(auth);
   const currentUserId = firebaseUser?.uid || null;
-
-  // Check for cached groups immediately
-  useEffect(() => {
-    // Reset on sign-out or a different account, so one person's logs never show for another.
-    setCachedGroupsState(currentUserId ? getCachedGroups(currentUserId) : null);
-  }, [currentUserId]);
 
   // Fetch the user's document ID from their userId (with caching)
   useEffect(() => {
@@ -184,8 +156,10 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   const combinedError = error || userIdFetchError;
 
   // Use cached data for instant display while fresh data loads
-  // (`data` is always an array, so it can't fall through to the cache with `||`.)
-  const allGroups = isSuccess ? data : (cachedGroups ?? []);
+  // Never shown from the cache: it's JSON, so the groups' Timestamps come back as plain
+  // { seconds, nanoseconds } objects without toDate(), and everything that reads dates
+  // (the nav on every page) crashes.
+  const allGroups = isSuccess ? data : [];
 
   return {
     currentGroups: allGroups.filter((group) => {
@@ -194,9 +168,7 @@ export const useGetCurrentGroups = (): GroupsResponse => {
     }),
     allGroups,
     isLoading: combinedIsLoading,
-    isSuccess:
-      (!combinedIsLoading && isSuccess && !!userDocId) ||
-      (!!cachedGroups && cachedGroups.length > 0),
+    isSuccess: !combinedIsLoading && isSuccess && !!userDocId,
     isError: combinedIsError,
     error: combinedError,
   };
