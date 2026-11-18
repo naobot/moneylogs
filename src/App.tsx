@@ -23,6 +23,7 @@ import { useRequiredUpdate } from "@/features/native/useRequiredUpdate";
 import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
 
 import { Auth } from "@/pages/auth";
+import { AuthAction } from "@/pages/auth/action";
 import { Home } from "@/pages/home";
 import { Landing } from "@/features/landing/Landing";
 import { UserSettings } from "@/pages/me";
@@ -109,6 +110,7 @@ const App = () => {
           <OnboardingGate>
             <Routes>
               <Route path="/login" element={<Auth />} />
+              <Route path="/auth/action" element={<AuthAction />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/create" element={<CreateNewLog />} />

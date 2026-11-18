@@ -8,7 +8,13 @@ import Button from "@/components/Button";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 import { getLoginErrorMessage } from "@/features/auth/loginErrors";
 
-const LoginHandler = ({ redirectTo }: { redirectTo?: string }) => {
+type LoginHandlerProps = {
+  redirectTo?: string;
+  /** Opens the forgot-password view, carrying over whatever email was typed. */
+  onForgotPassword?: (email: string) => void;
+};
+
+const LoginHandler = ({ redirectTo, onForgotPassword }: LoginHandlerProps) => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -55,6 +61,15 @@ const LoginHandler = ({ redirectTo }: { redirectTo?: string }) => {
           disabled={!email || !password}
           variant="primary"
         />
+        {onForgotPassword && (
+          <Button
+            onClick={() => onForgotPassword(email.trim())}
+            text="Forgot password"
+            size="sm"
+            variant="secondary"
+            className="Login__forgot"
+          />
+        )}
       </div>
     </>
   );

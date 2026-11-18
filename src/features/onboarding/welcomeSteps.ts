@@ -66,7 +66,7 @@ export const reachableWelcomeStep = (requested: number, s: WelcomeState): number
 };
 
 /** Paths a user with an unfinished welcome wizard may still visit. */
-const ONBOARDING_OPEN_PATHS = ["/welcome", "/login", "/about"];
+const ONBOARDING_OPEN_PATHS = ["/welcome", "/login", "/about", "/auth/action"];
 
 /**
  * Where to send a user who hasn't finished the welcome wizard, or null to let them be.

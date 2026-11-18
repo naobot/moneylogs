@@ -53,6 +53,15 @@ describe("getResetEmailErrorMessage", () => {
       "Couldn't send the reset email. Please try again.",
     );
   });
+
+  it("asks for a valid address when the email is malformed or missing", () => {
+    expect(getResetEmailErrorMessage("auth/invalid-email")).toBe(
+      "Please enter a valid email address.",
+    );
+    expect(getResetEmailErrorMessage("auth/missing-email")).toBe(
+      "Please enter a valid email address.",
+    );
+  });
 });
 
 describe("validatePasswordChange", () => {
