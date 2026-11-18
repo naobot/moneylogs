@@ -1,51 +1,31 @@
-import { FormEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import cx from "classnames";
-import {
-  DndContext,
-  DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
-import SharedRowButton from "@/components/RowButton";
-import Icon, { IconType } from "@/components/Icon";
-import Popover from "@/components/Popover";
-import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
+import Modal from "@/components/Modal";
+import Button from "@/components/Button";
+import RowButton from "@/components/RowButton";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useToastContext } from "@/hooks/useToastContext";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { formatTotals } from "@/utils/ledgerEntries";
-import { activeCategories, MAX_CATEGORY_NAME_LENGTH, sortCategories } from "@/utils/ledger";
+import { track } from "@/utils/analytics";
+import { activeCategories, sortCategories } from "@/utils/ledger";
 import {
   applyCategoryOps,
-  categoryNameError,
-  CategoryOp,
-  guessFixed,
-  isFixedCategory,
-  MAX_CATEGORIES,
-  newCategoryId,
   BudgetDrafts,
   budgetDraftKey,
   budgetDraftOps,
   budgetFieldError,
-  preferredBudgetCurrency,
+  CategoryOp,
+  guessFixed,
+  newCategoryId,
 } from "@/utils/ledgerCategories";
-import { BudgetField } from "./BudgetManager";
-
-import Modal from "@/components/Modal";
-import Button from "@/components/Button";
 import { reportError } from "@/utils/reportError";
-import { useToastContext } from "@/hooks/useToastContext";
+import CategoryDetail from "./CategoryDetail";
+import CategoryList from "./CategoryList";
+
+/** List and detail side by side from here up; keep in sync with $breakpoint-md. */
+const WIDE_QUERY = "(min-width: 768px)";
 
 type CategoryManagerProps = {
   isOpen: boolean;
@@ -59,16 +39,18 @@ type CategoryManagerProps = {
   checkInUse: (categoryId: string) => Promise<boolean>;
 };
 
-type DeleteState =
-  | { status: "idle" }
-  | { status: "checking"; id: string }
-  | { status: "in-use"; id: string }
-  | { status: "failed"; id: string };
-
 /** An edit shown straight away, kept on top of the server copy until it comes back. */
 type PendingEdit = { key: number; op: CategoryOp; saved: boolean };
 
+/** Archive and delete are confirmed in the window first, explaining what they do. */
+type Confirming =
+  | { kind: "archive"; id: string }
+  | { kind: "delete"; id: string; status: "checking" | "ready" | "in-use" | "failed" };
+
 /**
+ * A list of categories and one category's detail: side by side on wide screens; on
+ * phones the list, then tapping a row drills into its detail with a way back.
+ *
  * Every edit saves as soon as it's made, like the settings on /me: no Save or Cancel.
  * Edits are written one at a time, in order, each replayed onto the latest server copy
  * (see useLedgerCategoryQuery), so other members' concurrent edits survive.
@@ -83,14 +65,12 @@ const CategoryManagerDialog = ({
   onSave,
   checkInUse,
 }: CategoryManagerProps) => {
+  const wide = useMediaQuery(WIDE_QUERY);
   const [pending, setPending] = useState<PendingEdit[]>([]);
-  const [newName, setNewName] = useState("");
-  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
-  const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
-  const [budgetingId, setBudgetingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Confirming | null>(null);
   // What's typed into budget fields; saved when the field is left.
   const [budgetDrafts, setBudgetDrafts] = useState<BudgetDrafts>({});
-  const [budgetCurrency, setBudgetCurrency] = useState<Record<string, Currency>>({});
   const [saveFailed, setSaveFailed] = useState(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const nextKey = useRef(0);
@@ -120,13 +100,15 @@ const CategoryManagerDialog = ({
   );
   const active = activeCategories(draft);
   const archived = sortCategories(draft.filter((c) => c.archived));
-  // Budgets including fields still being typed, for each row's "X / month" summary.
+  // Budgets including fields still being typed, for each row's summary.
   const budgetsShown = new Map(
     applyCategoryOps(draft, budgetDraftOps(draft, budgetDrafts)).map((c) => [c.id, c.budget]),
   );
   const isSaving = pending.some((edit) => !edit.saved);
-  const currencyFor = (category: LedgerCategory) =>
-    budgetCurrency[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
+
+  // Side by side there's always a category open (the first, until another is picked
+  // or the open one is deleted); on phones none is, until a row is tapped.
+  const selected = draft.find((c) => c.id === selectedId) ?? (wide ? (active[0] ?? null) : null);
 
   const save = (op: CategoryOp) => {
     const key = nextKey.current++;
@@ -145,28 +127,11 @@ const CategoryManagerDialog = ({
     });
   };
 
-  const addError = newName.trim() ? categoryNameError(newName, draft) : undefined;
-  const atCap = draft.length >= MAX_CATEGORIES;
-
-  // Follows a guess from the name as you type, until you flip it yourself.
-  const [newFixedChoice, setNewFixedChoice] = useState<boolean | null>(null);
-  const newFixed = newFixedChoice ?? guessFixed(newName);
-
-  const addCategory = () => {
-    if (!newName.trim() || addError || atCap) return;
-    save({ type: "add", id: newCategoryId(newName, draft), name: newName, fixed: newFixed });
-    setNewName("");
-    setNewFixedChoice(null);
-  };
-
-  const renameError = renaming ? categoryNameError(renaming.name, draft, renaming.id) : undefined;
-  const commitRename = () => {
-    if (!renaming) return;
-    const current = draft.find((c) => c.id === renaming.id);
-    if (!renameError && current && current.name !== renaming.name.trim()) {
-      save({ type: "rename", id: renaming.id, name: renaming.name });
-    }
-    setRenaming(null);
+  const addCategory = (name: string) => {
+    const id = newCategoryId(name, draft);
+    save({ type: "add", id, name, fixed: guessFixed(name) });
+    // Open it, so its fixed and budget settings are right there.
+    setSelectedId(id);
   };
 
   /** Saves the valid, changed budget fields (all of them, or one category's). */
@@ -186,237 +151,129 @@ const CategoryManagerDialog = ({
     );
   };
 
+  const removeBudget = (categoryId: string, currency: Currency) => {
+    const key = budgetDraftKey(categoryId, currency);
+    setBudgetDrafts(({ [key]: _dropped, ...rest }) => rest);
+    save({ type: "setBudget", id: categoryId, currency, amount: null });
+    track("remove_budget");
+  };
+
+  /** Opens the delete confirmation, which first checks whether entries use it. */
+  const askDelete = async (categoryId: string) => {
+    const settle = (status: "ready" | "in-use" | "failed") =>
+      setConfirming((c) => (c?.kind === "delete" && c.id === categoryId ? { ...c, status } : c));
+    setConfirming({ kind: "delete", id: categoryId, status: "checking" });
+    // A category whose add is still saving can't have entries yet.
+    const unsaved = pending.some((e) => !e.saved && e.op.type === "add" && e.op.id === categoryId);
+    if (unsaved) return settle("ready");
+    try {
+      settle((await checkInUse(categoryId)) ? "in-use" : "ready");
+    } catch (err) {
+      reportError(err, { feature: "ledger", action: "check_category_in_use" });
+      settle("failed");
+    }
+  };
+
+  const archive = (categoryId: string) => {
+    save({ type: "archive", id: categoryId });
+    setConfirming(null);
+  };
+
+  const confirmDelete = (categoryId: string) => {
+    save({ type: "delete", id: categoryId });
+    track("delete_category");
+    setConfirming(null);
+    setSelectedId(null);
+  };
+
+  const select = (id: string | null) => {
+    if (selected) commitBudgets(selected.id);
+    setSelectedId(id);
+  };
+
   const close = () => {
     commitBudgets();
     onClose();
   };
 
-  const move = (id: string, toIndex: number) => save({ type: "move", id, toIndex });
-
-  // Dragging is the only way to reorder, so it's on everywhere here (unlike the nav's
-  // LogsMenu): only the ⋮⋮ handle starts a drag, so it can't fight scrolling or taps,
-  // and the keyboard sensor (Space on a focused handle, then arrows) keeps it accessible.
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  const list = (
+    <CategoryList
+      active={active}
+      archived={archived}
+      all={draft}
+      budgets={budgetsShown}
+      selectedId={wide ? (selected?.id ?? null) : null}
+      onSelect={select}
+      onMove={(id, toIndex) => save({ type: "move", id, toIndex })}
+      onAdd={addCategory}
+    />
   );
-  const handleDragEnd = ({ active: dragged, over }: DragEndEvent) => {
-    if (!over || dragged.id === over.id) return;
-    move(
-      String(dragged.id),
-      active.findIndex((c) => c.id === over.id),
+
+  const detail = selected && (
+    <CategoryDetail
+      key={selected.id}
+      category={selected}
+      all={draft}
+      lastActive={!selected.archived && active.length <= 1}
+      defaultCurrency={defaultCurrency}
+      save={save}
+      budgetDrafts={budgetDrafts}
+      onBudgetChange={(currency, raw) => {
+        setSaveFailed(false);
+        setBudgetDrafts((d) => ({ ...d, [budgetDraftKey(selected.id, currency)]: raw }));
+      }}
+      onBudgetCommit={() => commitBudgets(selected.id)}
+      onBudgetRemove={(currency) => removeBudget(selected.id, currency)}
+      onArchive={() => setConfirming({ kind: "archive", id: selected.id })}
+      onDelete={() => void askDelete(selected.id)}
+    />
+  );
+
+  // Gone (e.g. deleted by another member) while confirming: nothing left to confirm.
+  const confirmed = confirming && draft.find((c) => c.id === confirming.id);
+  if (confirming && confirmed) {
+    return (
+      <ConfirmView
+        confirming={confirming}
+        category={confirmed}
+        onBack={() => setConfirming(null)}
+        onArchive={() => archive(confirmed.id)}
+        onDelete={() => confirmDelete(confirmed.id)}
+        onRetry={() => void askDelete(confirmed.id)}
+      />
     );
-  };
-
-  const handleDelete = async (id: string) => {
-    setDeleteState({ status: "checking", id });
-    try {
-      // A category whose add is still saving can't have entries yet.
-      const unsaved = pending.some((e) => !e.saved && e.op.type === "add" && e.op.id === id);
-      if (!unsaved && (await checkInUse(id))) {
-        setDeleteState({ status: "in-use", id });
-        return;
-      }
-      save({ type: "delete", id });
-      setDeleteState({ status: "idle" });
-    } catch (err) {
-      reportError(err, { feature: "ledger", action: "check_category_in_use" });
-      setDeleteState({ status: "failed", id });
-    }
-  };
-
-  const lastActive = active.length <= 1;
+  }
 
   return (
-    <Modal isOpen onClose={close} className="CategoryManager">
+    <Modal
+      isOpen
+      onClose={close}
+      className={cx("CategoryManager", { "CategoryManager--wide": wide })}
+    >
       <Modal.Header striped title="Categories">
         Categories
       </Modal.Header>
       <Modal.Body>
-        <p className="CategoryManager__hint">
-          Tap a name to rename it. Drag <span aria-hidden="true">⋮⋮</span> to reorder.
-        </p>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-            <ul className="CategoryManager__list" aria-label="Active categories">
-              {active.map((category) => (
-                <SortableRow key={category.id} id={category.id} name={category.name}>
-                  {renaming?.id === category.id ? (
-                    <form
-                      className="CategoryManager__rename"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        commitRename();
-                      }}
-                    >
-                      <input
-                        className="LineInput"
-                        aria-label={`Rename ${category.name}`}
-                        value={renaming.name}
-                        maxLength={MAX_CATEGORY_NAME_LENGTH + 5}
-                        autoFocus
-                        onChange={(e) => setRenaming({ id: category.id, name: e.target.value })}
-                        onBlur={commitRename}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            e.stopPropagation();
-                            setRenaming(null);
-                          }
-                        }}
-                      />
-                      {renameError && (
-                        <small className="CategoryManager__error">{renameError}</small>
-                      )}
-                    </form>
-                  ) : (
-                    <button
-                      type="button"
-                      className="CategoryManager__name"
-                      title="Rename"
-                      onClick={() => setRenaming({ id: category.id, name: category.name })}
-                    >
-                      <span className="CategoryManager__nameText">{category.name}</span>
-                      <span className="CategoryManager__nameEdit" aria-hidden="true">
-                        <Icon type="pencil" size={14} />
-                      </span>
-                    </button>
-                  )}
-                  {budgetsShown.get(category.id) && (
-                    <small className="CategoryManager__budgetSummary">
-                      {formatTotals(budgetsShown.get(category.id)!)} / month
-                    </small>
-                  )}
-                  <span className="CategoryManager__actions">
-                    <FixedToggle
-                      name={category.name}
-                      fixed={isFixedCategory(category)}
-                      onToggle={(fixed) => save({ type: "setFixed", id: category.id, fixed })}
-                    />
-                    <ActionButton
-                      icon="wallet"
-                      iconOnly
-                      label={`Budget for ${category.name}`}
-                      tip="Set a monthly budget for this category."
-                      expanded={budgetingId === category.id}
-                      onClick={() =>
-                        setBudgetingId((id) => (id === category.id ? null : category.id))
-                      }
-                    />
-                    <ActionButton
-                      icon="folder"
-                      iconOnly
-                      label={`Archive ${category.name}`}
-                      disabled={lastActive}
-                      tip={
-                        lastActive
-                          ? "A log needs at least one category, so this one can't be archived."
-                          : "Archiving hides this category when adding entries. Past entries keep it, and you can restore it any time."
-                      }
-                      onClick={() => save({ type: "archive", id: category.id })}
-                    />
-                  </span>
-                  {budgetingId === category.id && (
-                    <div className="CategoryManager__budget">
-                      <BudgetField
-                        category={category}
-                        currency={currencyFor(category)}
-                        drafts={budgetDrafts}
-                        onBlur={() => commitBudgets(category.id)}
-                        onChange={(raw) => {
-                          setSaveFailed(false);
-                          setBudgetDrafts((d) => ({
-                            ...d,
-                            [budgetDraftKey(category.id, currencyFor(category))]: raw,
-                          }));
-                        }}
-                        onCurrencyChange={(currency) =>
-                          setBudgetCurrency((m) => ({ ...m, [category.id]: currency }))
-                        }
-                      />
-                    </div>
-                  )}
-                </SortableRow>
-              ))}
-            </ul>
-          </SortableContext>
-        </DndContext>
-
-        <form
-          className="CategoryManager__add"
-          onSubmit={(e: FormEvent) => {
-            e.preventDefault();
-            addCategory();
-          }}
-        >
-          <input
-            className="LineInput"
-            aria-label="New category name"
-            placeholder={atCap ? `Limit of ${MAX_CATEGORIES} reached` : "New category"}
-            value={newName}
-            disabled={atCap}
-            maxLength={MAX_CATEGORY_NAME_LENGTH + 5}
-            onChange={(e) => setNewName(e.target.value)}
-          />
-          <FixedToggle
-            name={newName.trim() || "the new category"}
-            fixed={newFixed}
-            disabled={atCap}
-            onToggle={setNewFixedChoice}
-          />
-          <Button
-            text="Add"
-            size="sm"
-            variant="secondary"
-            disabled={!newName.trim() || !!addError || atCap}
-            onClick={addCategory}
-          />
-          {addError && <small className="CategoryManager__error">{addError}</small>}
-        </form>
-
-        {archived.length > 0 && (
-          <>
-            <h4 className="CategoryManager__subheading">Archived</h4>
-            <p className="CategoryManager__hint">
-              Hidden when adding entries. Past entries keep their category.
-            </p>
-            <ul className="CategoryManager__list CategoryManager__list--archived">
-              {archived.map((category) => (
-                <li key={category.id} className="CategoryManager__row">
-                  <span className="CategoryManager__name CategoryManager__name--archived">
-                    {category.name}
-                  </span>
-                  <span className="CategoryManager__actions">
-                    <RowButton
-                      label={`Restore ${category.name}`}
-                      onClick={() => save({ type: "unarchive", id: category.id })}
-                    >
-                      restore
-                    </RowButton>
-                    <RowButton
-                      label={`Delete ${category.name}`}
-                      disabled={deleteState.status === "checking"}
-                      onClick={() => void handleDelete(category.id)}
-                    >
-                      {deleteState.status === "checking" && deleteState.id === category.id
-                        ? "checking…"
-                        : "delete"}
-                    </RowButton>
-                  </span>
-                  {deleteState.status === "in-use" && deleteState.id === category.id && (
-                    <small className="CategoryManager__error">
-                      Some entries use this category, so it can only be archived.
-                    </small>
-                  )}
-                  {deleteState.status === "failed" && deleteState.id === category.id && (
-                    <small className="CategoryManager__error">
-                      Couldn't check whether this category is in use. Try again.
-                    </small>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
+        {wide ? (
+          <div className="CategoryManager__panes">
+            {list}
+            <div className="CategoryManager__detailPane" aria-label="Category settings">
+              {detail}
+            </div>
+          </div>
+        ) : selected ? (
+          <div className="CategoryManager__detailPane" aria-label="Category settings">
+            <RowButton
+              className="CategoryManager__back"
+              aria-label="Back to categories"
+              onClick={() => select(null)}
+            >
+              ‹ categories
+            </RowButton>
+            {detail}
+          </div>
+        ) : (
+          list
         )}
 
         {saveFailed && (
@@ -433,174 +290,81 @@ const CategoryManagerDialog = ({
   );
 };
 
-const RowButton = ({
-  label,
-  title,
-  disabled,
-  onClick,
-  glyph,
-  children,
-}: {
-  label: string;
-  title?: string;
-  disabled?: boolean;
-  onClick: () => void;
-  glyph?: boolean;
-  children: ReactNode;
-}) => (
-  <SharedRowButton
-    glyph={glyph}
-    aria-label={label}
-    title={title ?? label}
-    disabled={disabled}
-    onClick={onClick}
-  >
-    {children}
-  </SharedRowButton>
-);
-
 /**
- * A row action: an icon and a one-word label, or a bare, borderless icon (`iconOnly`).
- * An optional tip explains it on hover or keyboard focus (touch goes straight to the
- * action).
+ * The window's confirm step for archive and delete (in place, like deleting a log from
+ * its manage window): what the action does, then Back or go ahead.
  */
-const ActionButton = ({
-  icon,
-  iconOnly,
-  label,
-  tip,
-  expanded,
-  pressed,
-  className,
-  disabled,
-  onClick,
-  children,
+const ConfirmView = ({
+  confirming,
+  category,
+  onBack,
+  onArchive,
+  onDelete,
+  onRetry,
 }: {
-  icon?: IconType;
-  /** Just the icon, with no frame; the label is for screen readers (and the tip). */
-  iconOnly?: boolean;
-  label: string;
-  tip?: string;
-  expanded?: boolean;
-  /** For toggles. */
-  pressed?: boolean;
-  className?: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children?: ReactNode;
+  confirming: Confirming;
+  category: LedgerCategory;
+  onBack: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
+  onRetry: () => void;
 }) => {
-  const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null);
-  const [open, setOpen] = useState(false);
-  const { openAfterDelay, cancelOpen } = useHoverIntent();
-  const tipId = useId();
-
-  const close = () => {
-    cancelOpen();
-    setOpen(false);
-  };
+  const name = <strong className="keep-case">{category.name}</strong>;
+  const status = confirming.kind === "delete" ? confirming.status : null;
+  const archiveHelp =
+    "Archiving hides it when adding entries. Past entries keep it, and you can restore it any time.";
 
   return (
-    // The tip hangs off a wrapper, since a disabled button gets no pointer events.
-    <span
-      ref={setAnchor}
-      className="CategoryManager__action"
-      onPointerEnter={(e) => tip && isMousePointer(e) && openAfterDelay(() => setOpen(true))}
-      onPointerLeave={(e) => isMousePointer(e) && close()}
-    >
-      <SharedRowButton
-        className={cx(
-          { "RowButton--icon": icon && !iconOnly, CategoryManager__iconAction: iconOnly },
-          className,
+    <Modal isOpen onClose={onBack} className="CategoryManager CategoryManager--confirm">
+      <Modal.Header striped title={`${confirming.kind} category`}>
+        {confirming.kind} category
+      </Modal.Header>
+      <Modal.Body>
+        {confirming.kind === "archive" && (
+          <>
+            <p>Archive {name}?</p>
+            <p className="CategoryManager__hint">{archiveHelp}</p>
+          </>
         )}
-        aria-label={label}
-        aria-expanded={expanded}
-        aria-pressed={pressed}
-        aria-describedby={tip && open ? tipId : undefined}
-        disabled={disabled}
-        onClick={() => {
-          close();
-          onClick();
-        }}
-        onFocus={() => tip && setOpen(true)}
-        onBlur={close}
-        onKeyDown={(e) => {
-          // Escape dismisses the tip first, without also closing the modal.
-          if (e.key === "Escape" && open) {
-            e.stopPropagation();
-            close();
-          }
-        }}
-      >
-        {icon && <Icon type={icon} size={20} />}
-        {children}
-      </SharedRowButton>
-      {tip && (
-        <Popover
-          anchor={anchor}
-          open={open}
-          onClose={close}
-          interactive={false}
-          className="HelpTip__panel"
-          role="tooltip"
-        >
-          <p id={tipId} className="HelpTip__text">
-            {tip}
-          </p>
-        </Popover>
-      )}
-    </span>
-  );
-};
-
-const FIXED_TIP =
-  "Fixed costs like rent and bills still count toward the budget, but the buddy won't fuss over them or judge the month's pace by them.";
-
-/** A text-mode checkbox marking a category as a fixed cost. */
-const FixedToggle = ({
-  name,
-  fixed,
-  disabled,
-  onToggle,
-}: {
-  name: string;
-  fixed: boolean;
-  disabled?: boolean;
-  onToggle: (fixed: boolean) => void;
-}) => (
-  <ActionButton
-    label={`${name} is a fixed cost`}
-    pressed={fixed}
-    tip={FIXED_TIP}
-    disabled={disabled}
-    className={cx("CategoryManager__fixed", { "CategoryManager__fixed--on": fixed })}
-    onClick={() => onToggle(!fixed)}
-  >
-    <span aria-hidden="true">{fixed ? "[■]" : "[ ]"}</span>
-    fixed
-  </ActionButton>
-);
-
-const SortableRow = ({ id, name, children }: { id: string; name: string; children: ReactNode }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  });
-  return (
-    <li
-      ref={setNodeRef}
-      className={cx("CategoryManager__row", { "CategoryManager__row--dragging": isDragging })}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-    >
-      <span
-        className="CategoryManager__handle"
-        {...attributes}
-        {...listeners}
-        aria-label={`Reorder ${name}`}
-        title="Drag to reorder"
-      >
-        ⋮⋮
-      </span>
-      {children}
-    </li>
+        {status === "checking" && <p role="status">Checking whether any entries use {name}…</p>}
+        {status === "ready" && (
+          <>
+            <p>Delete {name}?</p>
+            <p className="CategoryManager__hint">
+              No entries use it, so it can be removed for good. This can't be undone.
+            </p>
+          </>
+        )}
+        {status === "in-use" && (
+          <>
+            <p>Some entries use {name}, so it can't be deleted.</p>
+            <p className="CategoryManager__hint">
+              {category.archived ? "It's already archived. " : "Archive it instead. "}
+              {archiveHelp}
+            </p>
+          </>
+        )}
+        {status === "failed" && (
+          <p className="error-message">Couldn't check whether this category is in use.</p>
+        )}
+      </Modal.Body>
+      <Modal.Actions>
+        <Button text="Back" variant="secondary" onClick={onBack} />
+        {confirming.kind === "archive" && <Button text="Archive" onClick={onArchive} />}
+        {(status === "checking" || status === "ready") && (
+          <Button
+            text="Delete"
+            loading={status === "checking"}
+            disabled={status === "checking"}
+            onClick={onDelete}
+          />
+        )}
+        {status === "in-use" && !category.archived && (
+          <Button text="Archive instead" onClick={onArchive} />
+        )}
+        {status === "failed" && <Button text="Try again" onClick={onRetry} />}
+      </Modal.Actions>
+    </Modal>
   );
 };
 

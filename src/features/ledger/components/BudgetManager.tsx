@@ -182,10 +182,16 @@ export const BudgetField = ({
   onChange,
   onCurrencyChange,
   onBlur,
+  label,
+  currencies = CURRENCIES,
 }: {
   category: LedgerCategory;
   currency: Currency;
   drafts: BudgetDrafts;
+  /** The amount field's accessible name; defaults to "Monthly budget for <name>". */
+  label?: string;
+  /** What the currency picker offers (e.g. leaving out ones already budgeted). */
+  currencies?: ReadonlyArray<Currency>;
   onChange: (raw: string) => void;
   /** When the amount field is left (e.g. to save it). */
   onBlur?: () => void;
@@ -197,7 +203,7 @@ export const BudgetField = ({
     <span className="BudgetField">
       <input
         className="LineInput BudgetField__amount"
-        aria-label={`Monthly budget for ${category.name}`}
+        aria-label={label ?? `Monthly budget for ${category.name}`}
         aria-invalid={!!error}
         inputMode="decimal"
         autoComplete="off"
@@ -212,7 +218,7 @@ export const BudgetField = ({
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value as Currency)}
         >
-          {CURRENCIES.map((c) => (
+          {currencies.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>

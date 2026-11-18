@@ -9,7 +9,7 @@ import { CategoryOp } from "@/utils/ledgerCategories";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const CATEGORIES: LedgerCategory[] = [
-  { id: "food", name: "Food", order: 0 },
+  { id: "food", name: "Food", order: 0, budget: { JPY: 30000 } },
   { id: "transport", name: "Transport", order: 1 },
   { id: "old", name: "Old", order: 2, archived: true },
 ];
@@ -55,10 +55,25 @@ describe("CategoryManager", () => {
     document.querySelector(`[aria-label="${label}"]`) as HTMLButtonElement | HTMLInputElement;
   const button = (text: string) =>
     Array.from(document.querySelectorAll("button")).find((b) => b.textContent === text)!;
-  const activeNames = () =>
-    Array.from(
-      document.querySelectorAll('[aria-label="Active categories"] .CategoryManager__name'),
-    ).map((el) => (el as HTMLElement).textContent ?? (el as HTMLInputElement).value);
+  const names = (list: string) =>
+    Array.from(document.querySelectorAll(`[aria-label="${list}"] .CategoryManager__nameText`)).map(
+      (el) => el.textContent,
+    );
+  const activeNames = () => names("Active categories");
+  /** Taps a category's row (narrow layout: opens its detail). */
+  const open = (name: string) =>
+    act(() =>
+      Array.from(document.querySelectorAll<HTMLButtonElement>(".CategoryManager__select"))
+        .find((b) => b.querySelector(".CategoryManager__nameText")?.textContent === name)!
+        .click(),
+    );
+  const back = () => act(() => byLabel("Back to categories").click());
+  /** Archives via the detail's button and its confirmation. */
+  const archive = (name: string) => {
+    act(() => byLabel(`Archive ${name}`).click());
+    expect(document.body.textContent).toContain("Past entries keep it");
+    act(() => button("Archive").click());
+  };
   const type = (el: HTMLInputElement, value: string) => {
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!;
     act(() => {
@@ -83,15 +98,37 @@ describe("CategoryManager", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("saves each add and rename as it's made, one edit per write", async () => {
+  it("shows fixed and budget status on each row, without opening it", () => {
+    const row = document.querySelector('[aria-label="Active categories"] li')!;
+    expect(row.textContent).toContain("30,000 JPY/mo");
+    expect(names("Archived categories")).toEqual(["Old"]);
+  });
+
+  it("on narrow screens, opens a category's detail from its row and goes back", () => {
+    expect(byLabel("Rename Food")).toBeNull();
+    open("Food");
+    expect(byLabel("Rename Food")).not.toBeNull();
+    expect(byLabel("Active categories")).toBeNull();
+    // Explanations are written out, not hidden in hover tips.
+    expect(document.body.textContent).toContain("the buddy won't fuss over them");
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    back();
+    expect(activeNames()).toEqual(["Food", "Transport"]);
+  });
+
+  it("saves each add and rename as it's made, and opens a new category", async () => {
     type(byLabel("New category name") as HTMLInputElement, "Coffee");
     submit(byLabel("New category name"));
+    // The new category opens, so its settings are right there.
+    expect((byLabel("Rename Coffee") as HTMLInputElement).value).toBe("Coffee");
+    back();
     expect(activeNames()).toEqual(["Food", "Transport", "Coffee"]);
 
-    act(() => button("Food").click());
+    open("Food");
     const rename = byLabel("Rename Food") as HTMLInputElement;
     type(rename, "Eating out");
     submit(rename);
+    back();
     // Shown straight away, before the writes finish.
     expect(activeNames()).toEqual(["Eating out", "Transport", "Coffee"]);
 
@@ -103,11 +140,23 @@ describe("CategoryManager", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("guesses fixed from a new category's name", async () => {
+    type(byLabel("New category name") as HTMLInputElement, "Rent");
+    submit(byLabel("New category name"));
+    expect((byLabel("Rent is a fixed cost") as HTMLInputElement).checked).toBe(true);
+    await settle();
+    expect(saved()).toEqual([[{ type: "add", id: "rent", name: "Rent", fixed: true }]]);
+  });
+
   it("writes edits in order, one after another", async () => {
     let finishFirst!: () => void;
     onSave.mockImplementationOnce(() => new Promise<void>((resolve) => (finishFirst = resolve)));
-    act(() => byLabel("Archive Transport").click());
-    act(() => (byLabel("Food is a fixed cost") as HTMLButtonElement).click());
+    open("Transport");
+    archive("Transport");
+    back();
+    open("Food");
+    act(() => (byLabel("Food is a fixed cost") as HTMLInputElement).click());
+    expect((byLabel("Food is a fixed cost") as HTMLInputElement).checked).toBe(true);
     await settle();
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(document.body.textContent).toContain("saving…");
@@ -126,30 +175,73 @@ describe("CategoryManager", () => {
     expect(button("Add").disabled).toBe(true);
   });
 
-  it("archives, restores, and only deletes unused archived categories", async () => {
+  it("archives (after confirming) and restores, but never the last active category", async () => {
+    open("Transport");
     act(() => byLabel("Archive Transport").click());
+    // Back changes nothing.
+    act(() => button("Back").click());
+    expect(onSave).not.toHaveBeenCalled();
+    archive("Transport");
+    // Still open, now as an archived category.
+    expect(byLabel("Restore Transport")).not.toBeNull();
+    back();
     expect(activeNames()).toEqual(["Food"]);
-    // The last active category can't be archived.
+
+    open("Food");
     expect(byLabel("Archive Food").disabled).toBe(true);
+    expect(byLabel("Delete Food").disabled).toBe(true);
+    expect(document.body.textContent).toContain("has to stay");
+    back();
 
-    checkInUse.mockResolvedValueOnce(true);
-    await act(async () => byLabel("Delete Old").click());
-    expect(checkInUse).toHaveBeenCalledWith("old");
-    expect(document.body.textContent).toContain("can only be archived");
-    expect(byLabel("Restore Old")).not.toBeNull();
-
-    await act(async () => byLabel("Delete Transport").click());
-    expect(byLabel("Restore Transport")).toBeNull();
-
+    open("Old");
     act(() => byLabel("Restore Old").click());
+    back();
     expect(activeNames()).toEqual(["Food", "Old"]);
 
     await settle();
     expect(saved()).toEqual([
       [{ type: "archive", id: "transport" }],
-      [{ type: "delete", id: "transport" }],
       [{ type: "unarchive", id: "old" }],
     ]);
+  });
+
+  it("deletes an unused active category after confirming", async () => {
+    open("Transport");
+    await act(async () => byLabel("Delete Transport").click());
+    expect(checkInUse).toHaveBeenCalledWith("transport");
+    expect(document.body.textContent).toContain("can't be undone");
+    expect(onSave).not.toHaveBeenCalled();
+
+    act(() => button("Back").click());
+    await act(async () => byLabel("Delete Transport").click());
+    act(() => button("Delete").click());
+    // Back to the list, without it.
+    expect(activeNames()).toEqual(["Food"]);
+
+    await settle();
+    expect(saved()).toEqual([[{ type: "delete", id: "transport" }]]);
+  });
+
+  it("offers archiving instead when entries use the category", async () => {
+    checkInUse.mockResolvedValueOnce(true);
+    open("Transport");
+    await act(async () => byLabel("Delete Transport").click());
+    expect(document.body.textContent).toContain("Some entries use Transport");
+    expect(button("Delete")).toBeUndefined();
+
+    act(() => button("Archive instead").click());
+    await settle();
+    expect(saved()).toEqual([[{ type: "archive", id: "transport" }]]);
+  });
+
+  it("explains when it couldn't check whether a category is in use", async () => {
+    checkInUse.mockRejectedValueOnce(new Error("offline"));
+    open("Old");
+    await act(async () => byLabel("Delete Old").click());
+    expect(document.body.textContent).toContain("Couldn't check whether this category is in use");
+    expect(onSave).not.toHaveBeenCalled();
+    await act(async () => button("Try again").click());
+    expect(document.body.textContent).toContain("Delete Old?");
   });
 
   it("reorders by drag handle only: every active row has one, no up/down buttons", () => {
@@ -158,72 +250,135 @@ describe("CategoryManager", () => {
     expect(byLabel("Move Food up")).toBeNull();
   });
 
-  it("explains archiving in a tooltip on keyboard focus", () => {
-    const archive = byLabel("Archive Transport") as HTMLButtonElement;
-    expect(document.querySelector('[role="tooltip"]')).toBeNull();
-    act(() => archive.focus());
-    expect(document.querySelector('[role="tooltip"]')?.textContent).toContain(
-      "hides this category when adding entries",
-    );
-    // Layered above the modal it was opened from, not behind it.
-    expect(document.querySelector('[role="tooltip"]')!.className).toContain("Popover--inModal");
-    act(() => archive.blur());
-    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+  it("removes a budget with one tap", async () => {
+    open("Food");
+    expect((byLabel("Food budget in JPY") as HTMLInputElement).value).toBe("30000");
+    act(() => byLabel("Remove Food budget in JPY").click());
+    expect(byLabel("Food budget in JPY")).toBeNull();
+    expect(document.body.textContent).toContain("no budget");
+    await settle();
+    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "JPY", amount: null }]]);
   });
 
   it("saves a budget when its field is left, with no separate set step", async () => {
-    expect(byLabel("Monthly budget for Food")).toBeNull();
-    act(() => byLabel("Budget for Food").click());
-    expect(byLabel("Budget for Food").getAttribute("aria-expanded")).toBe("true");
-    const field = byLabel("Monthly budget for Food") as HTMLInputElement;
+    open("Transport");
+    const field = byLabel("Monthly budget for Transport") as HTMLInputElement;
     act(() => field.focus());
-    type(field, "30,000");
-    expect(document.body.textContent).toContain("30,000 JPY / month");
-    expect(document.querySelector('[aria-label^="Set budget"]')).toBeNull();
+    type(field, "5,000");
     await settle();
     expect(onSave).not.toHaveBeenCalled();
 
     act(() => field.blur());
     await settle();
-    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "JPY", amount: 30000 }]]);
-    expect(document.body.textContent).toContain("30,000 JPY / month");
+    expect(saved()).toEqual([
+      [{ type: "setBudget", id: "transport", currency: "JPY", amount: 5000 }],
+    ]);
+    // Now listed as a budget of its own, with a way to remove it.
+    expect(byLabel("Remove Transport budget in JPY")).not.toBeNull();
+    back();
+    expect(document.body.textContent).toContain("5,000 JPY/mo");
+  });
+
+  it("adds a budget in a second currency, keeping the first", async () => {
+    open("Food");
+    // Tucked away until asked for.
+    expect(byLabel("Budget currency for Food")).toBeNull();
+    act(() => button("[+ mixed currency budget]").click());
+    const picker = byLabel("Budget currency for Food") as unknown as HTMLSelectElement;
+    // JPY already has a budget, so it isn't offered again.
+    expect(Array.from(picker.options).map((o) => o.value)).not.toContain("JPY");
+    act(() => {
+      picker.value = "CAD";
+      picker.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const field = byLabel("Monthly budget for Food in another currency") as HTMLInputElement;
+    act(() => field.focus());
+    type(field, "200");
+    act(() => field.blur());
+    await settle();
+    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "CAD", amount: 200 }]]);
+    expect(byLabel("Food budget in JPY")).not.toBeNull();
+    expect(byLabel("Food budget in CAD")).not.toBeNull();
   });
 
   it("saves a budget still being typed when Done is pressed", async () => {
-    act(() => byLabel("Budget for Food").click());
-    type(byLabel("Monthly budget for Food") as HTMLInputElement, "500");
+    open("Transport");
+    type(byLabel("Monthly budget for Transport") as HTMLInputElement, "500");
     act(() => button("Done").click());
     await settle();
-    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "JPY", amount: 500 }]]);
+    expect(saved()).toEqual([
+      [{ type: "setBudget", id: "transport", currency: "JPY", amount: 500 }],
+    ]);
     expect(onClose).toHaveBeenCalled();
   });
 
   it("undoes an edit that fails to save, with an error", async () => {
     onSave.mockRejectedValueOnce(new Error("offline"));
-    act(() => byLabel("Archive Transport").click());
+    open("Transport");
+    archive("Transport");
     await settle();
     expect(document.body.textContent).toContain("Couldn't save that change");
+    back();
     expect(activeNames()).toEqual(["Food", "Transport"]);
     expect(onClose).not.toHaveBeenCalled();
   });
+});
 
-  it("marks categories as fixed, guessing from a new category's name", async () => {
-    const food = byLabel("Food is a fixed cost") as HTMLButtonElement;
-    expect(food.getAttribute("aria-pressed")).toBe("false");
-    act(() => food.click());
-    expect(food.getAttribute("aria-pressed")).toBe("true");
+describe("CategoryManager on wide screens", () => {
+  const original = window.matchMedia;
+  let root: Root;
 
-    const name = byLabel("New category name") as HTMLInputElement;
-    type(name, "Rent");
-    expect(byLabel("Rent is a fixed cost").getAttribute("aria-pressed")).toBe("true");
-    // Flipping it overrides the guess.
-    act(() => (byLabel("Rent is a fixed cost") as HTMLButtonElement).click());
-    submit(name);
+  beforeEach(() => {
+    window.matchMedia = vi.fn(
+      (query: string) =>
+        ({
+          matches: query.includes("min-width"),
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        }) as unknown as MediaQueryList,
+    );
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() =>
+      root.render(
+        <ToastProvider>
+          <CategoryManager
+            isOpen
+            categories={CATEGORIES}
+            defaultCurrency="JPY"
+            onClose={() => {}}
+            onSave={async () => {}}
+            checkInUse={async () => false}
+          />
+        </ToastProvider>,
+      ),
+    );
+  });
 
-    await settle();
-    expect(saved()).toEqual([
-      [{ type: "setFixed", id: "food", fixed: true }],
-      [{ type: "add", id: "rent", name: "Rent", fixed: false }],
-    ]);
+  afterEach(() => {
+    act(() => root.unmount());
+    window.matchMedia = original;
+    document.body.innerHTML = "";
+  });
+
+  const selectedName = () =>
+    document.querySelector('[aria-current="true"] .CategoryManager__nameText')?.textContent;
+
+  it("shows the list and the first category's detail side by side", () => {
+    expect(document.querySelector('[aria-label="Active categories"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="Rename Food"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="Back to categories"]')).toBeNull();
+    expect(selectedName()).toBe("Food");
+  });
+
+  it("switches the detail to the tapped row", () => {
+    act(() =>
+      Array.from(document.querySelectorAll<HTMLButtonElement>(".CategoryManager__select"))
+        .find((b) => b.textContent?.includes("Transport"))!
+        .click(),
+    );
+    expect(document.querySelector('[aria-label="Rename Transport"]')).not.toBeNull();
+    expect(selectedName()).toBe("Transport");
   });
 });

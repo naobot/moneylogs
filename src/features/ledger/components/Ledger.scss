@@ -334,25 +334,50 @@
 .CategoryManager {
   min-width: min(28em, 90vw);
 
+  // Inputs sit in a framed sheet box here, not on a dashed underline: rows and sections
+  // are divided by dashed lines, and an underlined field would read as another divider.
+  .LineInput {
+    padding: 0.2em 0.4em;
+    background: var(--sheet);
+    border: var(--border-hairline) solid var(--ink);
+
+    &:focus {
+      outline: var(--border-hairline) solid var(--ink);
+    }
+
+    &:disabled {
+      opacity: var(--opacity-disabled);
+    }
+  }
+
   &__list {
     list-style: none;
     margin: 0 0 1em;
     padding: 0;
+
+    // Archived: dotted, for things in the past.
+    &--archived .CategoryManager__row {
+      border-bottom-style: dotted;
+    }
   }
 
   &__row {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.5em;
-    padding: 0.35em 0;
+    gap: 0.25em;
     border-bottom: var(--border-hairline) dashed var(--ink);
     background: var(--paper);
 
     &--dragging {
       position: relative;
       z-index: 1;
-      outline: 2px solid var(--ink);
+      outline: var(--border-rule) solid var(--ink);
+    }
+
+    // The category open beside the list (wide layout): inverted.
+    &--selected {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
     }
   }
 
@@ -371,80 +396,60 @@
 
     &:focus-visible {
       opacity: 1;
-      outline: var(--border-hairline) dashed var(--ink);
+      outline: var(--border-hairline) dashed currentColor;
     }
   }
 
-  &__name {
+  // The whole row (bar the handle) opens the category.
+  &__select {
     flex: 1;
     min-width: 0;
-    text-align: left;
-    font: inherit;
-    font-weight: 700;
-    background: none;
-    border: none;
-    padding: 0.1em 0;
-    color: inherit;
-    cursor: text;
     display: flex;
     align-items: center;
-    gap: 0.35em;
+    gap: 0.5em;
+    padding: 0.45em 0.25em;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
 
-    // Dashed = editable: always shown, since there's no hover on touch screens.
-    .CategoryManager__nameText {
-      min-width: 0;
-      overflow-wrap: anywhere;
-      text-decoration: underline dashed;
-      text-decoration-thickness: var(--border-hairline);
+    &:hover .CategoryManager__nameText,
+    &:focus-visible .CategoryManager__nameText {
+      text-decoration: underline;
       text-underline-offset: 0.25em;
     }
 
-    .CategoryManager__nameEdit {
-      display: inline-flex;
-      flex-shrink: 0;
-      opacity: 0.7; // muted floor
-    }
-
-    &:hover,
     &:focus-visible {
-      .CategoryManager__nameText {
-        text-decoration-style: solid;
-      }
-
-      .CategoryManager__nameEdit {
-        opacity: 1;
-      }
-    }
-
-    &--archived {
-      cursor: default;
-      font-weight: 400;
-      opacity: 0.7; // muted text floor (5.5:1)
-      text-decoration: line-through;
-
-      &:hover {
-        text-decoration: line-through;
-      }
+      outline: var(--border-hairline) dashed currentColor;
+      outline-offset: -2px;
     }
   }
 
-  &__rename {
+  &__nameText {
     flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
+    font-weight: 700;
+    overflow-wrap: anywhere;
 
-    input {
-      font: inherit;
-      font-weight: 700;
-      border-radius: var(--radius-none);
+    &--archived {
+      font-weight: 400;
+      text-decoration: line-through;
     }
   }
 
-  &__actions {
-    display: inline-flex;
-    gap: 0.25em;
-    margin-left: auto;
+  // Status read at a glance: "fixed", "30,000 JPY/mo".
+  &__tag {
+    flex-shrink: 0;
+    font-size: 0.75em;
+    opacity: 0.7; // muted text floor
+    white-space: nowrap;
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    opacity: 0.7;
   }
 
   &__add {
@@ -464,6 +469,10 @@
     font-size: 0.8em;
   }
 
+  &__back {
+    margin-bottom: 0.5em;
+  }
+
   // Saved-as-you-go status, left of Done.
   .Modal__footer {
     justify-content: space-between;
@@ -476,59 +485,6 @@
     opacity: 0.7; // muted text floor
   }
 
-  &__budgetSummary {
-    font-size: 0.75em;
-    opacity: 0.7;
-    white-space: nowrap;
-  }
-
-  // Wrapper that anchors an action's hover tip.
-  &__action {
-    display: inline-flex;
-  }
-
-  // Unframed row actions: bare icons (budget, archive) and the fixed toggle. Written as
-  // .X.RowButton so they beat the shared .RowButton frame and padding: App.scss can load
-  // after this file.
-  &__iconAction.RowButton {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.1em;
-    border: none;
-
-    // The budget field is open below the row.
-    &[aria-expanded="true"] {
-      background: var(--inverse-surface);
-      color: var(--inverse-ink);
-
-      .Icon img {
-        filter: var(--icon-filter-inverse);
-      }
-    }
-  }
-
-  // Quiet when off, full ink when on.
-  &__fixed.RowButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-    white-space: nowrap;
-    border: none;
-    opacity: 0.7; // muted text floor
-  }
-
-  &__fixed--on.RowButton {
-    opacity: 1;
-  }
-
-  // Inline budget field: its own line under the category row, right-aligned.
-  &__budget {
-    flex-basis: 100%;
-    display: flex;
-    justify-content: flex-end;
-    padding: 0.2em 0;
-  }
-
   &__subheading {
     margin: 1.5em 0 0.25em;
   }
@@ -537,6 +493,130 @@
     margin: 0 0 0.5em;
     font-size: 0.8em;
     opacity: 0.7;
+  }
+
+  // Wide screens: list | detail, split by a container rule.
+  &__panes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 0 1em;
+    align-items: start;
+  }
+
+  &--wide &__detailPane {
+    padding-left: 1em;
+    border-left: var(--border-rule) solid var(--ink);
+    min-height: 100%;
+  }
+}
+
+// A tool modal with room for two panes, from tablet width up.
+.Modal__content.CategoryManager--wide {
+  @media (min-width: constants.$breakpoint-md) {
+    max-width: 760px;
+  }
+}
+
+// One category's settings: titles on the line with their inputs, fine print at the end
+// of each section.
+.CategoryDetail {
+  &__section {
+    padding: 0.6em 0;
+    border-bottom: var(--border-hairline) dashed var(--ink);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  // Title left, input right (as in the Budgets modal's rows); wraps on narrow screens.
+  &__field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25em 1em;
+    padding: 0.2em 0;
+  }
+
+  &__label {
+    font-weight: 700;
+  }
+
+  &__name {
+    flex: 1 1 10em;
+    min-width: 0;
+    max-width: 16em;
+    font-weight: 700;
+    border-radius: var(--radius-none);
+  }
+
+  // Fine print, left-aligned under everything in its section.
+  &__help {
+    margin: 0.4em 0 0;
+    font-size: 0.8em;
+    text-align: left;
+    opacity: 0.7; // muted text floor
+  }
+
+  // A plain checkbox, right-aligned like the other inputs.
+  &__check {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  &__budgets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__budget {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  // [+ mixed currency budget]: a quiet text toggle for the drawer below it.
+  &__drawerToggle {
+    display: block;
+    margin: 0.35em 0 0 auto;
+    padding: 0;
+    font: inherit;
+    font-size: 0.85em;
+    color: var(--ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+
+  &__drawer {
+    margin-top: 0.25em;
+    padding-top: 0.25em;
+    border-top: var(--border-hairline) dashed var(--ink);
+  }
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
+  }
+
+  // Told apart by frame, not colour: dotted = moving it to the past; 3px = warning.
+  // Written as .X.Button--secondary to beat the shared frame (App.scss may load later).
+  &__archive.Button--secondary {
+    border-style: dotted;
+  }
+
+  &__delete.Button--secondary {
+    border-width: var(--border-heavy);
   }
 }
 

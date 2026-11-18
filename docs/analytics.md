@@ -39,6 +39,8 @@ amounts or free text.
 | `add_entry`             | Entry added to a financial log          | `shared_log`, `has_note`                         |
 | `import_entries`        | CSV import finished                     | `source`, `created`                              |
 | `no_spend_day`          | No-spend day confirmed                  | —                                                |
+| `delete_category`       | Category deleted from a financial log   | —                                                |
+| `remove_budget`         | A category's monthly budget removed     | —                                                |
 | `update_profile`        | Profile saved on /me                    | —                                                |
 | `send_friend_request`   | Friend request sent                     | —                                                |
 | `accept_friend`         | Friend request accepted                 | —                                                |
