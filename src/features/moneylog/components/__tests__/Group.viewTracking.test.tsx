@@ -30,8 +30,8 @@ vi.mock("@/contexts/TutorialContext", () => ({
     onNewEntryClicked: vi.fn(),
   }),
 }));
-vi.mock("@/hooks/useReadTracking", () => ({
-  useReadTracking: () => ({ trackUserAction: vi.fn() }),
+vi.mock("@/utils/analytics", () => ({
+  track: vi.fn(),
 }));
 vi.mock("@/hooks/useUserQuery", () => ({
   useUserQuery: () => ({ updateViewTrackingFn: state.updateViewTrackingFn }),

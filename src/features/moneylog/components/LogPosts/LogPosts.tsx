@@ -12,7 +12,7 @@ import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { UserData } from "@/hooks/useGetUserInfo";
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 import { useGetComments } from "@/hooks/useGetLogPostComments";
 import { commentsAreUnseen, postHasUnreadComments } from "@/utils/unread";
 
@@ -414,7 +414,6 @@ const LogPosts = memo(
     const [isWeeklyView, _isWeeklyViewSet] = useState(false);
     const { markCommentsAsViewedFn } = useUserQuery();
     const { user: loggedInUser } = useCurrentUser();
-    const { trackUserAction } = useReadTracking();
     const { prefs, formatDate } = useDateFormat();
 
     const calendarMarkedPosts = useMemo(() => {
@@ -578,6 +577,7 @@ const LogPosts = memo(
         const isNewPost = selectedPostRef.current?.id !== post.id;
         const shouldRefresh = (isNewPost || hasUnreadComments) && !isReadOnly;
 
+        if (isNewPost) track("open_comments", { has_comments: !!post.commentCount });
         setShouldForceFresh(shouldRefresh);
         setSelectedPost(post);
       },
@@ -640,11 +640,6 @@ const LogPosts = memo(
         selectedPost?.commentCount &&
         selectedPost.commentCount > 0
       ) {
-        trackUserAction("view_post", {
-          post_id: selectedPost?.id,
-          user_id: loggedInUser?.id,
-        });
-
         // Only write when there are actually new comments to mark as read.
         if (commentsAreUnseen(selectedPost, loggedInUser.commentSubscriptions)) {
           markCommentsAsViewedFn({
@@ -653,7 +648,7 @@ const LogPosts = memo(
           });
         }
       }
-    }, [selectedPost?.id, loggedInUser?.userId, trackUserAction]);
+    }, [selectedPost?.id, loggedInUser?.userId]);
 
     return (
       <>

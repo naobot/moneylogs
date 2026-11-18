@@ -6,7 +6,7 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { useMutation } from "@/hooks/useFirebase";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { syncPersonalLedgerCurrency } from "@/hooks/useLedgerQuery";
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 
 import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
@@ -25,7 +25,6 @@ import AvatarEditorModal from "./avatar/AvatarEditorModal";
 /** Avatar, display name, location and timezone. */
 export const ProfileSection = () => {
   const { showToast } = useToastContext();
-  const { trackUserAction } = useReadTracking();
   const { user } = useCurrentUser();
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newDisplayLocation, setNewDisplayLocation] = useState("");
@@ -68,9 +67,7 @@ export const ProfileSection = () => {
         }),
       );
 
-      trackUserAction("update_user_profile", {
-        user_id: user?.id,
-      });
+      track("update_profile");
     },
   );
 
@@ -137,7 +134,7 @@ export const ProfileSection = () => {
             Your profile link. Send it to people you'd like to add as friends, or{" "}
             <Link to={`/u/${user.id}`}>see your profile</Link>.
           </p>
-          <CopyTextArea value={shareUrl(`/u/${user.id}`)} />
+          <CopyTextArea value={shareUrl(`/u/${user.id}`)} shareContent="profile" />
         </div>
       )}
       {editingAvatar && <AvatarEditorModal isOpen onClose={() => setEditingAvatar(false)} />}

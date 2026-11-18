@@ -15,7 +15,7 @@ import MDEditor, { commands, type ExecuteState, TextAreaTextApi } from "@uiw/rea
 import { useCurrentUser } from "@/contexts";
 import { Currency } from "@/types/user";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 import { ImageValidationError, useImageUpload } from "@/hooks/useImageUpload";
 import { reportError } from "@/utils/reportError";
 import { useToastContext } from "@/hooks/useToastContext";
@@ -92,7 +92,6 @@ const LogPostEditor = forwardRef(
     const fileInputRef = useRef<HTMLInputElement>(null);
     const editorApiRef = useRef<TextAreaTextApi | null>(null);
 
-    const { trackUserAction } = useReadTracking();
     const { uploadInlineImage, isUploading } = useImageUpload();
     const { showToast } = useToastContext();
     const { activeEditorTip, dismissTip, completeTutorial } = useTutorial();
@@ -177,10 +176,7 @@ const LogPostEditor = forwardRef(
           },
         });
 
-        trackUserAction("new_comment", {
-          user_id: userId,
-          post_id: postId,
-        });
+        track("add_post", { travelling: !!newTimezone });
 
         storage.remove(DRAFT_KEY);
         completeTutorial();

@@ -215,7 +215,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           <h4>or share a link</h4>
           <p>Send the following URL to anyone you want to share this financial log with.</p>
           <p>Members can see every entry in this log, and add their own.</p>
-          <CopyTextArea value={shareUrl(`/l/${ledger.id}/invite`)} />
+          <CopyTextArea value={shareUrl(`/l/${ledger.id}/invite`)} shareContent="log_invite" />
           <ShareLinkButton
             title={`Join ${ledger.title} on moneylogs`}
             url={shareUrl(`/l/${ledger.id}/invite`)}

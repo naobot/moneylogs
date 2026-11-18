@@ -16,6 +16,7 @@ import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnsee
 import { chooseFriend } from "./chooseFriend";
 import { giftLeftLine } from "./giftCopy";
 import "./GiftModal.scss";
+import { track } from "@/utils/analytics";
 
 type GiftModalProps = {
   /** The knick-knack picked in the drawer; one copy of it is given. */
@@ -61,6 +62,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
     setPending(true);
     try {
       await giftKnickKnack(find.id, chosenFriend);
+      track("gift_knickknack");
       showToast(`Gave 1 ${itemName} to ${nameOf(chosenFriend)}`, "success");
       onGiven?.();
       onClose();

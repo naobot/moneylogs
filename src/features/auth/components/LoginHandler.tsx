@@ -7,6 +7,7 @@ import ControlledInput from "@/components/ControlledInput";
 import Button from "@/components/Button";
 import AuthErrorMessage from "@/features/auth/components/AuthErrorMessage";
 import { getLoginErrorMessage } from "@/features/auth/loginErrors";
+import { track } from "@/utils/analytics";
 
 type LoginHandlerProps = {
   redirectTo?: string;
@@ -27,6 +28,7 @@ const LoginHandler = ({ redirectTo, onForgotPassword }: LoginHandlerProps) => {
     setLoginError("");
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
+        track("login", { method: "email" });
         setLoginPending(false);
         void navigate(redirectTo ?? "/");
       })

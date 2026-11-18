@@ -13,6 +13,7 @@ import Layout from "@/features/layout/Layout";
 import GlobalErrorHandler from "@/utils/errorHandler";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
+import { PageViewTracker } from "@/hooks/usePageViewTracking";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { useDailyCheckIn } from "@/features/ledger/buddy/knickknacks/checkIn";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -104,6 +105,7 @@ const App = () => {
   return (
     <Router>
       <NativeBridge />
+      <PageViewTracker />
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />
       )}

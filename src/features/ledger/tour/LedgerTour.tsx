@@ -9,6 +9,7 @@ import { personalLedgerId } from "@/utils/personalLedger";
 import type { Ledger } from "@/types/ledger";
 
 import { ledgerTourSteps, LedgerTourTarget, shouldShowLedgerTour } from "./tourRules";
+import { track } from "@/utils/analytics";
 
 type LedgerTourValue = {
   /** The target the current tip points at, or null when no tour is running. */
@@ -73,8 +74,10 @@ export const LedgerTourProvider = ({
     trackStep("ledger_tour", isLast ? "finished tour" : "next tour tip", {
       target: current.target,
     });
-    if (isLast) complete();
-    else setStep((s) => s + 1);
+    if (isLast) {
+      track("tutorial_complete", { tutorial: "ledger_tour" });
+      complete();
+    } else setStep((s) => s + 1);
   };
   const skip = () => {
     trackStep("ledger_tour", "skipped tour", { target: current.target });

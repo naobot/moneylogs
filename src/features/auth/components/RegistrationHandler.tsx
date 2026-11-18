@@ -17,6 +17,7 @@ import {
 } from "@/features/auth/registrationErrors";
 import { reportError, trackStep } from "@/utils/reportError";
 import { placeholderDisplayName, welcomePath } from "@/features/auth/authRedirect";
+import { track } from "@/utils/analytics";
 
 const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
   const [email, setEmail] = useState("");
@@ -43,6 +44,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       });
 
       trackStep("registration", "created account");
+      track("sign_up", { method: "email" });
 
       await sendEmailVerification(auth.currentUser!);
       await updateProfile(auth.currentUser!, { displayName });

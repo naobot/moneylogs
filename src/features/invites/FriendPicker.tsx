@@ -12,6 +12,7 @@ import Button from "@/components/Button";
 import { inviteFriendsToLog } from "./logInvites";
 import { pickableFriends, toggleFriend } from "./friendPicking";
 import "./invites.scss";
+import { logKindParam, track } from "@/utils/analytics";
 
 type FriendPickerProps = {
   selected: ReadonlyArray<string>;
@@ -107,6 +108,8 @@ export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFr
       setInvited((prev) => [...prev, ...result.invited]);
       setSelected([]);
       const n = result.invited.length;
+      if (n)
+        track("invite_friends_to_log", { log_kind: logKindParam(logKind), invited_friends: n });
       showToast(n ? `Invite${n > 1 ? "s" : ""} sent` : "Nobody new to invite", "success");
     } catch (err) {
       reportError(err, { feature: "log_invites", action: "invite_friends", tags: { logKind } });

@@ -5,6 +5,7 @@ import cx from "classnames";
 import { readDrawerOpen, writeDrawerOpen } from "@/utils/drawerState";
 
 import "./Drawer.scss";
+import { track } from "@/utils/analytics";
 
 type DrawerProps = {
   /** Stable id: the element id (so `#id` links open it) and the storage key. */
@@ -42,6 +43,7 @@ export const Drawer = ({ id, title, summary, defaultOpen = false, children }: Dr
     if (next === open) return;
     setOpen(next);
     writeDrawerOpen(id, next);
+    if (next) track("open_drawer", { drawer: id });
   };
 
   return (
