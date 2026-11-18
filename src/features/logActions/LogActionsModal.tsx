@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { httpsCallable } from "firebase/functions";
 import { FirebaseError } from "firebase/app";
@@ -32,6 +32,8 @@ type LogActionsModalProps = {
    * managing from inside the log; list pages pass this to stay where they are.
    */
   onDeleted?: () => void;
+  /** Log-specific settings, shown between Archive and Delete (e.g. a ledger's currency). */
+  settings?: ReactNode;
 };
 
 const deleteLogCallable = httpsCallable<{ kind: LogKind; id: string }, { deleted: boolean }>(
@@ -65,6 +67,7 @@ export const LogActionsModal = ({
   kind,
   creatorUid,
   onDeleted,
+  settings,
 }: LogActionsModalProps) => {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
@@ -221,6 +224,8 @@ export const LogActionsModal = ({
           />
           {failed && <p className="error-message">Couldn't update that. Please try again.</p>}
         </section>
+
+        {settings}
 
         {isCreator && (
           <section className="LogActions__section LogActions__danger">

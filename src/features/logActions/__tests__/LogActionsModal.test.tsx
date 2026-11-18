@@ -74,6 +74,23 @@ describe("LogActionsModal", () => {
     expect(title.querySelector(".keep-case")!.textContent).toBe("Tokyo");
   });
 
+  it("shows log-specific settings when given", () => {
+    archivedLogs = {};
+    act(() =>
+      root.render(
+        <LogActionsModal
+          isOpen
+          onClose={onClose}
+          logId="l1"
+          logTitle="Trip"
+          kind="financial"
+          settings={<section className="LogActions__section">currency here</section>}
+        />,
+      ),
+    );
+    expect(document.body.textContent).toContain("currency here");
+  });
+
   it("archives for the current user only", async () => {
     archivedLogs = {};
     render();
