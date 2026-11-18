@@ -53,7 +53,7 @@ export const InviteLink = () => {
         <p>Your invite link couldn't be loaded. Please try again later.</p>
       ) : code ? (
         <>
-          <CopyTextArea value={shareUrl(invitePath(code))} />
+          <CopyTextArea value={shareUrl(invitePath(code))} shareContent="friend_invite" />
           <div className="InviteLink__actions">
             <RowButton disabled={resetting} onClick={() => void reset()}>
               reset link

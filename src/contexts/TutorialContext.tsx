@@ -1,5 +1,6 @@
 import { createContext, useContext, PropsWithChildren, useState } from "react";
 import { storage } from "@/platform";
+import { track } from "@/utils/analytics";
 
 const STORAGE_KEY = "ML__tutorial_complete";
 
@@ -42,6 +43,8 @@ export const TutorialProvider = ({ children }: PropsWithChildren) => {
   const dismissTip = () => setEditorStep((prev) => prev + 1);
 
   const completeTutorial = () => {
+    // Called on every new post; only the first one finishes the tutorial.
+    if (!complete) track("tutorial_complete", { tutorial: "first_post" });
     storage.set(STORAGE_KEY, "1");
     setComplete(true);
     setEditorTipsActive(false);

@@ -178,6 +178,7 @@ Linting and formatting run automatically on staged files pre-commit.
 
 - Run `vp check` against staged files only before a commit. (`staged: { "*": "vp check --fix" }`)
 - Write accompanying unit tests to any new features that don't require extensive mocking.
+- New user-facing actions worth counting get an event in `src/utils/analytics.ts` (`track`); aggregate only, never ids or user content. See `docs/analytics.md`.
 - For any feature touching a flow in `docs/user-states.md`, state in the PR which user states it affects and how the empty / first-run case looks; keep that page current when adding user fields or `ML__` keys.
 
 ## Testing

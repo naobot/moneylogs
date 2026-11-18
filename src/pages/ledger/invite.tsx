@@ -11,6 +11,7 @@ import { clearLogInvite } from "@/features/invites/logInvites";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import { reportError } from "@/utils/reportError";
+import { track } from "@/utils/analytics";
 
 /**
  * Non-members can't read a financial log (security rules), so the invite screen can't
@@ -43,6 +44,7 @@ export const LedgerInvitePage = () => {
         ledgerId,
         member: { uid: user.userId, userDocId: user.id },
       });
+      track("join_log", { log_kind: "financial" });
       void writeSelfNotification({
         userDocId: user.id,
         prefs: user.notificationPrefs,

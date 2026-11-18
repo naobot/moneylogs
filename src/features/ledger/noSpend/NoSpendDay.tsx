@@ -8,6 +8,7 @@ import { reportError } from "@/utils/reportError";
 import { confirmNoSpendDay, isAlreadyLogged } from "./noSpendDays";
 
 import "./NoSpendDay.scss";
+import { track } from "@/utils/analytics";
 
 export const ALREADY_LOGGED_MESSAGE = "You've logged something today already.";
 
@@ -42,6 +43,7 @@ export const NoSpendDay = ({ today, loggedToday }: { today: string; loggedToday:
     try {
       // The confirmed day arrives through the live query, which swaps the button out.
       await confirmNoSpendDay();
+      track("no_spend_day");
     } catch (error) {
       if (isAlreadyLogged(error)) {
         showToast(ALREADY_LOGGED_MESSAGE, "error");

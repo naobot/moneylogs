@@ -1,13 +1,16 @@
 import cx from "classnames";
 import { useRef, useState } from "react";
 import { copyText } from "@/platform";
+import { ShareContent, track } from "@/utils/analytics";
 
 interface CopyTextAreaProps {
   value: string;
   rows?: number;
+  /** What's being shared, for the `share` analytics event; omit to not count copies. */
+  shareContent?: ShareContent;
 }
 
-const CopyTextArea = ({ value, rows = 1 }: CopyTextAreaProps) => {
+const CopyTextArea = ({ value, rows = 1, shareContent }: CopyTextAreaProps) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [showCopiedMsg, setShowCopiedMsg] = useState(false);
 
@@ -18,6 +21,7 @@ const CopyTextArea = ({ value, rows = 1 }: CopyTextAreaProps) => {
 
       // Selected above, so if the clipboard refuses, the text is ready to copy by hand.
       void copyText(value);
+      if (shareContent) track("share", { method: "copy", content_type: shareContent });
       setShowCopiedMsg(true);
 
       setTimeout(() => {

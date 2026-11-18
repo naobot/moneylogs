@@ -4,7 +4,7 @@ import { Dispatch, Fragment, useCallback, useEffect, useMemo, useRef, useState }
 import { useCurrentUser } from "@/contexts";
 import { LogPost } from "@/types/user";
 
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { useGetComments } from "@/hooks/useGetLogPostComments";
@@ -40,7 +40,6 @@ const AllLogsDigest = ({
 }) => {
   const { markCommentsAsViewedFn } = useUserQuery();
   const { user: loggedInUser } = useCurrentUser();
-  const { trackUserAction } = useReadTracking();
 
   const memberMap = useMemo(() => {
     const result = new Map<string, FullUserData>();
@@ -145,6 +144,7 @@ const AllLogsDigest = ({
         `👆 opening comments for post ${post.id} (new: ${isNewPost}, unread: ${hasUnreadComments}, refresh: ${shouldRefresh})`,
       );
 
+      if (isNewPost) track("open_comments", { has_comments: !!post.commentCount });
       setShouldForceFresh(shouldRefresh);
       setSelectedPost(post);
     },
@@ -169,11 +169,6 @@ const AllLogsDigest = ({
       selectedPost?.commentCount &&
       selectedPost.commentCount > 0
     ) {
-      trackUserAction("view_post", {
-        post_id: selectedPost?.id,
-        user_id: loggedInUser?.id,
-      });
-
       // Only write when there are actually new comments to mark as read.
       if (commentsAreUnseen(selectedPost, loggedInUser.commentSubscriptions)) {
         markCommentsAsViewedFn({
@@ -182,7 +177,7 @@ const AllLogsDigest = ({
         });
       }
     }
-  }, [selectedPost?.id, loggedInUser?.userId, trackUserAction]);
+  }, [selectedPost?.id, loggedInUser?.userId]);
 
   return (
     <>

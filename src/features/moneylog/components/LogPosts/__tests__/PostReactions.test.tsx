@@ -14,9 +14,6 @@ vi.mock("@/hooks/useLogPostQuery", () => ({
 vi.mock("@/hooks/useToastContext", () => ({
   useToastContext: () => ({ showToast }),
 }));
-vi.mock("@/hooks/useReadTracking", () => ({
-  useReadTracking: () => ({ trackUserAction: vi.fn() }),
-}));
 // The full palette is lazy-loaded third-party UI; these tests cover our own parts.
 vi.mock("@/features/moneylog/components/LogPosts/EmojiPickerPanel", () => ({
   default: () => <div className="EmojiPickerStub" />,

@@ -5,7 +5,7 @@ import { LogPost } from "@/types/user";
 import { useCurrentUser } from "@/contexts";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { useToastContext } from "@/hooks/useToastContext";
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 import { isMousePointer as isMouse, useHoverIntent } from "@/hooks/useHoverIntent";
 import Icon from "@/components/Icon";
 import Popover from "@/components/Popover";
@@ -50,7 +50,6 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
   const { user: viewer } = useCurrentUser();
   const { toggleReactionFn } = useLogPostQuery();
   const { showToast } = useToastContext();
-  const { trackUserAction } = useReadTracking();
   const memberNames = useMemberNames();
 
   const [panel, setPanel] = useState<Panel>(null);
@@ -83,7 +82,7 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
     }
     try {
       await toggleReactionFn({ logPostId: post.id, userDocId: viewerId, emoji, add });
-      if (add) trackUserAction("new_reaction");
+      if (add) track("add_reaction");
     } catch (error) {
       reportError(error, {
         feature: "reactions",

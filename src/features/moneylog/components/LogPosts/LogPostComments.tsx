@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/contexts";
 import { Comment } from "@/types/user";
 
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
-import { useReadTracking } from "@/hooks/useReadTracking";
+import { track } from "@/utils/analytics";
 
 import Button from "@/components/Button";
 import { markdownColorMode, useTheme } from "@/utils/theme";
@@ -44,7 +44,6 @@ const LogPostComments = ({
   const theme = useTheme();
   const [newCommentContent, newCommentContentSet] = useState<string | null>();
   const { user } = useCurrentUser();
-  const { trackUserAction } = useReadTracking();
 
   const commentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -63,10 +62,7 @@ const LogPostComments = ({
 
       refreshComments(postId);
 
-      trackUserAction("new_comment", {
-        user_id: user?.id,
-        post_id: postId,
-      });
+      track("add_comment");
 
       newCommentContentSet("");
     } catch (err) {

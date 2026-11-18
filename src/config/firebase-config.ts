@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics, setDefaultEventParameters } from "firebase/analytics";
+import { initializeAnalytics, logEvent, setDefaultEventParameters } from "firebase/analytics";
 import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore";
 import {
   connectAuthEmulator,
@@ -10,6 +10,7 @@ import {
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { isNative } from "@/platform/native";
+import { setAnalyticsSink } from "@/utils/analytics";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -39,7 +40,19 @@ const appVersion = __APP_VERSION__ ?? "unknown";
 const isDevelopment = environment === "development";
 
 // Firebase Analytics (gtag) only runs on http(s) pages, so native builds go without.
-const analytics = isNative() ? null : getAnalytics(app);
+// Page views are sent by PageViewTracker with the route pattern (no ids), so gtag's own
+// first page view is off; turn off "page changes based on browser history events" in the
+// GA web stream's enhanced measurement too (see docs/analytics.md). Anything but
+// production is sent as debug: visible in GA's DebugView, kept out of the reports.
+// (gtag treats any debug_mode value as on, so it's only set when wanted.)
+const analytics = isNative()
+  ? null
+  : initializeAnalytics(app, {
+      config: {
+        send_page_view: false,
+        ...(environment === "production" ? {} : { debug_mode: true }),
+      },
+    });
 
 if (analytics) {
   // Set default parameters for all analytics events
@@ -48,6 +61,7 @@ if (analytics) {
     app_version: appVersion,
     build_type: isDevelopment ? "development" : "production",
   });
+  setAnalyticsSink((event, params) => logEvent(analytics, event, params));
 }
 export { analytics };
 

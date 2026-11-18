@@ -13,6 +13,7 @@ import { Group } from "@/features/moneylog/components/Group";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import { reportError } from "@/utils/reportError";
+import { track } from "@/utils/analytics";
 
 export const InvitePage = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export const InvitePage = () => {
         addGroupToMember.mutate({ currentUserId: loggedInUser.userId, groupId }),
         addMemberToGroup.mutate({ currentUserId: loggedInUser.userId, groupId }),
       ]);
+      track("join_log", { log_kind: "social" });
       void writeSelfNotification({
         userDocId: loggedInUser.id,
         prefs: loggedInUser.notificationPrefs,

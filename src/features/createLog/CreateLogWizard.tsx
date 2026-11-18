@@ -35,6 +35,7 @@ import {
   titleError,
   WizardState,
 } from "./wizardSteps";
+import { track } from "@/utils/analytics";
 
 const initialState = (defaultCurrency: Currency): WizardState => ({
   mode: null,
@@ -135,6 +136,10 @@ export const CreateLogWizard = () => {
           groupName: title,
           logKind: "social",
         });
+        track("create_log", {
+          log_kind: "social",
+          invited_friends: friendsToInvite(state).length,
+        });
         await sendInvites(groupId, "social");
         void navigate("/", { replace: true });
       } else {
@@ -151,6 +156,10 @@ export const CreateLogWizard = () => {
           groupId: ledgerId,
           groupName: state.title.trim(),
           logKind: "ledger",
+        });
+        track("create_log", {
+          log_kind: "financial",
+          invited_friends: friendsToInvite(state).length,
         });
         await sendInvites(ledgerId, "ledger");
         void navigate(`/l/${ledgerId}`, { replace: true });

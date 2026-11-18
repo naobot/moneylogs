@@ -32,6 +32,7 @@ import { decodeBytes } from "./text";
 import { ImportSource, SkipReason } from "./types";
 
 import "./ImportModal.scss";
+import { track } from "@/utils/analytics";
 
 const SOURCE_LABELS: Record<ImportSource, string> = {
   moneyforward: "MoneyForward ME",
@@ -251,6 +252,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
         },
       );
       trackStep("ledger_import", "Import finished", { created, skippedDuplicates });
+      track("import_entries", { source: file.source, created });
       showToast(
         skippedDuplicates > 0
           ? `Imported ${created} entries. ${skippedDuplicates} were already here.`

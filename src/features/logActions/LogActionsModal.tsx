@@ -16,6 +16,7 @@ import Button from "@/components/Button";
 
 import "./LogActions.scss";
 import { reportError } from "@/utils/reportError";
+import { logKindParam, track } from "@/utils/analytics";
 
 export type LogKind = "social" | "financial";
 
@@ -94,6 +95,7 @@ export const LogActionsModal = ({
     setDeleteError(null);
     try {
       await deletion.mutate(undefined);
+      track("delete_log", { log_kind: logKindParam(kind) });
       showToast(`Deleted ${logTitle}`, "success");
       if (onDeleted) onDeleted();
       else void navigate("/", { replace: true });
@@ -120,9 +122,11 @@ export const LogActionsModal = ({
     try {
       if (archived) {
         await unarchiveLog.mutate({ userId: user.id, logId });
+        track("archive_log", { log_kind: logKindParam(kind), archived: false });
         showToast(`Unarchived ${logTitle}`, "success");
       } else {
         await archiveLog.mutate({ userId: user.id, logId });
+        track("archive_log", { log_kind: logKindParam(kind), archived: true });
         showToast(`Archived ${logTitle}`, "success");
       }
       onClose();

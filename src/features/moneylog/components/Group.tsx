@@ -16,7 +16,6 @@ import { ActiveLog } from "@/features/moneylog/components/ActiveLog";
 import { useGetGroupUsers } from "@/hooks/useGetGroupUsers";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { Group as GroupType } from "@/types/user";
-import { useReadTracking } from "@/hooks/useReadTracking";
 import { useGetLogPosts } from "@/hooks/useGetLogPosts";
 import { useUserQuery } from "@/hooks/useUserQuery";
 import { useNow } from "@/hooks/useNow";
@@ -56,7 +55,6 @@ export const Group = ({
   const { user: loggedInUser } = useCurrentUser();
   // const { pathname } = useLocation()
   const { updateViewTrackingFn } = useUserQuery();
-  const { trackUserAction } = useReadTracking();
   const { formatShortDate, formatTime, formatDateTime } = useDateFormat();
   const { showNewEntryTip, dismissNewEntryTip, onNewEntryClicked } = useTutorial();
   const { showToast } = useToastContext();
@@ -212,13 +210,6 @@ export const Group = ({
   }, [endingSoon]);
 
   useEffect(() => {
-    trackUserAction("view_group", {
-      user_id: loggedInUser?.id,
-      group_id: groupId,
-    });
-  }, [groupId, trackUserAction]);
-
-  useEffect(() => {
     const updateViewTracking = async () => {
       // Runs on completed (read-only) groups too: a post notification left unread
       // when the group ended can still be cleared by viewing. The memberHasUnreadPosts
@@ -256,11 +247,6 @@ export const Group = ({
           userId: viewingUserDocRefId,
           logGroupId: groupId,
           viewedUserId: viewedUserDocRefId,
-        });
-
-        trackUserAction("update_user_last_viewed", {
-          user_id: loggedInUser?.id,
-          group_id: groupId,
         });
       } catch (error) {
         reportError(error, {
@@ -497,7 +483,7 @@ export const Group = ({
               Send the following URL to those you want to invite to participate in this log group.
             </p>
             <p>Do not share the group URL with anyone you do not want participating!</p>
-            <CopyTextArea value={shareUrl(`/g/${groupId}/invite`)} />
+            <CopyTextArea value={shareUrl(`/g/${groupId}/invite`)} shareContent="log_invite" />
             <ShareLinkButton
               title={`Join ${group.title} on moneylogs`}
               url={shareUrl(`/g/${groupId}/invite`)}

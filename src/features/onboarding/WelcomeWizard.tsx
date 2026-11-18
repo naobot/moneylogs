@@ -32,6 +32,7 @@ import {
 } from "./welcomeSteps";
 
 import "@/components/ProfileFields.scss";
+import { track } from "@/utils/analytics";
 
 const guessTimezone = (): string => {
   try {
@@ -141,6 +142,7 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
       trackStep("onboarding", "finished welcome step", { step, index: stepIndex });
       if (isLast) {
         trackStep("onboarding", "finished welcome wizard", { toInvite: !!next });
+        track("tutorial_complete", { tutorial: "welcome" });
         void navigate(destination, { replace: true });
         return;
       }

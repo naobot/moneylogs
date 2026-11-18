@@ -10,6 +10,7 @@ import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsStrip } from "./LedgerStats";
 import { NoSpendDay } from "@/features/ledger/noSpend/NoSpendDay";
 import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
+import { track } from "@/utils/analytics";
 
 type LedgerProps = {
   ledger: LedgerType;
@@ -45,6 +46,7 @@ const LedgerEntries = ({
       input,
       author: { uid: user.userId, userDocId: user.id, displayName: user.displayName },
     });
+    track("add_entry", { shared_log: isShared, has_note: !!input.note?.trim() });
     // A first entry means they've got the hang of it.
     if (tour.activeTarget) tour.complete();
     // Logged into another month (e.g. a late receipt): jump there so it's visible.

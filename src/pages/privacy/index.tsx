@@ -46,8 +46,10 @@ export const Privacy = () => (
         to diagnose bugs, with text and images masked. The apps don't record replays.
       </li>
       <li>
-        <strong>Usage (website only):</strong> Google Analytics for Firebase counts page views and a
-        few actions, such as reading a log, to see which features are used.
+        <strong>Usage (website only):</strong> Google Analytics for Firebase counts page views (by
+        kind of page, not which log) and actions such as adding an entry or a comment, to see which
+        features are used. It isn't sent your account id, log or post ids, names, amounts or
+        anything you write.
       </li>
       <li>
         <strong>On your device:</strong> display preferences, drafts and short-lived caches are kept
