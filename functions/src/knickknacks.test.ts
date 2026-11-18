@@ -56,11 +56,17 @@ describe("knick-knacks (functions)", () => {
       "pine_branch",
       "holly",
       "snowdrop",
+      "mushroom",
+      "pebble",
+      "feather",
     ]);
     expect(findableIn({ month: 7, timezone: "America/Toronto" })).toEqual([
       "daisy",
       "sunflower",
       "dragonfly",
+      "mushroom",
+      "pebble",
+      "feather",
     ]);
     expect(findableIn({ month: 7, timezone: "Australia/Sydney" })).toEqual([
       "pinecone",
@@ -68,6 +74,9 @@ describe("knick-knacks (functions)", () => {
       "pine_branch",
       "holly",
       "snowdrop",
+      "mushroom",
+      "pebble",
+      "feather",
     ]);
   });
 

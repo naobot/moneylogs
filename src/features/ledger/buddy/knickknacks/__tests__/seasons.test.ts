@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vite-plus/test";
 import { hemisphereOf, seasonOf } from "../seasons";
-import { findableIn } from "../catalog";
+import { findableIn, KNICK_KNACKS } from "../catalog";
+
+/** Super-common finds turn up in every season, after the seasonal ones. */
+const ALL_YEAR = ["mushroom", "pebble", "feather"];
 
 describe("hemisphereOf", () => {
   it.each([
@@ -46,15 +49,18 @@ describe("seasonOf", () => {
 
 describe("findableIn", () => {
   it("turns up the autumn set in a northern October", () => {
-    expect(findableIn({ month: 10, timezone: "America/Toronto" }).sort()).toEqual([
-      "acorn",
-      "apple",
-      "chestnut",
-      "maple_leaf",
-      "osmanthus",
-      "persimmon",
-      "pinecone",
-    ]);
+    expect(findableIn({ month: 10, timezone: "America/Toronto" }).sort()).toEqual(
+      [
+        "acorn",
+        "apple",
+        "chestnut",
+        "maple_leaf",
+        "osmanthus",
+        "persimmon",
+        "pinecone",
+        ...ALL_YEAR,
+      ].sort(),
+    );
   });
 
   it("turns up the winter set, and the pinecone, in a northern January", () => {
@@ -64,6 +70,7 @@ describe("findableIn", () => {
       "pine_branch",
       "holly",
       "snowdrop",
+      ...ALL_YEAR,
     ]);
   });
 
@@ -72,20 +79,33 @@ describe("findableIn", () => {
       "cherry_blossom",
       "tulip",
       "lilac",
+      ...ALL_YEAR,
     ]);
     expect(findableIn({ month: 1, timezone: "Australia/Sydney" })).toEqual([
       "daisy",
       "sunflower",
       "dragonfly",
+      ...ALL_YEAR,
     ]);
-    expect(findableIn({ month: 4, timezone: "Australia/Sydney" }).sort()).toEqual([
-      "acorn",
-      "apple",
-      "chestnut",
-      "maple_leaf",
-      "osmanthus",
-      "persimmon",
-      "pinecone",
-    ]);
+    expect(findableIn({ month: 4, timezone: "Australia/Sydney" }).sort()).toEqual(
+      [
+        "acorn",
+        "apple",
+        "chestnut",
+        "maple_leaf",
+        "osmanthus",
+        "persimmon",
+        "pinecone",
+        ...ALL_YEAR,
+      ].sort(),
+    );
+  });
+
+  it("turns up the super-common finds in every season, both hemispheres", () => {
+    for (const timezone of ["America/Toronto", "Australia/Sydney"])
+      for (let month = 1; month <= 12; month++)
+        expect(findableIn({ month, timezone })).toEqual(expect.arrayContaining(ALL_YEAR));
+    for (const id of ALL_YEAR)
+      expect(KNICK_KNACKS[id as keyof typeof KNICK_KNACKS].rarity).toBe("super_common");
   });
 });
