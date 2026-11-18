@@ -10,6 +10,7 @@ import { arrangeDashboard } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
+import { showNavWordmark } from "../navWordmark";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 
 declare const __APP_VERSION__: string;
@@ -42,9 +43,7 @@ const MainNav = () => {
   const { signOut, isPending: signOutPending } = useSignOut();
 
   const showLogs = isLoggedIn && (ledgers.length > 0 || isLoading || currentGroups.length > 0);
-  // The signed-out login page has its own "moneylogs" heading; a second one in the
-  // corner just repeats it.
-  const showWordmark = isLoggedIn || location.pathname !== "/login";
+  const showWordmark = showNavWordmark(isLoggedIn, location.pathname);
 
   // Three parts. On desktop they sit in one row (nav, logs, brand). On phones the brand
   // and nav share the top row, and the logs get a scrollable row of their own beneath.
