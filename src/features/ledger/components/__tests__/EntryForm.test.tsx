@@ -139,6 +139,15 @@ describe("EntryForm", () => {
     expect(field("Category").value).toBe("food");
   });
 
+  it("follows a change to the log's default currency while adding", () => {
+    render();
+    render({ initial: { ...INITIAL, currency: "USD" } });
+    const currency = Array.from(container.querySelectorAll("select")).find((s) =>
+      Array.from(s.options).some((o) => o.value === "USD"),
+    )!;
+    expect(currency.value).toBe("USD");
+  });
+
   it("keeps an entry's archived category selectable when editing it", () => {
     render({ mode: "edit", initial: { ...INITIAL, amount: "5", categoryId: "old" } });
     const select = field("Category") as HTMLSelectElement;

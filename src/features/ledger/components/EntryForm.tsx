@@ -49,6 +49,11 @@ export const EntryForm = ({
     if (mode === "add") setValues((v) => ({ ...v, date: initial.date }));
   }, [initial.date, mode]);
 
+  // So does a change to the log's default currency (it updates live).
+  useEffect(() => {
+    if (mode === "add") setValues((v) => ({ ...v, currency: initial.currency }));
+  }, [initial.currency, mode]);
+
   // If the selected category is archived or deleted while adding, fall back to the first
   // active one (the ledger's categories update live).
   useEffect(() => {

@@ -23,6 +23,7 @@ import CategoryManager from "./CategoryManager";
 import BudgetManager from "./BudgetManager";
 import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
+import LedgerCurrencySection from "./LedgerCurrencySection";
 import { creatorUid } from "@/utils/logOwnership";
 import { shareUrl } from "@/utils/shareUrl";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
@@ -180,6 +181,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         logTitle={ledger.title}
         kind="financial"
         creatorUid={creatorUid(ledger, "financial")}
+        settings={<LedgerCurrencySection ledger={ledger} />}
       />
       <CategoryManager
         isOpen={showCategories}

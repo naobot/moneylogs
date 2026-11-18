@@ -142,12 +142,25 @@ export const useLedgerQuery = () => {
     return true;
   };
 
+  // Where new entries start; existing entries keep the currency they were logged in.
+  const updateLedgerCurrencyFn = async ({
+    ledgerId,
+    defaultCurrency,
+  }: {
+    ledgerId: string;
+    defaultCurrency: Currency;
+  }): Promise<void> => {
+    await updateDoc(doc(db, "ledgers", ledgerId), { defaultCurrency });
+  };
+
   return {
     createLedger: useMutation(createLedgerFn),
     joinLedger: useMutation(joinLedgerFn),
     updateLedgerTitle: useMutation(updateLedgerTitleFn),
+    updateLedgerCurrency: useMutation(updateLedgerCurrencyFn),
     createLedgerFn,
     joinLedgerFn,
     updateLedgerTitleFn,
+    updateLedgerCurrencyFn,
   };
 };
