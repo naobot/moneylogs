@@ -14,12 +14,15 @@ import {
   setDisplayPrefs,
 } from "@/utils/displayPrefs";
 import {
+  ColourTheme,
   COLOUR_THEMES,
   isColourTheme,
   markdownColorMode,
   setTheme,
   Theme,
+  THEME_FAMILIES,
   THEME_LABELS,
+  themesInFamily,
   useLastColourTheme,
   useTheme,
 } from "@/utils/theme";
@@ -77,6 +80,45 @@ const Segmented = <T extends string>({
 );
 
 /**
+ * The colour themes as swatches, grouped by family. Each swatch wears its own theme
+ * (data-theme scopes that theme's inks to the swatch), so it previews the real pair.
+ */
+const ColourSwatches = ({
+  value,
+  onChange,
+}: {
+  value: ColourTheme | null;
+  onChange: (theme: ColourTheme) => void;
+}) => (
+  <div className="DisplaySection__row DisplaySection__row--top">
+    <span className="DisplaySection__label">Colour</span>
+    <div className="ThemeSwatches" role="group" aria-label="Colour">
+      {THEME_FAMILIES.map((family) => (
+        <div key={family} className="ThemeSwatches__family">
+          <span className="ThemeSwatches__family-name">{family}</span>
+          <div className="ThemeSwatches__grid">
+            {themesInFamily(family).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`ThemeSwatch${value === id ? " ThemeSwatch--active" : ""}`}
+                aria-pressed={value === id}
+                onClick={() => onChange(id)}
+              >
+                <span className="ThemeSwatch__chip" data-theme={id} aria-hidden="true">
+                  Aa
+                </span>
+                <span className="ThemeSwatch__label">{THEME_LABELS[id]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/**
  * Viewing preferences remembered on this device: theme (Paper, the last colour theme as
  * a star, or Night shift, plus a row picking the colour theme), how dates and times read, and the size and alignment of entry text. A sample entry shows the
  * result live.
@@ -120,13 +162,7 @@ export const DisplaySection = () => {
         </div>
       </div>
 
-      <Segmented
-        label="Colour"
-        options={COLOUR_THEMES}
-        value={isColourTheme(theme) ? theme : null}
-        labelFor={(colour) => THEME_LABELS[colour]}
-        onChange={setTheme}
-      />
+      <ColourSwatches value={isColourTheme(theme) ? theme : null} onChange={setTheme} />
       <Segmented
         label="Clock"
         options={CLOCKS}
