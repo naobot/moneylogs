@@ -52,7 +52,7 @@ type LedgerShellProps = {
  */
 export const LedgerShell = (props: LedgerShellProps) => (
   // The first-run tour points at the add form, so it only runs on the entries view.
-  <LedgerTourProvider ledgerId={props.ledger.id} enabled={props.view === "entries"}>
+  <LedgerTourProvider ledger={props.ledger} enabled={props.view === "entries"}>
     <LedgerShellFrame {...props} />
   </LedgerTourProvider>
 );
