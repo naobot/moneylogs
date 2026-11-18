@@ -14,9 +14,9 @@ import {
   MonthAggregate,
 } from "./ledgerAggregate";
 import { isImportCreate } from "./ledgerImportPlan";
-import { BudgetCategory, isCurrentMonth } from "./ledgerBudget";
+import { isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
-import { maybeFindKnickKnack } from "./knickknackFind";
+import { takeDailyChance } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
 import { reportError, withSentry } from "./sentry";
 
@@ -70,7 +70,7 @@ export const alertBudgetsIfCurrent = async ({
 
 /**
  * What logging spending earns its author: today's check-in (and the copper coin for a first
- * entry), then the buddy's roll of the day for a knick-knack. Both count once per day, so
+ * entry), then the day's entry roll for a knick-knack. Both count once per day, so
  * calling this once for a whole import earns the same as logging by hand. Best-effort:
  * failures are reported, never thrown.
  */
@@ -78,12 +78,10 @@ export const rewardLoggedEntry = async ({
   db,
   ledgerRef,
   authorRef,
-  categories,
 }: {
   db: Firestore;
   ledgerRef: DocumentReference;
   authorRef: DocumentReference;
-  categories: ReadonlyArray<BudgetCategory>;
 }): Promise<void> => {
   try {
     await recordCheckIn({
@@ -96,7 +94,12 @@ export const rewardLoggedEntry = async ({
     reportError(error, { action: "check_in", level: "warning" });
   }
   try {
-    await maybeFindKnickKnack({ db, ledgerRef, authorRef, categories });
+    await takeDailyChance({
+      db,
+      userRef: db.collection("users").doc(authorRef.id),
+      kind: "entry",
+      ledgerId: ledgerRef.id,
+    });
   } catch (error) {
     reportError(error, { action: "knickknack_roll", level: "warning" });
   }
@@ -161,7 +164,6 @@ export const recomputeLedgerMonth = onDocumentWritten(
         db,
         ledgerRef,
         authorRef,
-        categories: (ledgerSnap.get("categories") ?? []) as BudgetCategory[],
       });
     }
   }),

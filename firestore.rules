@@ -94,9 +94,13 @@ service cloud.firestore {
         && request.resource.data.token is string
         && request.resource.data.platform in ["ios", "android"];
     }
-    // Knick-knacks the budget buddy found (rolled by recomputeLedgerMonth). The owner may
-    // read them and mark each one seen, once; only the server creates or deletes them.
-    // users/{id}/buddy (the daily roll marker) has no rule: server only.
+    // Knick-knacks the budget buddy found (rolled on visits and logged entries). The owner
+    // may read them and mark each one seen, once; only the server creates or deletes them.
+    // users/{id}/buddy (roll marker, streak, luck numbers) has no rule: server only.
+    // Luck as the owner sees it: just its tier, in words. Only the server writes it.
+    match /users/{userDocId}/luck/{doc} {
+      allow read: if ownsUserDoc(userDocId);
+    }
     match /users/{userDocId}/knickknacks/{findId} {
       // Owner only: how many of anything someone has is private. Other people see the
       // shelves/ mirror instead, which lists each kept item once.

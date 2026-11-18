@@ -14,6 +14,7 @@ import GlobalErrorHandler from "@/utils/errorHandler";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useAppVersionRefresh } from "@/hooks/useAppVersionRefresh";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
+import { useDailyCheckIn } from "@/features/ledger/buddy/knickknacks/checkIn";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateBanner from "@/components/UpdateBanner";
 import NativeBridge from "@/features/native/NativeBridge";
@@ -78,6 +79,8 @@ const App = () => {
   const { updateAvailable, refresh } = useAppVersionRefresh();
   const [updateDismissed, setUpdateDismissed] = useState(false);
   useEnsurePersonalLedger();
+  // Any signed-in visit checks in for the day: streak, luck, and the day's knick-knack rolls.
+  useDailyCheckIn();
   const requiredUpdate = useRequiredUpdate();
 
   useEffect(() => {

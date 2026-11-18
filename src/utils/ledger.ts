@@ -44,6 +44,15 @@ export const todayInTz = (tz?: string | null, now: number = Date.now()): string 
   }
 };
 
+/** The hour (0–23) in a timezone; the device's own when it's missing or unknown. */
+export const hourInTz = (tz?: string | null, now: number = Date.now()): number => {
+  try {
+    return (tz ? dayjs(now).tz(tz) : dayjs(now)).hour();
+  } catch {
+    return dayjs(now).hour();
+  }
+};
+
 /** Shift a "YYYY-MM" month key by `delta` months. */
 export const shiftMonth = (month: string, delta: number): string =>
   dayjs(`${month}-01`).add(delta, "month").format("YYYY-MM");
