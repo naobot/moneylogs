@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
+  applyNoSpend,
   daysBetween,
+  NO_SPEND_GAIN,
+  NO_SPEND_RECENT_ENTRY_DAYS,
+  undoNoSpend,
   luckOf,
   luckTier,
   MAX_CHANCE,
@@ -22,7 +26,13 @@ describe("nextLuckState", () => {
       momentum: MOMENTUM_START + MOMENTUM_GAIN,
       lastDay: "2026-11-18",
       entryDay: "",
+      noSpendDay: "",
     });
+  });
+
+  it("keeps a confirmed no-spend day through later check-ins", () => {
+    const state = { momentum: 0.5, lastDay: "2026-11-18", entryDay: "", noSpendDay: "2026-11-18" };
+    expect(nextLuckState({ state, today: "2026-11-19" })?.noSpendDay).toBe("2026-11-18");
   });
 
   it("seeds momentum from an existing check-in streak", () => {
@@ -68,6 +78,55 @@ describe("nextLuckState", () => {
   it("ignores a day that went backwards (a timezone change)", () => {
     const state = { momentum: 0.5, lastDay: "2026-11-18", entryDay: "" };
     expect(nextLuckState({ state, today: "2026-11-17" })).toBeNull();
+  });
+});
+
+describe("applyNoSpend", () => {
+  const today = "2026-11-18";
+  const logger = { momentum: 0.5, lastDay: today, entryDay: "2026-11-15" };
+
+  it("adds the bonus once a day for someone who logs", () => {
+    const { next, rewarded } = applyNoSpend({ state: logger, today });
+    expect(rewarded).toBe(true);
+    expect(next?.momentum).toBeCloseTo(0.5 + NO_SPEND_GAIN);
+    expect(next?.noSpendDay).toBe(today);
+    expect(applyNoSpend({ state: next, today })).toEqual({ next: null, rewarded: false });
+  });
+
+  it("gives nothing without an entry in the last week", () => {
+    const stale = { ...logger, entryDay: "2026-11-01" };
+    expect(applyNoSpend({ state: stale, today })).toEqual({ next: null, rewarded: false });
+    expect(applyNoSpend({ state: { ...logger, entryDay: "" }, today }).rewarded).toBe(false);
+    const edge = { ...logger, entryDay: "2026-11-11" };
+    expect(NO_SPEND_RECENT_ENTRY_DAYS).toBe(7);
+    expect(applyNoSpend({ state: edge, today }).rewarded).toBe(true);
+  });
+
+  it("never adds to a day that already had the entry bonus", () => {
+    expect(applyNoSpend({ state: { ...logger, entryDay: today }, today }).rewarded).toBe(false);
+  });
+
+  it("gives nothing before luck has started", () => {
+    expect(applyNoSpend({ state: undefined, today }).rewarded).toBe(false);
+  });
+
+  it("stays within 0..1", () => {
+    expect(applyNoSpend({ state: { ...logger, momentum: 0.99 }, today }).next?.momentum).toBe(1);
+  });
+});
+
+describe("undoNoSpend", () => {
+  it("takes the day's bonus back", () => {
+    const state = { momentum: 0.54, lastDay: "2026-11-18", noSpendDay: "2026-11-18" };
+    const next = undoNoSpend({ state, day: "2026-11-18" });
+    expect(next?.momentum).toBeCloseTo(0.54 - NO_SPEND_GAIN);
+    expect(next?.noSpendDay).toBe("");
+  });
+
+  it("leaves other days alone", () => {
+    const state = { momentum: 0.54, noSpendDay: "2026-11-17" };
+    expect(undoNoSpend({ state, day: "2026-11-18" })).toBeNull();
+    expect(undoNoSpend({ state: undefined, day: "2026-11-18" })).toBeNull();
   });
 });
 

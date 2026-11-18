@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   find: null as null | { id: string; item: "acorn"; ledgerId: string; seenAt: null },
   markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
   unseenFindArgs: [] as unknown[],
+  noSpend: new Set<string>(),
 }));
 
 vi.mock("@/contexts", () => ({
@@ -23,6 +24,10 @@ vi.mock("@/hooks/useLedgerMonths", () => ({
   useLedgerMonths: () => ({ byMonth: state.byMonth, isSuccess: state.isSuccess }),
 }));
 
+vi.mock("@/hooks/useNoSpendDays", () => ({
+  useNoSpendDays: () => ({ days: state.noSpend, isSuccess: true }),
+}));
+
 vi.mock("../knickknacks/useUnseenFinds", () => ({
   useUnseenFind: (userDocId?: string, ledgerId?: string) => {
     state.unseenFindArgs = [userDocId, ledgerId];
@@ -33,7 +38,7 @@ vi.mock("../knickknacks/useUnseenFinds", () => ({
 
 import { BudgetBuddy, BUDDY_HOVER_DELAY } from "../BudgetBuddy";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES } from "../faces";
-import { CHECK_IN_LINES } from "../buddyComments";
+import { CHECK_IN_LINES, NO_SPEND_LINES } from "../buddyComments";
 import { KNICK_KNACKS } from "../knickknacks/catalog";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -217,6 +222,7 @@ describe("BudgetBuddy evening check-in", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    state.noSpend = new Set();
     state.isSuccess = true;
     state.byMonth = spending({ "10": 40, "12": 40 }); // nothing today (the 15th)
     container = document.createElement("div");
@@ -241,6 +247,27 @@ describe("BudgetBuddy evening check-in", () => {
     expect(CHECK_IN_LINES.quiet).toContain(bubbleText());
     expect(button().getAttribute("aria-expanded")).toBe("true");
     expect(FACES.happy.click).toContain(button().textContent);
+  });
+
+  it("cheers a confirmed no-spend day once, whichever log, instead of asking", () => {
+    state.now = "2026-11-15T18:00:00Z";
+    state.noSpend = new Set(["2026-11-15"]);
+    render();
+    expect(NO_SPEND_LINES).toContain(bubbleText());
+    expect(FACES.delighted.click).toContain(button().textContent);
+    act(() => button().click()); // close it
+    // Not again today, here or in another log, and no "was it a no-spend day?" either.
+    render("l2");
+    expect(bubbleText()).toBeNull();
+  });
+
+  it("cheers as soon as the day is confirmed, any time of day", () => {
+    state.now = "2026-11-15T10:00:00Z";
+    render();
+    expect(bubbleText()).toBeNull();
+    state.noSpend = new Set(["2026-11-15"]);
+    render();
+    expect(NO_SPEND_LINES).toContain(bubbleText());
   });
 
   it("keeps quiet before 5pm", () => {

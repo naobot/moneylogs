@@ -478,6 +478,7 @@ export { deleteAccount } from "./deleteAccount";
 export { adminLookupUser, adminGift, adminDeleteLog, adminDeleteAccount } from "./admin";
 export { rollQuietDay } from "./rollQuietDay";
 export { checkInLedger, dailyCheckIn } from "./checkIn";
+export { confirmNoSpendDay } from "./noSpend";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";
 export { mirrorProfile } from "./mirrorProfile";

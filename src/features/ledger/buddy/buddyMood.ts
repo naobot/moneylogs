@@ -30,7 +30,7 @@ export type BuddyFacts = {
   daysLeft: number;
   /** This month so far vs the same point last month, as a fraction (+0.2 = 20% more). */
   change?: number | null;
-  /** Days in a row, up to today, with nothing spent. */
+  /** Confirmed no-spend days in a row, up to today (confirmedNoSpendStreak). */
   noSpendDays: number;
   /** The biggest everyday category; fixed costs (rent, bills) never count. */
   topCategory?: string;
@@ -82,13 +82,18 @@ export const moodForChange = (change: number, jitter = 0): ScaleMood => {
   return "delighted";
 };
 
-/** Days in a row, ending today, with nothing spent in any currency. */
-export const noSpendStreak = (byDay: LedgerMonth["byDay"] | undefined, elapsed: number): number => {
+/**
+ * Confirmed no-spend days in a row, counting back from today, or from yesterday while today
+ * is still open. Only days the person confirmed count (users/{id}/noSpendDays): a day with
+ * nothing logged may just have been forgotten.
+ */
+export const confirmedNoSpendStreak = (days: ReadonlySet<string>, today: string): number => {
+  let day = dayjs(today);
+  if (!days.has(day.format("YYYY-MM-DD"))) day = day.subtract(1, "day");
   let streak = 0;
-  for (let day = elapsed; day >= 1; day--) {
-    const amounts = byDay?.[String(day).padStart(2, "0")];
-    if (amounts && Object.values(amounts).some((v) => (v ?? 0) > 0)) break;
+  while (days.has(day.format("YYYY-MM-DD"))) {
     streak++;
+    day = day.subtract(1, "day");
   }
   return streak;
 };
@@ -102,7 +107,7 @@ const largest = (totals: CurrencyAmounts): Currency | undefined =>
  * The buddy's mood for the current month. Deliberately not a straight read-out of the
  * numbers:
  * - thresholds wobble a little day to day;
- * - a few no-spend days in a row cheer it up a step;
+ * - a few confirmed no-spend days in a row cheer it up a step;
  * - it only gets properly delighted once the month is a few days in.
  * Over budget is always alarming, though.
  */
@@ -113,9 +118,12 @@ export const buddyMood = ({
   previous,
   today,
   localHour,
+  confirmedNoSpend,
 }: {
   ledgerId: string;
   categories: ReadonlyArray<LedgerCategory>;
+  /** Days the person confirmed as no-spend days (useNoSpendDays). */
+  confirmedNoSpend?: ReadonlySet<string>;
   current?: LedgerMonth | null;
   previous?: LedgerMonth | null;
   /** "YYYY-MM-DD" in the viewer's timezone. */
@@ -152,7 +160,7 @@ export const buddyMood = ({
     currency: focus,
     hasBudget: budgeted.length > 0,
     daysLeft,
-    noSpendDays: noSpendStreak(current?.byDay, elapsed),
+    noSpendDays: confirmedNoSpend ? confirmedNoSpendStreak(confirmedNoSpend, today) : 0,
     change: insights?.vsLastMonth?.change ?? null,
     topCategory: focus ? topFlexibleCategory(agg, focus, categories)?.name : undefined,
   };

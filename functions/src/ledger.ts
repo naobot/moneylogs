@@ -18,6 +18,7 @@ import { isCurrentMonth } from "./ledgerBudget";
 import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
 import { takeDailyChance } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
+import { voidNoSpendDay } from "./noSpend";
 import { reportError, withSentry } from "./sentry";
 
 /**
@@ -157,8 +158,21 @@ export const recomputeLedgerMonth = onDocumentWritten(
       });
     }
 
-    // New entries only: editing or deleting one never earns a roll.
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
+
+    // An entry on a day its author confirmed as no-spend (new, or moved onto that day):
+    // the day no longer counts. Imports returned above, so history never undoes a day.
+    const day = (after as { date?: unknown } | undefined)?.date;
+    const dayChanged = !before || (before as { date?: unknown }).date !== day;
+    if (dayChanged && typeof day === "string" && authorRef && typeof authorRef.id === "string") {
+      try {
+        await voidNoSpendDay({ db, userRef: db.collection("users").doc(authorRef.id), day });
+      } catch (error) {
+        reportError(error, { action: "void_no_spend_day", level: "warning" });
+      }
+    }
+
+    // New entries only: editing or deleting one never earns a roll.
     if (!before && authorRef && typeof authorRef.id === "string") {
       await rewardLoggedEntry({
         db,

@@ -7,15 +7,22 @@ import Popover from "@/components/Popover";
 import { useCurrentUser } from "@/contexts";
 import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
+import { useNoSpendDays } from "@/hooks/useNoSpendDays";
 import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
 import { shiftMonth, todayInTz } from "@/utils/ledger";
 import { buddyMood } from "./buddyMood";
-import { buddyCheckInComment, buddyComment, buddyFindTeaser } from "./buddyComments";
+import {
+  buddyCheckInComment,
+  buddyComment,
+  buddyFindTeaser,
+  buddyNoSpendComment,
+} from "./buddyComments";
 import { checkedInToday, CheckIn, eveningCheckIn, markCheckedIn } from "./buddyCheckIn";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
 import KnickKnackReveal from "./knickknacks/KnickKnackReveal";
 import { KnickKnackFind, useUnseenFind } from "./knickknacks/useUnseenFinds";
+import { cheeredNoSpend, markCheeredNoSpend } from "@/features/ledger/noSpend/noSpendDays";
 
 import "./BudgetBuddy.scss";
 
@@ -64,6 +71,10 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
     to: month,
   });
 
+  // Only confirmed days count as no-spend: an unlogged day may just have been forgotten.
+  const noSpend = useNoSpendDays();
+  const confirmedToday = noSpend.days.has(today);
+
   // Cheap enough to work out on every render: two month docs and a few categories.
   const state = buddyMood({
     ledgerId: ledger.id,
@@ -72,13 +83,17 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
     previous: byMonth[previousMonth],
     today,
     localHour,
+    confirmedNoSpend: noSpend.days,
   });
-  const checkIn = eveningCheckIn({
+  const evening = eveningCheckIn({
     today,
     localHour,
     current: byMonth[month],
     previous: byMonth[previousMonth],
   });
+  // The "quiet" check-in asks whether today was a no-spend day; once it's confirmed, the
+  // cheer below says so instead.
+  const checkIn = evening === "quiet" && confirmedToday ? null : evening;
 
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const [hoverFace, setHoverFace] = useState<string | null>(null);
@@ -113,6 +128,20 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         },
     );
   }, [isSuccess, anchor, checkIn, ledger.id, today, asleep, seed]);
+
+  // Cheer a confirmed no-spend day, once a day whichever log it's in. It takes over an
+  // open bubble: the person has just told it something worth celebrating.
+  const cheered = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isSuccess || !anchor || !confirmedToday) return;
+    if (cheered.current === today || cheeredNoSpend(today)) return;
+    cheered.current = today;
+    markCheeredNoSpend(today);
+    setBubble({
+      text: buddyNoSpendComment({ asleep, seed }),
+      face: pick(FACES.delighted.click, seed),
+    });
+  }, [isSuccess, anchor, confirmedToday, today, asleep, seed]);
 
   // Nothing until the month docs arrive, so the face doesn't flash from idle.
   if (!isSuccess) return null;

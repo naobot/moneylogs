@@ -101,6 +101,11 @@ service cloud.firestore {
     match /users/{userDocId}/luck/{doc} {
       allow read: if ownsUserDoc(userDocId);
     }
+    // Confirmed no-spend days (functions/src/noSpend.ts): the owner reads them to show the
+    // day as confirmed and for the buddy; only the server writes them.
+    match /users/{userDocId}/noSpendDays/{day} {
+      allow read: if ownsUserDoc(userDocId);
+    }
     match /users/{userDocId}/knickknacks/{findId} {
       // Owner only: how many of anything someone has is private. Other people see the
       // shelves/ mirror instead, which lists each kept item once. The one exception: a

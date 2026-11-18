@@ -7,6 +7,7 @@ export type Feature =
   | "default_currency"
   | "personal_ledger"
   | "ledger_tour"
+  | "no_spend_day"
   | "create_log"
   | "ledger_entry"
   | "profile"
