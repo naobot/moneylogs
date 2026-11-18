@@ -227,7 +227,7 @@ describe("isEmailEnabled", () => {
         .filter(([, on]) => on)
         .map(([t]) => t)
         .sort(),
-    ).toEqual(["budget_exceeded", "friend_request", "log_ended", "log_ending"]);
+    ).toEqual(["budget_exceeded", "friend_request", "log_ended", "log_ending", "log_invite"]);
   });
 
   it("needs email unpaused, the type on in-app, and the email pref on", async () => {

@@ -6,6 +6,7 @@ import { needsProfileSetup, parseReferenceArray } from "@/utils/helpers";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useGetGroup } from "@/hooks/useGetGroup";
 import { writeSelfNotification } from "@/hooks/useNotifications";
+import { clearLogInvite } from "@/features/invites/logInvites";
 import { LogNotFound } from "@/features/logActions/LogNotFound";
 import { Group } from "@/features/moneylog/components/Group";
 
@@ -53,6 +54,9 @@ export const InvitePage = () => {
         groupName: group?.title ?? "",
         logKind: "social",
       });
+      clearLogInvite(loggedInUser.id, groupId).catch((err) =>
+        reportError(err, { feature: "log_invites", action: "clear_invite" }),
+      );
       if (needsProfileSetup(loggedInUser)) {
         setShowInviteModal(false);
         setShowJoinedModal(true);

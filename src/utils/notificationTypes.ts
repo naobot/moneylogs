@@ -106,6 +106,14 @@ export const NOTIFICATION_TYPES: Specs = {
     describe: (n) => ["you joined ", { keep: n.groupName }],
     href: logHref,
   },
+  log_invite: {
+    label: "Friends inviting you to a log",
+    defaultEnabled: true,
+    email: "on",
+    icon: "plus",
+    describe: (n) => [{ keep: n.actorName }, " invited you to ", { keep: n.groupName }],
+    href: (n) => (n.logKind === "ledger" ? `/l/${n.groupId}/invite` : `/g/${n.groupId}/invite`),
+  },
   log_ending: {
     label: "A log is about to end",
     defaultEnabled: true,

@@ -6,6 +6,7 @@ import { needsProfileSetup } from "@/utils/helpers";
 import { useLedgerAccess } from "@/hooks/useLedgerAccess";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
 import { writeSelfNotification } from "@/hooks/useNotifications";
+import { clearLogInvite } from "@/features/invites/logInvites";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -50,6 +51,9 @@ export const LedgerInvitePage = () => {
         groupName: title,
         logKind: "ledger",
       });
+      clearLogInvite(user.id, ledgerId).catch((err) =>
+        reportError(err, { feature: "log_invites", action: "clear_invite" }),
+      );
       if (needsProfileSetup(user)) {
         setShowJoinedModal(true);
       } else {

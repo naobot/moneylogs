@@ -56,6 +56,8 @@ export const pushCopy = (data: Data): PushCopy | null => {
       return { title, body: `Over ${budgetSubject(data)} (${spentOfBudget(data)}).` };
     case "budget_projected":
       return { title, body: `On track to go over ${budgetSubject(data)} this month.` };
+    case "log_invite":
+      return { title, body: `${actor} invited you to join` };
     case "friend_request":
       return { title, body: `${actor} wants to be friends` };
     case "friend_accepted":

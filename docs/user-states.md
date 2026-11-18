@@ -114,6 +114,19 @@ As: two personas who are friends (the seed's Alice and one of hers), signed in i
 - The friend switching off "Appear in other people's friends lists" drops out of that list; switching it back puts them back.
 - A shown list with no friends reads "no friends to show yet".
 
+### F6c. Inviting friends into a log
+
+As: two personas who are friends (the seed's Alice and one of hers), signed in in two windows.
+
+- In `/create`, a log with room for more than one person gets an optional "Friends" step before Review; a
+  log for just you skips it. Review lists how many friends will be invited.
+- In a log's invite modal (social and financial), friends already in the log aren't listed; ticking stops at
+  the spots left; sent friends show "invited".
+- The friend gets "X invited you to Y" in their inbox (and push, and the daily email by default); it opens
+  the log's join page, and joining removes the invite from their inbox.
+- With no friends (e.g. `empty@test.com`), the step and the modal say so and link to `/me#friends`; the
+  share link still works as before.
+
 ### F7. Leaving
 
 As: any persona (then reset it).

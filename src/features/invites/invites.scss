@@ -1,0 +1,59 @@
+// Friend picker for log invites (FriendPicker.tsx). Name left, checkbox right, like the
+// /me friends list.
+.FriendPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 16em;
+  overflow-y: auto;
+  text-align: left;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    cursor: pointer;
+  }
+
+  &__who {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  input[type="checkbox"] {
+    accent-color: var(--ink);
+  }
+
+  &__status {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}
+
+// Centred like the rest of the invite modal; the list itself reads left to right.
+.InviteFriends {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+
+  h4 {
+    margin: 0;
+  }
+
+  .FriendPicker {
+    align-self: stretch;
+  }
+}
