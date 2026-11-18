@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
 import { useMutation } from "@/hooks/useFirebase";
 import { useUserQuery } from "@/hooks/useUserQuery";
+import { syncPersonalLedgerCurrency } from "@/hooks/useLedgerQuery";
 import { useReadTracking } from "@/hooks/useReadTracking";
 
 import Avatar from "@/components/Avatar";
@@ -54,6 +55,18 @@ export const ProfileSection = () => {
       defaultCurrency: Currency;
     }) => {
       await updateUserProfile.mutate(userData);
+      // New entries in the personal log start in its own default, so keep it in step.
+      // The profile itself is saved, so a failure here is reported but not shown.
+      await syncPersonalLedgerCurrency({
+        personalLedgerId: user?.personalLedgerId,
+        defaultCurrency: userData.defaultCurrency,
+      }).catch((err: unknown) =>
+        reportError(err, {
+          feature: "personal_ledger",
+          action: "sync_personal_ledger_currency",
+          level: "warning",
+        }),
+      );
 
       trackUserAction("update_user_profile", {
         user_id: user?.id,
