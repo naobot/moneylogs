@@ -113,7 +113,7 @@ export const KnickKnackDrawer = () => {
             {waiting.length > 0 && (
               <button
                 type="button"
-                className="KnickKnackDrawer__alert"
+                className="KnickKnackDrawer__alert KnickKnackDrawer__alert--bounce"
                 onClick={() => setReveal({ queue: waiting, at: 0 })}
               >
                 <AlertMark />

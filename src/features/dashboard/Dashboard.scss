@@ -274,6 +274,17 @@
       border-style: solid;
       outline: none;
     }
+
+    // The buddy's finds: the whole alert hops, so its "!" stops hopping on its own.
+    &--bounce {
+      @media (prefers-reduced-motion: no-preference) {
+        animation: drawer-alert-bounce 1.2s ease-in-out infinite;
+      }
+
+      .KnickKnackDrawer__alertMark {
+        animation: none;
+      }
+    }
   }
 
   &__alertMark {
