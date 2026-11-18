@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vite-plus/test";
 import type { Timestamp } from "firebase/firestore";
-import { giverIds, inTransitGifts, provenanceLabel, provenanceOf, shelfSlots } from "../provenance";
+import {
+  FOREST_SPIRIT_ID,
+  giverIds,
+  giverName,
+  inTransitGifts,
+  provenanceLabel,
+  provenanceOf,
+  shelfSlots,
+} from "../provenance";
 import type { KnickKnackFind } from "../useUnseenFinds";
 
 const ts = (ms: number) => ({ toMillis: () => ms }) as Timestamp;
@@ -106,5 +114,37 @@ describe("inTransitGifts", () => {
 
   it("skips items this build doesn't know", () => {
     expect(inTransitGifts([gift("not_an_item", 100, "me", false)], "me")).toEqual([]);
+  });
+});
+
+describe("forest spirit gifts", () => {
+  const nameOf = (id: string) => ({ mina: "mina" })[id];
+
+  it("names the forest spirit without looking up a profile", () => {
+    expect(giverName(FOREST_SPIRIT_ID, () => "nope", "deleted user")).toBe("a forest spirit");
+    expect(giverName("mina", nameOf, "deleted user")).toBe("mina");
+    expect(giverName("gone", nameOf, "deleted user")).toBe("deleted user");
+    expect(giverName(null, nameOf, "someone")).toBe("someone");
+  });
+
+  it("labels the shelf and leaves the spirit out of profile lookups", () => {
+    expect(
+      provenanceLabel(
+        { kind: "gift", atMs: 9, fromId: FOREST_SPIRIT_ID },
+        () => "x",
+        (ms) => `d${ms}`,
+      ),
+    ).toBe("gift from a forest spirit · d9");
+    expect(
+      giverIds([
+        { item: "acorn", provenance: { kind: "gift", atMs: 1, fromId: FOREST_SPIRIT_ID } },
+        { item: "pebble", provenance: { kind: "gift", atMs: 2, fromId: "mina" } },
+      ]),
+    ).toEqual(["mina"]);
+  });
+
+  it("matches the backend's sentinel", async () => {
+    const plan = await import("../../../../../../functions/src/giftsPlan");
+    expect(plan.FOREST_SPIRIT_ID).toBe(FOREST_SPIRIT_ID);
   });
 });

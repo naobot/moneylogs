@@ -10,6 +10,10 @@ import { useProfiles } from "@/hooks/useProfiles";
 import { KNICK_KNACKS, KnickKnackId } from "@/features/ledger/buddy/knickknacks/catalog";
 import { drawerContents } from "@/features/ledger/buddy/knickknacks/drawer";
 import { giftableByItem } from "@/features/ledger/buddy/knickknacks/gifts";
+import {
+  FOREST_SPIRIT_ID,
+  giverName as nameOfGiver,
+} from "@/features/ledger/buddy/knickknacks/provenance";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import {
   KnickKnackFind,
@@ -57,9 +61,12 @@ export const KnickKnackDrawer = () => {
   // Givers of unopened gifts and of the one being unwrapped: opening a gift marks it seen,
   // which drops it from `gifts`, but the pop-up still names who sent it.
   const givers = useProfiles(
-    [...gifts, ...(reveal?.queue ?? [])].map((g) => g.giftedBy ?? "").filter(Boolean),
+    [...gifts, ...(reveal?.queue ?? [])]
+      .map((g) => g.giftedBy ?? "")
+      .filter((id) => id && id !== FOREST_SPIRIT_ID),
   );
-  const giverName = (id?: string | null) => (id && givers.get(id)?.displayName) || DELETED_USER;
+  const giverName = (id?: string | null) =>
+    nameOfGiver(id, (giver) => givers.get(giver)?.displayName, DELETED_USER);
   const giftable = useMemo(
     () => new Set(friends.length ? giftableByItem(data).map((g) => g.item) : []),
     [data, friends.length],
