@@ -72,6 +72,22 @@ describe("Landing", () => {
     expect(fresh).toContainEqual(expect.stringContaining("5 new posts"));
   });
 
+  it("shows a read-only financial log under the tracking points", () => {
+    const tracking = container.querySelector('[aria-labelledby="landing-tracking"]')!;
+    const ledger = container.querySelector<HTMLElement>('[aria-label="Example financial log"]')!;
+    // Right after "Your spending, day to day".
+    expect(tracking.nextElementSibling).toBe(ledger);
+    expect(ledger.querySelector<HTMLElement>(".Landing__ledger")!.inert).toBe(true);
+
+    // The whole month's total, matching the "My spending" card, and the latest days' entries.
+    expect(ledger.querySelector(".LedgerStats__strip__totals")!.textContent).toContain("642.18");
+    const notes = Array.from(ledger.querySelectorAll(".EntryList__note")).map((n) => n.textContent);
+    expect(notes[0]).toBe("Oat latte and a croissant");
+    expect(notes).not.toContain("Pharmacy");
+    // Nothing to edit or delete in a picture.
+    expect(ledger.querySelectorAll(".EntryList__menu .handler")).toHaveLength(0);
+  });
+
   it("points every example card at /login", () => {
     const all = Array.from(container.querySelectorAll<HTMLAnchorElement>(".LogCard"));
     expect(all.length).toBeGreaterThan(0);

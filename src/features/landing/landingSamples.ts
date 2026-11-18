@@ -3,7 +3,10 @@
  * cards, so a visitor sees what Home looks like once they've joined a few logs. Nothing
  * here is read from Firestore.
  */
+import type { Ledger, LedgerEntry } from "@/types/ledger";
+import type { Currency } from "@/types/user";
 import { memberLabel } from "@/utils/dashboard";
+import { DEFAULT_CATEGORIES } from "@/utils/ledger";
 import { formatNewCount } from "@/utils/logActivity";
 
 export type SampleCard = {
@@ -142,3 +145,62 @@ export const HOW_IT_WORKS = [
     text: "Monthly stats and budgets for your own spending, and totals and hot posts when a group log ends.",
   },
 ];
+
+/**
+ * Half a month of "My spending", the personal log on the sample Home: the entries add up
+ * to the 642.18 CAD its card shows. Rendered with the real ledger components (read-only).
+ */
+export const SAMPLE_LEDGER_MONTH = "2026-11";
+export const SAMPLE_LEDGER_TODAY = "2026-11-18";
+export const SAMPLE_LEDGER_CURRENCY: Currency = "CAD";
+
+const SAMPLE_BUDGETS: Record<string, number> = {
+  food: 300,
+  groceries: 350,
+  transport: 160,
+  shopping: 200,
+  entertainment: 120,
+};
+
+export const SAMPLE_LEDGER: Pick<
+  Ledger,
+  "id" | "title" | "categories" | "defaultCurrency" | "memberUids"
+> = {
+  id: "sample",
+  title: "My spending",
+  defaultCurrency: SAMPLE_LEDGER_CURRENCY,
+  memberUids: ["sample"],
+  categories: DEFAULT_CATEGORIES.map((c) => ({
+    ...c,
+    ...(SAMPLE_BUDGETS[c.id] ? { budget: { CAD: SAMPLE_BUDGETS[c.id] } } : {}),
+  })),
+};
+
+/** [day, amount, categoryId, note], newest first. */
+const SAMPLE_ENTRY_ROWS: ReadonlyArray<[number, number, string, string]> = [
+  [18, 9.75, "food", "Oat latte and a croissant"],
+  [18, 86.4, "groceries", "Weekly shop"],
+  [17, 156, "transport", "Monthly transit pass"],
+  [15, 78.5, "entertainment", "Concert tickets"],
+  [15, 32.6, "food", "Ramen with Sam"],
+  [12, 189.99, "shopping", "Winter boots"],
+  [12, 55, "utilities", "Phone bill"],
+  [9, 33.94, "health", "Pharmacy"],
+];
+
+export const SAMPLE_LEDGER_ENTRIES: LedgerEntry[] = SAMPLE_ENTRY_ROWS.map(
+  ([day, amount, categoryId, note], i) =>
+    ({
+      id: `sample-${i}`,
+      amount,
+      currency: SAMPLE_LEDGER_CURRENCY,
+      categoryId,
+      date: `${SAMPLE_LEDGER_MONTH}-${String(day).padStart(2, "0")}`,
+      month: SAMPLE_LEDGER_MONTH,
+      note,
+      authorUid: "sample",
+      authorName: "you",
+      // Only the order within a day is read from it: earlier rows were added later.
+      createdAt: { toMillis: () => SAMPLE_ENTRY_ROWS.length - i },
+    }) as unknown as LedgerEntry,
+);
