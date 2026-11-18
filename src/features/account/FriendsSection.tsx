@@ -1,5 +1,9 @@
 import { ReactNode } from "react";
 
+import { useCurrentUser } from "@/contexts";
+import { useToastContext } from "@/hooks/useToastContext";
+import { updateUserFields, UserFieldsPatch } from "@/hooks/useUserQuery";
+import { reportError } from "@/utils/reportError";
 import { removeFriend, respondFriend, useFriendships } from "@/hooks/useFriendships";
 import { Profile, useProfiles } from "@/hooks/useProfiles";
 import Avatar from "@/components/Avatar";
@@ -27,6 +31,50 @@ const PersonRow = ({
     {children && <span className="FriendsSection__actions">{children}</span>}
   </li>
 );
+
+/**
+ * Who can see your friends: your own list on your profile (off unless switched on), and
+ * whether you appear on other people's lists (on unless switched off). Saved as changed;
+ * the server rebuilds the public lists (functions/src/mirrorFriendList.ts).
+ */
+const FriendsPrivacy = () => {
+  const { user } = useCurrentUser();
+  const { showToast } = useToastContext();
+
+  const save = async (patch: UserFieldsPatch, action: string) => {
+    if (!user?.id) return;
+    try {
+      await updateUserFields(user.id, patch);
+    } catch (err) {
+      reportError(err, { feature: "friends", action });
+      showToast("Couldn't save that setting. Please try again.");
+    }
+  };
+
+  return (
+    <div>
+      <h4>privacy</h4>
+      <label className="FriendsSection__switch">
+        <input
+          type="checkbox"
+          checked={!!user?.showFriends}
+          onChange={(e) => save({ showFriends: e.target.checked }, "toggle_show_friends")}
+        />
+        <span>Show my friends list on my profile</span>
+      </label>
+      <label className="FriendsSection__switch">
+        <input
+          type="checkbox"
+          checked={!user?.hideFromFriendLists}
+          onChange={(e) =>
+            save({ hideFromFriendLists: !e.target.checked }, "toggle_appear_in_friend_lists")
+          }
+        />
+        <span>Appear in other people's friends lists</span>
+      </label>
+    </div>
+  );
+};
 
 /**
  * Friends and friend requests on /me, with your invite link. Adding happens from someone's
@@ -103,6 +151,8 @@ export const FriendsSection = () => {
           </ul>
         </div>
       )}
+
+      <FriendsPrivacy />
     </div>
   );
 };

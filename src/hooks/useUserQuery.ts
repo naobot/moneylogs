@@ -38,6 +38,8 @@ export type UserFieldsPatch = UpdateData<{
   avatar: string[] | null;
   "tutorials.ledgerNudge": FieldValue;
   emailPaused: boolean;
+  showFriends: boolean;
+  hideFromFriendLists: boolean;
 }> &
   // Notification settings are written one key at a time (NotificationsSection).
   Partial<Record<`notificationPrefs.${NotificationPrefKey}`, boolean>> &

@@ -9,6 +9,7 @@ import { useDateFormat } from "@/utils/dateFormat";
 import Avatar from "@/components/Avatar";
 import FriendControls from "@/features/profile/FriendControls";
 import KnickKnackShelf from "@/features/profile/KnickKnackShelf";
+import ProfileFriends from "@/features/profile/ProfileFriends";
 import { sharedGroups } from "@/features/profile/sharedLogs";
 
 import "@/features/profile/profile.scss";
@@ -89,6 +90,8 @@ export const UserProfilePage = () => {
           )}
         </section>
       )}
+
+      <ProfileFriends userDocId={userDocId} isMe={isMe} />
 
       <section className="ProfilePage__section" aria-labelledby="profile-shelf">
         <h3 id="profile-shelf">knick-knack shelf</h3>

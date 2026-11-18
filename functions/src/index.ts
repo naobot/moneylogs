@@ -483,6 +483,7 @@ export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";
 export { mirrorProfile } from "./mirrorProfile";
 export { mirrorShelf } from "./mirrorShelf";
+export { mirrorFriendList } from "./mirrorFriendList";
 export { requestFriend, respondFriend, removeFriend } from "./friends";
 export { getInviteCode, acceptInvite } from "./invites";
 export { giftKnickKnack } from "./gifts";
