@@ -1,10 +1,9 @@
-import { FormEvent, ReactNode, useState } from "react";
-import cx from "classnames";
+import { FormEvent, ReactNode, useId, useState } from "react";
 
+import Button from "@/components/Button";
 import RowButton from "@/components/RowButton";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { track } from "@/utils/analytics";
 import { CURRENCIES } from "@/utils/currency";
 import { MAX_CATEGORY_NAME_LENGTH } from "@/utils/ledger";
 import {
@@ -32,17 +31,15 @@ type CategoryDetailProps = {
   onBudgetCommit: () => void;
   /** Removes one budget straight away, dropping anything typed into its field. */
   onBudgetRemove: (currency: Currency) => void;
-  /** Resolves true if any entry uses the category. */
-  checkInUse: () => Promise<boolean>;
-  onDeleted: () => void;
+  /** Asks to archive or delete it (the manager confirms, explaining what happens). */
+  onArchive: () => void;
+  onDelete: () => void;
 };
 
-type DeleteState = "idle" | "checking" | "confirm" | "in-use" | "failed";
-
 /**
- * Everything about one category, each setting with its explanation written out (not
- * in a hover tip, which touch screens never show). Remounted per category (keyed by
- * id), so half-finished renames and delete prompts don't leak between categories.
+ * One category's settings: each title on the line with its input, and any fine print
+ * written out at the end of its section (not in a hover tip, which touch screens never
+ * show). Remounted per category (keyed by id), so a half-typed rename doesn't leak.
  */
 export const CategoryDetail = ({
   category,
@@ -54,13 +51,15 @@ export const CategoryDetail = ({
   onBudgetChange,
   onBudgetCommit,
   onBudgetRemove,
-  checkInUse,
-  onDeleted,
+  onArchive,
+  onDelete,
 }: CategoryDetailProps) => {
   const { id, name, archived } = category;
   const [renaming, setRenaming] = useState<string | null>(null);
-  const [deleteState, setDeleteState] = useState<DeleteState>("idle");
+  const [mixedOpen, setMixedOpen] = useState(false);
   const [pickedCurrency, setPickedCurrency] = useState<Currency | null>(null);
+  const nameId = useId();
+  const mixedId = useId();
 
   const renameError = renaming !== null ? categoryNameError(renaming, all, id) : undefined;
   const commitRename = () => {
@@ -72,44 +71,43 @@ export const CategoryDetail = ({
   const fixed = isFixedCategory(category);
   const budgeted = CURRENCIES.filter((c) => category.budget?.[c] !== undefined);
   const unbudgeted = CURRENCIES.filter((c) => !budgeted.includes(c));
-  const addCurrency =
+  // The currency a new budget field starts in: the picked one, else the log's.
+  const newCurrency =
     pickedCurrency && unbudgeted.includes(pickedCurrency)
       ? pickedCurrency
       : unbudgeted.includes(defaultCurrency)
         ? defaultCurrency
         : unbudgeted[0];
 
-  const askDelete = async () => {
-    setDeleteState("checking");
-    try {
-      setDeleteState((await checkInUse()) ? "in-use" : "confirm");
-    } catch {
-      // checkInUse reports its own errors.
-      setDeleteState("failed");
-    }
-  };
-  const confirmDelete = () => {
-    save({ type: "delete", id });
-    track("delete_category");
-    onDeleted();
-  };
-  const archive = () => {
-    setDeleteState("idle");
-    save({ type: "archive", id });
-  };
+  const newBudgetField = (label: string) => (
+    <BudgetField
+      category={category}
+      currency={newCurrency}
+      drafts={budgetDrafts}
+      label={label}
+      currencies={unbudgeted}
+      onChange={(raw) => onBudgetChange(newCurrency, raw)}
+      onBlur={onBudgetCommit}
+      onCurrencyChange={setPickedCurrency}
+    />
+  );
 
   return (
     <div className="CategoryDetail">
-      <Section title="name">
+      <Section>
         <form
-          className="CategoryDetail__rename"
+          className="CategoryDetail__field"
           onSubmit={(e: FormEvent) => {
             e.preventDefault();
             commitRename();
           }}
         >
+          <label className="CategoryDetail__label" htmlFor={nameId}>
+            name
+          </label>
           <input
-            className="LineInput keep-case"
+            id={nameId}
+            className="LineInput keep-case CategoryDetail__name"
             aria-label={`Rename ${name}`}
             value={renaming ?? name}
             maxLength={MAX_CATEGORY_NAME_LENGTH + 5}
@@ -128,161 +126,123 @@ export const CategoryDetail = ({
       </Section>
 
       {!archived && (
-        <Section title="fixed cost">
-          <button
-            type="button"
-            className={cx("CategoryDetail__toggle", { "CategoryDetail__toggle--on": fixed })}
-            aria-pressed={fixed}
-            aria-label={`${name} is a fixed cost`}
-            onClick={() => save({ type: "setFixed", id, fixed: !fixed })}
-          >
-            <span aria-hidden="true">{fixed ? "[■]" : "[ ]"}</span> fixed cost
-          </button>
-          <Help>{FIXED_HELP}</Help>
+        <Section help={FIXED_HELP}>
+          <label className="CategoryDetail__check">
+            <input
+              type="checkbox"
+              aria-label={`${name} is a fixed cost`}
+              checked={fixed}
+              onChange={(e) => save({ type: "setFixed", id, fixed: e.target.checked })}
+            />
+            <span>fixed cost</span>
+          </label>
         </Section>
       )}
 
       {!archived && (
-        <Section title="monthly budget">
-          <Help>
-            {budgeted.length === 0
-              ? "No budget, so spending here isn't tracked against a limit. Enter a monthly amount to set one."
-              : "Spending is tracked against this each month. Remove it to stop budgeting this category."}
-          </Help>
-          {budgeted.length > 0 && (
+        <Section
+          help={
+            budgeted.length === 0
+              ? "Empty means no budget: spending here isn't tracked against a limit."
+              : "Spending is tracked against this each month. Remove it to stop budgeting this category."
+          }
+        >
+          {budgeted.length === 0 ? (
+            <div className="CategoryDetail__field">
+              <span className="CategoryDetail__label">monthly budget</span>
+              {newBudgetField(`Monthly budget for ${name}`)}
+            </div>
+          ) : (
             <ul className="CategoryDetail__budgets" aria-label={`${name} budgets`}>
-              {budgeted.map((currency) => (
-                <li key={currency} className="CategoryDetail__budget">
-                  <BudgetField
-                    category={category}
-                    currency={currency}
-                    drafts={budgetDrafts}
-                    label={`${name} budget in ${currency}`}
-                    onChange={(raw) => onBudgetChange(currency, raw)}
-                    onBlur={onBudgetCommit}
-                  />
-                  <RowButton
-                    aria-label={`Remove ${name} budget in ${currency}`}
-                    onClick={() => onBudgetRemove(currency)}
-                  >
-                    remove
-                  </RowButton>
+              {budgeted.map((currency, i) => (
+                <li key={currency} className="CategoryDetail__field">
+                  <span className="CategoryDetail__label">{i === 0 ? "monthly budget" : ""}</span>
+                  <span className="CategoryDetail__budget">
+                    <BudgetField
+                      category={category}
+                      currency={currency}
+                      drafts={budgetDrafts}
+                      label={`${name} budget in ${currency}`}
+                      onChange={(raw) => onBudgetChange(currency, raw)}
+                      onBlur={onBudgetCommit}
+                    />
+                    <RowButton
+                      aria-label={`Remove ${name} budget in ${currency}`}
+                      onClick={() => onBudgetRemove(currency)}
+                    >
+                      remove
+                    </RowButton>
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-          {addCurrency && (
-            <div className="CategoryDetail__budget CategoryDetail__budget--add">
-              {budgeted.length > 0 && (
-                <small className="CategoryDetail__addLabel">another currency</small>
+          {budgeted.length > 0 && newCurrency && (
+            <>
+              <button
+                type="button"
+                className="CategoryDetail__drawerToggle"
+                aria-expanded={mixedOpen}
+                aria-controls={mixedId}
+                onClick={() => setMixedOpen((open) => !open)}
+              >
+                {mixedOpen ? "[− mixed currency budget]" : "[+ mixed currency budget]"}
+              </button>
+              {mixedOpen && (
+                <div id={mixedId} className="CategoryDetail__field CategoryDetail__drawer">
+                  <span className="CategoryDetail__label">also</span>
+                  {newBudgetField(`Monthly budget for ${name} in another currency`)}
+                </div>
               )}
-              <BudgetField
-                category={category}
-                currency={addCurrency}
-                drafts={budgetDrafts}
-                label={`Monthly budget for ${name}`}
-                currencies={unbudgeted}
-                onChange={(raw) => onBudgetChange(addCurrency, raw)}
-                onBlur={onBudgetCommit}
-                onCurrencyChange={setPickedCurrency}
-              />
-            </div>
+            </>
           )}
         </Section>
       )}
 
-      <Section title={archived ? "archived" : "archive"}>
-        {archived ? (
-          <>
-            <Help>
-              Hidden when adding entries. Past entries keep this category. Restore it to use it
-              again.
-            </Help>
-            <RowButton
+      <Section
+        help={
+          lastActive ? "A log needs at least one category, so this one has to stay." : undefined
+        }
+      >
+        <div className="CategoryDetail__buttons">
+          {archived ? (
+            <Button
+              text="Restore"
+              size="sm"
+              variant="secondary"
               aria-label={`Restore ${name}`}
               onClick={() => save({ type: "unarchive", id })}
-            >
-              restore
-            </RowButton>
-          </>
-        ) : (
-          <>
-            <Help>
-              {lastActive
-                ? "A log needs at least one category, so this one can't be archived."
-                : "Hides this category when adding entries. Past entries keep it, and you can restore it any time."}
-            </Help>
-            <RowButton aria-label={`Archive ${name}`} disabled={lastActive} onClick={archive}>
-              archive
-            </RowButton>
-          </>
-        )}
-      </Section>
-
-      <Section title="delete">
-        {deleteState === "confirm" ? (
-          <div className="CategoryDetail__confirm" role="alert">
-            <p>
-              Delete <span className="keep-case">{name}</span>? This can't be undone.
-            </p>
-            <span className="CategoryDetail__buttons">
-              <RowButton aria-label={`Confirm delete ${name}`} onClick={confirmDelete}>
-                delete
-              </RowButton>
-              <RowButton onClick={() => setDeleteState("idle")}>keep</RowButton>
-            </span>
-          </div>
-        ) : deleteState === "in-use" ? (
-          <div className="CategoryDetail__confirm" role="alert">
-            <p>
-              {archived
-                ? "Some entries use this category, so it can't be deleted. It stays archived."
-                : "Some entries use this category, so it can't be deleted. Archive it to hide it instead."}
-            </p>
-            <span className="CategoryDetail__buttons">
-              {!archived && (
-                <RowButton aria-label={`Archive ${name} instead`} onClick={archive}>
-                  archive
-                </RowButton>
-              )}
-              <RowButton onClick={() => setDeleteState("idle")}>ok</RowButton>
-            </span>
-          </div>
-        ) : (
-          <>
-            <Help>
-              {!archived && lastActive
-                ? "A log needs at least one category, so this one can't be deleted."
-                : "Removes the category for good. Only possible while no entries use it."}
-            </Help>
-            {deleteState === "failed" && (
-              <small className="CategoryManager__error">
-                Couldn't check whether this category is in use. Try again.
-              </small>
-            )}
-            <RowButton
-              aria-label={`Delete ${name}`}
-              disabled={(!archived && lastActive) || deleteState === "checking"}
-              onClick={() => void askDelete()}
-            >
-              {deleteState === "checking" ? "checking…" : "delete"}
-            </RowButton>
-          </>
-        )}
+            />
+          ) : (
+            <Button
+              text="Archive"
+              size="sm"
+              variant="secondary"
+              aria-label={`Archive ${name}`}
+              disabled={lastActive}
+              onClick={onArchive}
+            />
+          )}
+          <Button
+            text="Delete"
+            size="sm"
+            variant="secondary"
+            aria-label={`Delete ${name}`}
+            disabled={lastActive}
+            onClick={onDelete}
+          />
+        </div>
       </Section>
     </div>
   );
 };
 
-const Section = ({ title, children }: { title: string; children: ReactNode }) => (
+/** A block of settings, with its fine print (if any) at the end. */
+const Section = ({ help, children }: { help?: ReactNode; children: ReactNode }) => (
   <section className="CategoryDetail__section">
-    <h4 className="CategoryDetail__heading">{title}</h4>
     {children}
+    {help && <p className="CategoryDetail__help">{help}</p>}
   </section>
-);
-
-const Help = ({ children }: { children: ReactNode }) => (
-  <p className="CategoryDetail__help">{children}</p>
 );
 
 export default CategoryDetail;

@@ -42,6 +42,11 @@ type CategoryManagerProps = {
 /** An edit shown straight away, kept on top of the server copy until it comes back. */
 type PendingEdit = { key: number; op: CategoryOp; saved: boolean };
 
+/** Archive and delete are confirmed in the window first, explaining what they do. */
+type Confirming =
+  | { kind: "archive"; id: string }
+  | { kind: "delete"; id: string; status: "checking" | "ready" | "in-use" | "failed" };
+
 /**
  * A list of categories and one category's detail: side by side on wide screens; on
  * phones the list, then tapping a row drills into its detail with a way back.
@@ -63,6 +68,7 @@ const CategoryManagerDialog = ({
   const wide = useMediaQuery(WIDE_QUERY);
   const [pending, setPending] = useState<PendingEdit[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Confirming | null>(null);
   // What's typed into budget fields; saved when the field is left.
   const [budgetDrafts, setBudgetDrafts] = useState<BudgetDrafts>({});
   const [saveFailed, setSaveFailed] = useState(false);
@@ -152,16 +158,32 @@ const CategoryManagerDialog = ({
     track("remove_budget");
   };
 
-  const inUse = async (categoryId: string) => {
+  /** Opens the delete confirmation, which first checks whether entries use it. */
+  const askDelete = async (categoryId: string) => {
+    const settle = (status: "ready" | "in-use" | "failed") =>
+      setConfirming((c) => (c?.kind === "delete" && c.id === categoryId ? { ...c, status } : c));
+    setConfirming({ kind: "delete", id: categoryId, status: "checking" });
     // A category whose add is still saving can't have entries yet.
     const unsaved = pending.some((e) => !e.saved && e.op.type === "add" && e.op.id === categoryId);
-    if (unsaved) return false;
+    if (unsaved) return settle("ready");
     try {
-      return await checkInUse(categoryId);
+      settle((await checkInUse(categoryId)) ? "in-use" : "ready");
     } catch (err) {
       reportError(err, { feature: "ledger", action: "check_category_in_use" });
-      throw err;
+      settle("failed");
     }
+  };
+
+  const archive = (categoryId: string) => {
+    save({ type: "archive", id: categoryId });
+    setConfirming(null);
+  };
+
+  const confirmDelete = (categoryId: string) => {
+    save({ type: "delete", id: categoryId });
+    track("delete_category");
+    setConfirming(null);
+    setSelectedId(null);
   };
 
   const select = (id: string | null) => {
@@ -202,10 +224,25 @@ const CategoryManagerDialog = ({
       }}
       onBudgetCommit={() => commitBudgets(selected.id)}
       onBudgetRemove={(currency) => removeBudget(selected.id, currency)}
-      checkInUse={() => inUse(selected.id)}
-      onDeleted={() => setSelectedId(null)}
+      onArchive={() => setConfirming({ kind: "archive", id: selected.id })}
+      onDelete={() => void askDelete(selected.id)}
     />
   );
+
+  // Gone (e.g. deleted by another member) while confirming: nothing left to confirm.
+  const confirmed = confirming && draft.find((c) => c.id === confirming.id);
+  if (confirming && confirmed) {
+    return (
+      <ConfirmView
+        confirming={confirming}
+        category={confirmed}
+        onBack={() => setConfirming(null)}
+        onArchive={() => archive(confirmed.id)}
+        onDelete={() => confirmDelete(confirmed.id)}
+        onRetry={() => void askDelete(confirmed.id)}
+      />
+    );
+  }
 
   return (
     <Modal
@@ -248,6 +285,84 @@ const CategoryManagerDialog = ({
           {isSaving ? "saving…" : "changes save automatically"}
         </small>
         <Button text="Done" variant="primary" onClick={close} />
+      </Modal.Actions>
+    </Modal>
+  );
+};
+
+/**
+ * The window's confirm step for archive and delete (in place, like deleting a log from
+ * its manage window): what the action does, then Back or go ahead.
+ */
+const ConfirmView = ({
+  confirming,
+  category,
+  onBack,
+  onArchive,
+  onDelete,
+  onRetry,
+}: {
+  confirming: Confirming;
+  category: LedgerCategory;
+  onBack: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
+  onRetry: () => void;
+}) => {
+  const name = <strong className="keep-case">{category.name}</strong>;
+  const status = confirming.kind === "delete" ? confirming.status : null;
+  const archiveHelp =
+    "Archiving hides it when adding entries. Past entries keep it, and you can restore it any time.";
+
+  return (
+    <Modal isOpen onClose={onBack} className="CategoryManager CategoryManager--confirm">
+      <Modal.Header striped title={`${confirming.kind} category`}>
+        {confirming.kind} category
+      </Modal.Header>
+      <Modal.Body>
+        {confirming.kind === "archive" && (
+          <>
+            <p>Archive {name}?</p>
+            <p className="CategoryManager__hint">{archiveHelp}</p>
+          </>
+        )}
+        {status === "checking" && <p role="status">Checking whether any entries use {name}…</p>}
+        {status === "ready" && (
+          <>
+            <p>Delete {name}?</p>
+            <p className="CategoryManager__hint">
+              No entries use it, so it can be removed for good. This can't be undone.
+            </p>
+          </>
+        )}
+        {status === "in-use" && (
+          <>
+            <p>Some entries use {name}, so it can't be deleted.</p>
+            <p className="CategoryManager__hint">
+              {category.archived ? "It's already archived. " : "Archive it instead. "}
+              {archiveHelp}
+            </p>
+          </>
+        )}
+        {status === "failed" && (
+          <p className="error-message">Couldn't check whether this category is in use.</p>
+        )}
+      </Modal.Body>
+      <Modal.Actions>
+        <Button text="Back" variant="secondary" onClick={onBack} />
+        {confirming.kind === "archive" && <Button text="Archive" onClick={onArchive} />}
+        {(status === "checking" || status === "ready") && (
+          <Button
+            text="Delete"
+            loading={status === "checking"}
+            disabled={status === "checking"}
+            onClick={onDelete}
+          />
+        )}
+        {status === "in-use" && !category.archived && (
+          <Button text="Archive instead" onClick={onArchive} />
+        )}
+        {status === "failed" && <Button text="Try again" onClick={onRetry} />}
       </Modal.Actions>
     </Modal>
   );
