@@ -1,6 +1,27 @@
 import { KNICK_KNACK_IDS, KnickKnackId } from "./catalog";
 import type { KnickKnackFind } from "./useUnseenFinds";
 
+/**
+ * Gifts sent by hand from the backend (functions/scripts/forest-gift.ts) rather than
+ * by a friend carry this sentinel as `giftedBy`. It's never a user doc id, so it's never
+ * looked up as a profile. Mirrors functions/src/giftsPlan.ts.
+ */
+export const FOREST_SPIRIT_ID = "~forest-spirit";
+export const FOREST_SPIRIT_NAME = "a forest spirit";
+
+/**
+ * The name to show for a gift's giver: the forest spirit, the giver's profile name, or
+ * `fallback` (no giver, or a deleted account).
+ */
+export const giverName = (
+  id: string | null | undefined,
+  nameOf: (userDocId: string) => string | undefined,
+  fallback: string,
+): string => {
+  if (id === FOREST_SPIRIT_ID) return FOREST_SPIRIT_NAME;
+  return (id && nameOf(id)) || fallback;
+};
+
 /** How one knick-knack came to its owner. */
 export type Provenance =
   | { kind: "found"; atMs: number | null }
@@ -27,7 +48,7 @@ export const provenanceLabel = (
 ): string => {
   const when = p.atMs != null ? formatDay(p.atMs) : null;
   if (p.kind !== "gift") return when ? `${p.kind} ${when}` : p.kind;
-  const from = `gift from ${p.fromId ? nameOf(p.fromId) : "someone"}`;
+  const from = `gift from ${giverName(p.fromId, nameOf, "someone")}`;
   return when ? `${from} · ${when}` : from;
 };
 
@@ -62,7 +83,9 @@ export const shelfSlots = (items: unknown): ShelfSlot[] => {
 /** Ids of everyone who gave anything on a shelf, to look up their names. */
 export const giverIds = (slots: ReadonlyArray<ShelfSlot>): string[] => [
   ...new Set(
-    slots.flatMap(({ provenance: p }) => (p.kind === "gift" && p.fromId ? [p.fromId] : [])),
+    slots.flatMap(({ provenance: p }) =>
+      p.kind === "gift" && p.fromId && p.fromId !== FOREST_SPIRIT_ID ? [p.fromId] : [],
+    ),
   ),
 ];
 

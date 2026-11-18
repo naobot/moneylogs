@@ -12,7 +12,8 @@ export type Season = "spring" | "summer" | "autumn" | "winter";
 export type Hemisphere = "north" | "south";
 /**
  * Milestone items are never found by chance (see milestones.ts), and neither are
- * special ones, which are granted by hand (scripts/grant-special.ts).
+ * special ones, which are granted by hand (scripts/grant-special.ts) or sent by the
+ * forest spirit (scripts/forest-gift.ts).
  */
 export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
@@ -54,6 +55,8 @@ export const KNICK_KNACK_FINDS = {
   friendship_bracelet: { seasons: [], rarity: "milestone" },
   little_envelope: { seasons: [], rarity: "milestone" },
   mini_robot_charm: { seasons: [], rarity: "special" },
+  enoki_bunch: { seasons: [], rarity: "special" },
+  olive_branch: { seasons: [], rarity: "special" },
 } as const satisfies Record<string, { seasons: readonly Season[]; rarity: Rarity }>;
 
 export type KnickKnackId = keyof typeof KNICK_KNACK_FINDS;
