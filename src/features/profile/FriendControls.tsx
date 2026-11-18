@@ -3,6 +3,7 @@ import { useState } from "react";
 import { removeFriend, requestFriend, respondFriend, useFriendships } from "@/hooks/useFriendships";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import Popover from "@/components/Popover";
 import RowButton from "@/components/RowButton";
 
 import { useFriendAction } from "./useFriendAction";
@@ -14,6 +15,9 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
   const { stateWith, isLoading } = useFriendships();
   const { run, pending } = useFriendAction();
   const [confirmingUnfriend, setConfirmingUnfriend] = useState(false);
+  // "friends ▾" tucks unfriend away in a menu, so it's never one stray tap away.
+  const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const state = stateWith(userDocId);
 
   if (isLoading) return null;
@@ -66,16 +70,45 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
 
       {state === "friends" && (
         <>
-          <span className="FriendControls__status FriendControls__status--friends">friends</span>
+          <button
+            ref={setMenuAnchor}
+            type="button"
+            className="FriendControls__friends"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            ✓ friends ▾
+          </button>
+          <Popover
+            anchor={menuAnchor}
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            placement="bottom"
+            align="start"
+            role="menu"
+            className="FriendControls__menu"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="FriendControls__menuItem"
+              disabled={!!pending}
+              onClick={() => {
+                setMenuOpen(false);
+                setConfirmingUnfriend(true);
+              }}
+            >
+              unfriend
+            </button>
+          </Popover>
           <Button
             text="Send a gift"
             size="sm"
             variant="secondary"
+            icon="gift"
             to={`/?giftTo=${userDocId}#knickknacks`}
           />
-          <RowButton disabled={!!pending} onClick={() => setConfirmingUnfriend(true)}>
-            unfriend
-          </RowButton>
         </>
       )}
 
