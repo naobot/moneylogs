@@ -219,7 +219,8 @@ async function lapse(
     `users/${userDocId}`,
     {
       createdAt: joined,
-      tutorials: { ledgerTour: joined, ledgerNudge: joined },
+      // Toured long ago: per log (ledgerTours) and the older one-per-account record.
+      tutorials: { ledgerTours: { [ledgerId]: joined }, ledgerTour: joined, ledgerNudge: joined },
       logLastViewedAt: { [ledgerId]: lastSeen },
     },
     { merge: true },
