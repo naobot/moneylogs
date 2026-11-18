@@ -31,3 +31,85 @@
   font-size: 0.85em;
   opacity: 0.7;
 }
+
+.DisplaySection__row--top {
+  align-items: flex-start;
+}
+
+// Colour themes, grouped by family. Each chip wears its own theme (data-theme), so its
+// --paper and --ink are that theme's; the button around it stays in the page's inks.
+.ThemeSwatches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1 1 18em;
+  min-width: 0;
+
+  &__family {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__family-name {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.5em, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+.ThemeSwatch {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: var(--border-hairline) dashed transparent;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--ink);
+  }
+
+  &:focus-visible {
+    outline: var(--border-rule) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &__chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5em;
+    font-weight: 700;
+    color: var(--ink);
+    background-color: var(--paper);
+    border: var(--border-hairline) solid var(--ink);
+  }
+
+  &__label {
+    padding: 0 var(--space-1);
+    font-size: 0.8em;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  // The current theme: a committed (solid) frame and an inverted label.
+  &--active,
+  &--active:hover {
+    border: var(--border-hairline) solid var(--ink);
+  }
+
+  &--active &__label {
+    color: var(--inverse-ink);
+    background-color: var(--inverse-surface);
+  }
+}

@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { DisplaySection } from "@/features/account/DisplaySection";
-import { getTheme, initTheme } from "@/utils/theme";
+import { COLOUR_THEMES, getTheme, initTheme } from "@/utils/theme";
 import { getDisplayPrefs, initDisplayPrefs } from "@/utils/displayPrefs";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -39,7 +39,10 @@ describe("DisplaySection", () => {
   const group = (label: string) =>
     Array.from(container.querySelectorAll<HTMLButtonElement>(`[aria-label="${label}"] button`));
   const selected = (label: string) =>
-    group(label).find((b) => b.classList.contains("Button--active"))?.textContent;
+    group(label).find(
+      (b) => b.classList.contains("Button--active") || b.getAttribute("aria-pressed") === "true",
+    )?.textContent;
+  const swatch = (name: string) => group("Colour").find((b) => b.textContent?.endsWith(name))!;
 
   it("marks the current theme and switches to night shift", () => {
     expect(selected("Theme")).toBe("Paper");
@@ -63,16 +66,27 @@ describe("DisplaySection", () => {
     expect(getTheme()).toBe("amber");
     expect(selected("Theme")).toBe("Amber CRT");
 
-    act(() => group("Colour")[2].click());
+    act(() => swatch("Riso").click());
     expect(getTheme()).toBe("riso");
     expect(document.documentElement.dataset.theme).toBe("riso");
-    expect(selected("Colour")).toBe("Riso");
+    expect(selected("Colour")).toBe("AaRiso");
 
     // Away and back: the star remembers Riso.
     act(() => group("Theme")[0].click());
     expect(group("Theme")[1].textContent).toBe("Riso");
     act(() => group("Theme")[1].click());
     expect(getTheme()).toBe("riso");
+  });
+
+  it("previews every colour theme in its own inks, grouped by family", () => {
+    const families = [...container.querySelectorAll(".ThemeSwatches__family-name")];
+    expect(families.map((f) => f.textContent)).toEqual(["retro", "pastel", "aero", "after dark"]);
+    const chips = [...container.querySelectorAll<HTMLElement>(".ThemeSwatch__chip")];
+    expect(chips.map((c) => c.dataset.theme)).toEqual([...COLOUR_THEMES]);
+
+    act(() => swatch("Gilt").click());
+    expect(getTheme()).toBe("gilt");
+    expect(swatch("Gilt").getAttribute("aria-pressed")).toBe("true");
   });
 
   it("labels clock and date options with live examples and switches them", () => {

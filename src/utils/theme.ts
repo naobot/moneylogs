@@ -7,20 +7,59 @@ import { storage } from "@/platform";
  * Kept per device in local storage: it is a viewing preference, not account data. The
  * CSS lives in src/tokens.scss under :root[data-theme="<id>"] (Paper has no attribute).
  */
-export const COLOUR_THEMES = ["amber", "blueprint", "riso"] as const;
+export const COLOUR_THEMES = [
+  "amber",
+  "blueprint",
+  "riso",
+  "gilt",
+  "mint",
+  "lavender",
+  "peach",
+  "butter",
+  "aqua",
+  "meadow",
+  "aurora",
+  "phosphor",
+  "midnight",
+  "oxblood",
+  "forest",
+] as const;
 export type ColourTheme = (typeof COLOUR_THEMES)[number];
 export type Theme = "paper" | "night" | ColourTheme;
 
 /** Whether text sits on a light or a dark ground. */
 export type ThemeTone = "light" | "dark";
 
-export const THEMES: Record<Theme, { label: string; tone: ThemeTone }> = {
+/** How the /me picker groups the colour themes. */
+export const THEME_FAMILIES = ["retro", "pastel", "aero", "after dark"] as const;
+export type ThemeFamily = (typeof THEME_FAMILIES)[number];
+
+type ThemeInfo = { label: string; tone: ThemeTone };
+
+export const THEMES: Record<Theme, ThemeInfo> &
+  Record<ColourTheme, ThemeInfo & { family: ThemeFamily }> = {
   paper: { label: "Paper", tone: "light" },
   night: { label: "Night shift", tone: "dark" },
-  amber: { label: "Amber CRT", tone: "dark" },
-  blueprint: { label: "Blueprint", tone: "dark" },
-  riso: { label: "Riso", tone: "light" },
+  amber: { label: "Amber CRT", tone: "dark", family: "retro" },
+  blueprint: { label: "Blueprint", tone: "dark", family: "retro" },
+  riso: { label: "Riso", tone: "light", family: "retro" },
+  gilt: { label: "Gilt", tone: "dark", family: "retro" },
+  mint: { label: "Mint", tone: "light", family: "pastel" },
+  lavender: { label: "Lavender", tone: "light", family: "pastel" },
+  peach: { label: "Peach", tone: "light", family: "pastel" },
+  butter: { label: "Butter", tone: "light", family: "pastel" },
+  aqua: { label: "Aqua", tone: "light", family: "aero" },
+  meadow: { label: "Meadow", tone: "light", family: "aero" },
+  aurora: { label: "Aurora", tone: "dark", family: "aero" },
+  phosphor: { label: "Phosphor", tone: "dark", family: "after dark" },
+  midnight: { label: "Midnight", tone: "dark", family: "after dark" },
+  oxblood: { label: "Oxblood", tone: "dark", family: "after dark" },
+  forest: { label: "Forest", tone: "dark", family: "after dark" },
 };
+
+/** The colour themes of one family, in picker order. */
+export const themesInFamily = (family: ThemeFamily): ColourTheme[] =>
+  COLOUR_THEMES.filter((id) => THEMES[id].family === family);
 
 export const THEME_LABELS = Object.fromEntries(
   Object.entries(THEMES).map(([id, { label }]) => [id, label]),

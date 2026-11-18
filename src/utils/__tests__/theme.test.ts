@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "vite-plus/test";
 import {
+  COLOUR_THEMES,
+  THEME_FAMILIES,
+  THEMES,
+  themesInFamily,
   getLastColourTheme,
   getTheme,
   initTheme,
@@ -90,5 +94,12 @@ describe("theme", () => {
     ["night", false, null, "paper"],
   ] as const)("toggles from %s (star %s, last %s) to %s", (from, includeStar, lastColour, to) => {
     expect(nextToggleTheme(from, { includeStar, lastColour })).toBe(to);
+  });
+});
+
+describe("colour theme registry", () => {
+  it("puts every colour theme in exactly one family, in registry order", () => {
+    expect(THEME_FAMILIES.flatMap(themesInFamily)).toEqual([...COLOUR_THEMES]);
+    for (const id of COLOUR_THEMES) expect(THEMES[id].family).toBeTruthy();
   });
 });

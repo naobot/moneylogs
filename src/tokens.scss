@@ -3,7 +3,7 @@
 // properties; nothing else should hard-code a colour, radius or font.
 //
 // Two inks only: `ink` on `paper`. Every theme is one such pair — Night shift swaps
-// Paper's, the colour themes (Amber CRT, Blueprint, Riso) bring their own — so any
+// Paper's, the colour themes bring their own — so any
 // component written against these tokens gets every theme for free. The theme list
 // lives in src/utils/theme.ts.
 
@@ -131,16 +131,24 @@
   color-scheme: #{$scheme};
 }
 
+// Paper's inks as a theme, for elements that preview a theme in place (the /me picker's
+// swatches carry data-theme). The page itself uses :root above, with no attribute.
+[data-theme="paper"] {
+  @include two-inks(#f5f3f0, #ffffff, #242424, rgba(0, 0, 0, 0.2), none, invert(1), light);
+}
+
 // Night shift: the same two inks, swapped.
-:root[data-theme="night"] {
+[data-theme="night"] {
   @include two-inks(#242424, #242424, #f5f3f0, rgba(0, 0, 0, 0.5), invert(1), none, dark);
 }
 
-// Colour themes. Filters generated with a hex-to-CSS-filter solver; regenerate them if
-// an ink or paper changes. --ink-muted stays >= 5:1 on paper and sheet in each.
+// Colour themes, in the order of THEMES in src/utils/theme.ts. Every theme block matches
+// any element, not just :root, so a swatch can wear a theme inside another. Check a new
+// pair and generate its icon filters with `node scripts/theme-inks.mjs <paper> <sheet>
+// <ink>`: --ink-muted must stay >= 5:1 on paper and sheet.
 
 // Amber CRT: amber phosphor on a warm black.
-:root[data-theme="amber"] {
+[data-theme="amber"] {
   @include two-inks(
     #1c1408,
     #221a0c,
@@ -155,7 +163,7 @@
 }
 
 // Blueprint: chalk-white lines on cyanotype blue.
-:root[data-theme="blueprint"] {
+[data-theme="blueprint"] {
   @include two-inks(
     #1d3a66,
     #21426f,
@@ -170,7 +178,7 @@
 }
 
 // Riso: plum ink on pink stock, like a risograph print.
-:root[data-theme="riso"] {
+[data-theme="riso"] {
   @include two-inks(
     #fbe3ea,
     #fff1f5,
@@ -181,5 +189,185 @@
     brightness(0) saturate(100%) invert(90%) sepia(10%) saturate(914%) hue-rotate(300deg)
       brightness(106%) contrast(97%),
     light
+  );
+}
+
+// Gilt: gold leaf on graphite, like a well-loved code editor.
+[data-theme="gilt"] {
+  @include two-inks(
+    #232427,
+    #29292d,
+    #ffc24d,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(82%) sepia(14%) saturate(2225%) hue-rotate(335deg)
+      brightness(104%) contrast(102%),
+    brightness(0) saturate(100%) invert(11%) sepia(6%) saturate(687%) hue-rotate(187deg)
+      brightness(96%) contrast(92%),
+    dark
+  );
+}
+
+// Mint: pastel. Bottle green on mint.
+[data-theme="mint"] {
+  @include two-inks(
+    #e2f5ea,
+    #f1fbf5,
+    #0c2e20,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(11%) sepia(11%) saturate(3648%) hue-rotate(108deg)
+      brightness(92%) contrast(91%),
+    brightness(0) saturate(100%) invert(94%) sepia(12%) saturate(265%) hue-rotate(83deg)
+      brightness(103%) contrast(92%),
+    light
+  );
+}
+
+// Lavender: pastel. Deep violet on lavender.
+[data-theme="lavender"] {
+  @include two-inks(
+    #e9e2f7,
+    #f5f1fc,
+    #261a4a,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(11%) sepia(18%) saturate(5167%) hue-rotate(234deg)
+      brightness(92%) contrast(98%),
+    brightness(0) saturate(100%) invert(92%) sepia(10%) saturate(1158%) hue-rotate(194deg)
+      brightness(102%) contrast(94%),
+    light
+  );
+}
+
+// Peach: pastel. Burnt umber on peach.
+[data-theme="peach"] {
+  @include two-inks(
+    #fde6d6,
+    #fff3eb,
+    #3e1c0b,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(11%) sepia(64%) saturate(806%) hue-rotate(338deg)
+      brightness(98%) contrast(98%),
+    brightness(0) saturate(100%) invert(86%) sepia(14%) saturate(547%) hue-rotate(328deg)
+      brightness(108%) contrast(98%),
+    light
+  );
+}
+
+// Butter: pastel. Dark olive on butter yellow.
+[data-theme="butter"] {
+  @include two-inks(
+    #fbf3d0,
+    #fffbe8,
+    #302707,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(13%) sepia(76%) saturate(454%) hue-rotate(11deg)
+      brightness(95%) contrast(98%),
+    brightness(0) saturate(100%) invert(88%) sepia(48%) saturate(265%) hue-rotate(320deg)
+      brightness(107%) contrast(97%),
+    light
+  );
+}
+
+// Aqua: aero. Deep ocean blue on clear sky.
+[data-theme="aqua"] {
+  @include two-inks(
+    #d9f2fb,
+    #f1fbff,
+    #002b47,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(11%) sepia(60%) saturate(2487%) hue-rotate(184deg)
+      brightness(95%) contrast(101%),
+    brightness(0) saturate(100%) invert(88%) sepia(20%) saturate(207%) hue-rotate(158deg)
+      brightness(103%) contrast(97%),
+    light
+  );
+}
+
+// Meadow: aero. Forest green on spring grass.
+[data-theme="meadow"] {
+  @include two-inks(
+    #e5f6d4,
+    #f5fdea,
+    #0f340a,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(11%) sepia(82%) saturate(889%) hue-rotate(76deg)
+      brightness(103%) contrast(93%),
+    brightness(0) saturate(100%) invert(96%) sepia(15%) saturate(410%) hue-rotate(32deg)
+      brightness(101%) contrast(93%),
+    light
+  );
+}
+
+// Aurora: aero after dark. Glassy cyan on deep teal.
+[data-theme="aurora"] {
+  @include two-inks(
+    #052a43,
+    #093553,
+    #7fe0ff,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(79%) sepia(18%) saturate(4602%) hue-rotate(176deg)
+      brightness(115%) contrast(101%),
+    brightness(0) saturate(100%) invert(11%) sepia(15%) saturate(7498%) hue-rotate(184deg)
+      brightness(92%) contrast(96%),
+    dark
+  );
+}
+
+// Phosphor: green P1 phosphor on a terminal black.
+[data-theme="phosphor"] {
+  @include two-inks(
+    #0b170d,
+    #0f1f12,
+    #39ff6a,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(80%) sepia(26%) saturate(1220%) hue-rotate(72deg)
+      brightness(102%) contrast(101%),
+    brightness(0) saturate(100%) invert(6%) sepia(45%) saturate(539%) hue-rotate(79deg)
+      brightness(100%) contrast(97%),
+    dark
+  );
+}
+
+// Midnight: periwinkle on navy.
+[data-theme="midnight"] {
+  @include two-inks(
+    #13142a,
+    #191b36,
+    #c8ccf6,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(74%) sepia(33%) saturate(271%) hue-rotate(198deg)
+      brightness(105%) contrast(93%),
+    brightness(0) saturate(100%) invert(5%) sepia(26%) saturate(3527%) hue-rotate(220deg)
+      brightness(98%) contrast(95%),
+    dark
+  );
+}
+
+// Oxblood: blush on burgundy.
+[data-theme="oxblood"] {
+  @include two-inks(
+    #2a0e12,
+    #331419,
+    #f4c7b9,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(97%) sepia(35%) saturate(1378%) hue-rotate(295deg)
+      brightness(96%) contrast(98%),
+    brightness(0) saturate(100%) invert(8%) sepia(7%) saturate(6325%) hue-rotate(306deg)
+      brightness(91%) contrast(99%),
+    dark
+  );
+}
+
+// Forest: lichen on pine.
+[data-theme="forest"] {
+  @include two-inks(
+    #18221a,
+    #1e2a20,
+    #d3e4c0,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(95%) sepia(11%) saturate(496%) hue-rotate(36deg)
+      brightness(93%) contrast(93%),
+    brightness(0) saturate(100%) invert(10%) sepia(34%) saturate(408%) hue-rotate(79deg)
+      brightness(91%) contrast(93%),
+    dark
   );
 }
