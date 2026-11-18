@@ -119,14 +119,52 @@
   &__status {
     font-size: 0.85em;
     color: var(--ink-muted);
+  }
 
-    // Committed: shown solid and inverted, not faded.
-    &--friends {
-      padding: 0.1em 0.5em;
+  // A status that happens to open a menu: unframed, so it reads as a label
+  // beside the gift button rather than a third competing action.
+  &__friends {
+    padding: 0.1em 0;
+    font: inherit;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: lowercase;
+    color: var(--ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible,
+    &[aria-expanded="true"] {
+      text-decoration: underline;
+    }
+  }
+
+  &__menu {
+    padding: var(--space-1);
+  }
+
+  &__menuItem {
+    display: block;
+    width: 100%;
+    padding: 0.2em 0.6em;
+    font: inherit;
+    font-size: 0.85em;
+    text-align: left;
+    color: var(--ink-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
-      font-weight: 700;
-      text-transform: lowercase;
+    }
+
+    &:disabled {
+      cursor: default;
     }
   }
 }
