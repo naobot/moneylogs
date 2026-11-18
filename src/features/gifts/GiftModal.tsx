@@ -13,6 +13,7 @@ import { giftableByItem, giftKnickKnack } from "@/features/ledger/buddy/knickkna
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 
+import { chooseFriend } from "./chooseFriend";
 import { giftLeftLine } from "./giftCopy";
 import "./GiftModal.scss";
 
@@ -39,9 +40,10 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
   const profiles = useProfiles(friends);
   const friendSelectId = useId();
 
-  const [friend, setFriend] = useState(
-    toUserDocId && friends.includes(toUserDocId) ? toUserDocId : "",
-  );
+  // The friend picked in the dropdown, if any. The preselection is applied at render
+  // (chooseFriend), not as initial state: this modal's friends list loads after it
+  // mounts, so checking it up front missed and fell back to the first friend.
+  const [friend, setFriend] = useState("");
   const [pending, setPending] = useState(false);
 
   const owned = finds.filter((f) => f.item === item && f.seenAt).length;
@@ -49,7 +51,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
     () => giftableByItem(finds).find((g) => g.item === item)?.finds ?? [],
     [finds, item],
   );
-  const chosenFriend = friend || friends[0] || "";
+  const chosenFriend = chooseFriend(friend, toUserDocId, friends);
   const nameOf = (id: string) => profiles.get(id)?.displayName ?? "…";
   const itemName = KNICK_KNACKS[item].name.toLowerCase();
 
