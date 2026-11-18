@@ -9,13 +9,14 @@ import { hemisphereOf, Season, seasonOf } from "./seasons";
 export type KnickKnackId = keyof typeof ART;
 
 /**
- * Rare items turn up less often than the others in season (weights live server-side).
+ * Super-common items turn up most often and can be found all year; rare ones turn up
+ * less often than the others in season (weights live server-side).
  * Milestone items are never found by chance: the buddy hands them over with an
  * achievement (functions/src/milestones.ts), and they can't be gifted. Special items
  * aren't found by chance either: they're granted by hand
  * (functions/scripts/grant-special.ts), and can be gifted like any find.
  */
-export type Rarity = "common" | "rare" | "milestone" | "special";
+export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
 export type KnickKnackInfo = {
   name: string;
@@ -30,6 +31,8 @@ export type KnickKnackInfo = {
    */
   fromLog: boolean;
 };
+
+const ALL_SEASONS: readonly Season[] = ["spring", "summer", "autumn", "winter"];
 
 export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
   acorn: {
@@ -142,6 +145,27 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "rare",
     seasons: ["summer"],
     found: "a dragonfly looped right past my nose and landed on the receipts ♪",
+    fromLog: true,
+  },
+  mushroom: {
+    name: "mushroom",
+    rarity: "super_common",
+    seasons: ALL_SEASONS,
+    found: "a little mushroom popped up overnight! i'm not eating it. *sniffs it a lot*",
+    fromLog: true,
+  },
+  pebble: {
+    name: "pebble",
+    rarity: "super_common",
+    seasons: ALL_SEASONS,
+    found: "a perfectly smooth pebble! it fits right in my paw ♪ i'm keeping it forever~",
+    fromLog: true,
+  },
+  feather: {
+    name: "feather",
+    rarity: "super_common",
+    seasons: ALL_SEASONS,
+    found: "a feather floated down from somewhere! i chased it for ages… worth it ♡",
     fromLog: true,
   },
   copper_coin: {

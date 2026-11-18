@@ -15,10 +15,11 @@ export type Hemisphere = "north" | "south";
  * Milestone items are never found by chance (see milestones.ts), and neither are
  * special ones, which are granted by hand (scripts/grant-special.ts).
  */
-export type Rarity = "common" | "rare" | "milestone" | "special";
+export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
 /** How often each rarity is picked, relative to the others in season. */
 export const RARITY_WEIGHTS: Record<Rarity, number> = {
+  super_common: 6,
   common: 3,
   rare: 1,
   milestone: 0,
@@ -42,6 +43,9 @@ export const KNICK_KNACK_FINDS = {
   daisy: { seasons: ["summer"], rarity: "common" },
   sunflower: { seasons: ["summer"], rarity: "common" },
   dragonfly: { seasons: ["summer"], rarity: "rare" },
+  mushroom: { seasons: ["spring", "summer", "autumn", "winter"], rarity: "super_common" },
+  pebble: { seasons: ["spring", "summer", "autumn", "winter"], rarity: "super_common" },
+  feather: { seasons: ["spring", "summer", "autumn", "winter"], rarity: "super_common" },
   copper_coin: { seasons: [], rarity: "milestone" },
   silver_coin: { seasons: [], rarity: "milestone" },
   gold_coin: { seasons: [], rarity: "milestone" },
