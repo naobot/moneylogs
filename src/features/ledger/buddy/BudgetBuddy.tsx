@@ -65,7 +65,7 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   const localHour = localHourIn(now, user?.timezone);
 
   const previousMonth = shiftMonth(month, -1);
-  const { byMonth, isSuccess } = useLedgerMonths({
+  const { byMonth, isSuccess: monthsLoaded } = useLedgerMonths({
     ledgerId: ledger.id,
     from: previousMonth,
     to: month,
@@ -74,6 +74,9 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   // Only confirmed days count as no-spend: an unlogged day may just have been forgotten.
   const noSpend = useNoSpendDays();
   const confirmedToday = noSpend.days.has(today);
+  // Both have to be in before it speaks up: without the no-spend days, an already
+  // confirmed day looks unconfirmed, and the check-in asks again (using up today's).
+  const isSuccess = monthsLoaded && noSpend.isSuccess;
 
   // Cheap enough to work out on every render: two month docs and a few categories.
   const state = buddyMood({

@@ -4,6 +4,7 @@ import { db } from "@/config/firebase-config";
 import { Currency, Group, LogPost } from "@/types/user";
 import { absoluteEnd } from "@/utils/groupBoundaries";
 import { IconType } from "@/components/Icon";
+import { reportError } from "@/utils/reportError";
 import {
   MilestoneAchievementType,
   isMilestoneAchievementType,
@@ -116,25 +117,31 @@ export const sortAchievementsByGroupEnd = <T extends HeldAchievement>(
 };
 
 export const useGetAchievements = (userId?: string) => {
-  const [achievements, setAchievements] = useState<HeldAchievement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Kept with the user they belong to, so a new userId reads as loading, not as the
+  // previous user's list (or as "none").
+  const [result, setResult] = useState<{
+    userId: string;
+    achievements: HeldAchievement[];
+    isError: boolean;
+  } | null>(null);
 
   useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!userId) return;
 
     let cancelled = false;
     getDocs(achievementsCollection(userId))
       .then((snapshot) => {
         if (cancelled) return;
-        setAchievements(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as HeldAchievement));
-        setIsLoading(false);
+        setResult({
+          userId,
+          achievements: snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as HeldAchievement),
+          isError: false,
+        });
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
-        setIsLoading(false);
+        reportError(err, { feature: "account", action: "load_achievements" });
+        setResult({ userId, achievements: [], isError: true });
       });
 
     return () => {
@@ -142,8 +149,15 @@ export const useGetAchievements = (userId?: string) => {
     };
   }, [userId]);
 
-  return { achievements, isLoading };
+  const current = userId && result?.userId === userId ? result : null;
+  return {
+    achievements: current?.achievements ?? EMPTY_ACHIEVEMENTS,
+    isLoading: !!userId && !current,
+    isError: !!current?.isError,
+  };
 };
+
+const EMPTY_ACHIEVEMENTS: HeldAchievement[] = [];
 
 // Checks eligibility and writes any newly earned achievements for a completed group.
 // Returns the achievements that were just unlocked (empty if already held or ineligible).

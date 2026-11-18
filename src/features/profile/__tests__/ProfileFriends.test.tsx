@@ -10,8 +10,10 @@ vi.mock("../useFriendList", () => ({
   useFriendList: () => ({ friends: state.friends, isLoading: false }),
 }));
 vi.mock("@/hooks/useProfiles", () => ({
-  useProfiles: (ids: string[]) =>
-    new Map(ids.map((id) => [id, { id, displayName: id.toUpperCase(), avatar: null }])),
+  useProfiles: (ids: string[]) => ({
+    profiles: new Map(ids.map((id) => [id, { id, displayName: id.toUpperCase(), avatar: null }])),
+    isLoading: false,
+  }),
 }));
 vi.mock("@/contexts", () => ({ useCurrentUser: () => ({ user: { id: "viewer" } }) }));
 

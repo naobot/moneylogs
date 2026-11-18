@@ -23,7 +23,7 @@ type ProfileFriendsProps = {
  */
 export const ProfileFriends = ({ userDocId, isMe }: ProfileFriendsProps) => {
   const { friends, isLoading } = useFriendList(userDocId);
-  const profiles = useProfiles(friends ?? []);
+  const { profiles, isLoading: profilesLoading } = useProfiles(friends ?? []);
   const memberProfiles = useMemo(
     () =>
       new Map<string, MemberProfile>(
@@ -32,7 +32,7 @@ export const ProfileFriends = ({ userDocId, isMe }: ProfileFriendsProps) => {
     [profiles],
   );
 
-  if (isLoading) return null;
+  if (isLoading || profilesLoading) return null;
   if (!friends && !isMe) return null;
 
   // A deleted account drops out of the list as its friendships go (mirrorFriendList).

@@ -6,7 +6,8 @@ import { db } from "@/config/firebase-config";
 export const useGetGroup = (groupId?: string) => {
   const [state, setState] = useState({
     group: undefined as Group | undefined,
-    isLoading: false,
+    // Loading from the first render, so "not loaded" never reads as "no such log".
+    isLoading: !!groupId,
     isSuccess: false,
     isError: false,
     error: undefined as unknown,

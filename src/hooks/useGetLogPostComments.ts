@@ -70,7 +70,9 @@ type UseGetCommentsParams = {
 export const useGetComments = ({ logPostId, forceFresh = false }: UseGetCommentsParams) => {
   const [state, setState] = useState({
     data: [] as Comment[],
-    isLoading: false,
+    // Loading from the first render when there's a post: an empty list before the fetch
+    // starts would read as "no comments".
+    isLoading: !!logPostId,
     isSuccess: false,
     error: null as unknown,
   });
@@ -171,7 +173,11 @@ export const useGetComments = ({ logPostId, forceFresh = false }: UseGetComments
       return;
     }
 
-    // Update current post ref
+    // A different post: drop the previous one's comments rather than showing them under
+    // this one until the fetch lands.
+    if (currentPostIdRef.current !== logPostId) {
+      setState({ data: [], isLoading: true, isSuccess: false, error: null });
+    }
     currentPostIdRef.current = logPostId;
 
     // If forceFresh is true, invalidate cache immediately

@@ -81,7 +81,11 @@ export const useGetGroupUsers = (groupId: string) => {
   useEffect(() => {
     // console.log(`getGroupUsers for ${groupId}`)
 
-    if (!groupId) return;
+    if (!groupId) {
+      setUsers([]);
+      setIsLoading(false);
+      return;
+    }
 
     // Try to get cached user profiles first
     const cachedUsers = getCachedUsers(groupId);
@@ -150,6 +154,7 @@ export const useGetGroupUsers = (groupId: string) => {
         // Signature of the last member list we actually applied, so we can ignore
         // snapshots that only touched churny, nav-irrelevant fields (see below).
         let appliedSignature: string | null = null;
+        let allChunksReported = false;
 
         chunks.forEach((chunk, chunkIndex) => {
           const chunkQuery = query(collection(db, "profiles"), where("__name__", "in", chunk));
@@ -176,6 +181,15 @@ export const useGetGroupUsers = (groupId: string) => {
 
               const allUsers = chunkResults.flat();
 
+              // Members aren't loaded until every chunk has answered: before that, a
+              // member in a later chunk would show as "someone". (Cached members, if any,
+              // already cleared the loading state above.)
+              // Only once, so a restamp-only snapshot still causes no re-render.
+              if (!allChunksReported && receivedChunks.size === chunks.length) {
+                allChunksReported = true;
+                setIsLoading(false);
+              }
+
               // A member's user doc changes constantly as they view logs, subscribe to
               // comments, or are seen — but the nav reads those fields only from the
               // current user (via context), never from other members. Skip all state
@@ -189,7 +203,6 @@ export const useGetGroupUsers = (groupId: string) => {
 
               // Update state with current users
               setUsers(allUsers);
-              setIsLoading(false);
 
               // Only cache once every chunk has reported at least once, so we never
               // persist a partial member list.

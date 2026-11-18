@@ -21,9 +21,11 @@ const MainNav = () => {
 
   const location = useLocation();
   const currentGroupId = location.pathname.match(/\/[gl]\/([^/]+)/)?.[1];
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const groupsQuery = useGetCurrentGroups();
-  const { isSuccess, isLoading } = groupsQuery;
+  const { isSuccess } = groupsQuery;
+  // Archived logs are on the user doc: until it's in, they'd be listed as current.
+  const isLoading = groupsQuery.isLoading || userLoading;
   const ledgersQuery = useGetMyLedgers();
 
   // Same arrangement as the Home dashboard, so the nav and Home always agree: archived
@@ -78,20 +80,22 @@ const MainNav = () => {
         <div className="MainNav__logs">
           {/* Financial logs never end, so they're always listed — independently of
               whether the social groups query has loaded. */}
-          {ledgers.map((ledger) => (
-            <Button
-              key={ledger.id}
-              to={`/l/${ledger.id}`}
-              title={ledger.title}
-              text={ledger.title}
-              icon="dollar"
-              variant="toggle"
-              className="MainNav__log"
-              isSelected={highlightedGroupId == ledger.id}
-            />
-          ))}
+          {!userLoading &&
+            ledgers.map((ledger) => (
+              <Button
+                key={ledger.id}
+                to={`/l/${ledger.id}`}
+                title={ledger.title}
+                text={ledger.title}
+                icon="dollar"
+                variant="toggle"
+                className="MainNav__log"
+                isSelected={highlightedGroupId == ledger.id}
+              />
+            ))}
           {isLoading && <div>...</div>}
           {isSuccess &&
+            !userLoading &&
             currentGroups.map((group) => (
               <Button
                 key={group.id}
