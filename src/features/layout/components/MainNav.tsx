@@ -42,6 +42,9 @@ const MainNav = () => {
   const { signOut, isPending: signOutPending } = useSignOut();
 
   const showLogs = isLoggedIn && (ledgers.length > 0 || isLoading || currentGroups.length > 0);
+  // The signed-out login page has its own "moneylogs" heading; a second one in the
+  // corner just repeats it.
+  const showWordmark = isLoggedIn || location.pathname !== "/login";
 
   // Three parts. On desktop they sit in one row (nav, logs, brand). On phones the brand
   // and nav share the top row, and the logs get a scrollable row of their own beneath.
@@ -105,9 +108,11 @@ const MainNav = () => {
         </div>
       )}
       <div className="MainNav__brand">
-        <Link to={"/about"} className="MainNav__wordmark">
-          moneylogs <small>{__APP_VERSION__}</small>
-        </Link>
+        {showWordmark && (
+          <Link to={"/about"} className="MainNav__wordmark">
+            moneylogs <small>{__APP_VERSION__}</small>
+          </Link>
+        )}
         {/* Theme toggle and sign-out read as one pair of icons, set close together. On
             phones the theme toggle is left to /me (Display drawer); sign-out stays. */}
         <span className="MainNav__iconPair">
