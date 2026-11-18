@@ -41,7 +41,7 @@ export const PersonalLogNudge = ({ ledgerIds }: { ledgerIds: readonly string[] }
       <Link to={`/l/${personalLedgerId(user.userId)}`} onClick={seen}>
         take the 1-minute tour ›
       </Link>
-      <RowButton glyph aria-label="Dismiss" onClick={seen}>
+      <RowButton glyph className="PersonalLogNudge__dismiss" aria-label="Dismiss" onClick={seen}>
         ×
       </RowButton>
     </aside>

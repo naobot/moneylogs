@@ -7,6 +7,7 @@ import {
   onboardingRedirect,
   reachableWelcomeStep,
   WelcomeState,
+  welcomeDestination,
 } from "../welcomeSteps";
 
 const complete: WelcomeState = {
@@ -82,5 +83,22 @@ describe("onboardingRedirect", () => {
     expect(onboardingRedirect(pending, { pathname: "/login" })).toBeNull();
     expect(onboardingRedirect(pending, { pathname: "/about" })).toBeNull();
     expect(onboardingRedirect(pending, { pathname: "/auth/action" })).toBeNull();
+  });
+});
+
+describe("welcomeDestination", () => {
+  it("lands on Home by default", () => {
+    expect(welcomeDestination(undefined)).toBe("/");
+  });
+
+  it("lands on Home instead of settings", () => {
+    expect(welcomeDestination("/me")).toBe("/");
+    expect(welcomeDestination("/me#logs")).toBe("/");
+    expect(welcomeDestination("/me?x=1")).toBe("/");
+  });
+
+  it("carries on to anywhere else", () => {
+    expect(welcomeDestination("/g/abc/invite")).toBe("/g/abc/invite");
+    expect(welcomeDestination("/messages")).toBe("/messages");
   });
 });

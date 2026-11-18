@@ -13,7 +13,6 @@ import { DisplaySection } from "@/features/account/DisplaySection";
 import dayjs from "@/utils/configuredDayjs";
 import { nextDisplayLocation, Place, placeLabel } from "@/utils/citySearch";
 import { ledgerStartCurrency } from "@/utils/currency";
-import { personalLedgerId } from "@/utils/personalLedger";
 import { reportError, trackStep } from "@/utils/reportError";
 
 import ControlledInput from "@/components/ControlledInput";
@@ -26,6 +25,7 @@ import {
   displayNameError,
   isWelcomeStepValid,
   reachableWelcomeStep,
+  welcomeDestination,
   WELCOME_STEP_LABELS,
   WELCOME_STEPS,
   WelcomeState,
@@ -52,7 +52,7 @@ const initialState = (user: UserData): WelcomeState => ({
 /**
  * First-run setup for a new account, one question per step: name, where you're based
  * (which sets the timezone), display, default currency. Each step is saved as you go, so a refresh resumes where you
- * were. Finishing makes your personal log in your currency and takes you there (or on to
+ * were. Finishing makes your personal log in your currency and takes you Home (or on to
  * the invite you signed up from).
  */
 export const WelcomeWizard = () => {
@@ -66,6 +66,7 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const next = sanitizeRedirect(searchParams.get("next") ?? undefined);
+  const destination = welcomeDestination(next);
 
   const [state, setState] = useState<WelcomeState>(() => initialState(user));
   const update = (patch: Partial<WelcomeState>) => setState((prev) => ({ ...prev, ...patch }));
@@ -140,7 +141,7 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
       trackStep("onboarding", "finished welcome step", { step, index: stepIndex });
       if (isLast) {
         trackStep("onboarding", "finished welcome wizard", { toInvite: !!next });
-        void navigate(next ?? `/l/${personalLedgerId(user.userId)}`, { replace: true });
+        void navigate(destination, { replace: true });
         return;
       }
       goTo(stepIndex + 1);
@@ -245,7 +246,7 @@ const WelcomeWizardForm = ({ user }: { user: UserData }) => {
       stepIndex={stepIndex}
       onBack={() => goTo(stepIndex - 1)}
       onNext={() => void handleNext()}
-      nextText={isLast ? (next ? "Finish" : "Take me to my log") : "Next"}
+      nextText={isLast ? (destination === "/" ? "Take me home" : "Finish") : "Next"}
       nextDisabled={!isWelcomeStepValid(step, state)}
       busy={saving}
     >

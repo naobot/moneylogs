@@ -60,7 +60,8 @@ describe("WelcomeWizard", () => {
         <MemoryRouter initialEntries={[entry]}>
           <Routes>
             <Route path="/welcome" element={<WelcomeWizard />} />
-            <Route path="/l/:id" element={<div id="landed">ledger</div>} />
+            <Route path="/" element={<div id="landed">home</div>} />
+            <Route path="/me" element={<div id="landed">me</div>} />
             <Route path="/g/:id/invite" element={<div id="landed">invite</div>} />
           </Routes>
         </MemoryRouter>,
@@ -136,7 +137,7 @@ describe("WelcomeWizard", () => {
 
     expect(question()).toMatch(/currency/);
     chooseCurrency("CAD");
-    await click("Take me to my log");
+    await click("Take me home");
 
     expect(ensurePersonalLedger).toHaveBeenCalledWith({
       member: { uid: "uid-1", userDocId: "doc-1" },
@@ -150,7 +151,7 @@ describe("WelcomeWizard", () => {
     expect(ensurePersonalLedger.mock.invocationCallOrder[0]).toBeLessThan(
       updateUserFields.mock.invocationCallOrder.at(-1)!,
     );
-    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+    expect(container.querySelector("#landed")?.textContent).toBe("home");
   });
 
   const pickPlace = (typed: string, option: string) => {
@@ -201,10 +202,16 @@ describe("WelcomeWizard", () => {
     expect(container.querySelector("#landed")?.textContent).toBe("invite");
   });
 
+  it("lands on Home rather than settings", async () => {
+    render(`/welcome?step=3&next=${encodeURIComponent("/me#logs")}`);
+    await click("Take me home");
+    expect(container.querySelector("#landed")?.textContent).toBe("home");
+  });
+
   it("ignores an off-site next", async () => {
     render(`/welcome?step=3&next=${encodeURIComponent("//evil.com")}`);
-    await click("Take me to my log");
-    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+    await click("Take me home");
+    expect(container.querySelector("#landed")?.textContent).toBe("home");
   });
 
   it("stays put and says so when a save fails", async () => {

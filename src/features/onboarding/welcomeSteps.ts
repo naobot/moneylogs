@@ -83,3 +83,13 @@ export const onboardingRedirect = (
   const from = `${pathname}${search}${hash}`;
   return from === "/" ? "/welcome" : `/welcome?next=${encodeURIComponent(from)}`;
 };
+
+/**
+ * Where the wizard lands a user once they're done: where they were headed (an invite
+ * link, say), or else their Home dashboard. Settings (/me) isn't a destination worth
+ * carrying through — the wizard has just covered it — so it lands on Home too.
+ */
+export const welcomeDestination = (next?: string): string => {
+  if (!next || /^\/me(?:[/?#]|$)/.test(next)) return "/";
+  return next;
+};
