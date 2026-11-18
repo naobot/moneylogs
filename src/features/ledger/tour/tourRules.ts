@@ -21,11 +21,16 @@ export type LedgerTourStep = {
   align?: "center" | "start" | "end";
 };
 
-export const LEDGER_TOUR_STEPS: readonly LedgerTourStep[] = [
-  { target: "amount", text: "This is your personal log. Type what you spent here." },
+/** The tour for a log. Only the opening tips differ between the personal log and others. */
+export const ledgerTourSteps = (isPersonal: boolean): readonly LedgerTourStep[] => [
+  isPersonal
+    ? { target: "amount", text: "This is your personal log. Type what you spent here." }
+    : { target: "amount", text: "Type what you spent here. Everyone in this log sees it." },
   {
     target: "currency",
-    text: "It starts on your default currency. Switch it for anything you paid in another.",
+    text: isPersonal
+      ? "It starts on your default currency. Switch it for anything you paid in another."
+      : "It starts on this log's currency. Switch it for anything you paid in another.",
   },
   { target: "category", text: "Pick a category so your totals add up by kind.", align: "end" },
   {
@@ -47,36 +52,55 @@ export const LEDGER_TOUR_STEPS: readonly LedgerTourStep[] = [
   },
 ];
 
+/**
+ * Logs created from this day on run the tour for everyone in them. Older shared logs don't,
+ * so existing members aren't toured through logs they already know. The personal log
+ * always runs it once.
+ */
+export const TOUR_NEW_LOGS_SINCE = Date.UTC(2026, 10, 18);
+
 type TourUser = {
   userId: string;
   onboardingPending?: boolean;
-  tutorials?: { ledgerTour?: unknown; ledgerNudge?: unknown };
+  tutorials?: {
+    ledgerTours?: Record<string, unknown>;
+    ledgerNudge?: unknown;
+    /** The old one-per-account record. Ignored: everyone sees the per-log tour once more. */
+    ledgerTour?: unknown;
+  };
 };
 
+type TourLedger = {
+  id: string;
+  /** Missing (or null while the server timestamp is pending) on a log just created. */
+  createdAt?: { toMillis: () => number } | null;
+};
+
+const isNewLog = (ledger: TourLedger) =>
+  !ledger.createdAt || ledger.createdAt.toMillis() >= TOUR_NEW_LOGS_SINCE;
+
 /**
- * Whether to run the tour on this ledger: it's the user's own personal log, it's still
- * empty, and they've neither finished nor skipped the tour (on any device). `hasEntries`
- * is undefined while unknown, which never shows it.
+ * Whether to run the tour on this log: it's the user's own personal log or a log made since
+ * the tour went per-log, and they haven't finished or skipped it there (on any device).
+ * It runs whether or not the log has entries yet.
  */
 export const shouldShowLedgerTour = ({
   user,
-  ledgerId,
-  hasEntries,
+  ledger,
 }: {
   user: TourUser | undefined;
-  ledgerId: string;
-  hasEntries: boolean | undefined;
+  ledger: TourLedger;
 }): boolean =>
   !!user &&
   !user.onboardingPending &&
-  !user.tutorials?.ledgerTour &&
-  ledgerId === personalLedgerId(user.userId) &&
-  hasEntries === false;
+  !user.tutorials?.ledgerTours?.[ledger.id] &&
+  (ledger.id === personalLedgerId(user.userId) || isNewLog(ledger));
 
 /**
- * Whether Home should point at the personal log: the same as the tour, plus the log must
- * still be one of theirs (deleted personal logs stay deleted) and the nudge not yet
- * dismissed or followed.
+ * Whether Home should point at the personal log: it's still one of theirs (deleted personal
+ * logs stay deleted), still empty (it says "your personal log is ready"), not yet toured,
+ * and the nudge not yet dismissed or followed. `hasEntries` is undefined while unknown,
+ * which never shows it.
  */
 export const shouldShowLedgerNudge = ({
   user,
@@ -87,7 +111,7 @@ export const shouldShowLedgerNudge = ({
   ledgerIds: readonly string[];
   hasEntries: boolean | undefined;
 }): boolean => {
-  if (!user || user.tutorials?.ledgerNudge) return false;
+  if (!user || user.onboardingPending || user.tutorials?.ledgerNudge) return false;
   const id = personalLedgerId(user.userId);
-  return ledgerIds.includes(id) && shouldShowLedgerTour({ user, ledgerId: id, hasEntries });
+  return ledgerIds.includes(id) && !user.tutorials?.ledgerTours?.[id] && hasEntries === false;
 };

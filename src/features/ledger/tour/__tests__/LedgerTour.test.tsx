@@ -2,20 +2,20 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test"
 import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 
-const { updateUserFields, hasEntries } = vi.hoisted(() => ({
-  updateUserFields: vi.fn(async () => undefined),
-  hasEntries: { value: false as boolean | undefined },
+const { recordLedgerTour } = vi.hoisted(() => ({
+  recordLedgerTour: vi.fn(async () => undefined),
 }));
 
 let user: Record<string, unknown> | undefined;
 
 vi.mock("@/contexts", () => ({ useCurrentUser: () => ({ user }) }));
-vi.mock("@/hooks/useUserQuery", () => ({ updateUserFields }));
-vi.mock("@/hooks/useLedgerHasEntries", () => ({ useLedgerHasEntries: () => hasEntries.value }));
-vi.mock("firebase/firestore", () => ({ serverTimestamp: () => "<now>" }));
+vi.mock("@/hooks/useUserQuery", () => ({ recordLedgerTour }));
 
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
-import { LEDGER_TOUR_STEPS } from "@/features/ledger/tour/tourRules";
+import { ledgerTourSteps, TOUR_NEW_LOGS_SINCE } from "@/features/ledger/tour/tourRules";
+
+const STEPS = ledgerTourSteps(true);
+const OLD = { toMillis: () => TOUR_NEW_LOGS_SINCE - 1 };
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -23,7 +23,7 @@ const Targets = () => {
   const { tip } = useLedgerTour();
   return (
     <>
-      {LEDGER_TOUR_STEPS.map(({ target }) => (
+      {STEPS.map(({ target }) => (
         <div key={target} data-target={target}>
           {tip(target)}
         </div>
@@ -39,7 +39,7 @@ describe("LedgerTourProvider", () => {
   const render = (ledgerId = "personal-u1", enabled = true) =>
     act(() =>
       root.render(
-        <LedgerTourProvider ledgerId={ledgerId} enabled={enabled}>
+        <LedgerTourProvider ledger={{ id: ledgerId, createdAt: OLD as never }} enabled={enabled}>
           <Targets />
         </LedgerTourProvider>,
       ),
@@ -57,7 +57,6 @@ describe("LedgerTourProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user = { id: "doc-1", userId: "u1" };
-    hasEntries.value = false;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -68,15 +67,15 @@ describe("LedgerTourProvider", () => {
     container.remove();
   });
 
-  it("shows one tip at a time, in order, then records the tour once", () => {
+  it("shows one tip at a time, in order, then records the tour for that log once", () => {
     render();
-    for (const step of LEDGER_TOUR_STEPS) {
+    for (const step of STEPS) {
       expect(shownAt()).toEqual([step.target]);
       clickTip();
     }
     expect(shownAt()).toEqual([]);
-    expect(updateUserFields).toHaveBeenCalledTimes(1);
-    expect(updateUserFields).toHaveBeenCalledWith("doc-1", { "tutorials.ledgerTour": "<now>" });
+    expect(recordLedgerTour).toHaveBeenCalledTimes(1);
+    expect(recordLedgerTour).toHaveBeenCalledWith("doc-1", "personal-u1");
   });
 
   it("renders one bubble, outside any clipping container", () => {
@@ -91,23 +90,24 @@ describe("LedgerTourProvider", () => {
     clickTip();
     act(() => document.querySelector<HTMLElement>(".TutorialTooltip__skip")!.click());
     expect(shownAt()).toEqual([]);
-    expect(updateUserFields).toHaveBeenCalledTimes(1);
+    expect(recordLedgerTour).toHaveBeenCalledTimes(1);
   });
 
-  it("stays off for logs with entries, other logs, other views and finished tours", () => {
-    hasEntries.value = true;
-    render();
-    expect(shownAt()).toEqual([]);
-
-    hasEntries.value = false;
+  it("stays off for older shared logs, other views and logs already toured", () => {
     render("groceries");
     expect(shownAt()).toEqual([]);
 
     render("personal-u1", false);
     expect(shownAt()).toEqual([]);
 
-    user = { id: "doc-1", userId: "u1", tutorials: { ledgerTour: { seconds: 1 } } };
+    user = { id: "doc-1", userId: "u1", tutorials: { ledgerTours: { "personal-u1": 1 } } };
     render();
     expect(shownAt()).toEqual([]);
+  });
+
+  it("runs for people who finished the old one-per-account tour", () => {
+    user = { id: "doc-1", userId: "u1", tutorials: { ledgerTour: { seconds: 1 } } };
+    render();
+    expect(shownAt()).toEqual([STEPS[0].target]);
   });
 });

@@ -1,6 +1,7 @@
 import {
   deleteField,
   doc,
+  FieldPath,
   FieldValue,
   serverTimestamp,
   updateDoc,
@@ -35,7 +36,6 @@ export type UserFieldsPatch = UpdateData<{
   defaultCurrency: Currency;
   onboardingPending: boolean | FieldValue;
   avatar: string[] | null;
-  "tutorials.ledgerTour": FieldValue;
   "tutorials.ledgerNudge": FieldValue;
   emailPaused: boolean;
 }> &
@@ -47,6 +47,16 @@ export type UserFieldsPatch = UpdateData<{
 export const updateUserFields = async (userDocId: string, patch: UserFieldsPatch) => {
   console.log("✍️ executing write on users collection");
   await updateDoc(doc(db, "users", userDocId), patch);
+};
+
+/** Record that the ledger tour was finished or skipped on this log (tutorials.ledgerTours). */
+export const recordLedgerTour = async (userDocId: string, ledgerId: string) => {
+  // A FieldPath, so the log id is one segment whatever characters it holds.
+  await updateDoc(
+    doc(db, "users", userDocId),
+    new FieldPath("tutorials", "ledgerTours", ledgerId),
+    serverTimestamp(),
+  );
 };
 
 type UpdatePinnedPostArgs = {

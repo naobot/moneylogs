@@ -13,7 +13,9 @@ export type MoneyLog = {
 };
 
 export type UserTutorials = {
-  /** When the personal-ledger tooltip tour was finished or skipped. */
+  /** Per financial log: when its tooltip tour was finished or skipped. */
+  ledgerTours?: Record<string, Timestamp>;
+  /** Legacy: the one personal-log tour before it went per-log. No longer read. */
   ledgerTour?: Timestamp;
   /** When the Home nudge pointing at the personal ledger was dismissed or followed. */
   ledgerNudge?: Timestamp;
