@@ -109,12 +109,13 @@ const MainNav = () => {
           moneylogs <small>{__APP_VERSION__}</small>
         </Link>
         {/* Theme toggle and sign-out read as one pair of icons, set close together. On
-            phones they're left to /me (Display and Account drawers). */}
+            phones the theme toggle is left to /me (Display drawer); sign-out stays. */}
         <span className="MainNav__iconPair">
           <ThemeToggle isLoggedIn={isLoggedIn} />
           {isLoggedIn && (
             <Button
               variant="icon"
+              className="MainNav__signOut"
               title="Sign out"
               onClick={signOut}
               loading={signOutPending}

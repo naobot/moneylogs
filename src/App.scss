@@ -202,7 +202,7 @@ html {
       margin-left: 0;
     }
 
-    // Phones leave the version, theme and sign-out to /about and /me.
+    // Phones leave the version and theme to /about and /me; sign-out stays, far right.
     &__wordmark {
       font-size: 1.1em;
 
@@ -211,8 +211,14 @@ html {
       }
     }
 
-    .MainNav__iconPair {
+    .MainNav__iconPair > .Button:not(.MainNav__signOut) {
       display: none;
+    }
+
+    .MainNav__signOut {
+      min-width: 40px;
+      min-height: 40px;
+      justify-content: center;
     }
 
     // Comfortable tap targets for the nav icons (the bell included).
