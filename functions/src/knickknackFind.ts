@@ -1,14 +1,25 @@
 import { DocumentReference, FieldValue, Firestore } from "firebase-admin/firestore";
 import { BudgetCategory, budgetPaceRatio, HISTORY_MONTHS, historyPaceRatio } from "./ledgerBudget";
 import {
-  canRoll,
   dayIn,
   findableIn,
-  findChance,
+  hourIn,
   loggedDaysBefore,
+  openSlot,
+  rollDay,
   RollMarker,
   rollFind,
+  visitRollsLeft,
 } from "./knickknacks";
+import {
+  LuckState,
+  luckOf,
+  luckTier,
+  nextLuckState,
+  rollChance,
+  spendingGrade,
+  spendingScore,
+} from "./luck";
 
 type MonthDoc = {
   totals?: Record<string, number>;
@@ -17,82 +28,160 @@ type MonthDoc = {
 };
 
 /**
- * The buddy's one roll of the day for a person: after they log an entry, or on an
- * evening with nothing logged (rollQuietDay, which passes `onlyIf` to check that). The
- * marker at users/{id}/buddy/rolls is set on every roll, win or lose, so more entries
- * the same day do nothing. Finds land in users/{id}/knickknacks, which clients can read
- * (and mark seen) but never write.
+ * Spending habits across the person's financial logs (luck.ts spendingScore): each log
+ * they're a member of that isn't archived, graded on this month's budget pace, or on how
+ * it compares with recent months when it has no budgets.
  */
-export const maybeFindKnickKnack = async ({
+const spendingAcrossLogs = async ({
   db,
-  ledgerRef,
-  authorRef,
-  categories,
-  now = Date.now(),
-  rand = Math.random,
-  onlyIf,
+  uid,
+  today,
+  now,
 }: {
   db: Firestore;
-  ledgerRef: DocumentReference;
-  authorRef: DocumentReference;
-  categories: ReadonlyArray<BudgetCategory>;
-  now?: number;
-  rand?: () => number;
-  /** An extra condition, checked once the day is known to still have its roll. */
-  onlyIf?: (day: { today: string; timezone?: string }) => Promise<boolean>;
-}): Promise<string | null> => {
-  const userRef = db.collection("users").doc(authorRef.id);
-  const user = await userRef.get();
-  if (!user.exists) return null;
+  uid: string;
+  today: string;
+  now: number;
+}): Promise<number> => {
+  const ledgers = (
+    await db.collection("ledgers").where("memberUids", "array-contains", uid).get()
+  ).docs.filter((l) => l.get("archived") !== true && l.get("deleting") !== true);
+  if (!ledgers.length) return spendingScore([]);
 
-  const timezone = user.get("timezone") as string | undefined;
-  const today = dayIn(now, timezone);
-  const markerRef = userRef.collection("buddy").doc("rolls");
-  // Most entries come on a day that's already rolled: skip the month reads for those.
-  if (!canRoll({ marker: (await markerRef.get()).data() as RollMarker | undefined, today, now }))
-    return null;
-  if (onlyIf && !(await onlyIf({ today, timezone }))) return null;
-
-  const findable = findableIn({ month: Number(today.slice(5, 7)), timezone });
-  // The person's own current month, whatever month the entry was dated in.
+  // The person's own current month, then the history: last month first.
   const month = today.slice(0, 7);
   const [y, m] = month.split("-").map(Number);
   const monthsBack = (n: number) => new Date(Date.UTC(y, m - 1 - n, 1)).toISOString().slice(0, 7);
-  const months = ledgerRef.collection("months");
-  // This month, then the history: last month first.
-  const [current, ...history] = (
-    await db.getAll(
-      ...Array.from({ length: HISTORY_MONTHS + 1 }, (_, n) => months.doc(monthsBack(n))),
-    )
-  ).map((snap) => (snap.data() ?? {}) as MonthDoc);
-  const chance = findChance({
-    loggedDays: loggedDaysBefore(today, { [month]: current, [monthsBack(1)]: history[0] }),
-    // Budgets when the log has them; otherwise how this month compares with recent ones.
-    paceRatio:
-      budgetPaceRatio({ categories, byCategory: current.byCategory ?? {}, month, now }) ??
-      historyPaceRatio({
-        totals: current.totals ?? {},
-        history: history.map((h) => h.totals),
-        month,
-        now,
-      }),
+  const span = HISTORY_MONTHS + 1;
+  const snaps = await db.getAll(
+    ...ledgers.flatMap((l) =>
+      Array.from({ length: span }, (_, n) => l.ref.collection("months").doc(monthsBack(n))),
+    ),
+  );
+
+  return spendingScore(
+    ledgers.map((ledger, i) => {
+      const [current, ...history] = snaps
+        .slice(i * span, (i + 1) * span)
+        .map((s) => (s.data() ?? {}) as MonthDoc);
+      const categories = (ledger.get("categories") ?? []) as BudgetCategory[];
+      return {
+        loggedDays: loggedDaysBefore(today, { [month]: current, [monthsBack(1)]: history[0] }),
+        grade: spendingGrade(
+          budgetPaceRatio({ categories, byCategory: current.byCategory ?? {}, month, now }) ??
+            historyPaceRatio({
+              totals: current.totals ?? {},
+              history: history.map((h) => h.totals),
+              month,
+              now,
+            }),
+        ),
+      };
+    }),
+  );
+};
+
+/**
+ * A check-in's chance at a knick-knack: a signed-in visit (`kind: "visit"`, from
+ * dailyCheckIn) or a logged entry (`kind: "entry"`, from recomputeLedgerMonth or an
+ * import). It moves the person's momentum, works out their luck and saves its tier (the
+ * only part they see), then rolls the day's slot for this kind of check-in if it's still
+ * open (knickknacks.ts). Finds land in users/{id}/knickknacks, which clients can read (and
+ * mark seen) but never write; an entry's find remembers its log, so that log's buddy can
+ * reveal it. `more` says whether a visit later today could still roll.
+ */
+export const takeDailyChance = async ({
+  db,
+  userRef,
+  kind,
+  ledgerId = null,
+  now = Date.now(),
+  rand = Math.random,
+}: {
+  db: Firestore;
+  userRef: DocumentReference;
+  kind: "visit" | "entry";
+  ledgerId?: string | null;
+  now?: number;
+  rand?: () => number;
+}): Promise<{ item: string | null; more: boolean }> => {
+  const user = await userRef.get();
+  const uid = user.get("userId") as string | undefined;
+  if (!user.exists || !uid) return { item: null, more: false };
+
+  const timezone = user.get("timezone") as string | undefined;
+  const today = dayIn(now, timezone);
+  const hour = hourIn(now, timezone);
+  const buddy = userRef.collection("buddy");
+  const luckRef = buddy.doc("luck");
+  const markerRef = buddy.doc("rolls");
+
+  // Momentum first: it moves once a day per check-in, roll or no roll.
+  const momentum = await db.runTransaction(async (tx) => {
+    const [luckSnap, streakSnap] = await Promise.all([
+      tx.get(luckRef),
+      tx.get(buddy.doc("streak")),
+    ]);
+    const state = luckSnap.data() as LuckState | undefined;
+    const next = nextLuckState({
+      state,
+      today,
+      entry: kind === "entry",
+      streakDays: streakSnap.get("days") as number | undefined,
+    });
+    if (next) tx.set(luckRef, next);
+    return { value: next?.momentum ?? state?.momentum ?? 0, changed: !!next };
   });
 
-  // Checked again inside the transaction: two entries at once must not both roll.
-  return db.runTransaction(async (tx) => {
-    const marker = (await tx.get(markerRef)).data() as RollMarker | undefined;
-    if (!canRoll({ marker, today, now })) return null;
-    tx.set(markerRef, { lastDay: today, lastAtMs: now });
+  const day = rollDay({
+    marker: (await markerRef.get()).data() as RollMarker | undefined,
+    today,
+    now,
+  });
+  const slot = day && openSlot(day, { kind, hour });
+  // Nothing to roll and luck unchanged: skip the log reads.
+  if (!slot && !momentum.changed) return { item: null, more: visitRollsLeft(day) };
 
-    const item = rollFind({ rand, chance, findable });
-    if (!item) return null;
-    const findRef = userRef.collection("knickknacks").doc();
-    tx.create(findRef, {
-      item,
-      ledgerId: ledgerRef.id,
-      foundAt: FieldValue.serverTimestamp(),
-      seenAt: null,
+  const luck = luckOf({
+    spending: await spendingAcrossLogs({ db, uid, today, now }),
+    momentum: momentum.value,
+  });
+  await userRef
+    .collection("luck")
+    .doc("current")
+    .set({ tier: luckTier(luck), updatedAt: FieldValue.serverTimestamp() });
+  if (!slot) return { item: null, more: visitRollsLeft(day) };
+
+  const findable = findableIn({ month: Number(today.slice(5, 7)), timezone });
+  // Checked again inside the transaction: two check-ins at once must not both roll a slot.
+  return db.runTransaction(async (tx) => {
+    const current = rollDay({
+      marker: (await tx.get(markerRef)).data() as RollMarker | undefined,
+      today,
+      now,
     });
-    return item;
+    const open = current && openSlot(current, { kind, hour });
+    if (!current || !open) return { item: null, more: visitRollsLeft(current) };
+
+    const item = rollFind({
+      rand,
+      chance: rollChance({ luck, findsToday: current.finds }),
+      findable,
+    });
+    const after = {
+      ...current,
+      slots: [...current.slots, open],
+      finds: current.finds + (item ? 1 : 0),
+    };
+    tx.set(markerRef, after);
+    if (item) {
+      tx.create(userRef.collection("knickknacks").doc(), {
+        item,
+        ledgerId: kind === "entry" ? ledgerId : null,
+        foundAt: FieldValue.serverTimestamp(),
+        seenAt: null,
+      });
+    }
+    return { item, more: visitRollsLeft(after) };
   });
 };

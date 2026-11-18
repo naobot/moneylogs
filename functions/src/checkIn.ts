@@ -2,13 +2,15 @@ import { DocumentReference, Firestore, getFirestore } from "firebase-admin/fires
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { coinsDue, nextStreak, parseCheckInRequest, StreakMarker } from "./coins";
 import { dayIn } from "./knickknacks";
+import { takeDailyChance } from "./knickknackFind";
 import { writeMilestone } from "./awardMilestone";
 import { withSentryCall } from "./sentry";
 
 /**
- * Count a check-in on a financial log towards the person's streak, and hand over any coin
- * it earns (coins.ts). The streak lives at users/{id}/buddy/streak, which clients can't
- * read or write. Each coin comes with its achievement (awardMilestone.ts).
+ * Count a check-in towards the person's streak, and hand over any coin it earns (coins.ts).
+ * A check-in is any signed-in visit (dailyCheckIn) or a logged entry. The streak lives at
+ * users/{id}/buddy/streak, which clients can't read or write. Each coin comes with its
+ * achievement (awardMilestone.ts); a coin from a logged entry remembers its log.
  */
 export const recordCheckIn = async ({
   db,
@@ -18,7 +20,7 @@ export const recordCheckIn = async ({
   now = Date.now(),
 }: {
   db: Firestore;
-  ledgerRef: DocumentReference;
+  ledgerRef?: DocumentReference | null;
   userRef: DocumentReference;
   loggedEntry: boolean;
   now?: number;
@@ -36,34 +38,51 @@ export const recordCheckIn = async ({
     if (!next && !due.length) return [];
 
     tx.set(markerRef, { ...next, coins: [...given, ...due] }, { merge: true });
-    for (const item of due) writeMilestone(tx, user, item, ledgerRef.id);
+    for (const item of due) writeMilestone(tx, user, item, ledgerRef?.id ?? null);
     return due;
   });
 
+/** The signed-in caller's user doc, or null if they don't have one yet. */
+const callerUserRef = async (db: Firestore, uid: string) => {
+  const users = await db.collection("users").where("userId", "==", uid).limit(1).get();
+  return users.empty ? null : users.docs[0].ref;
+};
+
 /**
- * The budget buddy calls this when a member opens a financial log (once a day per
- * browser). The server decides the day, so the client can't add days to a streak.
+ * A signed-in visit: today's check-in (streak, coins, luck), and the day's visit roll for a
+ * knick-knack, or the evening one once that's spent. The server decides the day and the
+ * hour from the stored timezone, so the client can't add days or rolls. `more` tells the
+ * client whether a visit later today could still roll, so it knows to ask again.
+ */
+const checkInVisit = async (uid: string): Promise<{ ok: true; more: boolean }> => {
+  const db = getFirestore();
+  const userRef = await callerUserRef(db, uid);
+  if (!userRef) return { ok: true, more: false };
+  await recordCheckIn({ db, userRef, loggedEntry: false });
+  // Like other finds, what turns up is revealed through the live finds query, not here.
+  const { more } = await takeDailyChance({ db, userRef, kind: "visit" });
+  return { ok: true, more };
+};
+
+export const dailyCheckIn = onCall(
+  withSentryCall("dailyCheckIn", async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    return checkInVisit(uid);
+  }),
+);
+
+/**
+ * Deprecated: older clients call this when opening a financial log. It now counts as a
+ * visit, like dailyCheckIn. Remove once no client in the wild calls it.
  */
 export const checkInLedger = onCall(
   withSentryCall("checkInLedger", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
-    const req = parseCheckInRequest(request.data);
-    if (!req) throw new HttpsError("invalid-argument", "Expected { ledgerId }.");
-
-    const db = getFirestore();
-    const ledgerRef = db.collection("ledgers").doc(req.ledgerId);
-    const ledger = await ledgerRef.get();
-    if (!ledger.exists || ledger.get("deleting") === true) return { ok: true };
-    if (!((ledger.get("memberUids") ?? []) as string[]).includes(uid)) {
-      throw new HttpsError("permission-denied", "Not a member of this log.");
+    if (!parseCheckInRequest(request.data)) {
+      throw new HttpsError("invalid-argument", "Expected { ledgerId }.");
     }
-
-    const users = await db.collection("users").where("userId", "==", uid).limit(1).get();
-    if (users.empty) return { ok: true };
-
-    await recordCheckIn({ db, ledgerRef, userRef: users.docs[0].ref, loggedEntry: false });
-    // Like other finds, a coin is revealed through the live finds query, not returned here.
-    return { ok: true };
+    return checkInVisit(uid);
   }),
 );

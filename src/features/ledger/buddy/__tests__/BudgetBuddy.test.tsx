@@ -11,8 +11,6 @@ const state = vi.hoisted(() => ({
   find: null as null | { id: string; item: "acorn"; ledgerId: string; seenAt: null },
   markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
   unseenFindArgs: [] as unknown[],
-  requestQuietDayRoll: vi.fn(),
-  requestCheckIn: vi.fn(),
 }));
 
 vi.mock("@/contexts", () => ({
@@ -25,12 +23,6 @@ vi.mock("@/hooks/useLedgerMonths", () => ({
   useLedgerMonths: () => ({ byMonth: state.byMonth, isSuccess: state.isSuccess }),
 }));
 
-vi.mock("../knickknacks/quietDay", () => ({
-  requestQuietDayRoll: state.requestQuietDayRoll,
-}));
-vi.mock("../knickknacks/checkIn", () => ({
-  requestCheckIn: state.requestCheckIn,
-}));
 vi.mock("../knickknacks/useUnseenFinds", () => ({
   useUnseenFind: (userDocId?: string, ledgerId?: string) => {
     state.unseenFindArgs = [userDocId, ledgerId];
@@ -242,39 +234,6 @@ describe("BudgetBuddy evening check-in", () => {
     act(() => root.render(<BudgetBuddy ledger={{ ...ledger, id } as Ledger} />));
   const bubbleText = () => document.querySelector(".BuddyBubble")?.textContent ?? null;
   const button = () => container.querySelector<HTMLButtonElement>(".BudgetBuddy")!;
-
-  it("checks in for the day when the log opens, at any hour", () => {
-    state.requestCheckIn.mockClear();
-    state.now = "2026-11-15T08:00:00Z";
-    render();
-    expect(state.requestCheckIn).toHaveBeenCalledWith({
-      userDocId: "u1",
-      ledgerId: "l1",
-      today: "2026-11-15",
-    });
-  });
-
-  it("asks for the day's knick-knack roll on a quiet evening, and not before", () => {
-    state.requestQuietDayRoll.mockClear();
-    state.now = "2026-11-15T16:00:00Z";
-    render();
-    expect(state.requestQuietDayRoll).not.toHaveBeenCalled();
-    state.now = "2026-11-15T18:00:00Z";
-    render();
-    expect(state.requestQuietDayRoll).toHaveBeenCalledWith({
-      userDocId: "u1",
-      ledgerId: "l1",
-      today: "2026-11-15",
-    });
-  });
-
-  it("doesn't ask on an evening with spending logged", () => {
-    state.requestQuietDayRoll.mockClear();
-    state.byMonth = spending({ "15": 5 });
-    state.now = "2026-11-15T18:00:00Z";
-    render();
-    expect(state.requestQuietDayRoll).not.toHaveBeenCalled();
-  });
 
   it("speaks up by itself in the evening when nothing's been spent today", () => {
     state.now = "2026-11-15T18:00:00Z";

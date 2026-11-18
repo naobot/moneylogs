@@ -3,10 +3,9 @@
  * (src/features/ledger/buddy/knickknacks/catalog.ts and seasons.ts); a root test keeps
  * the two in step. Dependency-free so it can be unit tested from the root Vitest run.
  *
- * A day earns at most one roll: by logging an entry, or, on a day with nothing logged,
- * by checking in on a financial log in the evening. The odds lean mostly on budget pace
- * (graded: comfortably under pays most, over pays nothing) and a little on steady
- * logging, over a small base everyone gets. On a hit, rarer items are picked less often.
+ * A day has up to three rolls, one per slot: the first signed-in visit, the first logged
+ * entry, and a visit in the evening. The odds come from luck (luck.ts). On a hit, rarer
+ * items are picked less often.
  */
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
@@ -135,45 +134,34 @@ export const dayIn = (now: number, timezone?: string | null): string => {
   }
 };
 
-/** Everyone's chance on a roll, whatever their habits. */
-export const BASE_CHANCE = 0.015;
-/** Up to this much more for logging on most recent days. */
-export const STEADY_BONUS = 0.015;
-/** Up to this much more for spending under budget pace; half of it right on pace. */
-export const PACE_BONUS = 0.05;
-/** Days with spending, out of the last 14, that count as fully steady. */
-export const STEADY_DAYS = 10;
-/** At or under this share of the pace budget counts as comfortably under. */
+/** At or under this share of the pace budget counts as comfortably under (luck.ts). */
 export const COMFORTABLY_UNDER = 0.6;
-/** Rolls at least this far apart, so hopping timezones can't make a second "day". */
-export const MIN_ROLL_GAP_MS = 20 * 3_600_000;
-
 /**
- * The pace part, from `paceRatio` (spending ÷ the budget's share of the month so far,
- * the worst currency; null without budgets): full when comfortably under, sliding to
- * half right on pace, nothing once over.
+ * A new day's rolls open only this long after the previous day's first roll, so hopping
+ * timezones can't make extra days.
  */
-export const paceBonus = (paceRatio: number | null): number => {
-  if (paceRatio === null || paceRatio > 1) return 0;
-  if (paceRatio <= COMFORTABLY_UNDER) return PACE_BONUS;
-  const t = (paceRatio - COMFORTABLY_UNDER) / (1 - COMFORTABLY_UNDER);
-  return PACE_BONUS * (1 - t / 2);
+export const MIN_DAY_GAP_MS = 12 * 3_600_000;
+
+/** The three chances at a find each day. */
+export type RollSlot = "visit" | "entry" | "evening";
+
+/** users/{id}/buddy/rolls. `lastDay`/`lastAtMs` are from the one-roll-a-day version. */
+export type RollMarker = {
+  day?: string;
+  dayStartMs?: number;
+  slots?: string[];
+  finds?: number;
+  lastDay?: string;
+  lastAtMs?: number;
 };
 
-export const findChance = ({
-  loggedDays,
-  paceRatio,
-}: {
-  loggedDays: number;
-  paceRatio: number | null;
-}) =>
-  BASE_CHANCE +
-  (Math.min(Math.max(loggedDays, 0), STEADY_DAYS) / STEADY_DAYS) * STEADY_BONUS +
-  paceBonus(paceRatio);
+export type RollDay = { day: string; dayStartMs: number; slots: string[]; finds: number };
 
-export type RollMarker = { lastDay?: string; lastAtMs?: number };
-
-export const canRoll = ({
+/**
+ * Today's rolls so far, or a fresh day. Null when a new day can't start yet: the local day
+ * went backwards (a timezone change), or the previous day started too recently.
+ */
+export const rollDay = ({
   marker,
   today,
   now,
@@ -181,11 +169,38 @@ export const canRoll = ({
   marker?: RollMarker | null;
   today: string;
   now: number;
-}): boolean => {
-  if (!marker) return true;
-  if (marker.lastDay === today) return false;
-  return typeof marker.lastAtMs !== "number" || now - marker.lastAtMs >= MIN_ROLL_GAP_MS;
+}): RollDay | null => {
+  const fresh = { day: today, dayStartMs: now, slots: [], finds: 0 };
+  const day = marker?.day ?? marker?.lastDay;
+  const start = marker?.dayStartMs ?? marker?.lastAtMs;
+  if (!day) return fresh;
+  if (day === today) {
+    // An old marker's one roll counts as today's entry roll.
+    const slots = marker?.slots ?? (marker?.lastDay ? ["entry"] : []);
+    return { day, dayStartMs: start ?? now, slots, finds: marker?.finds ?? 0 };
+  }
+  if (today < day) return null;
+  if (typeof start === "number" && now - start < MIN_DAY_GAP_MS) return null;
+  return fresh;
 };
+
+/**
+ * The slot a check-in can roll: a logged entry has its own; a visit takes the visit slot,
+ * or the evening one from EVENING_FROM_HOUR once the visit slot is spent.
+ */
+export const openSlot = (
+  day: RollDay,
+  { kind, hour }: { kind: "visit" | "entry"; hour: number },
+): RollSlot | null => {
+  const free = (slot: RollSlot) => !day.slots.includes(slot);
+  if (kind === "entry") return free("entry") ? "entry" : null;
+  if (free("visit")) return "visit";
+  return hour >= EVENING_FROM_HOUR && free("evening") ? "evening" : null;
+};
+
+/** Whether a visit later today could still roll (the client asks again if so). */
+export const visitRollsLeft = (day: RollDay | null): boolean =>
+  !day || !day.slots.includes("visit") || !day.slots.includes("evening");
 
 /** On a hit, one item from what's in season, weighted by rarity. */
 export const rollFind = ({
@@ -237,10 +252,10 @@ export const hourIn = (now: number, timezone?: string | null): number => {
 };
 
 /**
- * A day with nothing logged can still earn its roll, from this hour on: the same hour
- * the buddy's evening check-in starts (src/features/ledger/buddy/buddyCheckIn.ts).
+ * The evening roll opens at this hour: the same hour the buddy's evening check-in starts
+ * (src/features/ledger/buddy/buddyCheckIn.ts).
  */
-export const QUIET_DAY_FROM_HOUR = 17;
+export const EVENING_FROM_HOUR = 17;
 
 export const parseQuietDayRequest = (data: unknown): { ledgerId: string } | null => {
   const ledgerId = (data as { ledgerId?: unknown } | null)?.ledgerId;

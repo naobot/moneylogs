@@ -184,8 +184,20 @@
 
   &__heading {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.3em;
+  }
+
+  // How lucky you are right now, in words; sits at the far end of the heading.
+  &__luck {
+    margin-left: auto;
+    font-size: 0.8em;
+    color: var(--ink-muted);
+
+    strong {
+      color: var(--ink);
+    }
   }
 
   &__box {

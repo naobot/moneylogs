@@ -1,0 +1,139 @@
+import { describe, it, expect } from "vite-plus/test";
+import {
+  daysBetween,
+  luckOf,
+  luckTier,
+  MAX_CHANCE,
+  MIN_ACTIVE_DAYS,
+  MIN_CHANCE,
+  MOMENTUM_DECAY,
+  MOMENTUM_ENTRY_GAIN,
+  MOMENTUM_GAIN,
+  MOMENTUM_START,
+  nextLuckState,
+  rollChance,
+  spendingGrade,
+  spendingScore,
+} from "./luck";
+
+describe("nextLuckState", () => {
+  it("starts someone new at the starting momentum, plus the day's gain", () => {
+    expect(nextLuckState({ today: "2026-11-18" })).toEqual({
+      momentum: MOMENTUM_START + MOMENTUM_GAIN,
+      lastDay: "2026-11-18",
+      entryDay: "",
+    });
+  });
+
+  it("seeds momentum from an existing check-in streak", () => {
+    expect(nextLuckState({ today: "2026-11-18", streakDays: 10 })?.momentum).toBeCloseTo(
+      0.5 + MOMENTUM_GAIN,
+    );
+    expect(nextLuckState({ today: "2026-11-18", streakDays: 40 })?.momentum).toBe(1);
+  });
+
+  it("rises a little each day in a row, and only once a day", () => {
+    const state = { momentum: 0.5, lastDay: "2026-11-17", entryDay: "" };
+    const next = nextLuckState({ state, today: "2026-11-18" });
+    expect(next?.momentum).toBeCloseTo(0.5 + MOMENTUM_GAIN);
+    expect(nextLuckState({ state: next, today: "2026-11-18" })).toBeNull();
+  });
+
+  it("adds the entry bonus once a day, even after the day's visit", () => {
+    const visited = { momentum: 0.5, lastDay: "2026-11-18", entryDay: "" };
+    const logged = nextLuckState({ state: visited, today: "2026-11-18", entry: true });
+    expect(logged?.momentum).toBeCloseTo(0.5 + MOMENTUM_ENTRY_GAIN);
+    expect(nextLuckState({ state: logged, today: "2026-11-18", entry: true })).toBeNull();
+  });
+
+  it("drains for each missed day", () => {
+    const state = { momentum: 0.8, lastDay: "2026-11-13", entryDay: "" };
+    // Four days missed (14th–17th).
+    expect(nextLuckState({ state, today: "2026-11-18" })?.momentum).toBeCloseTo(
+      0.8 - 4 * MOMENTUM_DECAY + MOMENTUM_GAIN,
+    );
+    expect(nextLuckState({ state, today: "2026-12-30" })?.momentum).toBe(MOMENTUM_GAIN);
+  });
+
+  it("stays within 0..1", () => {
+    expect(
+      nextLuckState({
+        state: { momentum: 0.99, lastDay: "2026-11-17" },
+        today: "2026-11-18",
+        entry: true,
+      })?.momentum,
+    ).toBe(1);
+  });
+
+  it("ignores a day that went backwards (a timezone change)", () => {
+    const state = { momentum: 0.5, lastDay: "2026-11-18", entryDay: "" };
+    expect(nextLuckState({ state, today: "2026-11-17" })).toBeNull();
+  });
+});
+
+describe("daysBetween", () => {
+  it("counts whole days, across months", () => {
+    expect(daysBetween("2026-11-30", "2026-12-02")).toBe(2);
+    expect(daysBetween("2026-11-18", "2026-11-18")).toBe(0);
+  });
+});
+
+describe("spending", () => {
+  it("grades pace: full comfortably under, half on pace, nothing over", () => {
+    expect(spendingGrade(0.3)).toBe(1);
+    expect(spendingGrade(0.6)).toBe(1);
+    expect(spendingGrade(0.8)).toBeCloseTo(0.75);
+    expect(spendingGrade(1)).toBeCloseTo(0.5);
+    expect(spendingGrade(1.01)).toBe(0);
+    expect(spendingGrade(null)).toBeNull();
+  });
+
+  it("averages the active logs with something to grade", () => {
+    expect(
+      spendingScore([
+        { loggedDays: 10, grade: 1 },
+        { loggedDays: MIN_ACTIVE_DAYS, grade: 0 },
+        // Too quiet to count, and nothing to grade.
+        { loggedDays: MIN_ACTIVE_DAYS - 1, grade: 0 },
+        { loggedDays: 10, grade: null },
+      ]),
+    ).toBe(0.5);
+    expect(spendingScore([{ loggedDays: 10, grade: 0.8 }])).toBe(0.8);
+  });
+
+  it("is neutral with no log to go on", () => {
+    expect(spendingScore([])).toBe(0.5);
+    expect(spendingScore([{ loggedDays: 0, grade: 1 }])).toBe(0.5);
+  });
+});
+
+describe("luck", () => {
+  it("is half spending, half momentum", () => {
+    expect(luckOf({ spending: 1, momentum: 0 })).toBe(0.5);
+    expect(luckOf({ spending: 0.6, momentum: 0.8 })).toBeCloseTo(0.7);
+  });
+
+  it("reads in fifths", () => {
+    expect(luckTier(0)).toBe("not_so_lucky");
+    expect(luckTier(0.19)).toBe("not_so_lucky");
+    expect(luckTier(0.2)).toBe("a_little_lucky");
+    expect(luckTier(0.5)).toBe("average");
+    expect(luckTier(0.7)).toBe("pretty_lucky");
+    expect(luckTier(0.8)).toBe("super_lucky");
+    expect(luckTier(1)).toBe("super_lucky");
+  });
+
+  it("turns luck into a chance per roll", () => {
+    expect(rollChance({ luck: 0, findsToday: 0 })).toBe(MIN_CHANCE);
+    expect(rollChance({ luck: 1, findsToday: 0 })).toBeCloseTo(MAX_CHANCE);
+    expect(rollChance({ luck: 0.5, findsToday: 0 })).toBeCloseTo((MIN_CHANCE + MAX_CHANCE) / 2);
+  });
+
+  it("makes a second find in a day rare, and needs high luck for it", () => {
+    expect(rollChance({ luck: 1, findsToday: 1 })).toBeCloseTo(MAX_CHANCE);
+    expect(rollChance({ luck: 0.5, findsToday: 1 })).toBeCloseTo(
+      ((MIN_CHANCE + MAX_CHANCE) / 2) * 0.25,
+    );
+    expect(rollChance({ luck: 0, findsToday: 1 })).toBe(0);
+  });
+});

@@ -1,21 +1,19 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
-  BASE_CHANCE,
-  canRoll,
   dayIn,
   findableIn,
-  findChance,
   hemisphereOf,
   hourIn,
   KNICK_KNACK_FINDS,
   loggedDaysBefore,
-  MIN_ROLL_GAP_MS,
-  PACE_BONUS,
-  paceBonus,
+  MIN_DAY_GAP_MS,
+  openSlot,
   parseQuietDayRequest,
+  rollDay,
+  RollDay,
   rollFind,
   seasonOf,
-  STEADY_BONUS,
+  visitRollsLeft,
 } from "./knickknacks";
 import { KNICK_KNACKS } from "../../src/features/ledger/buddy/knickknacks/catalog";
 import {
@@ -104,69 +102,74 @@ describe("knick-knacks (functions)", () => {
   });
 });
 
-describe("findChance", () => {
-  it("gives everyone the base chance, even over budget with no recent logging", () => {
-    expect(findChance({ loggedDays: 0, paceRatio: 1.5 })).toBe(BASE_CHANCE);
-    expect(findChance({ loggedDays: 0, paceRatio: null })).toBe(BASE_CHANCE);
-  });
-
-  it("tops out with steady logging comfortably under pace", () => {
-    expect(findChance({ loggedDays: 14, paceRatio: 0.3 })).toBeCloseTo(
-      BASE_CHANCE + STEADY_BONUS + PACE_BONUS,
-    );
-    expect(findChance({ loggedDays: 14, paceRatio: 0.3 })).toBeCloseTo(0.08);
-  });
-
-  it("leans mostly on spending: a steady logger well under pace finds ~2.5x as often", () => {
-    const over = findChance({ loggedDays: 14, paceRatio: 1.2 });
-    const under = findChance({ loggedDays: 14, paceRatio: 0.5 });
-    expect(under / over).toBeGreaterThan(2.5);
-  });
-
-  it("rises with more logged days, then levels off", () => {
-    const chances = [0, 3, 6, 10, 14].map((d) => findChance({ loggedDays: d, paceRatio: null }));
-    for (let i = 1; i < chances.length; i++)
-      expect(chances[i]).toBeGreaterThanOrEqual(chances[i - 1]);
-    expect(chances[3]).toBe(chances[4]);
-  });
-});
-
-describe("paceBonus", () => {
-  it("is full comfortably under pace, half right on it, nothing over it", () => {
-    expect(paceBonus(0)).toBe(PACE_BONUS);
-    expect(paceBonus(0.6)).toBe(PACE_BONUS);
-    expect(paceBonus(0.8)).toBeCloseTo(PACE_BONUS * 0.75);
-    expect(paceBonus(1)).toBeCloseTo(PACE_BONUS / 2);
-    expect(paceBonus(1.01)).toBe(0);
-  });
-
-  it("is nothing without budgets", () => {
-    expect(paceBonus(null)).toBe(0);
-  });
-});
-
-describe("canRoll", () => {
+describe("rollDay", () => {
   const now = at("2026-11-14T12:00:00Z");
+  const today = "2026-11-14";
 
-  it("rolls the first time", () => {
-    expect(canRoll({ marker: undefined, today: "2026-11-14", now })).toBe(true);
+  it("starts a fresh day the first time", () => {
+    expect(rollDay({ marker: undefined, today, now })).toEqual({
+      day: today,
+      dayStartMs: now,
+      slots: [],
+      finds: 0,
+    });
   });
 
-  it("rolls once a day", () => {
-    const marker = { lastDay: "2026-11-14", lastAtMs: now - 3_600_000 };
-    expect(canRoll({ marker, today: "2026-11-14", now })).toBe(false);
-    expect(
-      canRoll({
-        marker: { ...marker, lastDay: "2026-11-13", lastAtMs: now - 86_400_000 },
-        today: "2026-11-14",
-        now,
-      }),
-    ).toBe(true);
+  it("keeps today's slots and finds", () => {
+    const marker = { day: today, dayStartMs: now - 3_600_000, slots: ["visit"], finds: 1 };
+    expect(rollDay({ marker, today, now })).toEqual(marker);
+  });
+
+  it("starts a new day once the last one started long enough ago", () => {
+    const marker = {
+      day: "2026-11-13",
+      dayStartMs: now - MIN_DAY_GAP_MS,
+      slots: ["visit"],
+      finds: 1,
+    };
+    expect(rollDay({ marker, today, now })).toMatchObject({ day: today, slots: [], finds: 0 });
   });
 
   it("won't count a new 'day' that comes from hopping timezones", () => {
-    const marker = { lastDay: "2026-11-13", lastAtMs: now - MIN_ROLL_GAP_MS + 1 };
-    expect(canRoll({ marker, today: "2026-11-14", now })).toBe(false);
+    const marker = { day: "2026-11-13", dayStartMs: now - MIN_DAY_GAP_MS + 1, slots: [] };
+    expect(rollDay({ marker, today, now })).toBeNull();
+    expect(rollDay({ marker: { day: "2026-11-15", dayStartMs: 0 }, today, now })).toBeNull();
+  });
+
+  it("reads the old one-roll marker as today's entry roll", () => {
+    const marker = { lastDay: today, lastAtMs: now - 3_600_000 };
+    expect(rollDay({ marker, today, now })).toEqual({
+      day: today,
+      dayStartMs: now - 3_600_000,
+      slots: ["entry"],
+      finds: 0,
+    });
+    expect(
+      rollDay({ marker: { lastDay: "2026-11-13", lastAtMs: now - 86_400_000 }, today, now }),
+    ).toMatchObject({ day: today, slots: [] });
+  });
+});
+
+describe("openSlot", () => {
+  const day = (slots: string[]): RollDay => ({ day: "2026-11-14", dayStartMs: 0, slots, finds: 0 });
+
+  it("gives a logged entry its own slot, once", () => {
+    expect(openSlot(day(["visit", "evening"]), { kind: "entry", hour: 9 })).toBe("entry");
+    expect(openSlot(day(["entry"]), { kind: "entry", hour: 9 })).toBeNull();
+  });
+
+  it("gives a visit the visit slot, then the evening one from 17:00", () => {
+    expect(openSlot(day([]), { kind: "visit", hour: 20 })).toBe("visit");
+    expect(openSlot(day(["visit"]), { kind: "visit", hour: 16 })).toBeNull();
+    expect(openSlot(day(["visit"]), { kind: "visit", hour: 17 })).toBe("evening");
+    expect(openSlot(day(["visit", "evening"]), { kind: "visit", hour: 22 })).toBeNull();
+  });
+
+  it("says whether a later visit could still roll", () => {
+    expect(visitRollsLeft(null)).toBe(true);
+    expect(visitRollsLeft(day(["visit"]))).toBe(true);
+    expect(visitRollsLeft(day(["entry", "evening"]))).toBe(true);
+    expect(visitRollsLeft(day(["visit", "evening"]))).toBe(false);
   });
 });
 
@@ -180,6 +183,14 @@ describe("rollFind", () => {
     expect(rollFind({ rand: seq(0.01, 0.6), chance: 0.05, findable: ["acorn", "pinecone"] })).toBe(
       "pinecone",
     );
+  });
+
+  it("picks super-common items twice as often as common ones", () => {
+    // Mushroom (6) then acorn (3), out of 9.
+    const pick = (r: number) =>
+      rollFind({ rand: seq(0, r), chance: 1, findable: ["mushroom", "acorn"] });
+    expect(pick(0.66)).toBe("mushroom");
+    expect(pick(0.67)).toBe("acorn");
   });
 
   it("picks rare items a third as often as common ones", () => {

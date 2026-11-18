@@ -16,12 +16,13 @@ import {
   useKnickKnackFinds,
 } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 import GiftModal from "@/features/gifts/GiftModal";
+import { LUCK_WORDS, useLuck } from "@/features/ledger/buddy/knickknacks/luck";
 import KnickKnackReveal from "@/features/ledger/buddy/knickknacks/KnickKnackReveal";
 
 import "./Dashboard.scss";
 
 export const KNICK_KNACK_HELP =
-  "budget buddies in financial logs sometimes find random things throughout the day. rumour has it that better spending habits increase your luck.";
+  "budget buddies in financial logs sometimes find random things throughout the day. rumour has it that better spending habits increase your luck. so does dropping by every day.";
 
 const DELETED_USER = "deleted user";
 
@@ -46,6 +47,7 @@ export const KnickKnackDrawer = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data, isLoading } = useKnickKnackFinds(user?.id);
+  const luck = useLuck(user?.id);
   const { friends } = useFriendships();
   const { kept, waiting, gifts } = drawerContents(data);
   const [giving, setGiving] = useState<KnickKnackId | null>(null);
@@ -83,6 +85,11 @@ export const KnickKnackDrawer = () => {
       <div className="KnickKnackDrawer__heading">
         <h3 id="dashboard-drawer">knick-knack drawer</h3>
         <HelpTip label="What's the knick-knack drawer?">{KNICK_KNACK_HELP}</HelpTip>
+        {luck && (
+          <span className="KnickKnackDrawer__luck">
+            luck: <strong>{LUCK_WORDS[luck]}</strong>
+          </span>
+        )}
       </div>
       {givingTo && (
         <div className="KnickKnackDrawer__givingTo" role="status">

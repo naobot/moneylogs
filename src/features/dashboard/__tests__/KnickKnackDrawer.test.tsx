@@ -8,6 +8,11 @@ const state = vi.hoisted(() => ({
   isLoading: false,
   friends: [] as string[],
   markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
+  luck: null as string | null,
+}));
+vi.mock("@/features/ledger/buddy/knickknacks/luck", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/ledger/buddy/knickknacks/luck")>()),
+  useLuck: () => state.luck,
 }));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({ user: { id: "doc-1", userId: "uid-1", timezone: "UTC" } }),
@@ -55,6 +60,7 @@ describe("KnickKnackDrawer", () => {
     state.finds = [];
     state.isLoading = false;
     state.friends = [];
+    state.luck = null;
     state.markFindSeen.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -86,6 +92,16 @@ describe("KnickKnackDrawer", () => {
     expect(container.querySelector(".KnickKnackDrawer__empty")).not.toBeNull();
     act(() => container.querySelector<HTMLButtonElement>(".HelpTip")!.focus());
     expect(document.querySelector('[role="tooltip"]')!.textContent).toBe(KNICK_KNACK_HELP);
+  });
+
+  it("shows your luck in words, once there is some", () => {
+    render();
+    expect(container.querySelector(".KnickKnackDrawer__luck")).toBeNull();
+    state.luck = "pretty_lucky";
+    render();
+    expect(container.querySelector(".KnickKnackDrawer__luck")!.textContent).toBe(
+      "luck: pretty lucky",
+    );
   });
 
   it("holds back the empty note while loading", () => {
