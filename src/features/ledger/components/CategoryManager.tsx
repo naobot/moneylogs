@@ -187,6 +187,9 @@ const CategoryManagerDialog = ({
         Categories
       </Modal.Header>
       <Modal.Body>
+        <p className="CategoryManager__hint">
+          Tap a name to rename it. Drag <span aria-hidden="true">⋮⋮</span> to reorder.
+        </p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
             <ul className="CategoryManager__list" aria-label="Active categories">
@@ -201,6 +204,7 @@ const CategoryManagerDialog = ({
                       }}
                     >
                       <input
+                        className="LineInput"
                         aria-label={`Rename ${category.name}`}
                         value={renaming.name}
                         maxLength={MAX_CATEGORY_NAME_LENGTH + 5}
@@ -225,7 +229,10 @@ const CategoryManagerDialog = ({
                       title="Rename"
                       onClick={() => setRenaming({ id: category.id, name: category.name })}
                     >
-                      {category.name}
+                      <span className="CategoryManager__nameText">{category.name}</span>
+                      <span className="CategoryManager__nameEdit" aria-hidden="true">
+                        <Icon type="pencil" size={14} />
+                      </span>
                     </button>
                   )}
                   {budgetsAfterSave.get(category.id) && (
