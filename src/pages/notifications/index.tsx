@@ -24,10 +24,12 @@ import { reportError } from "@/utils/reportError";
  * changed.
  */
 export const Notifications = () => {
-  const { user } = useCurrentUser();
+  const { user, isUserDocSaved } = useCurrentUser();
   const userDocId = user?.id;
-  const { items, isLoading, isError, hasMore, isLoadingMore, loadMore } =
-    useNotificationFeed(userDocId);
+  // The rules read the user doc to allow this query, so wait until it's saved, as loading.
+  const feed = useNotificationFeed(isUserDocSaved ? userDocId : undefined);
+  const { items, isError, hasMore, isLoadingMore, loadMore } = feed;
+  const isLoading = feed.isLoading || (!!userDocId && !isUserDocSaved);
   const now = useNow().toDate();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

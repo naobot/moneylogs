@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, where, query, onSnapshot, Timestamp } from "firebase/firestore";
+import {
+  collection,
+  where,
+  query,
+  onSnapshot,
+  Timestamp,
+  waitForPendingWrites,
+} from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
 import type { EmailPrefs, NotificationPrefs } from "@/types/notification";
@@ -146,6 +153,8 @@ export const useGetUserInfo = (userId: string) => {
   const [user, setUser] = useState<UserData | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
+  // The user doc id the server has confirmed. See isUserDocSaved below.
+  const [savedDocId, setSavedDocId] = useState<string | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -180,6 +189,19 @@ export const useGetUserInfo = (userId: string) => {
           setUser(userData);
           setIsLoading(false);
           setError(null);
+
+          // Registration's addDoc shows up here before the server has it. Wait for it
+          // to land; once a doc is saved it stays saved, whatever later edits are pending.
+          if (!userDoc.metadata.hasPendingWrites) {
+            setSavedDocId(userDoc.id);
+          } else {
+            waitForPendingWrites(db).then(
+              () => setSavedDocId(userDoc.id),
+              () => {
+                // Signed out or the app closed first; the next snapshot tries again.
+              },
+            );
+          }
 
           const cacheableData: CacheableUserData = {
             id: userData.id,
@@ -230,6 +252,12 @@ export const useGetUserInfo = (userId: string) => {
 
   return {
     user,
+    /**
+     * Whether the user doc exists on the server, not just in this tab's pending writes.
+     * Rules that check ownership read it there (ownsUserDoc), so queries of the user's
+     * subcollections must wait for this, or a brand-new account's first query is denied.
+     */
+    isUserDocSaved: !!user && savedDocId === user.id,
     isLoading,
     isSuccess: !!user && !error,
     isError: !!error,

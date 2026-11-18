@@ -22,9 +22,10 @@ export const POPUP_LIMIT = 6;
  * latest few after a short delay. Touch has no hover, so a tap simply navigates.
  */
 export const NotificationBell = () => {
-  const { user } = useCurrentUser();
+  const { user, isUserDocSaved } = useCurrentUser();
   const userDocId = user?.id;
-  const { items, unreadCount } = useLatestNotifications(userDocId);
+  // The rules read the user doc to allow this query, so a new account waits for it to save.
+  const { items, unreadCount } = useLatestNotifications(isUserDocSaved ? userDocId : undefined);
   const { pathname } = useLocation();
 
   const now = useNow();
