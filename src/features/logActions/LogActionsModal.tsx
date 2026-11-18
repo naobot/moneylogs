@@ -217,6 +217,7 @@ export const LogActionsModal = ({
           <Button
             text={archived ? "Unarchive" : "Archive for me"}
             size="sm"
+            className="LogActions__action"
             variant="secondary"
             loading={pending}
             disabled={!user || pending}
@@ -245,6 +246,7 @@ export const LogActionsModal = ({
             <Button
               text={`Delete ${noun}`}
               size="sm"
+              className="LogActions__action"
               variant="secondary"
               disabled={pending}
               onClick={() => setConfirming(true)}

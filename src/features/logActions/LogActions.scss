@@ -99,6 +99,11 @@
   }
 }
 
+// A section's main button sits centred under its explanation.
+.LogActions__action {
+  align-self: center;
+}
+
 .LogActions__confirm {
   display: flex;
   flex-direction: column;
