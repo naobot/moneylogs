@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
 import { useGetLedger } from "@/hooks/useGetLedger";
+import { syncPersonalLedgerCurrency } from "@/hooks/useLedgerQuery";
 import { updateUserFields } from "@/hooks/useUserQuery";
 import { useToastContext } from "@/hooks/useToastContext";
 import { Currency } from "@/types/user";
@@ -51,6 +52,16 @@ export const DefaultCurrencyPrompt = () => {
     setSaving(true);
     try {
       await updateUserFields(user.id, { defaultCurrency });
+      await syncPersonalLedgerCurrency({
+        personalLedgerId: user.personalLedgerId,
+        defaultCurrency,
+      }).catch((err: unknown) =>
+        reportError(err, {
+          feature: "personal_ledger",
+          action: "sync_personal_ledger_currency",
+          level: "warning",
+        }),
+      );
     } catch (err) {
       reportError(err, {
         feature: "default_currency",

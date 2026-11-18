@@ -103,6 +103,31 @@ export const ensurePersonalLedger = async ({
   });
 };
 
+// Firestore codes for a personal log that's no longer there. Deleting it leaves the user's
+// personalLedgerId in place, and the rules deny writes to a missing ledger.
+const GONE_LEDGER_CODES = new Set(["not-found", "permission-denied"]);
+
+/**
+ * The personal log has no settings screen of its own, so its default currency follows
+ * the user's: call this whenever users.defaultCurrency changes. A personal log the user
+ * has since deleted is skipped quietly; other failures are thrown for the caller to report.
+ */
+export const syncPersonalLedgerCurrency = async ({
+  personalLedgerId,
+  defaultCurrency,
+}: {
+  personalLedgerId?: string;
+  defaultCurrency: Currency;
+}): Promise<void> => {
+  if (!personalLedgerId) return;
+  try {
+    await updateDoc(doc(db, "ledgers", personalLedgerId), { defaultCurrency });
+  } catch (err) {
+    if (GONE_LEDGER_CODES.has((err as { code?: string })?.code ?? "")) return;
+    throw err;
+  }
+};
+
 export const useLedgerQuery = () => {
   const createLedgerFn = async (args: CreateLedgerArgs): Promise<string> => {
     const userDocRef = doc(db, "users", args.member.userDocId);

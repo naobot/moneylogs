@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
 
+const { mockUpdateDoc } = vi.hoisted(() => ({ mockUpdateDoc: vi.fn() }));
+
 const store = new Map<string, Record<string, unknown>>();
 const writes: Array<{ op: string; path: string; data: Record<string, unknown> }> = [];
 
@@ -11,7 +13,7 @@ vi.mock("firebase/firestore", () => ({
   addDoc: vi.fn(),
   arrayUnion: vi.fn(),
   getDoc: vi.fn(),
-  updateDoc: vi.fn(),
+  updateDoc: mockUpdateDoc,
   serverTimestamp: () => "SERVER_TS",
   runTransaction: async (_db: unknown, fn: (tx: unknown) => Promise<unknown>): Promise<unknown> =>
     fn({
@@ -26,7 +28,7 @@ vi.mock("firebase/firestore", () => ({
     }),
 }));
 
-import { ensurePersonalLedger } from "@/hooks/useLedgerQuery";
+import { ensurePersonalLedger, syncPersonalLedgerCurrency } from "@/hooks/useLedgerQuery";
 
 const member = { uid: "auth-uid", userDocId: "user-doc" };
 const ensure = (defaultCurrency: "CAD" | "JPY" = "CAD") =>
@@ -73,5 +75,44 @@ describe("ensurePersonalLedger", () => {
     store.set("users/user-doc", { userId: "auth-uid", personalLedgerId: "personal-auth-uid" });
     await expect(ensure()).resolves.toBeNull();
     expect(writes).toEqual([]);
+  });
+});
+
+describe("syncPersonalLedgerCurrency", () => {
+  beforeEach(() => mockUpdateDoc.mockReset());
+
+  it("sets the personal log's default currency to the user's", async () => {
+    mockUpdateDoc.mockResolvedValueOnce(undefined);
+    await syncPersonalLedgerCurrency({
+      personalLedgerId: "personal-auth-uid",
+      defaultCurrency: "USD",
+    });
+    expect(mockUpdateDoc).toHaveBeenCalledWith(
+      { path: "ledgers/personal-auth-uid" },
+      { defaultCurrency: "USD" },
+    );
+  });
+
+  it("does nothing for a user without a personal log", async () => {
+    await syncPersonalLedgerCurrency({ personalLedgerId: undefined, defaultCurrency: "USD" });
+    expect(mockUpdateDoc).not.toHaveBeenCalled();
+  });
+
+  it("skips a personal log the user has deleted", async () => {
+    mockUpdateDoc.mockRejectedValueOnce({ code: "permission-denied" });
+    await expect(
+      syncPersonalLedgerCurrency({ personalLedgerId: "personal-auth-uid", defaultCurrency: "USD" }),
+    ).resolves.toBeUndefined();
+    mockUpdateDoc.mockRejectedValueOnce({ code: "not-found" });
+    await expect(
+      syncPersonalLedgerCurrency({ personalLedgerId: "personal-auth-uid", defaultCurrency: "USD" }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("passes other failures to the caller", async () => {
+    mockUpdateDoc.mockRejectedValueOnce({ code: "unavailable" });
+    await expect(
+      syncPersonalLedgerCurrency({ personalLedgerId: "personal-auth-uid", defaultCurrency: "USD" }),
+    ).rejects.toEqual({ code: "unavailable" });
   });
 });
