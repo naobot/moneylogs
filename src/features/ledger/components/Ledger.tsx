@@ -8,6 +8,7 @@ import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsStrip } from "./LedgerStats";
+import { NoSpendDay } from "@/features/ledger/noSpend/NoSpendDay";
 import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
 type LedgerProps = {
@@ -74,6 +75,13 @@ const LedgerEntries = ({
         }}
         onSubmit={handleAdd}
       />
+
+      {month === monthKeyOf(today) && !isLoading && (
+        <NoSpendDay
+          today={today}
+          loggedToday={entries.some((e) => e.authorUid === user?.userId && e.date === today)}
+        />
+      )}
 
       {isLoading && <p className="Ledger__empty">...</p>}
       {isError && <p className="error-message">Couldn't load entries for {formatMonth(month)}.</p>}

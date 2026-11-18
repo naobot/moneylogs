@@ -82,6 +82,33 @@ const spendingAcrossLogs = async ({
 };
 
 /**
+ * Work out luck from the person's logs and this momentum, and save its tier for them to see
+ * (users/{id}/luck/current, words only). Returns the luck, for a roll.
+ */
+export const refreshLuckTier = async ({
+  db,
+  userRef,
+  uid,
+  today,
+  now,
+  momentum,
+}: {
+  db: Firestore;
+  userRef: DocumentReference;
+  uid: string;
+  today: string;
+  now: number;
+  momentum: number;
+}): Promise<number> => {
+  const luck = luckOf({ spending: await spendingAcrossLogs({ db, uid, today, now }), momentum });
+  await userRef
+    .collection("luck")
+    .doc("current")
+    .set({ tier: luckTier(luck), updatedAt: FieldValue.serverTimestamp() });
+  return luck;
+};
+
+/**
  * A check-in's chance at a knick-knack: a signed-in visit (`kind: "visit"`, from
  * dailyCheckIn) or a logged entry (`kind: "entry"`, from recomputeLedgerMonth or an
  * import). It moves the person's momentum, works out their luck and saves its tier (the
@@ -142,14 +169,7 @@ export const takeDailyChance = async ({
   // Nothing to roll and luck unchanged: skip the log reads.
   if (!slot && !momentum.changed) return { item: null, more: visitRollsLeft(day) };
 
-  const luck = luckOf({
-    spending: await spendingAcrossLogs({ db, uid, today, now }),
-    momentum: momentum.value,
-  });
-  await userRef
-    .collection("luck")
-    .doc("current")
-    .set({ tier: luckTier(luck), updatedAt: FieldValue.serverTimestamp() });
+  const luck = await refreshLuckTier({ db, userRef, uid, today, now, momentum: momentum.value });
   if (!slot) return { item: null, more: visitRollsLeft(day) };
 
   const findable = findableIn({ month: Number(today.slice(5, 7)), timezone });

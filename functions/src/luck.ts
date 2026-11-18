@@ -21,6 +21,10 @@ export const MOMENTUM_DECAY = 0.08;
 export const MOMENTUM_START = 0.3;
 /** A check-in streak this long seeds full momentum (for people from before luck). */
 export const STREAK_SEED_DAYS = 20;
+/** Extra momentum for a confirmed no-spend day: the same as a logged day's, never more. */
+export const NO_SPEND_GAIN = MOMENTUM_ENTRY_GAIN;
+/** A no-spend day only lifts luck for someone who logged an entry within this many days. */
+export const NO_SPEND_RECENT_ENTRY_DAYS = 7;
 /** Days with spending, out of the last 14, that make a log count towards luck. */
 export const MIN_ACTIVE_DAYS = 3;
 
@@ -35,6 +39,8 @@ export type LuckState = {
   lastDay?: string;
   /** The last day whose first logged entry gave its extra momentum. */
   entryDay?: string;
+  /** The confirmed no-spend day whose extra momentum is currently applied. */
+  noSpendDay?: string;
 };
 
 export const LUCK_TIERS = [
@@ -78,9 +84,13 @@ export const nextLuckState = ({
     state?.momentum ?? (streakDays ? Math.min(1, streakDays / STREAK_SEED_DAYS) : MOMENTUM_START);
   let lastDay = state?.lastDay ?? "";
   let entryDay = state?.entryDay ?? "";
+  // Carried through untouched, so a later entry can still take a no-spend bonus back.
+  const noSpendDay = state?.noSpendDay ?? "";
   let changed = state?.momentum === undefined;
 
-  if (lastDay && today < lastDay) return changed ? { momentum, lastDay, entryDay } : null;
+  if (lastDay && today < lastDay) {
+    return changed ? { momentum, lastDay, entryDay, noSpendDay } : null;
+  }
   if (today !== lastDay) {
     const missed = lastDay ? Math.max(0, daysBetween(lastDay, today) - 1) : 0;
     // Drained to no lower than nothing, then the day's gain: coming back always counts.
@@ -93,7 +103,50 @@ export const nextLuckState = ({
     entryDay = today;
     changed = true;
   }
-  return changed ? { momentum, lastDay, entryDay } : null;
+  return changed ? { momentum, lastDay, entryDay, noSpendDay } : null;
+};
+
+/**
+ * Momentum after confirming `today` as a no-spend day. It takes the place of a logged day's
+ * bonus, so it's given once a day, never on a day that already had the entry bonus, and
+ * only to someone who's logged an entry in the last week: confirming every day without ever
+ * logging earns nothing. `rewarded` says whether the bonus was given; `next` is null when
+ * nothing changes.
+ */
+export const applyNoSpend = ({
+  state,
+  today,
+}: {
+  state?: LuckState | null;
+  today: string;
+}): { next: LuckState | null; rewarded: boolean } => {
+  if (!state || typeof state.momentum !== "number") return { next: null, rewarded: false };
+  if (state.noSpendDay === today || state.entryDay === today) {
+    return { next: null, rewarded: false };
+  }
+  const sinceEntry = state.entryDay ? daysBetween(state.entryDay, today) : Infinity;
+  if (sinceEntry < 0 || sinceEntry > NO_SPEND_RECENT_ENTRY_DAYS) {
+    return { next: null, rewarded: false };
+  }
+  return {
+    next: { ...state, momentum: clamp01(state.momentum + NO_SPEND_GAIN), noSpendDay: today },
+    rewarded: true,
+  };
+};
+
+/**
+ * Momentum after an entry turns up on a confirmed no-spend `day`: the day's bonus comes
+ * back off. Null when that day's bonus isn't the one applied.
+ */
+export const undoNoSpend = ({
+  state,
+  day,
+}: {
+  state?: LuckState | null;
+  day: string;
+}): LuckState | null => {
+  if (!state || state.noSpendDay !== day || typeof state.momentum !== "number") return null;
+  return { ...state, momentum: clamp01(state.momentum - NO_SPEND_GAIN), noSpendDay: "" };
 };
 
 /**

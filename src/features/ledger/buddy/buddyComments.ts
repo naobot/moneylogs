@@ -131,11 +131,13 @@ export const buddyComment = ({ mood, asleep, facts, seed }: BuddyState, nth = 0)
 
 /** What it says when it speaks up on its own in the evening. */
 export const CHECK_IN_LINES: Record<CheckIn, readonly string[]> = {
+  // Nothing logged isn't the same as nothing spent, so this asks rather than praises; a
+  // confirmed no-spend day gets NO_SPEND_LINES instead.
   quiet: [
-    "nothing spent today so far! the wallet's having a nap too~",
-    "not a single thing logged today. a whole day of being frugal ♡",
-    "a no-spend day so far! i'm very impressed. *slow blink*",
-    "today's been nice and quiet. let's keep the wallet tucked in tonight~",
+    "nothing logged today… was it a no-spend day? tell me with “nothing spent today” ♡",
+    "quiet day so far! if nothing got spent, let me know with “nothing spent today”~",
+    "no entries yet today. a no-spend day, or did something sneak past us? (=^･ω･^=)",
+    "the log's been quiet today. tell me if it was a no-spend day and i'll do a little dance",
   ],
   light: [
     "today's been way lighter than usual. so proud of us ♡",
@@ -158,6 +160,21 @@ const FIND_TEASERS = [
  */
 export const buddyFindTeaser = ({ asleep, seed }: Pick<BuddyState, "asleep" | "seed">): string =>
   drowsy(FIND_TEASERS[seed % FIND_TEASERS.length], asleep, seed);
+
+/** What it says when today's been confirmed as a no-spend day. */
+export const NO_SPEND_LINES = [
+  "a whole no-spend day! the wallet gets a day off ♡",
+  "nothing spent today?? i'm so proud i could purr",
+  "no-spend day! *happy tail swish*",
+  "a no-spend day, just like that. you're amazing, human ♪",
+] as const;
+
+/** Stable for the day (seed). */
+export const buddyNoSpendComment = ({
+  asleep,
+  seed,
+}: Pick<BuddyState, "asleep" | "seed">): string =>
+  drowsy(NO_SPEND_LINES[seed % NO_SPEND_LINES.length], asleep, seed);
 
 /** Stable for the day (seed). */
 export const buddyCheckInComment = (

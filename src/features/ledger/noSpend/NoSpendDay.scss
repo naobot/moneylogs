@@ -1,0 +1,16 @@
+// Under the add form, right-aligned like a small row action: tokens only.
+.NoSpendDay {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  font-size: 0.85em;
+
+  &--confirmed {
+    color: var(--ink-muted);
+  }
+
+  // Hack has no ✓, so a fallback glyph draws it and eats the space before it.
+  &__tick {
+    margin-left: 0.5em;
+  }
+}

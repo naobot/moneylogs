@@ -6,7 +6,7 @@ import {
   isBuddyAsleep,
   moodForChange,
   moodForPace,
-  noSpendStreak,
+  confirmedNoSpendStreak,
 } from "../buddyMood";
 import { MOOD_SCALE } from "../faces";
 
@@ -150,16 +150,32 @@ describe("buddyMood quirks", () => {
     ).toBe("idle");
   });
 
-  it("cheers up a step after a few days without spending", () => {
-    const streaky = buddyMood({
+  it("cheers up a step after a few confirmed no-spend days", () => {
+    const quiet = {
       ledgerId: "l1",
       categories: budgeted,
       current: monthDoc("2026-11", { food: { CAD: 575 } }, ["10"]), // nothing since the 10th
       today: TODAY,
       localHour: 12,
+    };
+    const streaky = buddyMood({
+      ...quiet,
+      confirmedNoSpend: new Set(["2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14"]),
     });
-    expect(streaky.facts.noSpendDays).toBe(5);
+    expect(streaky.facts.noSpendDays).toBe(4);
     expect(streaky.mood).toBe("content"); // wary, one step happier
+  });
+
+  it("doesn't count days that were only left unlogged", () => {
+    const forgot = buddyMood({
+      ledgerId: "l1",
+      categories: budgeted,
+      current: monthDoc("2026-11", { food: { CAD: 575 } }, ["10"]),
+      today: TODAY,
+      localHour: 12,
+    });
+    expect(forgot.facts.noSpendDays).toBe(0);
+    expect(forgot.mood).toBe("wary");
   });
 
   it("gives the same answer all day, for the same ledger", () => {
@@ -201,11 +217,24 @@ describe("sleeping", () => {
   });
 });
 
-describe("noSpendStreak", () => {
-  it("counts back from today to the last spend", () => {
-    expect(noSpendStreak({ "10": { CAD: 5 } }, 15)).toBe(5);
-    expect(noSpendStreak({ "15": { CAD: 5 } }, 15)).toBe(0);
-    expect(noSpendStreak({}, 4)).toBe(4);
+describe("confirmedNoSpendStreak", () => {
+  const days = new Set(["2026-11-12", "2026-11-13", "2026-11-14"]);
+
+  it("counts back from yesterday while today is still open", () => {
+    expect(confirmedNoSpendStreak(days, "2026-11-15")).toBe(3);
+  });
+
+  it("counts today once it's confirmed", () => {
+    expect(confirmedNoSpendStreak(new Set([...days, "2026-11-15"]), "2026-11-15")).toBe(4);
+  });
+
+  it("stops at a day that wasn't confirmed", () => {
+    expect(confirmedNoSpendStreak(days, "2026-11-16")).toBe(0);
+    expect(confirmedNoSpendStreak(new Set(["2026-11-13", "2026-11-15"]), "2026-11-15")).toBe(1);
+  });
+
+  it("crosses into the previous month", () => {
+    expect(confirmedNoSpendStreak(new Set(["2026-10-31", "2026-11-01"]), "2026-11-01")).toBe(2);
   });
 });
 

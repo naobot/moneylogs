@@ -3,6 +3,8 @@ import {
   buddyCheckInComment,
   buddyComment,
   CHECK_IN_LINES,
+  NO_SPEND_LINES,
+  buddyNoSpendComment,
   daysLeftInWords,
   shareInWords,
 } from "../buddyComments";
@@ -110,6 +112,21 @@ describe("faces", () => {
     for (const face of all) {
       expect(face).not.toMatch(/\n/);
       expect(Array.from(face).length).toBeLessThanOrEqual(24);
+    }
+  });
+});
+
+describe("no-spend days", () => {
+  it("cheers a confirmed day with a line that holds for the day", () => {
+    const line = buddyNoSpendComment({ asleep: false, seed: 5 });
+    expect(NO_SPEND_LINES).toContain(line);
+    expect(buddyNoSpendComment({ asleep: false, seed: 5 })).toBe(line);
+  });
+
+  it("asks rather than praises when today is only unlogged", () => {
+    for (const line of CHECK_IN_LINES.quiet) {
+      expect(line).toMatch(/no-spend day|nothing spent today/);
+      expect(line).not.toMatch(/frugal|impressed/);
     }
   });
 });

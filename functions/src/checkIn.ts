@@ -43,7 +43,7 @@ export const recordCheckIn = async ({
   });
 
 /** The signed-in caller's user doc, or null if they don't have one yet. */
-const callerUserRef = async (db: Firestore, uid: string) => {
+export const callerUserRef = async (db: Firestore, uid: string) => {
   const users = await db.collection("users").where("userId", "==", uid).limit(1).get();
   return users.empty ? null : users.docs[0].ref;
 };
