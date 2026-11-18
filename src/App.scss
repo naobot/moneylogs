@@ -813,6 +813,28 @@ h6,
       flex-direction: column;
       overflow-y: hidden;
     }
+
+    // Three columns: members · posts/summary · comments. The side columns share the
+    // spare room but stop at the sidebar width; past that the middle column grows
+    // (up to --main-width-wide), and whatever is still left over is split evenly
+    // around the three.
+    @media (min-width: constants.$breakpoint-md) {
+      justify-content: center;
+
+      > .LogsMenu,
+      > .LogPostComments {
+        max-width: var(--sidebar-width);
+      }
+
+      > .LogPosts,
+      > .LogsSummary {
+        max-width: clamp(
+          var(--main-width),
+          calc(100% - 2 * var(--sidebar-width) - 40px),
+          var(--main-width-wide)
+        );
+      }
+    }
   }
 }
 
@@ -938,9 +960,13 @@ h6,
     }
 
     // The 4px "new activity" frame, drawn inside so the row doesn't change size.
+    // Only in the sidebar: in the compact small-screen strip the badge (bell or
+    // speech bubble) says it on its own, and the frame is just noise.
     &--fresh {
-      outline: var(--border-fresh) solid var(--ink);
-      outline-offset: calc(-1 * var(--border-fresh));
+      @media (min-width: constants.$breakpoint-md) {
+        outline: var(--border-fresh) solid var(--ink);
+        outline-offset: calc(-1 * var(--border-fresh));
+      }
     }
 
     &__subtitle {
@@ -1231,13 +1257,6 @@ h6,
         .wmde-markdown {
           color: var(--inverse-ink) !important;
         }
-      }
-
-      // Arrived at from a notification link: the 4px "new activity" frame, briefly.
-      // An outline, so the frame doesn't shift the layout as it comes and goes.
-      &--focused {
-        outline: var(--border-fresh) solid var(--ink);
-        outline-offset: calc(-1 * var(--border-fresh));
       }
 
       &--selected {
@@ -1618,12 +1637,6 @@ h6,
 
     &--hidden {
       opacity: 0 !important;
-    }
-
-    // A comment linked from a notification, framed briefly.
-    &--focused {
-      outline: var(--border-fresh) solid var(--ink);
-      outline-offset: 2px;
     }
 
     &--notice {

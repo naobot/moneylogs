@@ -273,9 +273,10 @@ describe("Group — following a post link", () => {
     expect(view.postFocus).toMatchObject({ postId: "p2", commentId: "c9" });
   });
 
-  it("opens the default digest when there's no link", () => {
+  it("opens your own log by default when there's no link", () => {
     render(`/g/${GROUP_ID}`);
-    expect(lastActiveLog().displayAll).toBe(true);
+    expect(lastActiveLog().displayAll).toBe(false);
+    expect(lastActiveLog().displayUser?.id).toBe(me.id);
     expect(lastActiveLog().postFocus).toBeNull();
   });
 
@@ -289,6 +290,8 @@ describe("Group — following a post link", () => {
   it("says so when the post is gone", () => {
     render(`/g/${GROUP_ID}?post=gone`);
     expect(state.showToast).toHaveBeenCalledWith(expect.stringContaining("isn't"), "error");
-    expect(lastActiveLog().displayAll).toBe(true);
+    // Stays on the default view: your own log.
+    expect(lastActiveLog().displayAll).toBe(false);
+    expect(lastActiveLog().displayUser?.id).toBe(me.id);
   });
 });

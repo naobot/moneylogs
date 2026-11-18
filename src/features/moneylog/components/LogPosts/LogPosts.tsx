@@ -54,7 +54,7 @@ type LogPostsProps = {
  */
 export type PostFocus = { postId: string; commentId?: string; key: number };
 
-/** How long a linked post keeps its frame after scrolling into view. */
+/** How long a linked post stays "focused" (so following the same link again re-scrolls). */
 export const POST_FOCUS_MS = 2500;
 
 type LogPostProps = {
@@ -219,7 +219,6 @@ const LogPostItemComponent = ({
         className={cx("LogPosts__posts__item", {
           "LogPosts__posts__item--selected": selectedPostId === post.id,
           "LogPosts__posts__item--pinned": isPinned && !isDigestMode,
-          "LogPosts__posts__item--focused": isFocused,
         })}
         ref={postRef}
       >
@@ -608,7 +607,7 @@ const LogPosts = memo(
       }
     }, [selectedPost]);
 
-    // A followed link: frame the post briefly, and for a comment open the comments
+    // A followed link: scroll to the post, and for a comment open the comments
     // panel on it. Declared after the userId reset above, so when the link also switched
     // members, the reset runs first and this selection wins.
     const [focusedPostId, setFocusedPostId] = useState<string | null>(null);

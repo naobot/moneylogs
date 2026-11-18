@@ -67,6 +67,9 @@
   --icon-lg: 24px;
   --sidebar-width: 420px;
   --main-width: 800px;
+  // How far the log's middle column may grow on very wide screens, once both side
+  // columns are at --sidebar-width.
+  --main-width-wide: 1200px;
   --modal-width: 450px;
 
   // ---- layering ----

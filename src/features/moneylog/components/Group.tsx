@@ -64,9 +64,12 @@ export const Group = ({
   // than freezing at whatever they were when the page first rendered.
   const now = useNow();
 
-  // Default view: Daily Digest while the group is active, Log Group Summary once
-  // it has fully ended (see the reset effect below, which is the source of truth)
-  const [displayAll, setDisplayAll] = useState(() => absoluteEnd(group).isAfter(dayjs()));
+  // Default view: a member's own log while the group is active (the Daily Digest
+  // for spectators, who have none), Log Group Summary once it has fully ended (see
+  // the reset effect below, which is the source of truth)
+  const [displayAll, setDisplayAll] = useState(
+    () => isSpectator && absoluteEnd(group).isAfter(dayjs()),
+  );
   const [displayUser, setDisplayUser] = useState<UserData | null>(
     isSpectator ? null : (loggedInUser ?? null),
   );
@@ -153,13 +156,13 @@ export const Group = ({
       setDisplaySummary(true);
       return;
     }
-    // Active logs open on the Daily Digest
+    // Active logs open on the member's own log; spectators get the Daily Digest
     if (isSpectator) {
       setDisplayAll(true);
       setDisplayUser(null);
     } else if (loggedInUser) {
       setDisplayUser(loggedInUser);
-      setDisplayAll(true);
+      setDisplayAll(false);
     }
     setDisplaySummary(false);
   }, [loggedInUser?.id, groupId, isSpectator, isReadOnly]);
@@ -418,9 +421,16 @@ export const Group = ({
                   loadingMemberCount={Math.max(0, (group.members?.length ?? 0) - members.length)}
                 />
                 {isFutureGroup && (
-                  <div className="LogPosts">
-                    <div className="LogPosts__error">This group log has not begun yet!</div>
-                  </div>
+                  <>
+                    <div className="LogPosts">
+                      <div className="LogPosts__posts">
+                        <div className="LogPosts__error">This group log has not begun yet!</div>
+                      </div>
+                    </div>
+                    {/* Empty comments column, so the members list keeps the same width
+                        as in a running log instead of taking all the spare room. */}
+                    <div className="LogPostComments" aria-hidden />
+                  </>
                 )}
                 {!isFutureGroup && displaySummary && (
                   <LogsSummary

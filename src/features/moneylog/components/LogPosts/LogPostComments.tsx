@@ -30,9 +30,6 @@ type LogPostCommentsProps = {
   focusCommentId?: string;
 };
 
-/** How long a linked comment keeps its frame. */
-const COMMENT_FOCUS_MS = 2500;
-
 const LogPostComments = ({
   currentLogAuthorId,
   postId,
@@ -95,13 +92,7 @@ const LogPostComments = ({
         : undefined;
       if (linked) {
         pendingFocus.current = undefined;
-        linked.classList.add("LogPostComments__item--focused");
         linked.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Not cleared on re-run: the frame must come off even if comments refresh.
-        setTimeout(
-          () => linked.classList.remove("LogPostComments__item--focused"),
-          COMMENT_FOCUS_MS,
-        );
         return;
       }
       commentRefs.current?.get("newComment")?.scrollIntoView({ behavior: "smooth" });
