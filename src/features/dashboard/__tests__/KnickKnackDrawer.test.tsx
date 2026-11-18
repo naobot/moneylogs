@@ -130,6 +130,8 @@ describe("KnickKnackDrawer", () => {
     expect(alerts()[0].textContent).toBe("your budget buddy has something to show you");
     expect(alerts()[0].closest(".KnickKnackDrawer__alerts")).not.toBeNull();
     expect(alerts()[0].querySelector(".KnickKnackDrawer__alertMark")).not.toBeNull();
+    // The buddy's alert hops as a whole.
+    expect(alerts()[0].classList.contains("KnickKnackDrawer__alert--bounce")).toBe(true);
     expect(container.querySelector('svg[aria-label="tulip"]')).toBeNull();
   });
 
@@ -162,6 +164,7 @@ describe("KnickKnackDrawer", () => {
     ];
     render();
     expect(alerts().map((a) => a.textContent)).toEqual(["Mina has sent you something!"]);
+    expect(alerts()[0].classList.contains("KnickKnackDrawer__alert--bounce")).toBe(false);
     expect(container.querySelector('svg[aria-label="holly"]')).toBeNull();
     expect(container.querySelector(".KnickKnackDrawer__empty")).toBeNull();
 
