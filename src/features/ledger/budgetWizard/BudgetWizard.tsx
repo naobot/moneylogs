@@ -78,6 +78,8 @@ export const BudgetWizard = ({
 
   const reset = useMemo(() => resetToDefaultsOps(categories), [categories]);
   const step = STEPS[stepIndex];
+  // Repeated on the plan step when the reset changes anything, since using it saves.
+  const resetChangesCategories = Object.values(reset.summary).some((names) => names.length > 0);
 
   const incomeValue = parseAmount(income);
   const housingValue = parseOptional(housing);
@@ -127,7 +129,7 @@ export const BudgetWizard = ({
           <h3 className="Wizard__question">Need a starting point?</h3>
           <p>
             Answer a few questions about your month and we'll suggest a budget for each category.
-            You can re-roll the suggestion, then adjust any amount before saving.
+            You can re-roll the suggestion and adjust any amount before using it.
           </p>
           <CategoryWarning reset={reset} />
         </>
@@ -246,8 +248,8 @@ export const BudgetWizard = ({
               <>
                 <p className="Wizard__hint">
                   Every amount here is a suggestion you can change, and you can keep adjusting them
-                  in the Budgets window too. Whatever isn't budgeted is left to save. Re-rolling
-                  replaces your changes.
+                  in the Budgets window afterwards. Whatever isn't budgeted is left to save.
+                  Re-rolling replaces your changes.
                 </p>
                 {/* Pie beside the figures on wide screens, stacked on narrow ones. */}
                 <div className="BudgetWizard__planLayout">
@@ -299,8 +301,9 @@ export const BudgetWizard = ({
                         everyday costs.
                       </p>
                     )}
+                    {resetChangesCategories && <CategoryWarning reset={reset} />}
                     <p className="Wizard__hint">
-                      These use the default categories. After saving, you can rename them or break
+                      These use the default categories. Afterwards, you can rename them or break
                       them down (say, Food into Coffee and Restaurants) in Categories.
                     </p>
                   </div>
@@ -355,7 +358,7 @@ const CategoryWarning = ({ reset }: { reset: ReturnType<typeof resetToDefaultsOp
         <span>Your categories already match them, so nothing about them will change.</span>
       ) : (
         <>
-          <span>When you save it, your categories will be reset to match:</span>
+          <span>Using it will reset your categories to match:</span>
           <ul>
             {changes.map((line) => (
               <li key={line} className="keep-case">
@@ -363,7 +366,7 @@ const CategoryWarning = ({ reset }: { reset: ReturnType<typeof resetToDefaultsOp
               </li>
             ))}
           </ul>
-          <span>Nothing changes until you press Save in the Budgets window.</span>
+          <span>Nothing changes until you press Use this plan.</span>
         </>
       )}
     </div>
