@@ -15,8 +15,8 @@ android {
         applicationId "app.moneylogs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 51311
-        versionName "5.13.11"
+        versionCode 51312
+        versionName "5.13.12"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
