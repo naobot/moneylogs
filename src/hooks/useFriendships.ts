@@ -16,7 +16,7 @@ export type FriendEntry = { userDocId: string; state: Exclude<FriendState, "none
  * the read rule allows), no composite index.
  */
 export const useFriendships = () => {
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const me = user?.id;
   const uid = user?.userId;
 
@@ -53,7 +53,9 @@ export const useFriendships = () => {
     incoming: entries.filter((e) => e.state === "incoming").map((e) => e.userDocId),
     outgoing: entries.filter((e) => e.state === "outgoing").map((e) => e.userDocId),
     stateWith,
-    isLoading: result.isLoading || (!!uid && !result.isSuccess && !result.isError),
+    // Loading while the current user is: until then there's no uid to ask with, and an
+    // empty list would read as "no friends" (and "Add friend" for someone who is one).
+    isLoading: userLoading || result.isLoading,
   };
 };
 

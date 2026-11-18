@@ -24,12 +24,15 @@ vi.mock("@/features/ledger/buddy/knickknacks/useUnseenFinds", () => ({
 vi.mock("@/hooks/useFriendships", () => ({
   useFriendships: () => ({ friends: state.friends }),
 }));
-vi.mock("@/hooks/useProfiles", () => ({
+vi.mock("@/hooks/useProfiles", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/hooks/useProfiles")>()),
   // Like the real hook: only the profiles asked for.
-  useProfiles: (ids: ReadonlyArray<string>) =>
-    new Map(
+  useProfiles: (ids: ReadonlyArray<string>) => ({
+    profiles: new Map(
       ids.includes("mina") ? [["mina", { id: "mina", displayName: "Mina", avatar: null }]] : [],
     ),
+    isLoading: false,
+  }),
 }));
 vi.mock("@/features/gifts/GiftModal", () => ({
   default: ({ item, toUserDocId }: { item: string; toUserDocId?: string }) => (

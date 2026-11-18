@@ -1,14 +1,12 @@
 import dayjs from "@/utils/configuredDayjs";
 import { useDateFormat } from "@/utils/dateFormat";
-import { useProfiles } from "@/hooks/useProfiles";
+import { profileName, useProfiles } from "@/hooks/useProfiles";
 import { KNICK_KNACKS } from "@/features/ledger/buddy/knickknacks/catalog";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import { giverIds, provenanceLabel } from "@/features/ledger/buddy/knickknacks/provenance";
 import { useCurrentUser } from "@/contexts";
 import { useShelf } from "./useShelf";
 import { useGiftsInTransit } from "./useGiftsInTransit";
-
-export const DELETED_USER = "deleted user";
 
 /**
  * Someone's kept knick-knacks on their profile: each item once, with how they first got
@@ -26,7 +24,8 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
   const givers = useProfiles(giverIds(shelf));
   const { formatShortDate } = useDateFormat();
 
-  const nameOf = (id: string) => givers.get(id)?.displayName ?? DELETED_USER;
+  // "…" while the giver's profile loads; "deleted user" only once it's known to be gone.
+  const nameOf = (id: string) => profileName(givers, id) ?? "…";
   const day = (ms: number) => formatShortDate(dayjs(ms));
 
   if (isError) return <p className="ProfilePage__muted">couldn't open the shelf.</p>;

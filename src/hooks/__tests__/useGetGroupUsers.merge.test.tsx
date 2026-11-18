@@ -44,10 +44,12 @@ const makeSnapshot = (chunk: string[], extra?: (id: string) => Record<string, un
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let latestUsers: FullUserData[] = [];
+let latestLoading = true;
 let renderCount = 0;
 const Probe = ({ groupId }: { groupId: string }) => {
-  const { users } = useGetGroupUsers(groupId);
+  const { users, isLoading } = useGetGroupUsers(groupId);
   latestUsers = users;
+  latestLoading = isLoading;
   renderCount += 1;
   return null;
 };
@@ -106,6 +108,19 @@ describe("useGetGroupUsers chunk merge", () => {
   const fireChunks = (listeners: ChunkListener[]) => {
     listeners.forEach((l) => act(() => l.cb(makeSnapshot(l.chunk))));
   };
+
+  it("stays loading until every chunk has answered, so later members never read as missing", () => {
+    mount();
+    deliverMembers(MEMBER_IDS);
+
+    const [first, second] = chunkListeners;
+    act(() => first.cb(makeSnapshot(first.chunk)));
+    expect(latestLoading).toBe(true);
+
+    act(() => second.cb(makeSnapshot(second.chunk)));
+    expect(latestLoading).toBe(false);
+    expect(latestUsers).toHaveLength(12);
+  });
 
   it("keeps all members when a later chunk's snapshot arrives before an earlier one", () => {
     mount();

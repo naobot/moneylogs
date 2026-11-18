@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useFriendships } from "@/hooks/useFriendships";
-import { useProfiles } from "@/hooks/useProfiles";
+import { profileName, useProfiles } from "@/hooks/useProfiles";
 import { useToastContext } from "@/hooks/useToastContext";
 import type { LogKind } from "@/types/notification";
 import { reportError } from "@/utils/reportError";
@@ -56,8 +56,8 @@ export const FriendPicker = ({
   return (
     <ul className="FriendPicker" aria-label="friends">
       {ids.map((id) => {
-        const profile = profiles.get(id);
-        const name = profile?.displayName ?? "…";
+        const profile = profiles.profiles.get(id);
+        const name = profileName(profiles, id) ?? "…";
         const invited = invitedIds.includes(id);
         const checked = selected.includes(id);
         return (

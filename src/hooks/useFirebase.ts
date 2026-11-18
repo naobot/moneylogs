@@ -30,6 +30,19 @@ type MutationState = {
   error: unknown;
 };
 
+const sameDeps = (a: ReadonlyArray<unknown>, b: ReadonlyArray<unknown>) =>
+  a.length === b.length && a.every((dep, i) => Object.is(dep, b[i]));
+
+const IDLE = { data: [], isLoading: false, isSuccess: false, isError: false, error: null };
+const LOADING = { ...IDLE, isLoading: true };
+
+/**
+ * A live Firestore query. Each result is kept with the dependencies it was fetched for,
+ * so it's only shown while those still match: until the first snapshot for the current
+ * dependencies lands this reports `isLoading` with no data (never the previous query's
+ * data, and never an empty list that reads as "nothing there"). Disabled, or with no
+ * query to run, it's idle: not loading, not successful, no data.
+ */
 export const useFirebaseCollection = <T>({
   queryBuilder,
   dataTransformer,
@@ -40,43 +53,31 @@ export const useFirebaseCollection = <T>({
   dataTransformer: (docs: QueryDocumentSnapshot[]) => T[];
   dependencies?: unknown[];
   enabled?: boolean;
-}) => {
-  const [state, setState] = useState<FirebaseQuery<T>>({
-    data: [] as T[],
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-    error: null,
-  });
+}): FirebaseQuery<T> => {
+  const [state, setState] = useState<{ forDeps: unknown[]; result: FirebaseQuery<T> } | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
 
     const query = queryBuilder();
-    if (!query) return;
-
-    setState((prev) => ({ ...prev, isLoading: true }));
+    if (!query) {
+      setState({ forDeps: dependencies, result: IDLE });
+      return;
+    }
 
     const unsubscribe = onSnapshot(
       query,
       (snapshot) => {
         const data = snapshot.empty ? [] : dataTransformer(snapshot.docs);
-
         setState({
-          data,
-          isLoading: false,
-          isSuccess: true,
-          isError: false,
-          error: null,
+          forDeps: dependencies,
+          result: { data, isLoading: false, isSuccess: true, isError: false, error: null },
         });
       },
       (error) => {
         setState({
-          data: [],
-          isLoading: false,
-          isSuccess: false,
-          isError: true,
-          error,
+          forDeps: dependencies,
+          result: { data: [], isLoading: false, isSuccess: false, isError: true, error },
         });
       },
     );
@@ -84,7 +85,9 @@ export const useFirebaseCollection = <T>({
     return unsubscribe;
   }, dependencies);
 
-  return state;
+  if (!enabled) return IDLE;
+  if (!state || !sameDeps(state.forDeps, dependencies)) return LOADING;
+  return state.result;
 };
 
 export const useFirebaseTransaction = () => {

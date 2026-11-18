@@ -141,12 +141,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
 
   // Check for cached groups immediately
   useEffect(() => {
-    if (currentUserId) {
-      const cached = getCachedGroups(currentUserId);
-      if (cached) {
-        setCachedGroupsState(cached);
-      }
-    }
+    // Reset on sign-out or a different account, so one person's logs never show for another.
+    setCachedGroupsState(currentUserId ? getCachedGroups(currentUserId) : null);
   }, [currentUserId]);
 
   // Fetch the user's document ID from their userId (with caching)
@@ -170,8 +166,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
         ...doc.data(),
       })) as Group[];
 
-      // Cache the fresh groups data
-      if (currentUserId && groups.length > 0) {
+      // Cache the fresh groups data (empty too, so leaving your last log clears it)
+      if (currentUserId) {
         setCachedGroups(currentUserId, groups);
       }
 
@@ -188,7 +184,8 @@ export const useGetCurrentGroups = (): GroupsResponse => {
   const combinedError = error || userIdFetchError;
 
   // Use cached data for instant display while fresh data loads
-  const allGroups = data || cachedGroups || [];
+  // (`data` is always an array, so it can't fall through to the cache with `||`.)
+  const allGroups = isSuccess ? data : (cachedGroups ?? []);
 
   return {
     currentGroups: allGroups.filter((group) => {

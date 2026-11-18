@@ -17,6 +17,7 @@ import { PageViewTracker } from "@/hooks/usePageViewTracking";
 import { useEnsurePersonalLedger } from "@/hooks/useEnsurePersonalLedger";
 import { useDailyCheckIn } from "@/features/ledger/buddy/knickknacks/checkIn";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import KeyByParam from "@/components/KeyByParam";
 import UpdateBanner from "@/components/UpdateBanner";
 import NativeBridge from "@/features/native/NativeBridge";
 import UpdateRequired from "@/features/native/UpdateRequired";
@@ -147,7 +148,9 @@ const App = () => {
                 path="/u/:userDocId"
                 element={
                   <CheckAuth>
-                    <UserProfilePage />
+                    <KeyByParam param="userDocId">
+                      <UserProfilePage />
+                    </KeyByParam>
                   </CheckAuth>
                 }
               />
@@ -177,12 +180,21 @@ const App = () => {
                   </CheckAuth>
                 }
               />
-              <Route path="/g/:groupId" element={<GroupPage />} />
+              <Route
+                path="/g/:groupId"
+                element={
+                  <KeyByParam param="groupId">
+                    <GroupPage />
+                  </KeyByParam>
+                }
+              />
               <Route
                 path="/g/:groupId/invite"
                 element={
                   <CheckAuth fallback={<Landing invite="log" />}>
-                    <InvitePage />
+                    <KeyByParam param="groupId">
+                      <InvitePage />
+                    </KeyByParam>
                   </CheckAuth>
                 }
               />
@@ -190,7 +202,9 @@ const App = () => {
                 path="/l/:ledgerId"
                 element={
                   <CheckAuth>
-                    <LedgerPage />
+                    <KeyByParam param="ledgerId">
+                      <LedgerPage />
+                    </KeyByParam>
                   </CheckAuth>
                 }
               />
@@ -198,7 +212,9 @@ const App = () => {
                 path="/l/:ledgerId/stats"
                 element={
                   <CheckAuth>
-                    <LedgerStatsPage />
+                    <KeyByParam param="ledgerId">
+                      <LedgerStatsPage />
+                    </KeyByParam>
                   </CheckAuth>
                 }
               />
@@ -206,7 +222,9 @@ const App = () => {
                 path="/l/:ledgerId/invite"
                 element={
                   <CheckAuth fallback={<Landing invite="ledger" />}>
-                    <LedgerInvitePage />
+                    <KeyByParam param="ledgerId">
+                      <LedgerInvitePage />
+                    </KeyByParam>
                   </CheckAuth>
                 }
               />

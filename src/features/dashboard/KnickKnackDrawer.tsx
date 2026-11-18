@@ -6,7 +6,7 @@ import Icon from "@/components/Icon";
 import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { useFriendships } from "@/hooks/useFriendships";
-import { useProfiles } from "@/hooks/useProfiles";
+import { DELETED_USER, profileName, useProfiles } from "@/hooks/useProfiles";
 import { KNICK_KNACKS, KnickKnackId } from "@/features/ledger/buddy/knickknacks/catalog";
 import { drawerContents } from "@/features/ledger/buddy/knickknacks/drawer";
 import { giftableByItem } from "@/features/ledger/buddy/knickknacks/gifts";
@@ -27,8 +27,6 @@ import "./Dashboard.scss";
 
 export const KNICK_KNACK_HELP =
   "budget buddies in financial logs sometimes find random things throughout the day. rumour has it that better spending habits increase your luck. so does dropping by every day.";
-
-const DELETED_USER = "deleted user";
 
 /** The bouncing "!" on the drawer's alerts. */
 const AlertMark = () => (
@@ -66,14 +64,17 @@ export const KnickKnackDrawer = () => {
       .filter((id) => id && id !== FOREST_SPIRIT_ID),
   );
   const giverName = (id?: string | null) =>
-    nameOfGiver(id, (giver) => givers.get(giver)?.displayName, DELETED_USER);
+    nameOfGiver(id, (giver) => profileName(givers, giver) ?? "…", DELETED_USER);
   const giftable = useMemo(
     () => new Set(friends.length ? giftableByItem(data).map((g) => g.item) : []),
     [data, friends.length],
   );
   const giftTo = searchParams.get("giftTo");
   const givingTo = giftTo && friends.includes(giftTo) ? giftTo : null;
-  const givingToName = useProfiles(givingTo ? [givingTo] : []).get(givingTo ?? "")?.displayName;
+  const givingToProfiles = useProfiles(givingTo ? [givingTo] : []);
+  const givingToName =
+    givingToProfiles.profiles.get(givingTo ?? "")?.displayName ??
+    (givingToProfiles.isLoading ? "…" : "your friend");
   const stopGivingTo = () => navigate({ search: "", hash: "#knickknacks" }, { replace: true });
 
   // Gift notifications link to /#knickknacks.
@@ -101,7 +102,7 @@ export const KnickKnackDrawer = () => {
       {givingTo && (
         <div className="KnickKnackDrawer__givingTo" role="status">
           <span className="keep-case">
-            pick something to give to {givingToName ?? "your friend"}
+            pick something to give to {givingToName}
             {giftable.size ? "" : ". you don't have anything you found yourself to give yet"}
           </span>
           <RowButton onClick={stopGivingTo}>cancel</RowButton>

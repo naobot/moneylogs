@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from "react";
 
 import { useCurrentUser } from "@/contexts";
 import { useFriendships } from "@/hooks/useFriendships";
-import { useProfiles } from "@/hooks/useProfiles";
+import { profileName, useProfiles } from "@/hooks/useProfiles";
 import { useToastContext } from "@/hooks/useToastContext";
 import { reportError } from "@/utils/reportError";
 
@@ -53,7 +53,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
     [finds, item],
   );
   const chosenFriend = chooseFriend(friend, toUserDocId, friends);
-  const nameOf = (id: string) => profiles.get(id)?.displayName ?? "…";
+  const nameOf = (id: string) => profileName(profiles, id) ?? "…";
   const itemName = KNICK_KNACKS[item].name.toLowerCase();
 
   const give = async () => {

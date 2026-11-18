@@ -157,7 +157,10 @@ export const setCachedUser = (userId: string, user: CacheableUserData) => {
 
 export const useGetUserInfo = (userId: string) => {
   const [user, setUser] = useState<UserData | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+  // The userId the current answer (cache, snapshot or error) is for. Loading is derived
+  // from it, so a new userId reads as loading from its first render, not "no user".
+  const [resolvedFor, setResolvedFor] = useState<string | null>(null);
+  const isLoading = !!userId && resolvedFor !== userId;
   const [error, setError] = useState<unknown>(null);
   // The user doc id the server has confirmed. See isUserDocSaved below.
   const [savedDocId, setSavedDocId] = useState<string | null>(null);
@@ -166,15 +169,13 @@ export const useGetUserInfo = (userId: string) => {
   useEffect(() => {
     if (!userId) {
       setUser(undefined);
-      setIsLoading(false);
       return;
     }
 
     const cachedUser = getCachedUser(userId);
-    if (cachedUser) {
-      setUser(cachedUser as unknown as UserData);
-      setIsLoading(false);
-    }
+    // Never carry a previous account's user over to this one.
+    setUser(cachedUser ? (cachedUser as unknown as UserData) : undefined);
+    if (cachedUser) setResolvedFor(userId);
 
     console.log("🔄 setting up real-time listener for current user");
 
@@ -193,7 +194,7 @@ export const useGetUserInfo = (userId: string) => {
           console.log("📡 received current user data from real-time listener");
 
           setUser(userData);
-          setIsLoading(false);
+          setResolvedFor(userId);
           setError(null);
 
           // Registration's addDoc shows up here before the server has it. Wait for it
@@ -234,13 +235,13 @@ export const useGetUserInfo = (userId: string) => {
           setCachedUser(userId, cacheableData);
         } else {
           setUser(undefined);
-          setIsLoading(false);
+          setResolvedFor(userId);
           setError(new Error("User not found"));
         }
       },
       (err) => {
         setError(err);
-        setIsLoading(false);
+        setResolvedFor(userId);
         reportError(err, { feature: "account", action: "listen_current_user" });
       },
     );

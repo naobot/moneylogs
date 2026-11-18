@@ -5,32 +5,35 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { updateUserFields, UserFieldsPatch } from "@/hooks/useUserQuery";
 import { reportError } from "@/utils/reportError";
 import { removeFriend, respondFriend, useFriendships } from "@/hooks/useFriendships";
-import { Profile, useProfiles } from "@/hooks/useProfiles";
+import { profileName, ProfilesState, useProfiles } from "@/hooks/useProfiles";
 import Avatar from "@/components/Avatar";
 import RowButton from "@/components/RowButton";
 import ProfileLink from "@/features/profile/ProfileLink";
 import { useFriendAction } from "@/features/profile/useFriendAction";
 import InviteLink from "@/features/invites/InviteLink";
 
-const DELETED_USER = "deleted user";
-
 const PersonRow = ({
   id,
-  profile,
+  profiles,
   children,
 }: {
   id: string;
-  profile?: Profile;
+  profiles: ProfilesState;
   children?: ReactNode;
-}) => (
-  <li className="FriendsSection__row">
-    <ProfileLink userDocId={profile ? id : null}>
-      <Avatar avatar={profile?.avatar} name={profile?.displayName ?? DELETED_USER} size={30} />
-      <span className="ProfileLink__name keep-case">{profile?.displayName ?? DELETED_USER}</span>
-    </ProfileLink>
-    {children && <span className="FriendsSection__actions">{children}</span>}
-  </li>
-);
+}) => {
+  const profile = profiles.profiles.get(id);
+  // Undefined while loading: "…", not "deleted user", and no avatar initial yet.
+  const name = profileName(profiles, id);
+  return (
+    <li className="FriendsSection__row">
+      <ProfileLink userDocId={profile ? id : null}>
+        <Avatar avatar={profile?.avatar} name={name} size={30} />
+        <span className="ProfileLink__name keep-case">{name ?? "…"}</span>
+      </ProfileLink>
+      {children && <span className="FriendsSection__actions">{children}</span>}
+    </li>
+  );
+};
 
 /**
  * Who can see your friends: your own list on your profile (off unless switched on), and
@@ -97,7 +100,7 @@ export const FriendsSection = () => {
           <h4>requests</h4>
           <ul className="FriendsSection__list">
             {incoming.map((id) => (
-              <PersonRow key={id} id={id} profile={profiles.get(id)}>
+              <PersonRow key={id} id={id} profiles={profiles}>
                 <RowButton
                   disabled={!!pending}
                   onClick={() =>
@@ -123,7 +126,7 @@ export const FriendsSection = () => {
         {friends.length > 0 ? (
           <ul className="FriendsSection__list FriendsSection__list--columns">
             {friends.map((id) => (
-              <PersonRow key={id} id={id} profile={profiles.get(id)} />
+              <PersonRow key={id} id={id} profiles={profiles} />
             ))}
           </ul>
         ) : (
@@ -139,7 +142,7 @@ export const FriendsSection = () => {
           <h4>sent</h4>
           <ul className="FriendsSection__list">
             {outgoing.map((id) => (
-              <PersonRow key={id} id={id} profile={profiles.get(id)}>
+              <PersonRow key={id} id={id} profiles={profiles}>
                 <RowButton
                   disabled={!!pending}
                   onClick={() => void run(`cancel-${id}`, () => removeFriend(id))}
