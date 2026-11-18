@@ -26,3 +26,6 @@ dist-ssr
 serviceAccountKey.json
 # Chromatic visual test archives
 .vitest/
+
+# Walkthrough screenshots (npm run e2e)
+e2e/.output/

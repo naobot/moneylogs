@@ -142,21 +142,23 @@ npm run seed-emulator      # Populate emulator with dummy data (not necessary mo
 The seed also creates new-user personas (`fresh@`, `empty@`, `lapsed@test.com`, password `test123`);
 `npm run reset-persona -- <name|all>` puts one back at its starting stage, and `?fresh-device` (dev only)
 clears the browser's stored `ML__` keys. `docs/user-states.md` lists the user states and the flows (F1…)
-to walk as each persona.
+to walk as each persona; `npm run e2e` walks the automated ones and writes screenshots to
+`e2e/.output/index.html`.
 
 Emulator data is wiped each session. Local `.env` values are not committed.
 
-| Script                            | Does                                                              |
-| --------------------------------- | ----------------------------------------------------------------- |
-| `vp dev`                          | Dev server                                                        |
-| `vp build`                        | Production build, then stamps `version.json`                      |
-| `vp check`                        | Oxlint + TypeScript + React rules                                 |
-| `vp test`                         | Vitest (run once)                                                 |
-| `npm run seed-emulator`           | Seed local Firestore                                              |
-| `npm run reset-persona -- <name>` | Reset a new-user test persona (`fresh`, `empty`, `lapsed`, `all`) |
-| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device         |
-| `npm run android:forward`         | Re-forward emulator ports to a replugged Android device           |
-| `npm run cap:sync`                | Production build → sync native projects                           |
+| Script                            | Does                                                                |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `vp dev`                          | Dev server                                                          |
+| `vp build`                        | Production build, then stamps `version.json`                        |
+| `vp check`                        | Oxlint + TypeScript + React rules                                   |
+| `vp test`                         | Vitest (run once)                                                   |
+| `npm run seed-emulator`           | Seed local Firestore                                                |
+| `npm run e2e`                     | Playwright walkthroughs of docs/user-states.md flows (emulators up) |
+| `npm run reset-persona -- <name>` | Reset a new-user test persona (`fresh`, `empty`, `lapsed`, `all`)   |
+| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device           |
+| `npm run android:forward`         | Re-forward emulator ports to a replugged Android device             |
+| `npm run cap:sync`                | Production build → sync native projects                             |
 
 Linting and formatting run automatically on staged files pre-commit.
 

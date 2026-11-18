@@ -111,10 +111,31 @@ As: any persona (then reset it).
 
 - Deleting the account from `/me` signs them out cleanly; their posts in shared logs show as "deleted user".
 
+## Walkthroughs (Playwright)
+
+`npm run e2e` walks the automated flows in headless Chromium: F1 and F3 so far, in
+`e2e/F<n>-*.e2e.ts`. Each one runs on a phone-sized screen, once in each ink (day and
+night shift), and takes a screenshot at every step. When it finishes, open
+`e2e/.output/index.html` to review all the steps side by side. The page also lists any
+console errors. A green run only proves the flow completes; the screenshots are where
+UX problems show up.
+
+- Needs the emulators running with the functions built. It seeds them if they're empty and
+  starts its own dev server on :5174, forced onto the emulators.
+- Every request outside localhost is dropped, and any attempt to reach production Firebase
+  fails the walkthrough. So does an uncaught error on the page.
+- Accounts a walkthrough signs up are deleted afterwards, so runs don't fill Alice's logs.
+- A flow that fails on a known bug is marked `it.fails` with a comment. Once the bug is
+  fixed it turns red, as a reminder to drop the marker.
+- To add a flow, copy one of the specs: `openWalkthrough("F4a-…", title, variant)`,
+  `w.step("name")` at each screen, `w.done()` at the end. The shared steps (sign up, sign in,
+  the wizard) are in `e2e/support/flows.ts`.
+
 ## Before shipping a feature
 
 - [ ] Which dimensions above does it touch? Say so in the PR description.
-- [ ] Walk the flows that cross it as the new-user personas, not only as Alice.
+- [ ] Walk the flows that cross it as the new-user personas, not only as Alice: `npm run e2e`
+      for the automated ones, by hand for the rest.
 - [ ] Empty states: what does it show with nothing at all, and with exactly one item?
 - [ ] First visit on this device (`?fresh-device`), phone width, night shift.
 - [ ] If it adds a new user field or `ML__` key, add it to the state dimensions table.
