@@ -40,15 +40,15 @@ window for a completely clean first visit.
 A screen can look different along each of these. When a feature touches one, check the
 values in bold. Those are the ones that get missed.
 
-| Dimension     | Values                                                                                       | Where it lives                                                                 |
-| ------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**          | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`             |
-| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard |
-| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs       | `groups`, `personalLedgerId`, ledgers `memberUids`                             |
-| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds                    | `friendships`, `users/{id}/knickknacks`                                        |
-| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                  | ledger `months/{YYYY-MM}`, category budgets                                    |
-| Device        | **first visit** · returning · stored theme / drawers / dismissed tips                        | `ML__*` keys in browser storage                                                |
-| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)**                         | `data-theme`, `isNative()`                                                     |
+| Dimension     | Values                                                                                                                                             | Where it lives                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                            |
+| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                       | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                |
+| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                             | `groups`, `personalLedgerId`, ledgers `memberUids`                                                            |
+| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}` |
+| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                   |
+| Device        | **first visit** · returning · stored theme / drawers / dismissed tips                                                                              | `ML__*` keys in browser storage                                                                               |
+| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)**                                                                               | `data-theme`, `isNative()`                                                                                    |
 
 ## Flows
 
@@ -104,6 +104,15 @@ As: signed out, in a private window.
 
 - `/g/:id` for a public log, every landing page, `/about`, `/privacy`.
 - Every action that needs an account leads to sign-in and back to where they were.
+
+### F6b. Friends on a profile
+
+As: two personas who are friends (the seed's Alice and one of hers), signed in in two windows.
+
+- By default `/u/:id` shows no friends section to others; the owner sees "hidden from others" with a link to `/me#friends`.
+- Switching on "Show my friends list on my profile" makes avatars (no names) appear on the profile for others, live; hovering one opens the peek.
+- The friend switching off "Appear in other people's friends lists" drops out of that list; switching it back puts them back.
+- A shown list with no friends reads "no friends to show yet".
 
 ### F7. Leaving
 

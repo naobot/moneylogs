@@ -72,6 +72,10 @@ export type UserData = {
   emailPrefs?: EmailPrefs;
   /** Switches all email off (the "unsubscribe from all" link sets it too). */
   emailPaused?: boolean;
+  /** Show my friends list on my profile (opt-in; see functions/src/friendList.ts). */
+  showFriends?: boolean;
+  /** Leave me off other people's public friends lists (opt-out). */
+  hideFromFriendLists?: boolean;
   /** Id of the solo "personal" ledger made for this user (see utils/personalLedger). */
   personalLedgerId?: string;
   /** The currency the user chose as theirs (see utils/currency for how it's applied). */

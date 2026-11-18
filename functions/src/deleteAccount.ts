@@ -258,8 +258,12 @@ export const deleteUserData = async (db: Firestore, uid: string): Promise<Delete
 
   // The user docs with their achievements and notifications, then the Auth account.
   for (const ref of userRefs) await db.recursiveDelete(ref);
-  // Their public knick-knack shelves (mirrorShelf also clears one if it fires late).
-  for (const ref of userRefs) await db.collection("shelves").doc(ref.id).delete();
+  // Their public knick-knack shelves and friends lists (the mirrors also clear these if
+  // they fire late).
+  for (const ref of userRefs) {
+    await db.collection("shelves").doc(ref.id).delete();
+    await db.collection("friendLists").doc(ref.id).delete();
+  }
   try {
     await getAuth().deleteUser(uid);
   } catch (err) {

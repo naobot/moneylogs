@@ -62,6 +62,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public friends lists (mirrorFriendList): only exists while the owner shows it
+    // (users.showFriends), and leaves out anyone with users.hideFromFriendLists.
+    // Signed-in people may read them, like shelves; only the server writes.
+    match /friendLists/{userDocId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // One doc per pair of users, written only by the friend callables. Each side may
     // read it (list queries filter on uids array-contains their uid).
     match /friendships/{pairId} {
