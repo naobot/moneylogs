@@ -152,7 +152,11 @@ export const LedgerStatsPanel = ({
   const { currency, currencies, setPicked } = useStatsCurrency(ledger, month, entries);
 
   const trend = trailingMonths(month, TREND_MONTHS);
-  const { byMonth } = useLedgerMonths({ ledgerId: ledger.id, from: trend[0], to: month });
+  const { byMonth, isLoading: monthsLoading } = useLedgerMonths({
+    ledgerId: ledger.id,
+    from: trend[0],
+    to: month,
+  });
 
   const categories = ledger.categories ?? [];
   const catShares = categoryShares(agg, currency, categories);
@@ -177,7 +181,9 @@ export const LedgerStatsPanel = ({
 
   const hasEntries = agg.entryCount > 0;
 
-  if (isLoading) return <p className="Ledger__empty">...</p>;
+  // The trend and "vs last month" need the month summaries: before they're in, earlier
+  // months would draw as nothing spent.
+  if (isLoading || monthsLoading) return <p className="Ledger__empty">...</p>;
 
   return (
     <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>

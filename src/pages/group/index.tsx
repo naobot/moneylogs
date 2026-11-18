@@ -11,7 +11,7 @@ import { Group } from "@/features/moneylog/components/Group";
 export const GroupPage = () => {
   const { groupId } = useParams();
   const { group, isSuccess: isSuccessGroup, isError } = useGetGroup(groupId);
-  const { user: loggedInUser } = useCurrentUser();
+  const { user: loggedInUser, isLoading: userLoading } = useCurrentUser();
 
   const memberIds = useMemo(() => {
     if (!group?.members) return [];
@@ -30,7 +30,8 @@ export const GroupPage = () => {
 
   return (
     <>
-      {isSuccessGroup && group && groupId && (
+      {/* Wait for the viewer too, or a member briefly gets the spectator view. */}
+      {isSuccessGroup && group && groupId && !userLoading && (
         <Group group={group} groupId={groupId} isSpectator={isSpectator} />
       )}
     </>

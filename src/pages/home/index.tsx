@@ -11,11 +11,21 @@ import { partitionArchived } from "@/utils/archivedLogs";
 // Home is a dashboard of what's current. The full history (every past and archived log)
 // lives on /me under My logs.
 export const Home = () => {
-  const { user } = useCurrentUser();
-  const { allGroups: groups, isSuccess, isLoading } = useGetCurrentGroups();
-  const { ledgers, isLoading: ledgersLoading } = useGetMyLedgers();
+  const { user, isLoading: userLoading } = useCurrentUser();
+  const { allGroups: groups, isSuccess, isLoading, isError } = useGetCurrentGroups();
+  const { ledgers, isLoading: ledgersLoading, isError: ledgersError } = useGetMyLedgers();
 
-  if (isLoading || ledgersLoading) return <div className="InfoBox">...</div>;
+  // The user too: which logs are archived is on the user doc, so without it archived logs
+  // would show as current.
+  if (isLoading || ledgersLoading || userLoading) return <div className="InfoBox">...</div>;
+  // Not "you aren't part of any logs" when they just failed to load.
+  if (isError || ledgersError) {
+    return (
+      <div className="InfoBox">
+        Couldn't load your logs. Please check your connection and reload.
+      </div>
+    );
+  }
 
   const allGroups = isSuccess ? groups : [];
   const groupParts = partitionArchived(allGroups, user);

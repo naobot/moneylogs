@@ -18,9 +18,9 @@ import { useGiftsInTransit } from "./useGiftsInTransit";
  * own, never anyone else's (firestore.rules).
  */
 export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const { slots: shelf, isLoading, isError } = useShelf(userDocId);
-  const inTransit = useGiftsInTransit(userDocId, user?.id);
+  const { gifts: inTransit, isLoading: inTransitLoading } = useGiftsInTransit(userDocId, user?.id);
   const givers = useProfiles(giverIds(shelf));
   const { formatShortDate } = useDateFormat();
 
@@ -29,7 +29,8 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
   const day = (ms: number) => formatShortDate(dayjs(ms));
 
   if (isError) return <p className="ProfilePage__muted">couldn't open the shelf.</p>;
-  if (isLoading) return null;
+  // The viewer's wrapped gifts count too: without them an empty shelf isn't empty yet.
+  if (isLoading || inTransitLoading || userLoading) return null;
   if (!shelf.length && !inTransit.length) {
     return <p className="ProfilePage__muted">nothing on the shelf yet.</p>;
   }

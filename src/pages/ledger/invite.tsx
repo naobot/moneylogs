@@ -69,6 +69,15 @@ export const LedgerInvitePage = () => {
 
   const canAttemptJoin = (access === "not-member" || access === "not-found") && !showJoinedModal;
 
+  // Not a blank page when the access check itself failed.
+  if (access === "error") {
+    return (
+      <div className="InfoBox">
+        Couldn't open this invite. Please check your connection and reload.
+      </div>
+    );
+  }
+
   return (
     <>
       <Modal isOpen={canAttemptJoin}>

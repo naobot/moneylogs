@@ -394,6 +394,11 @@ export const Group = ({
           </div>
           <div className="Group__body">
             {/*{(isLoadingGroup || isLoadingMembers) && <>...</>}*/}
+            {logPostRes.isError && (
+              <div className="LogPosts__error">
+                Couldn't load this log's posts. Please check your connection and reload.
+              </div>
+            )}
             {logPostRes.isSuccess && !isLoadingMembers && groupId && (
               <>
                 <LogsMenu

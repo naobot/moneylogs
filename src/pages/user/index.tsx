@@ -17,15 +17,17 @@ import "@/features/profile/profile.scss";
 /** /u/:userDocId — someone's public profile, for signed-in people. */
 export const UserProfilePage = () => {
   const { userDocId } = useParams<{ userDocId: string }>();
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const { profile, isLoading } = useProfile(userDocId);
-  const { allGroups } = useGetCurrentGroups();
+  const { allGroups, isLoading: groupsLoading } = useGetCurrentGroups();
   const { formatTime } = useDateFormat();
   const now = useNow();
 
   const isMe = !!user?.id && user.id === userDocId;
 
-  if (isLoading) {
+  // Wait for the viewer too: until then, isMe can't be told and your own profile would
+  // show "Add friend".
+  if (isLoading || userLoading) {
     return (
       <div className="Window ProfilePage">
         <p className="ProfilePage__muted">loading…</p>
@@ -75,7 +77,9 @@ export const UserProfilePage = () => {
       {!isMe && (
         <section className="ProfilePage__section" aria-labelledby="profile-shared">
           <h3 id="profile-shared">logs together</h3>
-          {shared.length > 0 ? (
+          {groupsLoading ? (
+            <p className="ProfilePage__muted">…</p>
+          ) : shared.length > 0 ? (
             <ul className="ProfilePage__logs">
               {shared.map((g) => (
                 <li key={g.id}>

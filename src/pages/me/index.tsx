@@ -32,13 +32,17 @@ import { Link } from "react-router-dom";
 // Personal settings plus everything tied to the account, in drawers. "logs" is linked
 // to from Home as /me#logs, which opens that drawer.
 export const UserSettings = () => {
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const theme = useTheme();
   const displayPrefs = useDisplayPrefs();
-  const { allGroups: groups } = useGetCurrentGroups();
-  const { ledgers: allLedgers } = useGetMyLedgers();
-  const { achievements } = useGetAchievements(user?.id);
-  const { friends, incoming } = useFriendships();
+  const { allGroups: groups, isLoading: groupsLoading } = useGetCurrentGroups();
+  const { ledgers: allLedgers, isLoading: ledgersLoading } = useGetMyLedgers();
+  const { achievements, isLoading: achievementsLoading } = useGetAchievements(user?.id);
+  const { friends, incoming, isLoading: friendsLoading } = useFriendships();
+  // Until these are in, the drawers say "…" rather than "0" or "none yet". Logs wait for
+  // the user too: which are archived is on the user doc.
+  const logsLoading = groupsLoading || ledgersLoading || userLoading;
+  const loadingNote = <p className="GroupArchive__empty">…</p>;
   const isAdmin = useIsAdmin();
 
   const { active: activeGroups, archived: archivedGroups } = partitionArchived(groups, user);
@@ -81,7 +85,11 @@ export const UserSettings = () => {
         <Drawer
           id="friends"
           title="friends"
-          summary={friendsHint({ friends: friends.length, incoming: incoming.length })}
+          summary={
+            friendsLoading
+              ? "…"
+              : friendsHint({ friends: friends.length, incoming: incoming.length })
+          }
         >
           <FriendsSection />
         </Drawer>
@@ -103,30 +111,42 @@ export const UserSettings = () => {
         <Drawer
           id="achievements"
           title="Achievements"
-          summary={`${orderedAchievements.length} unlocked`}
+          summary={achievementsLoading ? "…" : `${orderedAchievements.length} unlocked`}
         >
-          <AchievementsSection achievements={orderedAchievements} />
+          {achievementsLoading || !user ? (
+            loadingNote
+          ) : (
+            <AchievementsSection achievements={orderedAchievements} />
+          )}
         </Drawer>
 
         <Drawer
           id="logs"
           title="my logs"
-          summary={myLogsHint({
-            financial: ledgers.length,
-            ongoing: ongoing.length,
-            upcoming: upcoming.length,
-            past: past.length,
-            archived: archivedCount,
-          })}
+          summary={
+            logsLoading
+              ? "…"
+              : myLogsHint({
+                  financial: ledgers.length,
+                  ongoing: ongoing.length,
+                  upcoming: upcoming.length,
+                  past: past.length,
+                  archived: archivedCount,
+                })
+          }
         >
-          <MyLogsSection
-            ledgers={ledgers}
-            ongoing={ongoing}
-            upcoming={upcoming}
-            past={past}
-            archivedGroups={archivedGroups}
-            archivedLedgers={archivedLedgers}
-          />
+          {logsLoading ? (
+            loadingNote
+          ) : (
+            <MyLogsSection
+              ledgers={ledgers}
+              ongoing={ongoing}
+              upcoming={upcoming}
+              past={past}
+              archivedGroups={archivedGroups}
+              archivedLedgers={archivedLedgers}
+            />
+          )}
         </Drawer>
       </div>
 
