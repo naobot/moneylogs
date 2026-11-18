@@ -484,6 +484,7 @@ const LogPostEditor = forwardRef(
               text="Submit your first log entry!"
               onDismiss={dismissTip}
               position="top"
+              pointAt=".Button"
             />
           )}
           <Button

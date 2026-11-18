@@ -13,8 +13,11 @@ import { ledgerTourSteps, LedgerTourTarget, shouldShowLedgerTour } from "./tourR
 type LedgerTourValue = {
   /** The target the current tip points at, or null when no tour is running. */
   activeTarget: LedgerTourTarget | null;
-  /** The tip bubble for a target, or null if it isn't that target's turn. */
-  tip: (target: LedgerTourTarget) => ReactNode;
+  /**
+   * The tip bubble for a target, or null if it isn't that target's turn. `pointAt` is a
+   * selector for the control to aim at when the tip sits in a wider wrapper.
+   */
+  tip: (target: LedgerTourTarget, pointAt?: string) => ReactNode;
   /** End the tour for good (finished, skipped, or the first entry was saved). */
   complete: () => void;
 };
@@ -81,7 +84,7 @@ export const LedgerTourProvider = ({
   const value: LedgerTourValue = {
     activeTarget: current.target,
     complete,
-    tip: (target) =>
+    tip: (target, pointAt) =>
       target === current.target ? (
         <TutorialTooltip
           text={current.text}
@@ -91,6 +94,7 @@ export const LedgerTourProvider = ({
           hint={isLast ? "tap to finish" : "tap for next"}
           onDismiss={advance}
           onSkip={isLast ? undefined : skip}
+          pointAt={pointAt}
         />
       ) : null,
   };

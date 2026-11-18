@@ -137,7 +137,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         <div className="Ledger__body">
           <nav className="Ledger__month" aria-label="Month">
             <div className="Ledger__month__controls">
-              {tip("month")}
+              {tip("month", ".Ledger__month__label")}
               <RowButton
                 glyph
                 aria-label="Previous month"

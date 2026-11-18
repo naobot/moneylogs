@@ -18,6 +18,11 @@ type Props = {
   hint?: string;
   /** Shows a "skip tour" control that ends the whole tour. */
   onSkip?: () => void;
+  /**
+   * A selector for the element to point at, looked up inside the anchor. For when the
+   * anchor is a wrapper wider than the control the tip is about; falls back to the anchor.
+   */
+  pointAt?: string;
 };
 
 type Placed = { top: number; left: number; side: "top" | "bottom" | "center"; arrow?: number };
@@ -35,14 +40,20 @@ const TutorialTooltip = ({
   progress,
   hint = "tap to dismiss",
   onSkip,
+  pointAt,
 }: Props) => {
   // An inert marker left in place, so the bubble knows which element it belongs to.
   const markerRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<Placed>();
 
-  const update = useCallback(() => {
+  const target = useCallback(() => {
     const anchor = markerRef.current?.parentElement;
+    return (pointAt && anchor?.querySelector(pointAt)) || anchor;
+  }, [pointAt]);
+
+  const update = useCallback(() => {
+    const anchor = target();
     const bubble = bubbleRef.current;
     if (!anchor || !bubble) return;
     const rect = anchor.getBoundingClientRect();
@@ -54,7 +65,7 @@ const TutorialTooltip = ({
     }
     const { top, left, side } = computePosition(rect, size, viewport, position, align);
     setPlaced({ top, left, side, arrow: arrowOffset(rect, left, size.width) });
-  }, [position, align]);
+  }, [position, align, target]);
 
   useLayoutEffect(() => {
     update();
@@ -64,7 +75,7 @@ const TutorialTooltip = ({
     // The anchor moves when the layout around it does (e.g. the editor opening).
     const observer =
       typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => update()) : undefined;
-    const anchor = markerRef.current?.parentElement;
+    const anchor = target();
     if (anchor) observer?.observe(anchor);
     if (bubbleRef.current) observer?.observe(bubbleRef.current);
     return () => {
@@ -73,7 +84,7 @@ const TutorialTooltip = ({
       window.visualViewport?.removeEventListener("resize", update);
       observer?.disconnect();
     };
-  }, [update, text]);
+  }, [update, target, text]);
 
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();

@@ -42,7 +42,8 @@ export const EntryForm = ({
   const amountRef = useRef<HTMLInputElement>(null);
   const tour = useLedgerTour();
   // The first-run tour only walks through the add form.
-  const tip = (target: LedgerTourTarget) => (mode === "add" ? tour.tip(target) : null);
+  const tip = (target: LedgerTourTarget, pointAt?: string) =>
+    mode === "add" ? tour.tip(target, pointAt) : null;
 
   // A different default date (e.g. after switching month) resets the add form's date.
   useEffect(() => {
@@ -117,7 +118,7 @@ export const EntryForm = ({
           (date · amount + currency · category), then the note and a small button. */}
       <div className="EntryForm__header">
         <div className="EntryForm__header__left">
-          {tip("date")}
+          {tip("date", "input")}
           <input
             type="date"
             aria-label="Date"
@@ -127,8 +128,8 @@ export const EntryForm = ({
           />
         </div>
         <div className="EntryForm__header__center">
-          {tip("amount")}
-          {tip("currency")}
+          {tip("amount", ".EntryForm__amount")}
+          {tip("currency", 'select[aria-label="Currency"]')}
           <input
             ref={amountRef}
             className="LogPostsCurrency__input EntryForm__amount"
@@ -154,7 +155,7 @@ export const EntryForm = ({
           </select>
         </div>
         <div className="EntryForm__header__right">
-          {tip("category")}
+          {tip("category", 'select[aria-label="Category"]')}
           <select
             aria-label="Category"
             value={values.categoryId}
@@ -173,7 +174,7 @@ export const EntryForm = ({
         </div>
       </div>
       <div className="EntryForm__body">
-        {tip("note")}
+        {tip("note", ".EntryForm__noteField")}
         <label className="EntryForm__noteField">
           <span className="EntryForm__noteLabel">Note:</span>
           <input

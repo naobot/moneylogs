@@ -1482,22 +1482,34 @@ h6,
     font-weight: 400;
   }
 
+  // The tail: a paper square turned 45° and centred on the bubble's edge, outlined on its
+  // two outer sides only, so it reads as part of the bubble (same fill, one continuous
+  // outline) rather than a separate ink triangle that vanishes against dark targets.
+  // --tooltip-arrow-x is measured from the bubble's outer edge; ::after sits inside the
+  // border, hence the hairline correction.
   &::after {
     content: "";
     position: absolute;
-    left: var(--tooltip-arrow-x, 50%);
-    transform: translateX(-50%);
-    border: 6px solid transparent;
+    left: calc(var(--tooltip-arrow-x, 50%) - var(--border-hairline));
+    width: 8px;
+    height: 8px;
+    box-sizing: border-box;
+    background-color: var(--paper);
+    border: var(--border-hairline) solid transparent;
   }
 
   &--bottom::after {
-    bottom: 100%;
-    border-bottom-color: var(--ink);
+    top: calc(var(--border-hairline) / -2);
+    transform: translate(-50%, -50%) rotate(45deg);
+    border-top-color: var(--ink);
+    border-left-color: var(--ink);
   }
 
   &--top::after {
-    top: 100%;
-    border-top-color: var(--ink);
+    top: calc(100% + var(--border-hairline) / 2);
+    transform: translate(-50%, -50%) rotate(45deg);
+    border-bottom-color: var(--ink);
+    border-right-color: var(--ink);
   }
 
   &--center {

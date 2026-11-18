@@ -47,4 +47,31 @@ describe("TutorialTooltip (visual)", () => {
     expect(bubble!.classList.contains("TutorialTooltip--top")).toBe(true);
     await v.snapshot("tutorial tooltip above");
   });
+
+  it("points at the pointAt element, not the centre of a wider anchor", async () => {
+    v.render(
+      <div style={{ padding: "1rem 1rem 12rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", width: 360 }}>
+          <span style={anchorStyle}>amount</span>
+          <select aria-label="Currency" style={{ width: 70 }}>
+            <option>CAD</option>
+          </select>
+          <TutorialTooltip
+            text="Switch it for anything you paid in another."
+            pointAt="select"
+            onDismiss={() => {}}
+          />
+        </div>
+      </div>,
+    );
+
+    const bubble = document.querySelector<HTMLElement>(".TutorialTooltip")!;
+    await expect.poll(() => bubble.style.visibility).not.toBe("hidden");
+    const select = document.querySelector("select")!.getBoundingClientRect();
+    const arrowX =
+      bubble.getBoundingClientRect().left +
+      parseFloat(bubble.style.getPropertyValue("--tooltip-arrow-x"));
+    expect(Math.abs(arrowX - (select.left + select.width / 2))).toBeLessThan(1);
+    await v.snapshot("tutorial tooltip pointing at a child");
+  });
 });
