@@ -36,8 +36,10 @@ type GiftModalProps = {
 export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProps) => {
   const { user } = useCurrentUser();
   const { showToast } = useToastContext();
-  const { data: finds } = useKnickKnackFinds(user?.id);
-  const { friends } = useFriendships();
+  const { data: finds, isLoading: findsLoading } = useKnickKnackFinds(user?.id);
+  const { friends, isLoading: friendsLoading } = useFriendships();
+  // Until both are in, "every one was a gift" or "add a friend first" would be a guess.
+  const isLoading = findsLoading || friendsLoading;
   const profiles = useProfiles(friends);
   const friendSelectId = useId();
 
@@ -75,14 +77,16 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
     }
   };
 
-  const canGive = giftable.length > 0 && friends.length > 0;
+  const canGive = !isLoading && giftable.length > 0 && friends.length > 0;
 
   return (
     <Modal isOpen onClose={pending ? undefined : onClose} disabled={pending} className="GiftModal">
       <Modal.Header title={`Give 1 ${itemName}`} />
       <Modal.Body className="GiftModal__body">
         <KnickKnack id={item} size={64} />
-        {!giftable.length ? (
+        {isLoading ? (
+          <p>…</p>
+        ) : !giftable.length ? (
           <p>
             Every {itemName} you have was a gift, and gifts can't be passed on. Only knick-knacks
             you found yourself can be given.

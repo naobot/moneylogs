@@ -19,7 +19,7 @@ export const InvitePage = () => {
   const navigate = useNavigate();
   const { groupId } = useParams();
   const { group, isSuccess: isSuccessGroup, isError } = useGetGroup(groupId);
-  const { user: loggedInUser } = useCurrentUser();
+  const { user: loggedInUser, isLoading: userLoading } = useCurrentUser();
   const { addGroupToMember, addMemberToGroup } = useLogGroupQuery();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -77,10 +77,12 @@ export const InvitePage = () => {
   }, [currentUserIsMember, groupId, navigate, showJoinedModal]);
 
   useEffect(() => {
-    if (isSuccessGroup && group?.members && !currentUserIsMember) {
+    // Not until we know who you are: a member would otherwise see "Join" before the
+    // redirect to the log.
+    if (isSuccessGroup && group?.members && !userLoading && !currentUserIsMember) {
       setShowInviteModal(true);
     }
-  }, [currentUserIsMember, isSuccessGroup, group?.members]);
+  }, [currentUserIsMember, isSuccessGroup, group?.members, userLoading]);
 
   if (isError) return <LogNotFound />;
 

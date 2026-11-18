@@ -13,7 +13,7 @@ import { inTransitGifts } from "@/features/ledger/buddy/knickknacks/provenance";
  */
 export const useGiftsInTransit = (toUserDocId?: string, viewerDocId?: string) => {
   const enabled = !!toUserDocId && !!viewerDocId && toUserDocId !== viewerDocId;
-  const { data, isError, error } = useFirebaseCollection<KnickKnackFind>({
+  const { data, isLoading, isError, error } = useFirebaseCollection<KnickKnackFind>({
     queryBuilder: () =>
       enabled
         ? query(
@@ -31,5 +31,8 @@ export const useGiftsInTransit = (toUserDocId?: string, viewerDocId?: string) =>
     if (isError) reportError(error, { feature: "profile", action: "load_gifts_in_transit" });
   }, [isError, error]);
 
-  return enabled && viewerDocId ? inTransitGifts(data, viewerDocId) : [];
+  return {
+    gifts: enabled && viewerDocId ? inTransitGifts(data, viewerDocId) : [],
+    isLoading,
+  };
 };

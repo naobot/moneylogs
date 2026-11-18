@@ -44,11 +44,14 @@ const AlertMark = () => (
  * friend's profile) preselects who it goes to.
  */
 export const KnickKnackDrawer = () => {
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const { hash } = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data, isLoading } = useKnickKnackFinds(user?.id);
+  const finds = useKnickKnackFinds(user?.id);
+  const { data } = finds;
+  // Without a user yet there's no query to run, which isn't the same as an empty drawer.
+  const isLoading = finds.isLoading || userLoading;
   const luck = useLuck(user?.id);
   const { friends } = useFriendships();
   const { kept, waiting, gifts } = drawerContents(data);

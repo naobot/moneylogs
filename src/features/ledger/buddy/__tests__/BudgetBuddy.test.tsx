@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
   markFindSeen: vi.fn((..._args: unknown[]) => Promise.resolve()),
   unseenFindArgs: [] as unknown[],
   noSpend: new Set<string>(),
+  noSpendLoaded: true,
 }));
 
 vi.mock("@/contexts", () => ({
@@ -25,7 +26,7 @@ vi.mock("@/hooks/useLedgerMonths", () => ({
 }));
 
 vi.mock("@/hooks/useNoSpendDays", () => ({
-  useNoSpendDays: () => ({ days: state.noSpend, isSuccess: true }),
+  useNoSpendDays: () => ({ days: state.noSpend, isSuccess: state.noSpendLoaded }),
 }));
 
 vi.mock("../knickknacks/useUnseenFinds", () => ({
@@ -223,6 +224,7 @@ describe("BudgetBuddy evening check-in", () => {
   beforeEach(() => {
     localStorage.clear();
     state.noSpend = new Set();
+    state.noSpendLoaded = true;
     state.isSuccess = true;
     state.byMonth = spending({ "10": 40, "12": 40 }); // nothing today (the 15th)
     container = document.createElement("div");
@@ -266,6 +268,19 @@ describe("BudgetBuddy evening check-in", () => {
     render();
     expect(bubbleText()).toBeNull();
     state.noSpend = new Set(["2026-11-15"]);
+    render();
+    expect(NO_SPEND_LINES).toContain(bubbleText());
+  });
+
+  it("waits for the no-spend days, so a confirmed day isn't asked about again", () => {
+    state.now = "2026-11-15T18:00:00Z";
+    state.noSpendLoaded = false;
+    render();
+    // Not "was today a no-spend day?" (which would use up today's check-in).
+    expect(bubbleText()).toBeNull();
+
+    state.noSpend = new Set(["2026-11-15"]);
+    state.noSpendLoaded = true;
     render();
     expect(NO_SPEND_LINES).toContain(bubbleText());
   });

@@ -9,7 +9,11 @@ let latest: { items: AppNotification[]; unreadCount: number } = { items: [], unr
 const markNotificationRead = vi.fn(async () => {});
 
 vi.mock("@/contexts", () => ({
-  useCurrentUser: () => ({ user: { id: "u1", userId: "auth1" } }),
+  useCurrentUser: () => ({
+    user: { id: "u1", userId: "auth1" },
+    isUserDocSaved: true,
+    isLoading: false,
+  }),
 }));
 vi.mock("@/hooks/useNotifications", () => ({
   useLatestNotifications: () => latest,

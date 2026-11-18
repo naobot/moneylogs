@@ -22,10 +22,13 @@ export const POPUP_LIMIT = 6;
  * latest few after a short delay. Touch has no hover, so a tap simply navigates.
  */
 export const NotificationBell = () => {
-  const { user, isUserDocSaved } = useCurrentUser();
+  const { user, isUserDocSaved, isLoading: userLoading } = useCurrentUser();
   const userDocId = user?.id;
   // The rules read the user doc to allow this query, so a new account waits for it to save.
-  const { items, unreadCount } = useLatestNotifications(isUserDocSaved ? userDocId : undefined);
+  const latest = useLatestNotifications(isUserDocSaved ? userDocId : undefined);
+  const { items, unreadCount } = latest;
+  // "nothing yet" only once we've actually looked.
+  const isLoading = latest.isLoading || userLoading || (!!userDocId && !isUserDocSaved);
   const { pathname } = useLocation();
 
   const now = useNow();
@@ -110,7 +113,7 @@ export const NotificationBell = () => {
             ))}
           </ul>
         ) : (
-          <p className="NotificationPopup__empty">nothing yet</p>
+          <p className="NotificationPopup__empty">{isLoading ? "…" : "nothing yet"}</p>
         )}
         <Link to="/notifications" className="NotificationPopup__all">
           see all
