@@ -6,7 +6,7 @@ import { initTheme } from "@/utils/theme";
 import { initDisplayPrefs } from "@/utils/displayPrefs";
 import { initKeyboardInset } from "@/utils/keyboardInset";
 import App from "@/App";
-import { nativePlatform } from "@/platform";
+import { nativePlatform, storage } from "@/platform";
 import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -61,6 +61,19 @@ Sentry.init({
   // Enable logs to be sent to Sentry
   enableLogs: true,
 });
+
+// Dev only: `?fresh-device` forgets this device's app storage (theme, dismissed tips,
+// drawers, drafts) so the app looks as it would on a first visit. It keeps the sign-in.
+// See docs/user-states.md.
+if (import.meta.env.DEV) {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("fresh-device")) {
+    const cleared = storage.clearAppKeys();
+    url.searchParams.delete("fresh-device");
+    window.history.replaceState(null, "", url);
+    console.info(`fresh-device: cleared ${cleared} stored app keys`);
+  }
+}
 
 // Apply the stored theme and display prefs before the first paint so nothing flashes.
 initTheme();

@@ -47,4 +47,22 @@ describe("storage", () => {
     cyclic.self = cyclic;
     expect(storage.setJSON("c", cyclic)).toBe(false);
   });
+
+  it("clears only the app's own keys", () => {
+    window.localStorage.setItem("ML__theme", "night");
+    window.localStorage.setItem("ML__drawer_logs", "open");
+    window.localStorage.setItem("firebase:authUser", "x");
+    expect(storage.clearAppKeys()).toBe(2);
+    expect(window.localStorage.getItem("ML__theme")).toBeNull();
+    expect(window.localStorage.getItem("ML__drawer_logs")).toBeNull();
+    expect(window.localStorage.getItem("firebase:authUser")).toBe("x");
+  });
+
+  it("clears nothing, without throwing, when storage is blocked", () => {
+    window.localStorage.setItem("ML__theme", "night");
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("SecurityError");
+    });
+    expect(storage.clearAppKeys()).toBe(0);
+  });
 });

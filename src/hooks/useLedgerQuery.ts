@@ -11,8 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
 import { Currency } from "@/types/user";
-import { LedgerCategory } from "@/types/ledger";
-import { DEFAULT_CATEGORIES } from "@/utils/ledger";
+import { buildNewLedgerDoc, type CreateLedgerArgs, type LedgerMember } from "@/utils/ledgerDoc";
 import {
   PERSONAL_LEDGER_MAX_PARTICIPANTS,
   PERSONAL_LEDGER_TITLE,
@@ -21,49 +20,12 @@ import {
 } from "@/utils/personalLedger";
 import { useMutation } from "./useFirebase";
 
-export type LedgerMember = {
-  uid: string; // auth uid
-  userDocId: string; // users/{docId}
-};
-
-type CreateLedgerArgs = {
-  title: string;
-  max_participants: number;
-  defaultCurrency: Currency;
-  member: LedgerMember;
-};
+export { buildNewLedgerDoc, type LedgerMember };
 
 type JoinLedgerArgs = {
   ledgerId: string;
   member: LedgerMember;
 };
-
-/**
- * The document written for a new ledger. Kept pure (refs/timestamps injected) so the
- * shape that firestore.rules validates on create is unit-testable.
- */
-export const buildNewLedgerDoc = <TRef, TTime>({
-  title,
-  max_participants,
-  defaultCurrency,
-  member,
-  userDocRef,
-  createdAt,
-  categories = DEFAULT_CATEGORIES,
-}: CreateLedgerArgs & {
-  userDocRef: TRef;
-  createdAt: TTime;
-  categories?: ReadonlyArray<LedgerCategory>;
-}) => ({
-  title: title.trim(),
-  max_participants,
-  defaultCurrency,
-  members: [userDocRef],
-  memberUids: [member.uid],
-  createdBy: member.uid,
-  categories: categories.map((c) => ({ ...c })),
-  createdAt,
-});
 
 // Create the user's solo "personal" ledger unless they've had one before (see
 // utils/personalLedger). Reads the user doc inside the transaction, so a stale cached
