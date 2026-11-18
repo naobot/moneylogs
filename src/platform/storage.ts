@@ -9,6 +9,9 @@
  * Storage can be missing or throw (private mode, blocked site data, a full quota), so no
  * call here ever throws: reads fall back to null/undefined and writes report false.
  */
+/** Every key the app writes starts with this. */
+export const APP_KEY_PREFIX = "ML__";
+
 const backing = (): Storage | null => {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
@@ -61,6 +64,27 @@ export const storage = {
       return storage.set(key, JSON.stringify(value));
     } catch {
       return false;
+    }
+  },
+
+  /**
+   * Forget everything this app has stored on the device (every `ML__` key), as a first
+   * visit would find it. Other sites' and libraries' keys are left alone. Returns how
+   * many keys were removed.
+   */
+  clearAppKeys(): number {
+    try {
+      const store = backing();
+      if (!store) return 0;
+      const keys: string[] = [];
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key?.startsWith(APP_KEY_PREFIX)) keys.push(key);
+      }
+      keys.forEach((key) => store.removeItem(key));
+      return keys.length;
+    } catch {
+      return 0;
     }
   },
 };

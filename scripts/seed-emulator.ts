@@ -11,16 +11,8 @@
 // here are written directly with emulator owner access: the hourly "ending soon / has
 // ended" notifications (scheduled functions don't fire in the emulator) and the
 // "you started / joined a log" ones the app writes at the moment of the action.
-import { initializeApp } from "firebase/app";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  connectAuthEmulator,
-} from "firebase/auth";
-import {
-  getFirestore,
-  connectFirestoreEmulator,
   collection,
   addDoc,
   doc,
@@ -33,6 +25,16 @@ import {
 } from "firebase/firestore";
 import { timelineNotificationsFor } from "../functions/src/logTimeline";
 import { PRESET_AVATARS } from "../src/features/account/avatar/presets";
+import {
+  APP_URL,
+  PASSWORD,
+  auth,
+  db,
+  functionsEmulatorIsUp,
+  ownerWrite,
+  type Value,
+} from "./emulator";
+import { PERSONAS, PERSONA_KEYS, resetPersona } from "./personas";
 
 /** A premade avatar's grid by id (not position, which changes as presets are added). */
 const presetGrid = (id: string): string[] => {
@@ -44,28 +46,6 @@ const presetGrid = (id: string): string[] => {
 // This script runs under tsx (Node); `process` is provided by the runtime but
 // this file is outside the app tsconfig, so declare the bit we use.
 declare const process: { exit(code?: number): never };
-
-const PROJECT_ID = "moneylogs-89ebf";
-const FIRESTORE_HOST = "localhost:8888";
-const FUNCTIONS_URL = "http://localhost:5001";
-
-const app = initializeApp({
-  apiKey: "mock-api-key",
-  authDomain: "mock-auth-domain",
-  projectId: PROJECT_ID,
-  storageBucket: "mock-storage-bucket",
-  messagingSenderId: "mock-sender-id",
-  appId: "mock-app-id",
-});
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-try {
-  connectAuthEmulator(auth, "http://localhost:9099");
-  connectFirestoreEmulator(db, "localhost", 8888);
-} catch {
-  console.log("Emulators already connected or not running");
-}
 
 // ---------------------------------------------------------------------------
 // Time helpers. "Wall clock" strings are timezone-agnostic, like the ones the create
@@ -96,7 +76,6 @@ const previousMonth = (month: string) => {
 // Users. Alice is the main account to sign in as: she has something in every state.
 // Every password is test123.
 // ---------------------------------------------------------------------------
-const PASSWORD = "test123";
 
 const testUsers = [
   {
@@ -781,47 +760,6 @@ const sampleEntries: EntrySeed[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Owner writes (bypass rules) for what only backend jobs or the acting client write.
-// ---------------------------------------------------------------------------
-type Value =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Date
-  | Value[]
-  | { [key: string]: Value };
-
-const encode = (v: Value): unknown => {
-  if (v === null || v === undefined) return { nullValue: null };
-  if (v instanceof Date) return { timestampValue: v.toISOString() };
-  if (typeof v === "string") return { stringValue: v };
-  if (typeof v === "boolean") return { booleanValue: v };
-  if (typeof v === "number")
-    return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-  if (Array.isArray(v)) return { arrayValue: { values: v.map(encode) } };
-  return { mapValue: { fields: encodeFields(v) } };
-};
-// Undefined fields are left out, as the Admin SDK's ignoreUndefinedProperties would.
-const encodeFields = (data: { [key: string]: Value }) =>
-  Object.fromEntries(
-    Object.entries(data)
-      .filter(([, v]) => v !== undefined)
-      .map(([k, v]) => [k, encode(v)]),
-  );
-
-async function ownerWrite(path: string, data: { [key: string]: Value }) {
-  const url = `http://${FIRESTORE_HOST}/v1/projects/${PROJECT_ID}/databases/(default)/documents/${path}`;
-  const res = await fetch(url, {
-    method: "PATCH",
-    headers: { Authorization: "Bearer owner", "Content-Type": "application/json" },
-    body: JSON.stringify({ fields: encodeFields(data) }),
-  });
-  if (!res.ok) throw new Error(`Owner write to ${path} failed: ${res.status} ${await res.text()}`);
-}
-
 const notify = (userKey: UserKey, id: string, data: { [key: string]: Value }) =>
   ownerWrite(`users/${users[userKey].docId}/notifications/${id}`, data);
 
@@ -1035,6 +973,32 @@ async function personaliseAlice(
   console.log("✅ Alice's visits, pin, archive and notification prefs");
 }
 
+/**
+ * Alice's personal invite link, at a fixed code so the link is the same every session
+ * (and in docs/user-states.md). Like getInviteCode: invites/{code} plus the user doc.
+ */
+const ALICE_INVITE_CODE = "alice-0001";
+
+async function createInvites() {
+  await ownerWrite(`invites/${ALICE_INVITE_CODE}`, {
+    inviterId: users.alice.docId,
+    createdAt: new Date(NOW - 20 * DAY),
+  });
+  await ownerWrite(
+    `users/${users.alice.docId}`,
+    { inviteCode: ALICE_INVITE_CODE },
+    { merge: true },
+  );
+  console.log(`✅ Alice's invite link (${ALICE_INVITE_CODE})`);
+}
+
+async function createPersonas() {
+  for (const key of PERSONA_KEYS) {
+    await resetPersona(key);
+    console.log(`✅ ${key}: ${PERSONAS[key].email}, ${PERSONAS[key].stage}`);
+  }
+}
+
 async function writeNotifications(
   groupIds: Record<string, string>,
   ledgerIds: Record<string, string>,
@@ -1099,15 +1063,6 @@ async function writeNotifications(
   console.log(`🔔 ${count} membership and timeline notifications`);
 }
 
-async function functionsEmulatorIsUp() {
-  try {
-    await fetch(FUNCTIONS_URL, { signal: AbortSignal.timeout(1500) });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function seedEmulator() {
   console.log("🌱 Seeding the emulators...");
   try {
@@ -1129,6 +1084,12 @@ async function seedEmulator() {
     console.log("\n🔔 Notifications");
     await writeNotifications(groupIds, ledgerIds);
 
+    console.log("\n✉️  Invites");
+    await createInvites();
+
+    console.log("\n🐣 New-user personas (reset any time: npm run reset-persona -- <name|all>)");
+    await createPersonas();
+
     console.log("\n🎉 Done. Sign in as alice.vancouver@test.com / test123 to see:");
     console.log(
       "   - home: an ongoing log with new posts, an upcoming one, the 3 latest past logs",
@@ -1139,6 +1100,11 @@ async function seedEmulator() {
     console.log("   Charlie (charlie.london@test.com) sees a log that's ending soon.");
     console.log("   Erik (erik.tokyo@test.com) is good for trying account deletion: one solo");
     console.log('   log to purge, one shared log where his posts become a "deleted user".');
+    console.log("\n🐣 New users (same password): fresh@, empty@, lapsed@test.com. Invite links to");
+    console.log("   sign up or join through (docs/user-states.md has the flows to walk):");
+    console.log(`   - friend: ${APP_URL}/invite/${ALICE_INVITE_CODE}`);
+    console.log(`   - social log: ${APP_URL}/g/${groupIds.roommates}/invite`);
+    console.log(`   - financial log: ${APP_URL}/l/${ledgerIds.home}/invite`);
 
     if (!(await functionsEmulatorIsUp())) {
       console.warn(

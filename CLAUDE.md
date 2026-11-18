@@ -139,18 +139,24 @@ vp dev                # Vite dev server on :5173
 npm run seed-emulator      # Populate emulator with dummy data (not necessary most of the time)
 ```
 
+The seed also creates new-user personas (`fresh@`, `empty@`, `lapsed@test.com`, password `test123`);
+`npm run reset-persona -- <name|all>` puts one back at its starting stage, and `?fresh-device` (dev only)
+clears the browser's stored `ML__` keys. `docs/user-states.md` lists the user states and the flows (F1…)
+to walk as each persona.
+
 Emulator data is wiped each session. Local `.env` values are not committed.
 
-| Script                            | Does                                                      |
-| --------------------------------- | --------------------------------------------------------- |
-| `vp dev`                          | Dev server                                                |
-| `vp build`                        | Production build, then stamps `version.json`              |
-| `vp check`                        | Oxlint + TypeScript + React rules                         |
-| `vp test`                         | Vitest (run once)                                         |
-| `npm run seed-emulator`           | Seed local Firestore                                      |
-| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device |
-| `npm run android:forward`         | Re-forward emulator ports to a replugged Android device   |
-| `npm run cap:sync`                | Production build → sync native projects                   |
+| Script                            | Does                                                              |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `vp dev`                          | Dev server                                                        |
+| `vp build`                        | Production build, then stamps `version.json`                      |
+| `vp check`                        | Oxlint + TypeScript + React rules                                 |
+| `vp test`                         | Vitest (run once)                                                 |
+| `npm run seed-emulator`           | Seed local Firestore                                              |
+| `npm run reset-persona -- <name>` | Reset a new-user test persona (`fresh`, `empty`, `lapsed`, `all`) |
+| `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device         |
+| `npm run android:forward`         | Re-forward emulator ports to a replugged Android device           |
+| `npm run cap:sync`                | Production build → sync native projects                           |
 
 Linting and formatting run automatically on staged files pre-commit.
 
@@ -170,6 +176,7 @@ Linting and formatting run automatically on staged files pre-commit.
 
 - Run `vp check` against staged files only before a commit. (`staged: { "*": "vp check --fix" }`)
 - Write accompanying unit tests to any new features that don't require extensive mocking.
+- For any feature touching a flow in `docs/user-states.md`, state in the PR which user states it affects and how the empty / first-run case looks; keep that page current when adding user fields or `ML__` keys.
 
 ## Testing
 
