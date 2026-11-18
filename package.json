@@ -21,7 +21,8 @@
     "center-icons": "node scripts/center-icons.mjs",
     "prepare": "vp config",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "vitest run --config e2e/vitest.config.ts"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "8.5.2",

@@ -102,9 +102,9 @@ const LAPSED_MONTHS = 3;
  * Sign the persona in if the account exists; null if it doesn't. A wrong password means
  * someone changed it in the app, which a reset can't get past.
  */
-async function signInIfExists(email: string) {
+async function signInIfExists(email: string, password: string) {
   try {
-    return (await signInWithEmailAndPassword(auth, email, PASSWORD)).user;
+    return (await signInWithEmailAndPassword(auth, email, password)).user;
   } catch (error) {
     const code = (error as { code?: string })?.code;
     if (code === "auth/user-not-found" || code === "auth/invalid-credential") return null;
@@ -117,15 +117,18 @@ async function signInIfExists(email: string) {
   }
 }
 
-/** Delete the persona's current account, if any, the way the app's "delete account" does. */
-async function deleteIfExists(persona: Persona) {
-  const user = await signInIfExists(persona.email);
+/**
+ * Delete an account if it exists, the way the app's "delete account" does. Used to reset
+ * personas, and by the e2e walkthroughs to clean up the accounts they sign up.
+ */
+export async function deleteAccountIfExists(email: string, password = PASSWORD) {
+  const user = await signInIfExists(email, password);
   if (!user) return false;
   if (!(await functionsEmulatorIsUp())) {
     throw new Error(
-      "Resetting an existing persona deletes it through the deleteAccount function, but the " +
-        "Functions emulator isn't answering on :5001. Build the functions (cd functions && " +
-        "npm run build) and restart the emulators.",
+      "Deleting an account goes through the deleteAccount function, but the Functions " +
+        "emulator isn't answering on :5001. Build the functions (cd functions && npm run " +
+        "build) and restart the emulators.",
     );
   }
   await httpsCallable(functions, "deleteAccount")();
@@ -230,7 +233,7 @@ async function lapse(
  */
 export async function resetPersona(key: PersonaKey) {
   const persona = PERSONAS[key];
-  const replaced = await deleteIfExists(persona);
+  const replaced = await deleteAccountIfExists(persona.email);
   const ids = await register(persona);
   if (persona.profile) {
     const ledgerId = await finishWelcome(ids, persona.profile);
