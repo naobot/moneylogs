@@ -5,6 +5,15 @@
   flex-direction: column;
   gap: var(--space-5);
   text-align: left;
+  // A direct child of the bounded .Content (like .UserSettings): scroll inside the
+  // Window so its border stays put and the bottom is reachable.
+  min-height: 0;
+  overflow-y: auto;
+
+  // Flex children would otherwise shrink to fit instead of overflowing into the scroll.
+  > * {
+    flex-shrink: 0;
+  }
 
   h3,
   h4 {
