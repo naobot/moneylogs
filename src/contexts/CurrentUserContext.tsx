@@ -6,6 +6,8 @@ import { useGetUserInfo, UserData } from "@/hooks/useGetUserInfo";
 
 interface CurrentUserContextType {
   user: UserData | undefined;
+  /** The user doc exists on the server (see useGetUserInfo). */
+  isUserDocSaved: boolean;
   isLoading: boolean;
   isSuccess: boolean;
   isError: boolean;
@@ -35,6 +37,7 @@ export const CurrentUserProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isLoading: firebaseLoading || userInfo.isLoading,
     // If Firebase auth is loading or user is null, treat as no user
     user: firebaseUser ? userInfo.user : undefined,
+    isUserDocSaved: !!firebaseUser && userInfo.isUserDocSaved,
   };
 
   return (
