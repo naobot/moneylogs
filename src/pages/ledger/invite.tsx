@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
 import { needsProfileSetup } from "@/utils/helpers";
-import { useGetLedger } from "@/hooks/useGetLedger";
+import { useLedgerAccess } from "@/hooks/useLedgerAccess";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
 import { writeSelfNotification } from "@/hooks/useNotifications";
 
@@ -20,7 +20,8 @@ export const LedgerInvitePage = () => {
   const navigate = useNavigate();
   const { ledgerId } = useParams();
   const { user } = useCurrentUser();
-  const { isSuccess, isDenied, isNotFound } = useGetLedger(ledgerId);
+  // A one-time check, not a listener: see useLedgerAccess for why.
+  const access = useLedgerAccess(ledgerId, user?.userId);
   const { joinLedger } = useLedgerQuery();
 
   const [joinFailed, setJoinFailed] = useState(false);
@@ -28,10 +29,10 @@ export const LedgerInvitePage = () => {
 
   // Already a member: the read succeeds, so go straight to the log.
   useEffect(() => {
-    if (isSuccess && ledgerId && !showJoinedModal) {
+    if (access === "member" && ledgerId && !showJoinedModal) {
       void navigate(`/l/${ledgerId}`, { replace: true });
     }
-  }, [isSuccess, ledgerId, navigate, showJoinedModal]);
+  }, [access, ledgerId, navigate, showJoinedModal]);
 
   const handleJoin = async () => {
     if (!user || !ledgerId) return;
@@ -60,7 +61,7 @@ export const LedgerInvitePage = () => {
     }
   };
 
-  const canAttemptJoin = (isDenied || isNotFound) && !showJoinedModal;
+  const canAttemptJoin = (access === "not-member" || access === "not-found") && !showJoinedModal;
 
   return (
     <>
