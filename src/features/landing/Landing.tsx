@@ -9,6 +9,7 @@ import type { AuthLocationState } from "@/features/auth/authRedirect";
 import {
   HOW_IT_WORKS,
   SAMPLE_DAY,
+  SAMPLE_LEDGER,
   SAMPLE_NOW,
   SAMPLE_POSTS,
   SAMPLE_RECENT,
@@ -18,6 +19,7 @@ import {
   TRACKING,
   WITH_FRIENDS,
 } from "./landingSamples";
+import { LedgerPreview } from "./LedgerPreview";
 
 import "@/features/dashboard/Dashboard.scss";
 import "@/features/moneylog/components/LogPosts/PostReactions.scss";
@@ -124,8 +126,8 @@ const Points = ({
 /**
  * What a logged-out visitor sees at `/`: a short pitch for everyday spending tracking, Home
  * as it looks with a few logs (built from the real dashboard cards, filled with made-up logs),
- * the tracking features, the optional social side with a peek inside a group trip log, and
- * how it works. Every example links to registration.
+ * the tracking features with a peek inside a personal financial log, the optional social side
+ * with a peek inside a group trip log, and how it works. Every example links to registration.
  *
  * Invite routes show it to logged-out visitors too (`invite` set), at the invite URL itself:
  * a fixed bar offers sign-up, and every auth link carries the invite path as `from` so the
@@ -193,6 +195,10 @@ export const Landing = ({ invite }: { invite?: InviteKind }) => {
           and pick up where you left off.
         </p>
       </Points>
+
+      <PreviewWindow title={SAMPLE_LEDGER.title} label="Example financial log">
+        <LedgerPreview />
+      </PreviewWindow>
 
       <Points id="landing-friends" heading="With friends, gently" points={WITH_FRIENDS} />
 
