@@ -14,7 +14,8 @@ export type KnickKnackId = keyof typeof ART;
  * Milestone items are never found by chance: the buddy hands them over with an
  * achievement (functions/src/milestones.ts), and they can't be gifted. Special items
  * aren't found by chance either: they're granted by hand
- * (functions/scripts/grant-special.ts), and can be gifted like any find.
+ * (functions/scripts/grant-special.ts) or sent by the forest spirit
+ * (functions/scripts/forest-gift.ts), and can be gifted like any find.
  */
 export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
@@ -231,6 +232,21 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "special",
     seasons: [],
     found: "a little robot charm! it winked at me. i think we're friends now ♪",
+    fromLog: false,
+  },
+  enoki_bunch: {
+    name: "enoki bunch",
+    rarity: "special",
+    seasons: [],
+    found: "a bunch of enoki, tied with a bow! one of them fell asleep on the others~ *tiptoe*",
+    fromLog: false,
+  },
+  olive_branch: {
+    name: "olive branch",
+    rarity: "special",
+    seasons: [],
+    found:
+      "an olive branch! i think it means peace… or snacks? one olive already rolled away *pounce*",
     fromLog: false,
   },
 };
