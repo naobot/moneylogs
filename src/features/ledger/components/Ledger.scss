@@ -464,6 +464,18 @@
     font-size: 0.8em;
   }
 
+  // Saved-as-you-go status, left of Done.
+  .Modal__footer {
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+  }
+
+  &__status {
+    font-size: 0.8em;
+    opacity: 0.7; // muted text floor
+  }
+
   &__budgetSummary {
     font-size: 0.75em;
     opacity: 0.7;

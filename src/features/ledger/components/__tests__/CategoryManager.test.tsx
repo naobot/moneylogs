@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test"
 import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import CategoryManager from "@/features/ledger/components/CategoryManager";
+import { ToastProvider } from "@/contexts/ToastContext";
 import { LedgerCategory } from "@/types/ledger";
 import { CategoryOp } from "@/utils/ledgerCategories";
 
@@ -29,15 +30,16 @@ describe("CategoryManager", () => {
     onClose = vi.fn<() => void>();
     act(() =>
       root.render(
-        <CategoryManager
-          isOpen
-          categories={CATEGORIES}
-          defaultCurrency="JPY"
-          onClose={onClose}
-          onSave={onSave}
-          isSaving={false}
-          checkInUse={checkInUse}
-        />,
+        <ToastProvider>
+          <CategoryManager
+            isOpen
+            categories={CATEGORIES}
+            defaultCurrency="JPY"
+            onClose={onClose}
+            onSave={onSave}
+            checkInUse={checkInUse}
+          />
+        </ToastProvider>,
       ),
     );
   });
@@ -68,13 +70,20 @@ describe("CategoryManager", () => {
     act(() => {
       el.closest("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
+  // Lets queued saves run.
+  const settle = () => act(async () => {});
+  const saved = () => onSave.mock.calls.map(([ops]) => ops);
 
-  it("starts with nothing to save", () => {
+  it("has no Save or Cancel, just Done", () => {
     expect(activeNames()).toEqual(["Food", "Transport"]);
-    expect(button("Save").disabled).toBe(true);
+    expect(button("Save")).toBeUndefined();
+    expect(button("Cancel")).toBeUndefined();
+    act(() => button("Done").click());
+    expect(onClose).toHaveBeenCalled();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("adds and renames, then saves exactly those edits", async () => {
+  it("saves each add and rename as it's made, one edit per write", async () => {
     type(byLabel("New category name") as HTMLInputElement, "Coffee");
     submit(byLabel("New category name"));
     expect(activeNames()).toEqual(["Food", "Transport", "Coffee"]);
@@ -83,14 +92,32 @@ describe("CategoryManager", () => {
     const rename = byLabel("Rename Food") as HTMLInputElement;
     type(rename, "Eating out");
     submit(rename);
+    // Shown straight away, before the writes finish.
     expect(activeNames()).toEqual(["Eating out", "Transport", "Coffee"]);
 
-    await act(async () => button("Save").click());
-    expect(onSave).toHaveBeenCalledWith([
-      { type: "add", id: "coffee", name: "Coffee", fixed: false },
-      { type: "rename", id: "food", name: "Eating out" },
+    await settle();
+    expect(saved()).toEqual([
+      [{ type: "add", id: "coffee", name: "Coffee", fixed: false }],
+      [{ type: "rename", id: "food", name: "Eating out" }],
     ]);
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("writes edits in order, one after another", async () => {
+    let finishFirst!: () => void;
+    onSave.mockImplementationOnce(() => new Promise<void>((resolve) => (finishFirst = resolve)));
+    act(() => byLabel("Archive Transport").click());
+    act(() => (byLabel("Food is a fixed cost") as HTMLButtonElement).click());
+    await settle();
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).toContain("saving…");
+
+    await act(async () => finishFirst());
+    expect(saved()).toEqual([
+      [{ type: "archive", id: "transport" }],
+      [{ type: "setFixed", id: "food", fixed: true }],
+    ]);
+    expect(document.body.textContent).not.toContain("saving…");
   });
 
   it("explains and blocks duplicate names", () => {
@@ -116,6 +143,13 @@ describe("CategoryManager", () => {
 
     act(() => byLabel("Restore Old").click());
     expect(activeNames()).toEqual(["Food", "Old"]);
+
+    await settle();
+    expect(saved()).toEqual([
+      [{ type: "archive", id: "transport" }],
+      [{ type: "delete", id: "transport" }],
+      [{ type: "unarchive", id: "old" }],
+    ]);
   });
 
   it("reorders by drag handle only: every active row has one, no up/down buttons", () => {
@@ -137,27 +171,39 @@ describe("CategoryManager", () => {
     expect(document.querySelector('[role="tooltip"]')).toBeNull();
   });
 
-  it("edits a budget inline with no separate set step, saved with the rest", async () => {
+  it("saves a budget when its field is left, with no separate set step", async () => {
     expect(byLabel("Monthly budget for Food")).toBeNull();
     act(() => byLabel("Budget for Food").click());
     expect(byLabel("Budget for Food").getAttribute("aria-expanded")).toBe("true");
-    type(byLabel("Monthly budget for Food") as HTMLInputElement, "30,000");
+    const field = byLabel("Monthly budget for Food") as HTMLInputElement;
+    act(() => field.focus());
+    type(field, "30,000");
     expect(document.body.textContent).toContain("30,000 JPY / month");
     expect(document.querySelector('[aria-label^="Set budget"]')).toBeNull();
-    act(() => byLabel("Archive Transport").click());
+    await settle();
+    expect(onSave).not.toHaveBeenCalled();
 
-    await act(async () => button("Save").click());
-    expect(onSave).toHaveBeenCalledWith([
-      { type: "archive", id: "transport" },
-      { type: "setBudget", id: "food", currency: "JPY", amount: 30000 },
-    ]);
+    act(() => field.blur());
+    await settle();
+    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "JPY", amount: 30000 }]]);
+    expect(document.body.textContent).toContain("30,000 JPY / month");
   });
 
-  it("keeps the dialog open with an error when saving fails", async () => {
+  it("saves a budget still being typed when Done is pressed", async () => {
+    act(() => byLabel("Budget for Food").click());
+    type(byLabel("Monthly budget for Food") as HTMLInputElement, "500");
+    act(() => button("Done").click());
+    await settle();
+    expect(saved()).toEqual([[{ type: "setBudget", id: "food", currency: "JPY", amount: 500 }]]);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("undoes an edit that fails to save, with an error", async () => {
     onSave.mockRejectedValueOnce(new Error("offline"));
     act(() => byLabel("Archive Transport").click());
-    await act(async () => button("Save").click());
-    expect(document.body.textContent).toContain("Couldn't save your changes");
+    await settle();
+    expect(document.body.textContent).toContain("Couldn't save that change");
+    expect(activeNames()).toEqual(["Food", "Transport"]);
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -174,10 +220,10 @@ describe("CategoryManager", () => {
     act(() => (byLabel("Rent is a fixed cost") as HTMLButtonElement).click());
     submit(name);
 
-    await act(async () => button("Save").click());
-    expect(onSave).toHaveBeenCalledWith([
-      { type: "setFixed", id: "food", fixed: true },
-      { type: "add", id: "rent", name: "Rent", fixed: false },
+    await settle();
+    expect(saved()).toEqual([
+      [{ type: "setFixed", id: "food", fixed: true }],
+      [{ type: "add", id: "rent", name: "Rent", fixed: false }],
     ]);
   });
 });

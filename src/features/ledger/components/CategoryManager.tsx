@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useId, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import cx from "classnames";
 import {
   DndContext,
@@ -45,6 +45,7 @@ import { BudgetField } from "./BudgetManager";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import { reportError } from "@/utils/reportError";
+import { useToastContext } from "@/hooks/useToastContext";
 
 type CategoryManagerProps = {
   isOpen: boolean;
@@ -52,8 +53,8 @@ type CategoryManagerProps = {
   /** Pre-selected currency when adding a budget. */
   defaultCurrency: Currency;
   onClose: () => void;
+  /** Writes edits straight away; rejects if they couldn't be saved. */
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
-  isSaving: boolean;
   /** Resolves true if any entry uses the category (so it can only be archived). */
   checkInUse: (categoryId: string) => Promise<boolean>;
 };
@@ -64,12 +65,15 @@ type DeleteState =
   | { status: "in-use"; id: string }
   | { status: "failed"; id: string };
 
+/** An edit shown straight away, kept on top of the server copy until it comes back. */
+type PendingEdit = { key: number; op: CategoryOp; saved: boolean };
+
 /**
- * Edits are recorded as operations and only written on Save, where they're replayed onto
- * the latest server copy (see useLedgerCategoryQuery).
+ * Every edit saves as soon as it's made, like the settings on /me: no Save or Cancel.
+ * Edits are written one at a time, in order, each replayed onto the latest server copy
+ * (see useLedgerCategoryQuery), so other members' concurrent edits survive.
  */
 export const CategoryManager = (props: CategoryManagerProps) =>
-  // Remount on open so each session starts from the current categories with no pending ops.
   props.isOpen ? <CategoryManagerDialog {...props} /> : null;
 
 const CategoryManagerDialog = ({
@@ -77,33 +81,68 @@ const CategoryManagerDialog = ({
   defaultCurrency,
   onClose,
   onSave,
-  isSaving,
   checkInUse,
 }: CategoryManagerProps) => {
-  const [ops, setOps] = useState<CategoryOp[]>([]);
+  const [pending, setPending] = useState<PendingEdit[]>([]);
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
   const [budgetingId, setBudgetingId] = useState<string | null>(null);
-  // Budget fields are drafts (no per-field "set"); they become ops on Save.
+  // What's typed into budget fields; saved when the field is left.
   const [budgetDrafts, setBudgetDrafts] = useState<BudgetDrafts>({});
   const [budgetCurrency, setBudgetCurrency] = useState<Record<string, Currency>>({});
   const [saveFailed, setSaveFailed] = useState(false);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const nextKey = useRef(0);
+  const { showToast } = useToastContext();
+  // Saves can finish after Done; a failure then is reported by toast instead.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
-  const draft = useMemo(() => applyCategoryOps(categories, ops), [categories, ops]);
+  // Replaying an edit the server copy already has changes nothing (ops are idempotent),
+  // so saved edits only need dropping once the server copy has moved on.
+  useEffect(() => {
+    setPending((edits) => edits.filter((edit) => !edit.saved));
+  }, [categories]);
+
+  const draft = useMemo(
+    () =>
+      applyCategoryOps(
+        categories,
+        pending.map((edit) => edit.op),
+      ),
+    [categories, pending],
+  );
   const active = activeCategories(draft);
   const archived = sortCategories(draft.filter((c) => c.archived));
-  const budgetOps = budgetDraftOps(draft, budgetDrafts);
-  // Budgets as they'll be after Save, for each row's "X / month" summary.
-  const budgetsAfterSave = new Map(applyCategoryOps(draft, budgetOps).map((c) => [c.id, c.budget]));
-  const budgetHasErrors = Object.values(budgetDrafts).some((raw) => budgetFieldError(raw));
-  const isDirty = ops.length > 0 || budgetOps.length > 0;
+  // Budgets including fields still being typed, for each row's "X / month" summary.
+  const budgetsShown = new Map(
+    applyCategoryOps(draft, budgetDraftOps(draft, budgetDrafts)).map((c) => [c.id, c.budget]),
+  );
+  const isSaving = pending.some((edit) => !edit.saved);
   const currencyFor = (category: LedgerCategory) =>
     budgetCurrency[category.id] ?? preferredBudgetCurrency([category], defaultCurrency);
 
-  const push = (op: CategoryOp) => {
+  const save = (op: CategoryOp) => {
+    const key = nextKey.current++;
     setSaveFailed(false);
-    setOps((prev) => [...prev, op]);
+    setPending((edits) => [...edits, { key, op, saved: false }]);
+    queue.current = queue.current.then(async () => {
+      try {
+        await onSave([op]);
+        setPending((edits) => edits.map((e) => (e.key === key ? { ...e, saved: true } : e)));
+      } catch (err) {
+        reportError(err, { feature: "ledger", action: "save_categories", extra: { op: op.type } });
+        setPending((edits) => edits.filter((e) => e.key !== key));
+        if (mounted.current) setSaveFailed(true);
+        else showToast("Couldn't save your last category change. Please try again.");
+      }
+    });
   };
 
   const addError = newName.trim() ? categoryNameError(newName, draft) : undefined;
@@ -115,7 +154,7 @@ const CategoryManagerDialog = ({
 
   const addCategory = () => {
     if (!newName.trim() || addError || atCap) return;
-    push({ type: "add", id: newCategoryId(newName, draft), name: newName, fixed: newFixed });
+    save({ type: "add", id: newCategoryId(newName, draft), name: newName, fixed: newFixed });
     setNewName("");
     setNewFixedChoice(null);
   };
@@ -125,12 +164,34 @@ const CategoryManagerDialog = ({
     if (!renaming) return;
     const current = draft.find((c) => c.id === renaming.id);
     if (!renameError && current && current.name !== renaming.name.trim()) {
-      push({ type: "rename", id: renaming.id, name: renaming.name });
+      save({ type: "rename", id: renaming.id, name: renaming.name });
     }
     setRenaming(null);
   };
 
-  const move = (id: string, toIndex: number) => push({ type: "move", id, toIndex });
+  /** Saves the valid, changed budget fields (all of them, or one category's). */
+  const commitBudgets = (categoryId?: string) => {
+    const ops = budgetDraftOps(draft, budgetDrafts).filter(
+      (op) => !categoryId || op.id === categoryId,
+    );
+    ops.forEach(save);
+    // Invalid fields keep their text (and error) so nothing typed silently vanishes.
+    setBudgetDrafts((drafts) =>
+      Object.fromEntries(
+        Object.entries(drafts).filter(
+          ([key, raw]) =>
+            (categoryId && !key.startsWith(`${categoryId}:`)) || !!budgetFieldError(raw),
+        ),
+      ),
+    );
+  };
+
+  const close = () => {
+    commitBudgets();
+    onClose();
+  };
+
+  const move = (id: string, toIndex: number) => save({ type: "move", id, toIndex });
 
   // Dragging is the only way to reorder, so it's on everywhere here (unlike the nav's
   // LogsMenu): only the ⋮⋮ handle starts a drag, so it can't fight scrolling or taps,
@@ -151,13 +212,13 @@ const CategoryManagerDialog = ({
   const handleDelete = async (id: string) => {
     setDeleteState({ status: "checking", id });
     try {
-      // Categories added in this session can't have entries yet.
-      const isNew = !categories.some((c) => c.id === id);
-      if (!isNew && (await checkInUse(id))) {
+      // A category whose add is still saving can't have entries yet.
+      const unsaved = pending.some((e) => !e.saved && e.op.type === "add" && e.op.id === id);
+      if (!unsaved && (await checkInUse(id))) {
         setDeleteState({ status: "in-use", id });
         return;
       }
-      push({ type: "delete", id });
+      save({ type: "delete", id });
       setDeleteState({ status: "idle" });
     } catch (err) {
       reportError(err, { feature: "ledger", action: "check_category_in_use" });
@@ -165,24 +226,10 @@ const CategoryManagerDialog = ({
     }
   };
 
-  const handleSave = async () => {
-    try {
-      await onSave([...ops, ...budgetOps]);
-      onClose();
-    } catch (err) {
-      reportError(err, {
-        feature: "ledger",
-        action: "save_categories",
-        extra: { opTypes: [...ops, ...budgetOps].map((op) => op.type) },
-      });
-      setSaveFailed(true);
-    }
-  };
-
   const lastActive = active.length <= 1;
 
   return (
-    <Modal isOpen onClose={isSaving ? undefined : onClose} className="CategoryManager">
+    <Modal isOpen onClose={close} className="CategoryManager">
       <Modal.Header striped title="Categories">
         Categories
       </Modal.Header>
@@ -235,16 +282,16 @@ const CategoryManagerDialog = ({
                       </span>
                     </button>
                   )}
-                  {budgetsAfterSave.get(category.id) && (
+                  {budgetsShown.get(category.id) && (
                     <small className="CategoryManager__budgetSummary">
-                      {formatTotals(budgetsAfterSave.get(category.id)!)} / month
+                      {formatTotals(budgetsShown.get(category.id)!)} / month
                     </small>
                   )}
                   <span className="CategoryManager__actions">
                     <FixedToggle
                       name={category.name}
                       fixed={isFixedCategory(category)}
-                      onToggle={(fixed) => push({ type: "setFixed", id: category.id, fixed })}
+                      onToggle={(fixed) => save({ type: "setFixed", id: category.id, fixed })}
                     />
                     <ActionButton
                       icon="wallet"
@@ -266,7 +313,7 @@ const CategoryManagerDialog = ({
                           ? "A log needs at least one category, so this one can't be archived."
                           : "Archiving hides this category when adding entries. Past entries keep it, and you can restore it any time."
                       }
-                      onClick={() => push({ type: "archive", id: category.id })}
+                      onClick={() => save({ type: "archive", id: category.id })}
                     />
                   </span>
                   {budgetingId === category.id && (
@@ -275,6 +322,7 @@ const CategoryManagerDialog = ({
                         category={category}
                         currency={currencyFor(category)}
                         drafts={budgetDrafts}
+                        onBlur={() => commitBudgets(category.id)}
                         onChange={(raw) => {
                           setSaveFailed(false);
                           setBudgetDrafts((d) => ({
@@ -341,7 +389,7 @@ const CategoryManagerDialog = ({
                   <span className="CategoryManager__actions">
                     <RowButton
                       label={`Restore ${category.name}`}
-                      onClick={() => push({ type: "unarchive", id: category.id })}
+                      onClick={() => save({ type: "unarchive", id: category.id })}
                     >
                       restore
                     </RowButton>
@@ -372,18 +420,14 @@ const CategoryManagerDialog = ({
         )}
 
         {saveFailed && (
-          <p className="error-message">Couldn't save your changes. Please try again.</p>
+          <p className="error-message">Couldn't save that change. Please try again.</p>
         )}
       </Modal.Body>
       <Modal.Actions>
-        <Button
-          text="Save"
-          variant="primary"
-          disabled={!isDirty || budgetHasErrors || isSaving}
-          loading={isSaving}
-          onClick={() => void handleSave()}
-        />
-        <Button text="Cancel" variant="secondary" disabled={isSaving} onClick={onClose} />
+        <small className="CategoryManager__status" role="status">
+          {isSaving ? "saving…" : "changes save automatically"}
+        </small>
+        <Button text="Done" variant="primary" onClick={close} />
       </Modal.Actions>
     </Modal>
   );

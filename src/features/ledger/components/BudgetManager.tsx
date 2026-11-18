@@ -181,11 +181,14 @@ export const BudgetField = ({
   drafts,
   onChange,
   onCurrencyChange,
+  onBlur,
 }: {
   category: LedgerCategory;
   currency: Currency;
   drafts: BudgetDrafts;
   onChange: (raw: string) => void;
+  /** When the amount field is left (e.g. to save it). */
+  onBlur?: () => void;
   onCurrencyChange?: (currency: Currency) => void;
 }) => {
   const value = budgetFieldValue(drafts, category, currency);
@@ -201,6 +204,7 @@ export const BudgetField = ({
         placeholder="no budget"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
       />
       {onCurrencyChange ? (
         <select
