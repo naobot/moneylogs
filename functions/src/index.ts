@@ -475,6 +475,7 @@ export { recomputeLedgerMonth } from "./ledger";
 export { checkLedgerImport, importLedgerEntries } from "./ledgerImport";
 export { deleteLog } from "./deleteLog";
 export { deleteAccount } from "./deleteAccount";
+export { adminLookupUser, adminGift, adminDeleteLog, adminDeleteAccount } from "./admin";
 export { rollQuietDay } from "./rollQuietDay";
 export { checkInLedger, dailyCheckIn } from "./checkIn";
 export { notifyOnReaction } from "./notifyOnReaction";

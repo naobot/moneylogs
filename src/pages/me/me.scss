@@ -70,3 +70,9 @@
     color: var(--ink-muted);
   }
 }
+
+// Only for accounts with the admin claim.
+.UserSettings__admin {
+  margin: var(--space-5) 0 0;
+  text-align: right;
+}

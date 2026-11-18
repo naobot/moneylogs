@@ -5,7 +5,8 @@
 // knick-knack drawer, rather than as a pile of finds for the buddy to reveal one by one.
 // Like ordinary finds, they can be given to friends.
 //
-// Not idempotent: every --write run adds `--count` more copies.
+// Not idempotent: every --write run adds `--count` more copies. The admin panel (/admin)
+// can grant any non-milestone item the same way (src/knickknackGrants.ts).
 //
 // Uses the Admin SDK with Application Default Credentials:
 //   gcloud auth application-default login
@@ -16,8 +17,9 @@
 //   FIRESTORE_EMULATOR_HOST=127.0.0.1:8888 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 npx tsx ...
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import { KNICK_KNACK_FINDS } from "../src/knickknacks";
+import { grantKept } from "../src/knickknackGrants";
 
 declare const process: { argv: string[]; exit(code?: number): never };
 
@@ -51,17 +53,7 @@ const main = async () => {
   );
   if (!write) return;
 
-  const batch = db.batch();
-  for (let i = 0; i < count; i++) {
-    batch.create(userRef.collection("knickknacks").doc(), {
-      item,
-      ledgerId: null,
-      foundAt: FieldValue.serverTimestamp(),
-      seenAt: FieldValue.serverTimestamp(),
-      source: "special",
-    });
-  }
-  await batch.commit();
+  await grantKept(db, userRef, item, count);
   console.log(`✅ granted ${count} × ${item}`);
 };
 

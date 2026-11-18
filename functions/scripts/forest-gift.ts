@@ -8,7 +8,8 @@
 // from that friend). Milestone knick-knacks can't be sent: they're
 // earned, not given.
 //
-// Not idempotent: every --write run sends `--count` more.
+// Not idempotent: every --write run sends `--count` more. The admin panel (/admin) does the
+// same from the app; both write through src/knickknackGrants.ts.
 //
 // Uses the Admin SDK with Application Default Credentials:
 //   gcloud auth application-default login
@@ -20,14 +21,10 @@
 //   FIRESTORE_EMULATOR_HOST=127.0.0.1:8888 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 npx tsx ...
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import {
-  FOREST_SPIRIT_ID,
-  FOREST_SPIRIT_NAME,
-  giftNotificationId,
-  spiritGiftBlock,
-} from "../src/giftsPlan";
+import { getFirestore } from "firebase-admin/firestore";
+import { FOREST_SPIRIT_NAME, spiritGiftBlock } from "../src/giftsPlan";
 import { KNICK_KNACK_FINDS } from "../src/knickknacks";
+import { sendSpiritGift } from "../src/knickknackGrants";
 import { isNotificationEnabled } from "../src/notificationPrefs";
 
 declare const process: { argv: string[]; exit(code?: number): never };
@@ -78,35 +75,7 @@ const main = async () => {
   );
   if (!write) return;
 
-  const batch = db.batch();
-  const finds = user.ref.collection("knickknacks");
-  const giftIds: string[] = [];
-  for (let i = 0; i < count; i++) {
-    const giftRef = finds.doc();
-    giftIds.push(giftRef.id);
-    batch.create(giftRef, {
-      item,
-      ledgerId: null,
-      foundAt: FieldValue.serverTimestamp(),
-      seenAt: null,
-      source: "gift",
-      giftedBy: FOREST_SPIRIT_ID,
-      giftedAt: FieldValue.serverTimestamp(),
-    });
-  }
-  // One notification for the whole run, however many copies: it doesn't say what's
-  // inside, and one ping is enough.
-  if (notify) {
-    batch.set(user.ref.collection("notifications").doc(giftNotificationId(giftIds[0])), {
-      type: "gift_received",
-      actorId: FOREST_SPIRIT_ID,
-      actorName: FOREST_SPIRIT_NAME,
-      findId: giftIds[0],
-      createdAt: FieldValue.serverTimestamp(),
-      readAt: null,
-    });
-  }
-  await batch.commit();
+  await sendSpiritGift(db, user, item, count);
   console.log(`🌲 sent ${count} × ${item}`);
 };
 

@@ -109,14 +109,169 @@ const uidOfUserDoc = async (db: Firestore, userDocId: string): Promise<string | 
   return typeof uid === "string" && uid ? uid : undefined;
 };
 
+export type DeleteUserDataResult = { userDocs: number; logsDeleted: number; logsLeft: number };
+
 /**
- * Permanently delete the caller's account: logs they're alone in are deleted, shared logs
- * stay for the other members with the caller's content anonymised, then their user doc
- * (with achievements and notifications) and finally their Auth account are removed.
+ * Permanently delete an account: logs they're alone in are deleted, shared logs stay for
+ * the other members with their content anonymised, then their user doc (with achievements
+ * and notifications) and finally their Auth account are removed. Callers check who may
+ * do this (the person themselves, or an admin).
  *
- * Requires a sign-in within the last few minutes (the client re-authenticates first).
  * Safe to retry: each log's membership is removed only after its content is anonymised,
  * and the Auth account goes last, so a failed run can be finished by calling again.
+ */
+export const deleteUserData = async (db: Firestore, uid: string): Promise<DeleteUserDataResult> => {
+  const userDocs = (await db.collection("users").where("userId", "==", uid).get()).docs;
+  const userRefs = userDocs.map((d) => d.ref);
+  const userDocIds = new Set(userRefs.map((r) => r.id));
+  const failures = trackFailures();
+  const stats = { purged: 0, left: 0 };
+
+  // Social logs: from the user docs' `groups` lists and from membership.
+  const groupIds = new Set<string>();
+  for (const doc of userDocs) {
+    for (const id of (doc.data().groups ?? []) as unknown[]) {
+      if (typeof id === "string" && id) groupIds.add(id);
+    }
+  }
+  for (const ref of userRefs) {
+    const memberOf = await db
+      .collection("log_groups")
+      .where("members", "array-contains", ref)
+      .get();
+    for (const d of memberOf.docs) groupIds.add(d.id);
+  }
+
+  for (const groupId of groupIds) {
+    const groupRef = db.collection("log_groups").doc(groupId);
+    const snap = await groupRef.get();
+    if (!snap.exists) continue;
+    const data = snap.data() as DocumentData;
+    const plan = planSocialExit(data, uid, userDocIds);
+
+    if (plan.action === "purge") {
+      await purgeLog(db, "social", groupId, data);
+      stats.purged++;
+    } else if (plan.action === "leave") {
+      const bulk = db.bulkWriter();
+      await anonymiseInGroup(db, bulk, failures, groupRef, data, userRefs, userDocIds);
+      await bulk.close();
+      if (failures.count) break;
+
+      const update: Record<string, unknown> = { members: FieldValue.arrayRemove(...userRefs) };
+      if (plan.transferCreator) {
+        const next = await uidOfUserDoc(db, plan.remainingMemberIds[0]);
+        update.createdBy = next ?? FieldValue.delete();
+      }
+      await groupRef.update(update);
+      stats.left++;
+    }
+  }
+
+  // Financial logs (including the personal one).
+  if (!failures.count) {
+    const ledgers = await db.collection("ledgers").where("memberUids", "array-contains", uid).get();
+    for (const ledger of ledgers.docs) {
+      const plan = planLedgerExit(ledger.data(), uid, userDocIds);
+      if (plan.action === "purge") {
+        await purgeLog(db, "financial", ledger.id, ledger.data());
+        stats.purged++;
+        continue;
+      }
+      if (plan.action !== "leave") continue;
+
+      const entries = await ledger.ref.collection("entries").where("authorUid", "==", uid).get();
+      const bulk = db.bulkWriter();
+      for (const entry of entries.docs) {
+        if (entry.data().authorName === DELETED_USER_NAME) continue;
+        bulk
+          .update(entry.ref, { authorName: DELETED_USER_NAME })
+          .catch(failures.record(`anonymise entry ${entry.id}`));
+      }
+      await bulk.close();
+      if (failures.count) break;
+
+      // Re-plan inside a transaction: someone may have joined since the read above.
+      await db.runTransaction(async (tx) => {
+        const fresh = await tx.get(ledger.ref);
+        if (!fresh.exists) return;
+        const freshPlan = planLedgerExit(fresh.data() as DocumentData, uid, userDocIds);
+        if (freshPlan.action !== "leave") return;
+        tx.update(ledger.ref, {
+          members: freshPlan.members,
+          memberUids: freshPlan.memberUids,
+          ...(freshPlan.createdBy ? { createdBy: freshPlan.createdBy } : {}),
+        });
+      });
+      stats.left++;
+    }
+  }
+
+  // Posts they wrote in logs they'd already left (author names only).
+  if (!failures.count && userRefs.length) {
+    const authored = await db
+      .collection("log_posts")
+      .where("author", "in", userRefs.slice(0, IN_LIMIT))
+      .get();
+    const bulk = db.bulkWriter();
+    for (const post of authored.docs) {
+      if (post.data().authorName === DELETED_USER_NAME) continue;
+      bulk
+        .update(post.ref, { authorName: DELETED_USER_NAME })
+        .catch(failures.record(`anonymise post ${post.id}`));
+    }
+    await bulk.close();
+  }
+
+  // Friendships and requests, and the friend notifications they left in the other
+  // person's inbox. (Their own inbox goes with the user doc below. Gifts they gave stay
+  // with the recipients; the giver then shows as "deleted user".)
+  if (!failures.count) {
+    const pairs = await db.collection("friendships").where("uids", "array-contains", uid).get();
+    const bulk = db.bulkWriter();
+    for (const pair of pairs.docs) {
+      const users = (pair.get("users") ?? []) as string[];
+      for (const other of users.filter((id) => !userDocIds.has(id))) {
+        const inbox = db.collection("users").doc(other).collection("notifications");
+        for (const me of userDocIds) {
+          for (const id of [friendRequestNotificationId(me), friendAcceptedNotificationId(me)]) {
+            bulk.delete(inbox.doc(id)).catch(failures.record(`delete notification ${id}`));
+          }
+        }
+      }
+      bulk.delete(pair.ref).catch(failures.record(`delete friendship ${pair.id}`));
+    }
+    // Their invite links stop working.
+    for (const me of userDocIds) {
+      const invites = await db.collection("invites").where("inviterId", "==", me).get();
+      for (const invite of invites.docs) {
+        bulk.delete(invite.ref).catch(failures.record(`delete invite ${invite.id}`));
+      }
+    }
+    await bulk.close();
+  }
+
+  if (failures.count) {
+    // The user doc and Auth account still exist, so calling again finishes the job.
+    throw new HttpsError("internal", "Some of your data couldn't be removed. Please try again.");
+  }
+
+  // The user docs with their achievements and notifications, then the Auth account.
+  for (const ref of userRefs) await db.recursiveDelete(ref);
+  // Their public knick-knack shelves (mirrorShelf also clears one if it fires late).
+  for (const ref of userRefs) await db.collection("shelves").doc(ref.id).delete();
+  try {
+    await getAuth().deleteUser(uid);
+  } catch (err) {
+    if ((err as { code?: string })?.code !== "auth/user-not-found") throw err;
+  }
+
+  return { userDocs: userRefs.length, logsDeleted: stats.purged, logsLeft: stats.left };
+};
+
+/**
+ * Permanently delete the caller's account (see deleteUserData).
+ * Requires a sign-in within the last few minutes (the client re-authenticates first).
  */
 export const deleteAccount = onCall(
   { timeoutSeconds: 540, memory: "512MiB" },
@@ -130,158 +285,10 @@ export const deleteAccount = onCall(
       );
     }
 
-    const db = getFirestore();
-    const userDocs = (await db.collection("users").where("userId", "==", uid).get()).docs;
-    const userRefs = userDocs.map((d) => d.ref);
-    const userDocIds = new Set(userRefs.map((r) => r.id));
-    const failures = trackFailures();
-    const stats = { purged: 0, left: 0 };
-
-    // Social logs: from the user docs' `groups` lists and from membership.
-    const groupIds = new Set<string>();
-    for (const doc of userDocs) {
-      for (const id of (doc.data().groups ?? []) as unknown[]) {
-        if (typeof id === "string" && id) groupIds.add(id);
-      }
-    }
-    for (const ref of userRefs) {
-      const memberOf = await db
-        .collection("log_groups")
-        .where("members", "array-contains", ref)
-        .get();
-      for (const d of memberOf.docs) groupIds.add(d.id);
-    }
-
-    for (const groupId of groupIds) {
-      const groupRef = db.collection("log_groups").doc(groupId);
-      const snap = await groupRef.get();
-      if (!snap.exists) continue;
-      const data = snap.data() as DocumentData;
-      const plan = planSocialExit(data, uid, userDocIds);
-
-      if (plan.action === "purge") {
-        await purgeLog(db, "social", groupId, data);
-        stats.purged++;
-      } else if (plan.action === "leave") {
-        const bulk = db.bulkWriter();
-        await anonymiseInGroup(db, bulk, failures, groupRef, data, userRefs, userDocIds);
-        await bulk.close();
-        if (failures.count) break;
-
-        const update: Record<string, unknown> = { members: FieldValue.arrayRemove(...userRefs) };
-        if (plan.transferCreator) {
-          const next = await uidOfUserDoc(db, plan.remainingMemberIds[0]);
-          update.createdBy = next ?? FieldValue.delete();
-        }
-        await groupRef.update(update);
-        stats.left++;
-      }
-    }
-
-    // Financial logs (including the personal one).
-    if (!failures.count) {
-      const ledgers = await db
-        .collection("ledgers")
-        .where("memberUids", "array-contains", uid)
-        .get();
-      for (const ledger of ledgers.docs) {
-        const plan = planLedgerExit(ledger.data(), uid, userDocIds);
-        if (plan.action === "purge") {
-          await purgeLog(db, "financial", ledger.id, ledger.data());
-          stats.purged++;
-          continue;
-        }
-        if (plan.action !== "leave") continue;
-
-        const entries = await ledger.ref.collection("entries").where("authorUid", "==", uid).get();
-        const bulk = db.bulkWriter();
-        for (const entry of entries.docs) {
-          if (entry.data().authorName === DELETED_USER_NAME) continue;
-          bulk
-            .update(entry.ref, { authorName: DELETED_USER_NAME })
-            .catch(failures.record(`anonymise entry ${entry.id}`));
-        }
-        await bulk.close();
-        if (failures.count) break;
-
-        // Re-plan inside a transaction: someone may have joined since the read above.
-        await db.runTransaction(async (tx) => {
-          const fresh = await tx.get(ledger.ref);
-          if (!fresh.exists) return;
-          const freshPlan = planLedgerExit(fresh.data() as DocumentData, uid, userDocIds);
-          if (freshPlan.action !== "leave") return;
-          tx.update(ledger.ref, {
-            members: freshPlan.members,
-            memberUids: freshPlan.memberUids,
-            ...(freshPlan.createdBy ? { createdBy: freshPlan.createdBy } : {}),
-          });
-        });
-        stats.left++;
-      }
-    }
-
-    // Posts they wrote in logs they'd already left (author names only).
-    if (!failures.count && userRefs.length) {
-      const authored = await db
-        .collection("log_posts")
-        .where("author", "in", userRefs.slice(0, IN_LIMIT))
-        .get();
-      const bulk = db.bulkWriter();
-      for (const post of authored.docs) {
-        if (post.data().authorName === DELETED_USER_NAME) continue;
-        bulk
-          .update(post.ref, { authorName: DELETED_USER_NAME })
-          .catch(failures.record(`anonymise post ${post.id}`));
-      }
-      await bulk.close();
-    }
-
-    // Friendships and requests, and the friend notifications they left in the other
-    // person's inbox. (Their own inbox goes with the user doc below. Gifts they gave stay
-    // with the recipients; the giver then shows as "deleted user".)
-    if (!failures.count) {
-      const pairs = await db.collection("friendships").where("uids", "array-contains", uid).get();
-      const bulk = db.bulkWriter();
-      for (const pair of pairs.docs) {
-        const users = (pair.get("users") ?? []) as string[];
-        for (const other of users.filter((id) => !userDocIds.has(id))) {
-          const inbox = db.collection("users").doc(other).collection("notifications");
-          for (const me of userDocIds) {
-            for (const id of [friendRequestNotificationId(me), friendAcceptedNotificationId(me)]) {
-              bulk.delete(inbox.doc(id)).catch(failures.record(`delete notification ${id}`));
-            }
-          }
-        }
-        bulk.delete(pair.ref).catch(failures.record(`delete friendship ${pair.id}`));
-      }
-      // Their invite links stop working.
-      for (const me of userDocIds) {
-        const invites = await db.collection("invites").where("inviterId", "==", me).get();
-        for (const invite of invites.docs) {
-          bulk.delete(invite.ref).catch(failures.record(`delete invite ${invite.id}`));
-        }
-      }
-      await bulk.close();
-    }
-
-    if (failures.count) {
-      // The user doc and Auth account still exist, so calling again finishes the job.
-      throw new HttpsError("internal", "Some of your data couldn't be removed. Please try again.");
-    }
-
-    // The user docs with their achievements and notifications, then the Auth account.
-    for (const ref of userRefs) await db.recursiveDelete(ref);
-    // Their public knick-knack shelves (mirrorShelf also clears one if it fires late).
-    for (const ref of userRefs) await db.collection("shelves").doc(ref.id).delete();
-    try {
-      await getAuth().deleteUser(uid);
-    } catch (err) {
-      if ((err as { code?: string })?.code !== "auth/user-not-found") throw err;
-    }
-
+    const { userDocs, logsDeleted, logsLeft } = await deleteUserData(getFirestore(), uid);
     console.log(
-      `deleteAccount: ${uid}; ${userRefs.length} user docs, ${stats.purged} logs deleted, ${stats.left} logs left`,
+      `deleteAccount: ${uid}; ${userDocs} user docs, ${logsDeleted} logs deleted, ${logsLeft} logs left`,
     );
-    return { deleted: true, logsDeleted: stats.purged, logsLeft: stats.left };
+    return { deleted: true, logsDeleted, logsLeft };
   }),
 );

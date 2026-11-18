@@ -22,7 +22,8 @@ export type Feature =
   | "log_group"
   | "log_actions"
   | "log_analytics"
-  | "push";
+  | "push"
+  | "admin";
 
 type ReportContext = {
   feature: Feature;

@@ -1,4 +1,4 @@
-import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
+import { PropsWithChildren, ReactNode, Suspense, lazy, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -41,6 +41,9 @@ import { InviteFriendPage } from "@/pages/invite";
 import { OnboardingGate } from "@/features/onboarding/OnboardingGate";
 
 import "./App.scss";
+
+// Admin tools are only for accounts with the admin claim: kept out of the main bundle.
+const AdminPage = lazy(() => import("@/pages/admin"));
 
 export const CheckAuth = ({
   children,
@@ -159,6 +162,16 @@ const App = () => {
                 element={
                   <CheckAuth>
                     <Notifications />
+                  </CheckAuth>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <CheckAuth>
+                    <Suspense fallback={<div className="Window">loading…</div>}>
+                      <AdminPage />
+                    </Suspense>
                   </CheckAuth>
                 }
               />

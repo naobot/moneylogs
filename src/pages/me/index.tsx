@@ -26,6 +26,8 @@ import "@/components/ProfileFields.scss";
 import "./me.scss";
 import { PushSection } from "@/features/account/PushSection";
 import { pushAvailable } from "@/features/push/devicePush";
+import { useIsAdmin } from "@/features/admin/useIsAdmin";
+import { Link } from "react-router-dom";
 
 // Personal settings plus everything tied to the account, in drawers. "logs" is linked
 // to from Home as /me#logs, which opens that drawer.
@@ -37,6 +39,7 @@ export const UserSettings = () => {
   const { ledgers: allLedgers } = useGetMyLedgers();
   const { achievements } = useGetAchievements(user?.id);
   const { friends, incoming } = useFriendships();
+  const isAdmin = useIsAdmin();
 
   const { active: activeGroups, archived: archivedGroups } = partitionArchived(groups, user);
   const { active: ledgers, archived: archivedLedgers } = partitionArchived(allLedgers, user);
@@ -126,6 +129,12 @@ export const UserSettings = () => {
           />
         </Drawer>
       </div>
+
+      {isAdmin && (
+        <p className="UserSettings__admin">
+          <Link to="/admin">admin tools →</Link>
+        </p>
+      )}
     </div>
   );
 };
