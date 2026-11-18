@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
+  friendsToInvite,
   isStepValid,
   participantsError,
   reachableStepIndex,
   scheduleError,
   stepsFor,
+  stepsForState,
   titleError,
   WizardState,
 } from "@/features/createLog/wizardSteps";
@@ -18,6 +20,7 @@ const base: WizardState = {
   endDate: "2026-11-30",
   endTime: "23:59",
   defaultCurrency: "JPY",
+  inviteFriendIds: [],
 };
 
 describe("stepsFor", () => {
@@ -28,6 +31,43 @@ describe("stepsFor", () => {
   it("asks for dates in social mode and a currency in financial mode", () => {
     expect(stepsFor("social")).toEqual(["type", "basics", "schedule", "review"]);
     expect(stepsFor("financial")).toEqual(["type", "basics", "currency", "review"]);
+  });
+
+  it("puts the optional friends step just before review", () => {
+    expect(stepsFor("social", true)).toEqual(["type", "basics", "schedule", "friends", "review"]);
+    expect(stepsFor("financial", true)).toEqual([
+      "type",
+      "basics",
+      "currency",
+      "friends",
+      "review",
+    ]);
+  });
+
+  it("offers the friends step only when the log has room for more than you", () => {
+    expect(stepsForState({ ...base, mode: "social" })).toContain("friends");
+    expect(stepsForState({ ...base, mode: "social", maxParticipants: 1 })).not.toContain("friends");
+  });
+});
+
+describe("friendsToInvite", () => {
+  const picked = { ...base, mode: "social" as const, inviteFriendIds: ["a", "b", "c"] };
+
+  it("invites everyone picked when there's room", () => {
+    expect(friendsToInvite(picked)).toEqual(["a", "b", "c"]);
+  });
+
+  it("drops picks past the spots left after lowering the cap", () => {
+    expect(friendsToInvite({ ...picked, maxParticipants: 3 })).toEqual(["a", "b"]);
+  });
+
+  it("invites nobody to a log for just you", () => {
+    expect(friendsToInvite({ ...picked, maxParticipants: 1 })).toEqual([]);
+  });
+
+  it("never blocks the wizard: the step is optional", () => {
+    expect(isStepValid("friends", picked)).toBe(true);
+    expect(isStepValid("friends", { ...picked, inviteFriendIds: [] })).toBe(true);
   });
 });
 
@@ -79,7 +119,8 @@ describe("reachableStepIndex", () => {
 
   it("clamps out-of-range and junk values", () => {
     const ready = { ...base, mode: "social" as const, title: "Trip" };
-    expect(reachableStepIndex(99, ready)).toBe(3);
+    // type, basics, schedule, friends, review
+    expect(reachableStepIndex(99, ready)).toBe(4);
     expect(reachableStepIndex(-4, ready)).toBe(0);
     expect(reachableStepIndex(NaN, ready)).toBe(0);
   });

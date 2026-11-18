@@ -4,7 +4,7 @@ import { Timestamp } from "firebase/firestore";
  * A notification lives at `users/{userDocId}/notifications/{id}`. Ids are deterministic,
  * so a writer that runs twice can't produce duplicates. Cloud Functions write the
  * social-activity, timeline and budget ones (functions/src/notifications.ts and
- * friends). The client writes only the ones whose recipient is the actor (starting or
+ * friends, log invites). The client writes only the ones whose recipient is the actor (starting or
  * joining a log).
  *
  * Copy, links and default on/off for every type live in src/utils/notificationTypes.ts.
@@ -14,6 +14,7 @@ export type NotificationType =
   | "reaction"
   | "log_created"
   | "log_joined"
+  | "log_invite"
   | "log_ending"
   | "log_ended"
   | "budget_approaching"
@@ -64,6 +65,14 @@ export type ReactionNotification = Base & {
 
 export type LogMembershipNotification = Base & {
   type: "log_created" | "log_joined";
+};
+
+/** A friend invited you into a log they're in. Links to the log's join page. */
+export type LogInviteNotification = Base & {
+  type: "log_invite";
+  /** The inviter's user doc id. */
+  actorId: string;
+  actorName: string;
 };
 
 export type LogTimelineNotification = Base & {
@@ -130,6 +139,7 @@ export type AppNotification =
   | CommentNotification
   | ReactionNotification
   | LogMembershipNotification
+  | LogInviteNotification
   | LogTimelineNotification
   | BudgetNotification;
 

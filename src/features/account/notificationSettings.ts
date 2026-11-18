@@ -26,7 +26,7 @@ export const NOTIFICATION_SETTING_GROUPS: ReadonlyArray<{
   keys: ReadonlyArray<NotificationPrefKey>;
 }> = [
   { title: "posts", keys: ["comment", "reaction"] },
-  { title: "logs", keys: ["log_ending", "log_ended", "log_created", "log_joined"] },
+  { title: "logs", keys: ["log_invite", "log_ending", "log_ended", "log_created", "log_joined"] },
   {
     title: "budgets",
     keys: ["budget_approaching", "budget_exceeded", "budget_projected", "budget_category"],

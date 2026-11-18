@@ -26,6 +26,7 @@ import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
 import { creatorUid } from "@/utils/logOwnership";
 import { shareUrl } from "@/utils/shareUrl";
+import InviteFriends from "@/features/invites/FriendPicker";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
@@ -203,6 +204,15 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
         <Modal.Header title={"Invite"}>Invite</Modal.Header>
         <Modal.Body>
+          {showInviteModal && (
+            <InviteFriends
+              logId={ledger.id}
+              logKind="ledger"
+              memberIds={ledger.members.map((ref) => ref.id)}
+              spotsLeft={spots}
+            />
+          )}
+          <h4>or share a link</h4>
           <p>Send the following URL to anyone you want to share this financial log with.</p>
           <p>Members can see every entry in this log, and add their own.</p>
           <CopyTextArea value={shareUrl(`/l/${ledger.id}/invite`)} />

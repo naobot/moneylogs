@@ -170,6 +170,11 @@ export const DIGEST_LINES: Record<string, LineSpec> = {
   }),
   log_created: (n) => ({ section: "logs", parts: ["you started ", logName(n)], href: logHref(n) }),
   log_joined: (n) => ({ section: "logs", parts: ["you joined ", logName(n)], href: logHref(n) }),
+  log_invite: (n) => ({
+    section: "logs",
+    parts: [someone(n), " invited you to ", logName(n)],
+    href: `${logHref(n)}/invite`,
+  }),
   log_ending: (n) => ({
     section: "logs",
     parts: [logName(n), " is about to end"],

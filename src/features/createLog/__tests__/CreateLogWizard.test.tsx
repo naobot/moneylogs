@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 const createLedgerMutate = vi.fn(async () => "new-ledger");
 const addNewLogGroupMutate = vi.fn(async () => "new-group");
+const inviteFriendsToLog = vi.hoisted(() => vi.fn(async () => ({ invited: [], skipped: [] })));
 
 const personal = vi.hoisted(() => ({
   ledger: { id: "personal-uid-1", title: "personal" } as { id: string; title: string } | undefined,
@@ -14,6 +15,16 @@ vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({
     user: { id: "doc-1", userId: "uid-1", displayName: "Nao", personalLedgerId: "personal-uid-1" },
   }),
+}));
+vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast: vi.fn() }) }));
+vi.mock("@/features/invites/logInvites", () => ({ inviteFriendsToLog }));
+// The real picker reads friendships and profiles; a stand-in that picks one friend.
+vi.mock("@/features/invites/FriendPicker", () => ({
+  FriendPicker: ({ onChange }: { onChange: (ids: string[]) => void }) => (
+    <button type="button" onClick={() => onChange(["friend-1"])}>
+      pick friend-1
+    </button>
+  ),
 }));
 vi.mock("@/hooks/useGetLedger", () => ({
   useGetLedger: (id?: string) => {
@@ -44,6 +55,7 @@ describe("CreateLogWizard", () => {
     personal.ledger = { id: "personal-uid-1", title: "personal" };
     createLedgerMutate.mockClear();
     addNewLogGroupMutate.mockClear();
+    inviteFriendsToLog.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -149,11 +161,38 @@ describe("CreateLogWizard", () => {
     await click("Next");
     expect(question()).toMatch(/When does it run/);
     await click("Next");
+    expect(question()).toMatch(/Invite friends/);
+    await click("Next");
     await click("Start log group");
     expect(addNewLogGroupMutate).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Tokyo trip", currentUserId: "uid-1" }),
     );
     expect(createLedgerMutate).not.toHaveBeenCalled();
+    // Nobody picked: no invites go out.
+    expect(inviteFriendsToLog).not.toHaveBeenCalled();
+  });
+
+  it("invites the friends picked once the log exists", async () => {
+    await click("Financial");
+    typeInto("Title", "Flat");
+    await click("Next");
+    await click("Next"); // currency
+    expect(question()).toMatch(/Invite friends/);
+    await click("pick friend-1");
+    await click("Next");
+    expect(container.querySelector(".Wizard__review")!.textContent).toContain("1 friend");
+    await click("Start financial log");
+    expect(inviteFriendsToLog).toHaveBeenCalledWith("new-ledger", "ledger", ["friend-1"]);
+    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+  });
+
+  it("skips the friends step for a log that's just for you", async () => {
+    await click("Financial");
+    typeInto("Title", "Mine");
+    typeInto("Max no. of participants", "1");
+    await click("Next");
+    await click("Next"); // currency
+    expect(question()).toMatch(/Ready to go/);
   });
 
   it("goes back a step and keeps what was entered", async () => {

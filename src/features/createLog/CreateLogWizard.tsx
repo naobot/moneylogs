@@ -5,6 +5,10 @@ import dayjs from "@/utils/configuredDayjs";
 import { formatDate, formatTime } from "@/utils/dateFormat";
 
 import { useCurrentUser } from "@/contexts";
+import { useToastContext } from "@/hooks/useToastContext";
+import { FriendPicker } from "@/features/invites/FriendPicker";
+import { inviteFriendsToLog } from "@/features/invites/logInvites";
+import type { LogKind } from "@/types/notification";
 import { useLogGroupQuery } from "@/hooks/useLogGroupQuery";
 import { useLedgerQuery } from "@/hooks/useLedgerQuery";
 import { useGetLedger } from "@/hooks/useGetLedger";
@@ -18,6 +22,7 @@ import Wizard from "@/components/Wizard/Wizard";
 import CurrencySelect from "@/components/CurrencySelect";
 
 import {
+  friendsToInvite,
   isStepValid,
   LogMode,
   MAX_PARTICIPANTS,
@@ -26,6 +31,7 @@ import {
   scheduleError,
   STEP_LABELS,
   stepsFor,
+  stepsForState,
   titleError,
   WizardState,
 } from "./wizardSteps";
@@ -39,6 +45,7 @@ const initialState = (defaultCurrency: Currency): WizardState => ({
   endDate: dayjs().add(1, "month").format("YYYY-MM-DD"),
   endTime: "23:59",
   defaultCurrency,
+  inviteFriendIds: [],
 });
 
 const MODE_OPTIONS: Array<{ mode: LogMode; title: string; lines: string[] }> = [
@@ -71,22 +78,41 @@ export const CreateLogWizard = () => {
   const { user } = useCurrentUser();
   const { addNewLogGroup } = useLogGroupQuery();
   const { createLedger } = useLedgerQuery();
+  const { showToast } = useToastContext();
+  const [isInviting, setIsInviting] = useState(false);
 
   const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
   const update = (patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch }));
 
-  const steps = stepsFor(state.mode);
+  const steps = stepsForState(state);
   // The step lives in the URL so the browser back button walks back through the wizard.
   const stepIndex = reachableStepIndex(Number(searchParams.get("step") ?? 0), state);
   const step = steps[stepIndex];
   const isLast = stepIndex === steps.length - 1;
   const canAdvance = isStepValid(step, state);
 
-  const isSubmitting = addNewLogGroup.isLoading || createLedger.isLoading;
+  const isSubmitting = addNewLogGroup.isLoading || createLedger.isLoading || isInviting;
   const submitFailed = addNewLogGroup.isError || createLedger.isError;
 
   const goTo = (index: number) => {
     setSearchParams(index === 0 ? {} : { step: String(index) });
+  };
+
+  // Best effort: the log exists either way, and invites can be sent again from inside it.
+  const sendInvites = async (logId: string, logKind: LogKind) => {
+    const friendIds = friendsToInvite(state);
+    if (!friendIds.length) return;
+    setIsInviting(true);
+    try {
+      await inviteFriendsToLog(logId, logKind, friendIds);
+    } catch (err) {
+      reportError(err, { feature: "log_invites", action: "invite_on_create", tags: { logKind } });
+      showToast(
+        "Your log is ready, but the invites didn't go out. Try again from its invite button.",
+      );
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const submit = async () => {
@@ -109,6 +135,7 @@ export const CreateLogWizard = () => {
           groupName: title,
           logKind: "social",
         });
+        await sendInvites(groupId, "social");
         void navigate("/", { replace: true });
       } else {
         const ledgerId = await createLedger.mutate({
@@ -125,6 +152,7 @@ export const CreateLogWizard = () => {
           groupName: state.title.trim(),
           logKind: "ledger",
         });
+        await sendInvites(ledgerId, "ledger");
         void navigate(`/l/${ledgerId}`, { replace: true });
       }
     } catch (err) {
@@ -217,7 +245,7 @@ export const CreateLogWizard = () => {
           <p className="Wizard__hint">
             {state.mode === "financial"
               ? "Set this to 1 to keep the log to yourself. You can invite others later if there's room."
-              : "Invite friends with a link once the group is created."}
+              : "You can invite friends in a later step, or with a link once the group is created."}
           </p>
         </>
       );
@@ -276,6 +304,23 @@ export const CreateLogWizard = () => {
       );
       break;
 
+    case "friends":
+      body = (
+        <>
+          <h3 className="Wizard__question">Invite friends?</h3>
+          <FriendPicker
+            selected={state.inviteFriendIds}
+            onChange={(inviteFriendIds) => update({ inviteFriendIds })}
+            max={state.maxParticipants - 1}
+          />
+          <p className="Wizard__hint">
+            Optional. Each friend you pick gets an invite in their notifications once the log is
+            created. You can also share a link from inside the log.
+          </p>
+        </>
+      );
+      break;
+
     case "review":
       body = (
         <>
@@ -287,6 +332,15 @@ export const CreateLogWizard = () => {
             <dd>{state.title.trim()}</dd>
             <dt>Participants</dt>
             <dd>{state.maxParticipants === 1 ? "Just you" : `Up to ${state.maxParticipants}`}</dd>
+            {friendsToInvite(state).length > 0 && (
+              <>
+                <dt>Inviting</dt>
+                <dd>
+                  {friendsToInvite(state).length} friend
+                  {friendsToInvite(state).length > 1 && "s"}
+                </dd>
+              </>
+            )}
             {state.mode === "social" ? (
               <>
                 <dt>Runs</dt>
@@ -312,7 +366,7 @@ export const CreateLogWizard = () => {
       break;
   }
 
-  const labels = (state.mode ? steps : stepsFor("social")).map((s, i) =>
+  const labels = (state.mode ? steps : stepsFor("social", true)).map((s, i) =>
     i === 2 && !state.mode ? "Details" : STEP_LABELS[s],
   );
 

@@ -38,6 +38,8 @@ import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
 import { storage } from "@/platform";
 import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
+import InviteFriends from "@/features/invites/FriendPicker";
+import { parseReferenceArray } from "@/utils/helpers";
 
 const agreeWarningKey = (groupId: string) => `ML__${groupId}__agreeWarning`;
 const agreedToEndWarning = (groupId: string) => storage.get(agreeWarningKey(groupId)) === "1";
@@ -482,6 +484,15 @@ export const Group = ({
         <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>
           <Modal.Header title={"Invite"}>Invite</Modal.Header>
           <Modal.Body>
+            {groupId && showInviteModal && (
+              <InviteFriends
+                logId={groupId}
+                logKind="social"
+                memberIds={parseReferenceArray(group.members ?? []).map((ref) => ref.id)}
+                spotsLeft={(group.max_participants ?? 0) - (group.members?.length ?? 0)}
+              />
+            )}
+            <h4>or share a link</h4>
             <p>
               Send the following URL to those you want to invite to participate in this log group.
             </p>

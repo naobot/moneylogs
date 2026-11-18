@@ -13,6 +13,7 @@ export type Feature =
   | "profile"
   | "log_post"
   | "friends"
+  | "log_invites"
   | "budget_buddy"
   | "ledger"
   | "ledger_import"
