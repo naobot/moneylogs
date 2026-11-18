@@ -1,5 +1,5 @@
 // F3. Signing up through an invite (docs/user-states.md)
-import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vite-plus/test";
 import { deleteAccountIfExists, PERSONAS, resetPersona } from "../scripts/personas";
 import { VARIANTS } from "./support/env";
 import {
@@ -28,11 +28,13 @@ beforeAll(async () => {
   ids = await seededIds();
 });
 
-afterAll(async () => {
-  await closeBrowser();
-  // Deleting them takes them back out of Alice's logs and friends, so runs don't pile up.
-  for (const email of signedUp) await deleteAccountIfExists(email, NEW_PASSWORD);
+// Deleting them takes them back out of Alice's logs and friends. After each test, not at
+// the end: Alice + Bob's financial log only has room for four.
+afterEach(async () => {
+  for (const email of signedUp.splice(0)) await deleteAccountIfExists(email, NEW_PASSWORD);
 });
+
+afterAll(closeBrowser);
 
 /** Signed out at an invite link: the landing page, then sign up from its invite bar. */
 async function signUpFromInvite(w: Walkthrough, invitePath: string, tag: string) {
@@ -103,9 +105,7 @@ describe.each(VARIANTS)("F3 invites ($id)", (variant) => {
     expect(w.problems()).toEqual([]);
   });
 
-  // Known bug: joining fails with a Firestore SDK internal assertion (ID: ca9) when the
-  // person signed in or up in the same page session as the invite. Remove .fails once fixed.
-  it.fails("a financial log invite: sign up, join, and land in the log", async () => {
+  it("a financial log invite: sign up, join, and land in the log", async () => {
     const w = await openWalkthrough(
       "F3c-ledger",
       "F3c · financial log invite → sign up → join",
@@ -150,8 +150,7 @@ describe.each(VARIANTS)("F3 invites ($id)", (variant) => {
     expect(w.problems()).toEqual([]);
   });
 
-  // Known bug (same as above): the page goes blank. Remove .fails once fixed.
-  it.fails("an existing account signing in from a financial log invite, then joining", async () => {
+  it("an existing account signing in from a financial log invite, then joining", async () => {
     const w = await openWalkthrough(
       "F3f-ledger-sign-in",
       "F3f · empty@ signs in from a financial log invite → join",
