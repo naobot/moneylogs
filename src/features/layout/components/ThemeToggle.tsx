@@ -1,20 +1,40 @@
 import Button from "@/components/Button";
-import { setTheme, useTheme } from "@/utils/theme";
+import { IconType } from "@/components/Icon";
+import {
+  isColourTheme,
+  nextToggleTheme,
+  setTheme,
+  Theme,
+  THEME_LABELS,
+  useLastColourTheme,
+  useTheme,
+} from "@/utils/theme";
+
+/** The icon for a theme: sun for Paper, moon for Night shift, star for any colour theme. */
+const themeIcon = (theme: Theme): IconType =>
+  theme === "paper" ? "sun" : theme === "night" ? "moon" : "star";
 
 /**
- * Icon-only Paper / Night shift switch for the top bar. Shows the icon of the theme it
- * switches to (moon in Paper, sun in Night shift), and names that action in its title.
+ * Icon-only theme switch for the top bar. Shows the icon of the current theme (sun,
+ * star or moon) and cycles Paper → ★ last colour theme → Night shift. The star joins
+ * the cycle only once a colour theme has been picked in /me, and only when signed in.
  */
-export const ThemeToggle = () => {
+export const ThemeToggle = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
   const theme = useTheme();
-  const isNight = theme === "night";
+  const lastColour = useLastColourTheme();
+  const next = nextToggleTheme(theme, {
+    includeStar: isLoggedIn && isColourTheme(lastColour),
+    lastColour,
+  });
+  const action = `Switch to ${THEME_LABELS[next]}`;
 
   return (
     <Button
       variant="icon"
-      title={isNight ? "Switch to Paper" : "Switch to Night shift"}
-      icon={isNight ? "sun" : "moon"}
-      onClick={() => setTheme(isNight ? "paper" : "night")}
+      title={action}
+      aria-label={`Theme: ${THEME_LABELS[theme]}. ${action}`}
+      icon={themeIcon(theme)}
+      onClick={() => setTheme(next)}
     />
   );
 };

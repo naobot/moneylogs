@@ -13,14 +13,18 @@ import {
   EntrySize,
   setDisplayPrefs,
 } from "@/utils/displayPrefs";
-import { markdownColorMode, setTheme, Theme, useTheme } from "@/utils/theme";
+import {
+  COLOUR_THEMES,
+  isColourTheme,
+  markdownColorMode,
+  setTheme,
+  Theme,
+  THEME_LABELS,
+  useLastColourTheme,
+  useTheme,
+} from "@/utils/theme";
 
 import "./DisplaySection.scss";
-
-export const THEME_LABELS: Record<Theme, string> = {
-  paper: "Paper",
-  night: "Night shift",
-};
 
 /** One-line summary for the Display drawer, e.g. "Night shift · 12h". */
 export const displaySummary = (theme: Theme, prefs: DisplayPrefs) =>
@@ -42,7 +46,8 @@ mango sticky rice that nobody regretted.`;
 type SegmentedProps<T extends string> = {
   label: string;
   options: readonly T[];
-  value: T;
+  /** null when no option is the current one. */
+  value: T | null;
   labelFor: (option: T) => string;
   onChange: (option: T) => void;
 };
@@ -72,12 +77,14 @@ const Segmented = <T extends string>({
 );
 
 /**
- * Viewing preferences remembered on this device: theme (Paper or Night shift), how dates
- * and times read, and the size and alignment of entry text. A sample entry shows the
+ * Viewing preferences remembered on this device: theme (Paper, the last colour theme as
+ * a star, or Night shift, plus a row picking the colour theme), how dates and times read, and the size and alignment of entry text. A sample entry shows the
  * result live.
  */
 export const DisplaySection = () => {
   const theme = useTheme();
+  const lastColour = useLastColourTheme();
+  const starTheme = lastColour ?? COLOUR_THEMES[0];
   const { prefs, formatDate } = useDateFormat();
   const now = dayjs();
 
@@ -95,6 +102,14 @@ export const DisplaySection = () => {
             onClick={() => setTheme("paper")}
           />
           <Button
+            text={lastColour ? THEME_LABELS[lastColour] : "Colour"}
+            icon="star"
+            variant="toggle"
+            size="sm"
+            isSelected={isColourTheme(theme)}
+            onClick={() => setTheme(starTheme)}
+          />
+          <Button
             text={THEME_LABELS.night}
             icon="moon"
             variant="toggle"
@@ -105,6 +120,13 @@ export const DisplaySection = () => {
         </div>
       </div>
 
+      <Segmented
+        label="Colour"
+        options={COLOUR_THEMES}
+        value={isColourTheme(theme) ? theme : null}
+        labelFor={(colour) => THEME_LABELS[colour]}
+        onChange={setTheme}
+      />
       <Segmented
         label="Clock"
         options={CLOCKS}

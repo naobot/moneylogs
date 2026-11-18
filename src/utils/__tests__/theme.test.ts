@@ -1,5 +1,14 @@
 import { describe, it, expect, beforeEach } from "vite-plus/test";
-import { getTheme, initTheme, markdownColorMode, readStoredTheme, setTheme } from "@/utils/theme";
+import {
+  getLastColourTheme,
+  getTheme,
+  initTheme,
+  markdownColorMode,
+  nextToggleTheme,
+  readStoredTheme,
+  setTheme,
+  themeTone,
+} from "@/utils/theme";
 
 describe("theme", () => {
   beforeEach(() => {
@@ -38,5 +47,48 @@ describe("theme", () => {
     expect(markdownColorMode("paper", true)).toBe("dark");
     expect(markdownColorMode("night")).toBe("dark");
     expect(markdownColorMode("night", true)).toBe("light");
+  });
+
+  it("applies colour themes and remembers the last one", () => {
+    expect(getLastColourTheme()).toBeNull();
+
+    setTheme("amber");
+    expect(document.documentElement.dataset.theme).toBe("amber");
+    expect(readStoredTheme()).toBe("amber");
+    expect(getLastColourTheme()).toBe("amber");
+
+    setTheme("night");
+    expect(getLastColourTheme()).toBe("amber");
+
+    initTheme();
+    expect(getTheme()).toBe("night");
+    expect(getLastColourTheme()).toBe("amber");
+  });
+
+  it("ignores a junk last colour theme", () => {
+    window.localStorage.setItem("ML__theme_colour", "night");
+    initTheme();
+    expect(getLastColourTheme()).toBeNull();
+  });
+
+  it("knows each theme's tone", () => {
+    expect(themeTone("riso")).toBe("light");
+    expect(themeTone("amber")).toBe("dark");
+    expect(themeTone("blueprint")).toBe("dark");
+    expect(markdownColorMode("riso")).toBe("light");
+    expect(markdownColorMode("amber")).toBe("dark");
+    expect(markdownColorMode("blueprint", true)).toBe("light");
+  });
+
+  it.each([
+    ["paper", true, "riso", "riso"],
+    ["riso", true, "riso", "night"],
+    ["night", true, "riso", "paper"],
+    ["paper", false, "riso", "night"],
+    ["paper", true, null, "night"],
+    ["amber", false, "amber", "night"],
+    ["night", false, null, "paper"],
+  ] as const)("toggles from %s (star %s, last %s) to %s", (from, includeStar, lastColour, to) => {
+    expect(nextToggleTheme(from, { includeStar, lastColour })).toBe(to);
   });
 });

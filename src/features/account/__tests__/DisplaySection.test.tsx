@@ -36,24 +36,43 @@ describe("DisplaySection", () => {
     container.remove();
   });
 
-  const buttons = () => Array.from(container.querySelectorAll<HTMLButtonElement>("button"));
-  const active = () => buttons().find((b) => b.classList.contains("Button--active"))!;
   const group = (label: string) =>
     Array.from(container.querySelectorAll<HTMLButtonElement>(`[aria-label="${label}"] button`));
   const selected = (label: string) =>
     group(label).find((b) => b.classList.contains("Button--active"))?.textContent;
 
   it("marks the current theme and switches to night shift", () => {
-    expect(active().textContent).toBe("Paper");
+    expect(selected("Theme")).toBe("Paper");
 
-    act(() => buttons()[1].click());
+    act(() => group("Theme")[2].click());
     expect(getTheme()).toBe("night");
     expect(document.documentElement.dataset.theme).toBe("night");
-    expect(active().textContent).toBe("Night shift");
+    expect(selected("Theme")).toBe("Night shift");
 
-    act(() => buttons()[0].click());
+    act(() => group("Theme")[0].click());
     expect(getTheme()).toBe("paper");
-    expect(active().textContent).toBe("Paper");
+    expect(selected("Theme")).toBe("Paper");
+  });
+
+  it("offers the star as the last colour theme, picked from the colour row", () => {
+    expect(group("Theme").map((b) => b.textContent)).toEqual(["Paper", "Colour", "Night shift"]);
+    expect(selected("Colour")).toBeUndefined();
+
+    // Before any colour theme is picked, the star starts at the first one.
+    act(() => group("Theme")[1].click());
+    expect(getTheme()).toBe("amber");
+    expect(selected("Theme")).toBe("Amber CRT");
+
+    act(() => group("Colour")[2].click());
+    expect(getTheme()).toBe("riso");
+    expect(document.documentElement.dataset.theme).toBe("riso");
+    expect(selected("Colour")).toBe("Riso");
+
+    // Away and back: the star remembers Riso.
+    act(() => group("Theme")[0].click());
+    expect(group("Theme")[1].textContent).toBe("Riso");
+    act(() => group("Theme")[1].click());
+    expect(getTheme()).toBe("riso");
   });
 
   it("labels clock and date options with live examples and switches them", () => {

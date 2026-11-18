@@ -2,8 +2,10 @@
 // Mirrors the moneylogs design system (tokens.json). Components read these custom
 // properties; nothing else should hard-code a colour, radius or font.
 //
-// Two inks only: `ink` on `paper`. Night shift swaps them (and nothing else), so any
-// component written against these tokens gets the second theme for free.
+// Two inks only: `ink` on `paper`. Every theme is one such pair — Night shift swaps
+// Paper's, the colour themes (Amber CRT, Blueprint, Riso) bring their own — so any
+// component written against these tokens gets every theme for free. The theme list
+// lives in src/utils/theme.ts.
 
 :root {
   // ---- colour (Paper theme) ----
@@ -111,18 +113,73 @@
   --entry-text-align: justify;
 }
 
+// One theme = one pair of inks. Derived tints keep the same alphas as Paper's.
+// Icons are black <img>s, so each theme supplies a filter that maps black to its ink
+// (on the ground) and to its paper (on an inverted block).
+@mixin two-inks($paper, $sheet, $ink, $scrim, $icon-filter, $icon-filter-inverse, $scheme) {
+  --paper: #{$paper};
+  --sheet: #{$sheet};
+  --ink: #{$ink};
+  --ink-muted: #{rgba($ink, 0.7)};
+  --ink-faint: #{rgba($ink, 0.3)};
+  --ink-ghost: #{rgba($ink, 0.15)};
+  --ink-wash: #{rgba($ink, 0.07)};
+  --scrim: #{$scrim};
+  --icon-filter: #{$icon-filter};
+  --icon-filter-inverse: #{$icon-filter-inverse};
+
+  color-scheme: #{$scheme};
+}
+
 // Night shift: the same two inks, swapped.
 :root[data-theme="night"] {
-  --paper: #242424;
-  --sheet: #242424;
-  --ink: #f5f3f0;
-  --ink-muted: rgba(245, 243, 240, 0.7);
-  --ink-faint: rgba(245, 243, 240, 0.3);
-  --ink-ghost: rgba(245, 243, 240, 0.15);
-  --ink-wash: rgba(245, 243, 240, 0.07);
-  --scrim: rgba(0, 0, 0, 0.5);
-  --icon-filter: invert(1);
-  --icon-filter-inverse: none;
+  @include two-inks(#242424, #242424, #f5f3f0, rgba(0, 0, 0, 0.5), invert(1), none, dark);
+}
 
-  color-scheme: dark;
+// Colour themes. Filters generated with a hex-to-CSS-filter solver; regenerate them if
+// an ink or paper changes. --ink-muted stays >= 5:1 on paper and sheet in each.
+
+// Amber CRT: amber phosphor on a warm black.
+:root[data-theme="amber"] {
+  @include two-inks(
+    #1c1408,
+    #221a0c,
+    #ffb000,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(66%) sepia(74%) saturate(1423%) hue-rotate(359deg)
+      brightness(101%) contrast(106%),
+    brightness(0) saturate(100%) invert(6%) sepia(10%) saturate(4556%) hue-rotate(3deg)
+      brightness(95%) contrast(94%),
+    dark
+  );
+}
+
+// Blueprint: chalk-white lines on cyanotype blue.
+:root[data-theme="blueprint"] {
+  @include two-inks(
+    #1d3a66,
+    #21426f,
+    #eaf1fb,
+    rgba(0, 0, 0, 0.5),
+    brightness(0) saturate(100%) invert(87%) sepia(21%) saturate(242%) hue-rotate(193deg)
+      brightness(106%) contrast(97%),
+    brightness(0) saturate(100%) invert(19%) sepia(66%) saturate(720%) hue-rotate(180deg)
+      brightness(92%) contrast(94%),
+    dark
+  );
+}
+
+// Riso: plum ink on pink stock, like a risograph print.
+:root[data-theme="riso"] {
+  @include two-inks(
+    #fbe3ea,
+    #fff1f5,
+    #3d1450,
+    rgba(0, 0, 0, 0.2),
+    brightness(0) saturate(100%) invert(8%) sepia(29%) saturate(6888%) hue-rotate(271deg)
+      brightness(106%) contrast(95%),
+    brightness(0) saturate(100%) invert(90%) sepia(10%) saturate(914%) hue-rotate(300deg)
+      brightness(106%) contrast(97%),
+    light
+  );
 }
