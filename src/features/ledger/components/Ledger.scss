@@ -334,6 +334,22 @@
 .CategoryManager {
   min-width: min(28em, 90vw);
 
+  // Inputs sit in a framed sheet box here, not on a dashed underline: rows and sections
+  // are divided by dashed lines, and an underlined field would read as another divider.
+  .LineInput {
+    padding: 0.2em 0.4em;
+    background: var(--sheet);
+    border: var(--border-hairline) solid var(--ink);
+
+    &:focus {
+      outline: var(--border-hairline) solid var(--ink);
+    }
+
+    &:disabled {
+      opacity: var(--opacity-disabled);
+    }
+  }
+
   &__list {
     list-style: none;
     margin: 0 0 1em;
@@ -543,12 +559,9 @@
     opacity: 0.7; // muted text floor
   }
 
-  // A plain checkbox and its label, like the switches on /me.
+  // A plain checkbox, right-aligned like the other inputs.
   &__check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-weight: 700;
+    margin: 0;
     cursor: pointer;
   }
 
@@ -592,7 +605,18 @@
   &__buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5em;
+    justify-content: center;
+    gap: 1em;
+  }
+
+  // Told apart by frame, not colour: dotted = moving it to the past; 3px = warning.
+  // Written as .X.Button--secondary to beat the shared frame (App.scss may load later).
+  &__archive.Button--secondary {
+    border-style: dotted;
+  }
+
+  &__delete.Button--secondary {
+    border-width: var(--border-heavy);
   }
 }
 

@@ -60,6 +60,7 @@ export const CategoryDetail = ({
   const [pickedCurrency, setPickedCurrency] = useState<Currency | null>(null);
   const nameId = useId();
   const mixedId = useId();
+  const fixedId = useId();
 
   const renameError = renaming !== null ? categoryNameError(renaming, all, id) : undefined;
   const commitRename = () => {
@@ -127,15 +128,19 @@ export const CategoryDetail = ({
 
       {!archived && (
         <Section help={FIXED_HELP}>
-          <label className="CategoryDetail__check">
+          <div className="CategoryDetail__field">
+            <label className="CategoryDetail__label" htmlFor={fixedId}>
+              fixed cost
+            </label>
             <input
+              id={fixedId}
               type="checkbox"
+              className="CategoryDetail__check"
               aria-label={`${name} is a fixed cost`}
               checked={fixed}
               onChange={(e) => save({ type: "setFixed", id, fixed: e.target.checked })}
             />
-            <span>fixed cost</span>
-          </label>
+          </div>
         </Section>
       )}
 
@@ -218,6 +223,7 @@ export const CategoryDetail = ({
               text="Archive"
               size="sm"
               variant="secondary"
+              className="CategoryDetail__archive"
               aria-label={`Archive ${name}`}
               disabled={lastActive}
               onClick={onArchive}
@@ -227,6 +233,7 @@ export const CategoryDetail = ({
             text="Delete"
             size="sm"
             variant="secondary"
+            className="CategoryDetail__delete"
             aria-label={`Delete ${name}`}
             disabled={lastActive}
             onClick={onDelete}
