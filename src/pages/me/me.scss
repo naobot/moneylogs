@@ -49,6 +49,26 @@
     margin: 0;
     padding: 0;
     list-style: none;
+
+    // Plain friend rows (no actions) flow into as many columns as fit on wider
+    // screens; one column on phones.
+    &--columns {
+      @media (min-width: constants.$breakpoint-sm) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+        gap: var(--space-2) var(--space-4);
+      }
+
+      .FriendsSection__row {
+        min-width: 0;
+      }
+
+      .ProfileLink__name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
   }
 
   // Name left, actions right.

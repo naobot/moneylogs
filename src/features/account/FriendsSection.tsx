@@ -121,7 +121,7 @@ export const FriendsSection = () => {
       <div>
         <h4>friends</h4>
         {friends.length > 0 ? (
-          <ul className="FriendsSection__list">
+          <ul className="FriendsSection__list FriendsSection__list--columns">
             {friends.map((id) => (
               <PersonRow key={id} id={id} profile={profiles.get(id)} />
             ))}
