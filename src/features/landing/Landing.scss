@@ -188,6 +188,12 @@
     background-color: var(--inverse-surface);
     color: var(--inverse-ink);
 
+    // It bobs gently in place to catch the eye. `translate` is separate from the
+    // centring `transform` above, so the two don't fight.
+    @media (prefers-reduced-motion: no-preference) {
+      animation: Landing__invite-float 3s ease-in-out infinite alternate;
+    }
+
     &__text {
       margin: 0;
       font-weight: 700;
@@ -202,5 +208,14 @@
     &__login {
       color: var(--inverse-ink);
     }
+  }
+}
+
+@keyframes Landing__invite-float {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -6px;
   }
 }

@@ -10,6 +10,7 @@ import { arrangeDashboard } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
+import { showNavWordmark } from "../navWordmark";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 
 declare const __APP_VERSION__: string;
@@ -42,6 +43,7 @@ const MainNav = () => {
   const { signOut, isPending: signOutPending } = useSignOut();
 
   const showLogs = isLoggedIn && (ledgers.length > 0 || isLoading || currentGroups.length > 0);
+  const showWordmark = showNavWordmark(isLoggedIn, location.pathname);
 
   // Three parts. On desktop they sit in one row (nav, logs, brand). On phones the brand
   // and nav share the top row, and the logs get a scrollable row of their own beneath.
@@ -105,9 +107,11 @@ const MainNav = () => {
         </div>
       )}
       <div className="MainNav__brand">
-        <Link to={"/about"} className="MainNav__wordmark">
-          moneylogs <small>{__APP_VERSION__}</small>
-        </Link>
+        {showWordmark && (
+          <Link to={"/about"} className="MainNav__wordmark">
+            moneylogs <small>{__APP_VERSION__}</small>
+          </Link>
+        )}
         {/* Theme toggle and sign-out read as one pair of icons, set close together. On
             phones the theme toggle is left to /me (Display drawer); sign-out stays. */}
         <span className="MainNav__iconPair">
