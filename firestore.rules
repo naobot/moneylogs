@@ -103,8 +103,12 @@ service cloud.firestore {
     }
     match /users/{userDocId}/knickknacks/{findId} {
       // Owner only: how many of anything someone has is private. Other people see the
-      // shelves/ mirror instead, which lists each kept item once.
-      allow read: if ownsUserDoc(userDocId);
+      // shelves/ mirror instead, which lists each kept item once. The one exception: a
+      // giver may read their own gift while it's still wrapped (unseen), to show it in
+      // transit on the friend's profile. Queries must filter giftedBy == their own user
+      // doc id and seenAt == null, so nobody sees gifts from anyone else.
+      allow read: if ownsUserDoc(userDocId)
+        || (resource.data.seenAt == null && ownsUserDoc(resource.data.giftedBy));
       allow update: if ownsUserDoc(userDocId)
         && resource.data.seenAt == null
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenAt"])

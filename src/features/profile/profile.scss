@@ -80,6 +80,16 @@
     font-size: 0.75em;
     color: var(--ink-muted);
   }
+
+  // A gift the viewer sent that's still wrapped: dimmed art, dashed frame (not yet kept).
+  &__item--transit {
+    padding: var(--space-2);
+    border: var(--border-hairline) dashed var(--ink);
+  }
+
+  &__item--transit &__art {
+    opacity: var(--opacity-dragging);
+  }
 }
 
 // An avatar and/or name that opens someone's profile.

@@ -65,3 +65,24 @@ export const giverIds = (slots: ReadonlyArray<ShelfSlot>): string[] => [
     slots.flatMap(({ provenance: p }) => (p.kind === "gift" && p.fromId ? [p.fromId] : [])),
   ),
 ];
+
+/** A gift the viewer sent that's still wrapped in the friend's drawer. */
+export type InTransitGift = { id: string; item: KnickKnackId; sentAtMs: number | null };
+
+/**
+ * The viewer's own gifts still waiting to be opened, oldest first. Only gifts from
+ * `giverId` count (firestore.rules allows reading no others; this filter keeps that true
+ * on the client too), and only unseen ones: once opened, the gift is on the shelf.
+ */
+export const inTransitGifts = (
+  finds: ReadonlyArray<KnickKnackFind>,
+  giverId: string,
+): InTransitGift[] => {
+  const known = new Set<string>(KNICK_KNACK_IDS);
+  return finds
+    .filter(
+      (f) => f.source === "gift" && f.giftedBy === giverId && f.seenAt == null && known.has(f.item),
+    )
+    .map((f) => ({ id: f.id, item: f.item, sentAtMs: f.giftedAt?.toMillis() ?? null }))
+    .sort((a, b) => (a.sentAtMs ?? Infinity) - (b.sentAtMs ?? Infinity));
+};

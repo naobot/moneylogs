@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import type { Timestamp } from "firebase/firestore";
-import { giverIds, provenanceLabel, provenanceOf, shelfSlots } from "../provenance";
+import { giverIds, inTransitGifts, provenanceLabel, provenanceOf, shelfSlots } from "../provenance";
 import type { KnickKnackFind } from "../useUnseenFinds";
 
 const ts = (ms: number) => ({ toMillis: () => ms }) as Timestamp;
@@ -89,5 +89,22 @@ describe("shelfSlots", () => {
       { item: "acorn", kind: "found", atMs: 3 },
     ]);
     expect(giverIds(slots)).toEqual(["mina"]);
+  });
+});
+
+describe("inTransitGifts", () => {
+  it("lists only the giver's own unopened gifts, oldest first", () => {
+    const finds = [
+      gift("acorn", 300, "me", false),
+      gift("acorn", 100, "me", false),
+      gift("acorn", 200, "mina", false), // someone else's gift
+      gift("acorn", 50, "me", true), // already opened: it's on the shelf
+      found("acorn", 10, false), // their own find
+    ];
+    expect(inTransitGifts(finds, "me").map((g) => g.sentAtMs)).toEqual([100, 300]);
+  });
+
+  it("skips items this build doesn't know", () => {
+    expect(inTransitGifts([gift("not_an_item", 100, "me", false)], "me")).toEqual([]);
   });
 });
