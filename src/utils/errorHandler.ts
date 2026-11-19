@@ -1,28 +1,12 @@
 import * as Sentry from "@sentry/react";
 import { ErrorInfo } from "@/types/error";
+import { classifyErrorMessage } from "@/utils/errorNoise";
 
-// Third-party / benign noise that is not an app bug and carries no diagnostic
-// value: browser-extension content scripts (iOS Safari content blockers,
-// password managers, translators) whose runtime.sendMessage fails when the tab
-// context is gone ("Invalid call to runtime.sendMessage(). Tab not found."),
-// extension context teardown, and the harmless ResizeObserver loop warning.
-// These are neither reported to Sentry nor surfaced to the user.
-const DROP_PATTERNS = [
-  "runtime.sendMessage",
-  "Tab not found",
-  "Extension context invalidated",
-  "ResizeObserver loop",
-];
-
-// Client network-layer fetch failures (see the Sentry beforeSend in main.tsx).
-// Not app bugs — usually blockers or flaky connections — but we keep reporting
-// them (down-ranked in Sentry) for outage trend-spotting. They should not show
-// the user a toast, since there's nothing actionable on their end mid-session.
-const TOAST_SUPPRESS_PATTERNS = ["Load failed", "Failed to fetch"];
-
-const matchesAny = (message: string, patterns: string[]): boolean =>
-  patterns.some((pattern) => message.includes(pattern));
-
+// Uncaught errors and unhandled rejections are captured by Sentry's own global
+// handlers (with the original error and stack); this handler only shows the user a
+// toast for them. Errors handed over explicitly with reportError() (e.g. by the
+// ErrorBoundary, which keeps them from reaching the global handlers) are sent to
+// Sentry here. Noise is filtered by utils/errorNoise, same as the Sentry beforeSend.
 class GlobalErrorHandler {
   private static instance: GlobalErrorHandler;
   private errorQueue: ErrorInfo[] = [];
@@ -68,36 +52,41 @@ class GlobalErrorHandler {
   }
 
   reportError(error: Error, source: string = "manual") {
-    this.handleError({
-      message: error.message,
-      stack: error.stack,
-      source,
-      timestamp: new Date(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-    });
+    this.handleError(
+      {
+        message: error.message,
+        stack: error.stack,
+        source,
+        timestamp: new Date(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+      },
+      error,
+    );
   }
 
-  private handleError(errorInfo: ErrorInfo) {
-    const message = errorInfo.message ?? "";
+  // `reportable` is the error to send to Sentry; omitted for errors Sentry's global
+  // handlers already capture.
+  private handleError(errorInfo: ErrorInfo, reportable?: Error) {
+    const noise = classifyErrorMessage(errorInfo.message ?? "");
 
     // Pure third-party / benign noise: don't report it and don't toast the user.
-    if (matchesAny(message, DROP_PATTERNS)) {
+    if (noise?.type === "drop") {
       return;
     }
 
     console.error("Error:", errorInfo);
 
-    Sentry.captureException(new Error(errorInfo.message), {
-      extra: { source: errorInfo.source, url: errorInfo.url },
-    });
+    // Benign kinds are demoted to "info" by the Sentry beforeSend in main.tsx.
+    if (reportable) {
+      Sentry.captureException(reportable, { extra: { source: errorInfo.source } });
+    }
 
     this.errorQueue.push(errorInfo);
 
-    // Network fetch failures are still reported (down-ranked in Sentry) but must
-    // not surface a scary "An error has occurred" toast for something the user
-    // can't act on. Everything else toasts as before.
-    if (!matchesAny(message, TOAST_SUPPRESS_PATTERNS)) {
+    // Benign failures (network, IndexedDB aborts) must not surface a scary "An error
+    // has occurred" toast for something the user can't act on.
+    if (!noise) {
       this.showToast?.(this.getUserFriendlyMessage(errorInfo));
     }
   }

@@ -11,25 +11,17 @@ import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { TutorialProvider } from "@/contexts/TutorialContext";
+import { classifyErrorMessage } from "@/utils/errorNoise";
 
-// Browser network-layer fetch failures — Safari/WebKit reports "Load failed",
-// Chromium "Failed to fetch". In this app these surface almost entirely from
-// inside the Firebase SDK (Analytics config fetch to firebase.googleapis.com,
-// Firestore WebChannel transport) and are caused by the client environment:
-// ad/tracking blockers, flaky mobile connections, or a tab closed mid-request.
-// They are not app bugs and Firestore retries + offline persistence recover.
-// We keep sending them (a spike can still flag a real outage) but demote them
-// from "error" so they don't bury genuine issues or trigger alerts.
-const NETWORK_FETCH_ERROR_PATTERNS = ["Load failed", "Failed to fetch"];
-
-const isNetworkFetchError = (event: Sentry.ErrorEvent, hint: Sentry.EventHint): boolean => {
+// Message of the thrown error, wherever Sentry put it.
+const eventMessage = (event: Sentry.ErrorEvent, hint: Sentry.EventHint): string => {
   const original = hint?.originalException;
-  const message =
+  return (
     (original instanceof Error ? original.message : "") ||
     event.exception?.values?.map((v) => v.value ?? "").join(" ") ||
     (typeof event.message === "string" ? event.message : "") ||
-    "";
-  return NETWORK_FETCH_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
+    ""
+  );
 };
 
 // "web", "ios" or "android": every event is tagged so issues can be split by app.
@@ -44,11 +36,16 @@ Sentry.init({
     // httpBodies: []
   },
   beforeSend(event, hint) {
-    if (isNetworkFetchError(event, hint)) {
+    // Extension / ResizeObserver noise is dropped; client-environment failures (network,
+    // IndexedDB aborts) are kept for trend-spotting but demoted from "error" so they
+    // don't bury genuine issues or trigger alerts. See utils/errorNoise.
+    const noise = classifyErrorMessage(eventMessage(event, hint));
+    if (noise?.type === "drop") return null;
+    if (noise?.type === "benign") {
       event.level = "info";
-      event.tags = { ...event.tags, network_fetch_failure: true };
-      // Group them together regardless of the minified frame they threw from.
-      event.fingerprint = ["network-fetch-failure"];
+      event.tags = { ...event.tags, benign_failure: noise.kind };
+      // Group each kind together regardless of the minified frame it threw from.
+      event.fingerprint = [noise.kind];
     }
     return event;
   },
