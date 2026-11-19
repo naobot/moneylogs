@@ -25,7 +25,8 @@ export type Feature =
   | "log_actions"
   | "log_analytics"
   | "push"
-  | "admin";
+  | "admin"
+  | "share_card";
 
 type ReportContext = {
   feature: Feature;

@@ -79,9 +79,10 @@
       display: none;
     }
 
-    // Level with the middle of the period row beside it.
+    // Level with the middle of the period row beside it; "share today" under it.
     > .Ledger__month__buddy {
       padding-top: 0.15em;
+      flex-direction: column;
     }
   }
 
@@ -139,6 +140,9 @@
       grid-area: buddy;
       justify-self: end;
       min-height: 1.6em;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
     }
 
     &__label {
@@ -804,6 +808,12 @@
 
 // Always-on stats: a one-line strip (totals + category bar) that expands into a panel.
 .LedgerStats {
+  // "share <month>" under the stats.
+  &__share {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   border: var(--border-rule) solid var(--ink);
 
   &__strip {

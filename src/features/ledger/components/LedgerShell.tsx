@@ -34,6 +34,7 @@ import { shareUrl } from "@/utils/shareUrl";
 import InviteFriends from "@/features/invites/FriendPicker";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
+import ShareCardModal from "@/features/share/ShareCardModal";
 
 import "./Ledger.scss";
 
@@ -87,6 +88,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [showBudgets, setShowBudgets] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showShareToday, setShowShareToday] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
 
   const spots = spotsLeft(ledger);
@@ -112,6 +114,9 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           navigate(ledgerPeriodPath(ledger.id, "stats", { kind: "month", key: m }, currentMonth))
         }
       />
+      <RowButton className="Ledger__month__share" onClick={() => setShowShareToday(true)}>
+        share today
+      </RowButton>
     </div>
   );
 
@@ -221,6 +226,14 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           </div>
         </div>
       </div>
+      {showShareToday && (
+        <ShareCardModal
+          card="daily"
+          ledger={ledger}
+          today={today}
+          onClose={() => setShowShareToday(false)}
+        />
+      )}
       <LogActionsModal
         isOpen={showManageModal}
         onClose={() => setShowManageModal(false)}

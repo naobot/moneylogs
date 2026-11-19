@@ -21,36 +21,37 @@ amounts or free text.
 
 ## Events
 
-| Event                   | When                                     | Params                                                    |
-| ----------------------- | ---------------------------------------- | --------------------------------------------------------- |
-| `page_view`             | Route change (pathname only)             | `page_path` (pattern), `page_title`, `signed_in`          |
-| `sign_up`               | Account created                          | `method`                                                  |
-| `login`                 | Signed in from the login form            | `method`                                                  |
-| `tutorial_complete`     | Welcome wizard, ledger tour, first post  | `tutorial`                                                |
-| `create_log`            | Create wizard finished                   | `log_kind`, `invited_friends`                             |
-| `join_log`              | Joined from an invite page               | `log_kind`                                                |
-| `archive_log`           | Archived / unarchived                    | `log_kind`, `archived`                                    |
-| `delete_log`            | Deleted                                  | `log_kind`                                                |
-| `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                             |
-| `add_post`              | New post in a social log                 | `travelling`                                              |
-| `open_comments`         | A post's comments opened                 | `has_comments`                                            |
-| `add_comment`           | Comment added                            | —                                                         |
-| `add_reaction`          | Reaction added                           | —                                                         |
-| `add_entry`             | Entry added to a financial log           | `shared_log`, `has_note`                                  |
-| `import_entries`        | CSV import finished                      | `source`, `created`                                       |
-| `no_spend_day`          | No-spend day confirmed                   | —                                                         |
-| `delete_category`       | Category deleted from a financial log    | —                                                         |
-| `remove_budget`         | A category's monthly budget removed      | —                                                         |
-| `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                     |
-| `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`) |
-| `update_profile`        | Profile saved on /me                     | —                                                         |
-| `send_friend_request`   | Friend request sent                      | —                                                         |
-| `accept_friend`         | Friend request accepted                  | —                                                         |
-| `gift_knickknack`       | Knick-knack gifted                       | —                                                         |
-| `send_nudge`            | Poke or cheer sent to a friend           | `kind`                                                    |
-| `read_nudge`            | Received poke/cheer opened               | —                                                         |
-| `share`                 | Invite / profile link copied             | `method`, `content_type`                                  |
-| `open_drawer`           | A /me drawer opened                      | `drawer`                                                  |
+| Event                   | When                                     | Params                                                                                                      |
+| ----------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `page_view`             | Route change (pathname only)             | `page_path` (pattern), `page_title`, `signed_in`                                                            |
+| `sign_up`               | Account created                          | `method`                                                                                                    |
+| `login`                 | Signed in from the login form            | `method`                                                                                                    |
+| `tutorial_complete`     | Welcome wizard, ledger tour, first post  | `tutorial`                                                                                                  |
+| `create_log`            | Create wizard finished                   | `log_kind`, `invited_friends`                                                                               |
+| `join_log`              | Joined from an invite page               | `log_kind`                                                                                                  |
+| `archive_log`           | Archived / unarchived                    | `log_kind`, `archived`                                                                                      |
+| `delete_log`            | Deleted                                  | `log_kind`                                                                                                  |
+| `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                                                                               |
+| `add_post`              | New post in a social log                 | `travelling`                                                                                                |
+| `open_comments`         | A post's comments opened                 | `has_comments`                                                                                              |
+| `add_comment`           | Comment added                            | —                                                                                                           |
+| `add_reaction`          | Reaction added                           | —                                                                                                           |
+| `add_entry`             | Entry added to a financial log           | `shared_log`, `has_note`                                                                                    |
+| `import_entries`        | CSV import finished                      | `source`, `created`                                                                                         |
+| `no_spend_day`          | No-spend day confirmed                   | —                                                                                                           |
+| `delete_category`       | Category deleted from a financial log    | —                                                                                                           |
+| `remove_budget`         | A category's monthly budget removed      | —                                                                                                           |
+| `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                                                                       |
+| `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                   |
+| `update_profile`        | Profile saved on /me                     | —                                                                                                           |
+| `send_friend_request`   | Friend request sent                      | —                                                                                                           |
+| `accept_friend`         | Friend request accepted                  | —                                                                                                           |
+| `gift_knickknack`       | Knick-knack gifted                       | —                                                                                                           |
+| `send_nudge`            | Poke or cheer sent to a friend           | `kind`                                                                                                      |
+| `read_nudge`            | Received poke/cheer opened               | —                                                                                                           |
+| `share`                 | Invite / profile link copied             | `method`, `content_type`                                                                                    |
+| `share_card`            | Share card shared or saved               | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`) |
+| `open_drawer`           | A /me drawer opened                      | `drawer`                                                                                                    |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.
 

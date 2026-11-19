@@ -32,5 +32,5 @@ export const useNoSpendDays = () => {
     enabled: !!userDocId,
   });
   const days = useMemo(() => new Set(userDocId ? result.data : []), [userDocId, result.data]);
-  return { days, isSuccess: !!userDocId && result.isSuccess };
+  return { days, isSuccess: !!userDocId && result.isSuccess, isError: result.isError };
 };

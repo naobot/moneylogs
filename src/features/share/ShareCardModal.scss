@@ -1,0 +1,60 @@
+.ShareCardModal {
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  &__formats {
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+
+  // The card at a glance: scaled down, framed like a print.
+  &__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    &--story {
+      height: min(52vh, 480px);
+      aspect-ratio: 9 / 16;
+    }
+
+    &--square {
+      width: min(100%, 320px);
+      aspect-ratio: 1;
+    }
+  }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    align-self: stretch;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 0.85em;
+    color: var(--ink-muted);
+  }
+}
