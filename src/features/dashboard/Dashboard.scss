@@ -178,6 +178,34 @@
 }
 
 // Everything the budget buddies have found: a framed drawer of one-ink pixel art.
+// Your friends: avatar and name, one per row, wrapping into columns when there's room.
+.DashboardFriends {
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10em, 1fr));
+    gap: var(--space-3) var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      min-width: 0;
+    }
+
+    .ProfileLink__name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__muted {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}
+
 .KnickKnackDrawer {
   // Takes all the height it's given; its contents stay at the top.
   flex: 1 0 auto;
