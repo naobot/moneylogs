@@ -40,7 +40,11 @@ export const ledgerTourSteps = (isPersonal: boolean): readonly LedgerTourStep[] 
   },
   { target: "note", text: "Add a note if you like, then press Enter or Add to save it." },
   { target: "month", text: "Entries are kept by month. Flip between them here." },
-  { target: "stats", text: "Totals, trends and budgets live in stats.", align: "end" },
+  {
+    target: "stats",
+    text: "Totals, trends and budgets live in stats, by month, quarter or year.",
+    align: "start",
+  },
   {
     target: "categories",
     text: "Rename, reorder and add categories here.",
@@ -49,6 +53,7 @@ export const ledgerTourSteps = (isPersonal: boolean): readonly LedgerTourStep[] 
   {
     target: "buddy",
     text: "Your budget buddy keeps an eye on the month. Tap it any time.",
+    align: "end",
   },
 ];
 

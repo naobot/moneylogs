@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry } from "@/types/ledger";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
+import { useBudgetSnapshots } from "@/hooks/useBudgetSnapshots";
+import { categoriesForMonth } from "@/utils/budgetHistory";
 import {
   formatMonth,
   ledgerViewPath,
@@ -158,7 +160,12 @@ export const LedgerStatsPanel = ({
     to: month,
   });
 
-  const categories = ledger.categories ?? [];
+  // A finished month is judged by the budgets it had, not today's.
+  const { snapshots, isLoading: snapshotsLoading } = useBudgetSnapshots({
+    ledgerId: ledger.id,
+    from: month,
+  });
+  const categories = categoriesForMonth(month, ledger.categories ?? [], snapshots);
   const catShares = categoryShares(agg, currency, categories);
   const catRows = categoryBudgetRows(agg, currency, categories);
   const budget = budgetSummary({ month, today, currency, agg, categories });
@@ -183,7 +190,7 @@ export const LedgerStatsPanel = ({
 
   // The trend and "vs last month" need the month summaries: before they're in, earlier
   // months would draw as nothing spent.
-  if (isLoading || monthsLoading) return <p className="Ledger__empty">...</p>;
+  if (isLoading || monthsLoading || snapshotsLoading) return <p className="Ledger__empty">...</p>;
 
   return (
     <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>
@@ -314,7 +321,7 @@ const pct = (share: number) => `${Math.round(share * 100)}%`;
  * Horizontal bars. Rows with a budget show progress toward it (capped fill, heavy border
  * when over); rows without show their share of the month's spending.
  */
-const ShareRows = ({
+export const ShareRows = ({
   rows,
   currency,
   label,
@@ -437,7 +444,7 @@ const BudgetSection = ({
  * A monochrome stacked bar: largest categories as distinct fills (drawn in the order set
  * in the Categories panel), the rest grouped at the end.
  */
-const CategoryBar = ({
+export const CategoryBar = ({
   shares,
   currency,
   categories,
