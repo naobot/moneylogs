@@ -118,6 +118,11 @@
       align-items: center;
       gap: 0.5em 0.75em;
       min-width: 0;
+
+      // On phones it sits alone under the buddy, so centre it there too.
+      @media (max-width: constants.$breakpoint-sm) {
+        justify-content: center;
+      }
     }
 
     &__buddy {
