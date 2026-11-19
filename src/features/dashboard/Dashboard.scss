@@ -192,12 +192,65 @@
       display: flex;
       min-width: 0;
     }
+  }
 
-    .ProfileLink__name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+  // Positions the "!" over the avatar's top-right corner.
+  &__friend {
+    position: relative;
+    display: flex;
+    min-width: 0;
+  }
+
+  // Avatar and name: one button that opens the friend's menu.
+  &__person {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--ink);
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover .DashboardFriends__name,
+    &:focus-visible .DashboardFriends__name,
+    &[aria-expanded="true"] .DashboardFriends__name {
+      text-decoration: underline;
     }
+
+    &:focus-visible {
+      outline: var(--border-hairline) dashed var(--ink);
+      outline-offset: 2px;
+    }
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__nudge {
+    position: absolute;
+    top: -0.55em;
+    left: calc(30px - 0.6em);
+    line-height: 0;
+  }
+
+  &__menu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    min-width: 12em;
+  }
+
+  &__profile {
+    font-size: 0.85em;
+    color: var(--ink);
   }
 
   &__muted {

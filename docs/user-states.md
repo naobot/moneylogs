@@ -40,17 +40,17 @@ window for a completely clean first visit.
 A screen can look different along each of these. When a feature touches one, check the
 values in bold. Those are the ones that get missed.
 
-| Dimension     | Values                                                                                                                                             | Where it lives                                                                                                |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                            |
-| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                       | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                |
-| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                             | `groups`, `personalLedgerId`, ledgers `memberUids`                                                            |
-| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}` |
-| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                   |
-| Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                            |
-| Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)        |
-| Device        | **first visit** · returning · stored theme / drawers / dismissed tips                                                                              | `ML__*` keys in browser storage                                                                               |
-| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)**                                                                               | `data-theme`, `isNative()`                                                                                    |
+| Dimension     | Values                                                                                                                                             | Where it lives                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                                      |
+| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                       | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                          |
+| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                             | `groups`, `personalLedgerId`, ledgers `memberUids`                                                                      |
+| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}`, `nudges` |
+| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                             |
+| Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                                      |
+| Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)                  |
+| Device        | **first visit** · returning · stored theme / drawers / dismissed tips                                                                              | `ML__*` keys in browser storage                                                                                         |
+| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)**                                                                               | `data-theme`, `isNative()`                                                                                              |
 
 ## Flows
 
@@ -129,6 +129,19 @@ As: two personas who are friends (the seed's Alice and one of hers), signed in i
   the log's join page, and joining removes the invite from their inbox.
 - With no friends (e.g. `empty@test.com`), the step and the modal say so and link to `/me#friends`; the
   share link still works as before.
+
+### F6d. Pokes and cheers
+
+As: two personas who are friends (the seed's Alice and one of hers), signed in in two windows.
+
+- On Home, tapping a friend opens a menu: poke, cheer ▾ (preset words), profile →. Their profile has the
+  same poke / cheer beside "Send a gift".
+- Mashing poke shows "poked ×N" and sends one write a moment after the last tap.
+- The friend's Home shows a bouncing "!" over the sender's avatar, live, and the sender moves to the
+  front of the list. Tapping "!" opens a speech bubble ("poked you ×N · <cheer>"); closing it deletes it.
+  No inbox entry, push or email.
+- Unfriending clears anything waiting either way; unread ones expire after 14 days.
+- With no friends there's nothing to show: the list's empty state is unchanged.
 
 ### F7. Leaving
 

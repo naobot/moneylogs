@@ -47,12 +47,20 @@ export const useFriendships = () => {
   const stateWith = (otherUserDocId: string): FriendState =>
     entries.find((e) => e.userDocId === otherUserDocId)?.state ?? "none";
 
+  /** A friend's auth uid, from the friendship doc (what nudge rules check); null if unknown. */
+  const uidOf = (otherUserDocId: string): string | null => {
+    const pair = result.data.find((f) => f.users.includes(otherUserDocId));
+    if (!pair) return null;
+    return pair.uids[pair.users.indexOf(otherUserDocId)] ?? null;
+  };
+
   return {
     entries,
     friends: entries.filter((e) => e.state === "friends").map((e) => e.userDocId),
     incoming: entries.filter((e) => e.state === "incoming").map((e) => e.userDocId),
     outgoing: entries.filter((e) => e.state === "outgoing").map((e) => e.userDocId),
     stateWith,
+    uidOf,
     // Loading while the current user is: until then there's no uid to ask with, and an
     // empty list would read as "no friends" (and "Add friend" for someone who is one).
     isLoading: userLoading || result.isLoading,

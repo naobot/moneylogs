@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Popover from "@/components/Popover";
 import RowButton from "@/components/RowButton";
+import NudgeActions from "@/features/nudges/NudgeActions";
 
 import { useFriendAction } from "./useFriendAction";
 
@@ -12,13 +13,14 @@ type FriendControlsProps = { userDocId: string; name: string };
 
 /** Add, answer, cancel or undo a friendship from someone's profile. */
 export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
-  const { stateWith, isLoading } = useFriendships();
+  const { stateWith, uidOf, isLoading } = useFriendships();
   const { run, pending } = useFriendAction();
   const [confirmingUnfriend, setConfirmingUnfriend] = useState(false);
   // "friends ▾" tucks unfriend away in a menu, so it's never one stray tap away.
   const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const state = stateWith(userDocId);
+  const friendUid = uidOf(userDocId);
 
   if (isLoading) return null;
 
@@ -109,6 +111,7 @@ export const FriendControls = ({ userDocId, name }: FriendControlsProps) => {
             icon="gift"
             to={`/?giftTo=${userDocId}#knickknacks`}
           />
+          {friendUid && <NudgeActions userDocId={userDocId} toUid={friendUid} name={name} />}
         </>
       )}
 
