@@ -17,6 +17,9 @@ export default defineConfig({
           setupFiles: ["./src/test/setup.ts"],
           include: ["src/**/*.test.{ts,tsx}", "functions/src/**/*.test.ts"],
           exclude: ["src/**/*.visual.test.tsx"],
+          // Share cards read design tokens from src/tokens.scss?raw; Vitest blanks
+          // stylesheet imports unless they're included here.
+          css: { include: [/tokens\.scss/] },
           // @uiw/react-markdown-preview imports .css from its ESM build; inline it so
           // Vite handles the CSS instead of Node's loader.
           server: { deps: { inline: [/@uiw\//] } },
