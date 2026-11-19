@@ -41,6 +41,7 @@ amounts or free text.
 | `no_spend_day`          | No-spend day confirmed                  | —                                                |
 | `delete_category`       | Category deleted from a financial log   | —                                                |
 | `remove_budget`         | A category's monthly budget removed     | —                                                |
+| `stats_period`          | Stats period switched in a ledger       | `period` (`month`, `quarter`, `year`)            |
 | `update_profile`        | Profile saved on /me                    | —                                                |
 | `send_friend_request`   | Friend request sent                     | —                                                |
 | `accept_friend`         | Friend request accepted                 | —                                                |
@@ -62,7 +63,7 @@ In the Firebase console → Analytics (or analytics.google.com, property for mon
 2. **Register custom dimensions.** Admin → Custom definitions → Create custom dimension,
    scope **Event**, one for each param below (dimension name can match the param):
    `log_kind`, `tutorial`, `archived`, `travelling`, `has_comments`, `shared_log`,
-   `has_note`, `source`, `drawer`, `signed_in`.
+   `has_note`, `source`, `drawer`, `signed_in`, `period`.
    And as custom **metrics** (unit: standard): `invited_friends`, `created`.
    `method` and `content_type` are built in. Dimensions only apply to data from the
    time they're created, not before.
