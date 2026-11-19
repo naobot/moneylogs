@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/contexts";
 import { useLedgerCategoryQuery } from "@/hooks/useLedgerCategoryQuery";
 import { Ledger } from "@/types/ledger";
 import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
-import { LedgerView, monthKeyOf, spotsLeft, todayInTz } from "@/utils/ledger";
+import { hourInTz, LedgerView, monthKeyOf, spotsLeft, todayInTz } from "@/utils/ledger";
 import {
   currentPeriodLabel,
   formatPeriod,
@@ -35,6 +35,7 @@ import InviteFriends from "@/features/invites/FriendPicker";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 import ShareCardModal from "@/features/share/ShareCardModal";
+import { shareDayOf } from "@/features/share/shareLines";
 
 import "./Ledger.scss";
 
@@ -115,7 +116,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         }
       />
       <RowButton className="Ledger__month__share" onClick={() => setShowShareToday(true)}>
-        share today
+        share {shareDayOf(today, hourInTz(user?.timezone)).word}
       </RowButton>
     </div>
   );

@@ -9,7 +9,7 @@ import {
   categoryShares,
   spentThroughDay,
 } from "@/utils/ledgerStats";
-import { confirmedNoSpendStreak } from "@/features/ledger/buddy/buddyMood";
+import { BUDDY_WAKE_AT, confirmedNoSpendStreak } from "@/features/ledger/buddy/buddyMood";
 import { FACES, pick } from "@/features/ledger/buddy/faces";
 import { KNICK_KNACK_IDS, KnickKnackId } from "@/features/ledger/buddy/knickknacks/catalog";
 import type { KnickKnackFind } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
@@ -33,6 +33,17 @@ export const USUAL_DAY_MIN_WEEKS = 4;
 
 /** Months of entries the cards read: this one and the two before (covers 8 weeks back). */
 export const SHARE_MONTHS = 3;
+
+export type ShareDayWord = "today" | "yesterday";
+
+/**
+ * Which day the daily card covers. A day out doesn't end at midnight: until the buddy
+ * wakes (BUDDY_WAKE_AT, 07:00 local) the card is still about the evening before.
+ */
+export const shareDayOf = (today: string, localHour: number): { day: string; word: ShareDayWord } =>
+  localHour < BUDDY_WAKE_AT
+    ? { day: dayjs(today).subtract(1, "day").format("YYYY-MM-DD"), word: "yesterday" }
+    : { day: today, word: "today" };
 
 /** Month keys to load for `today`, oldest first. */
 export const shareMonths = (today: string): string[] => {
@@ -104,12 +115,16 @@ export const usualDayLine = ({
     : null;
 };
 
-export const noSpendLine = (days: ReadonlySet<string>, today: string): ShareLine | null => {
+export const noSpendLine = (
+  days: ReadonlySet<string>,
+  today: string,
+  dayWord: ShareDayWord = "today",
+): ShareLine | null => {
   if (!days.has(today)) return null;
   const streak = confirmedNoSpendStreak(days, today);
   return streak >= 2
     ? { kind: "no_spend", text: `${streak} no-spend days in a row!` }
-    : { kind: "no_spend", text: "Nothing spent today ✓" };
+    : { kind: "no_spend", text: `Nothing spent ${dayWord} ✓` };
 };
 
 /**
@@ -194,14 +209,18 @@ export const shareLines = ({
   categories,
   noSpendDays,
   isSoleMember,
+  dayWord = "today",
 }: {
   entries: ReadonlyArray<LedgerEntry>;
   myUid: string;
+  /** The day the card covers (shareDayOf). */
   today: string;
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
   noSpendDays: ReadonlySet<string>;
   isSoleMember: boolean;
+  /** How the lines name that day. */
+  dayWord?: ShareDayWord;
 }): ShareLine[] => {
   const mine = entries.filter((e) => e.authorUid === myUid && e.date <= today);
   const firstDate = mine.reduce<string | null>(
@@ -211,13 +230,15 @@ export const shareLines = ({
   const confirmedToday = noSpendDays.has(today);
   const lines = [
     usualDayLine({ byDate: dailyTotals(mine, currency), firstDate, today, confirmedToday }),
-    noSpendLine(noSpendDays, today),
+    noSpendLine(noSpendDays, today, dayWord),
     monthPaceLine({ entries: mine, firstDate, today, currency }),
     budgetLine({ entries: mine, today, currency, categories, isSoleMember }),
   ].filter((l): l is ShareLine => l !== null);
   if (lines.length) return lines.slice(0, MAX_SHARE_LINES);
   const loggedToday = mine.some((e) => e.date === today);
-  return loggedToday || confirmedToday ? [{ kind: "kept_up", text: "Kept my log up today" }] : [];
+  return loggedToday || confirmedToday
+    ? [{ kind: "kept_up", text: `Kept my log up ${dayWord}` }]
+    : [];
 };
 
 /** The card's buddy: always pleased (it's a brag), picked for the day. */

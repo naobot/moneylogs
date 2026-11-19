@@ -13,6 +13,7 @@ import { Ledger, LedgerEntry } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { ShareCardResult, track } from "@/utils/analytics";
 import { initialAvatarGrid, normaliseAvatar } from "@/utils/avatar";
+import { hourInTz } from "@/utils/ledger";
 import { currenciesByUse } from "@/utils/ledgerStats";
 import { reportError } from "@/utils/reportError";
 import { daySeed } from "@/features/ledger/buddy/buddyMood";
@@ -26,6 +27,8 @@ import {
   breakdownSlices,
   pickShareKnickKnack,
   shareFace,
+  ShareDayWord,
+  shareDayOf,
   shareLines,
   shareMonths,
 } from "./shareLines";
@@ -77,10 +80,15 @@ const useKeepsakes = () => {
 
 const DailyShare = ({
   ledger,
-  today,
+  today: calendarToday,
   onClose,
 }: Omit<ShareCardModalProps, "card"> & { card: "daily" }) => {
   const { user } = useCurrentUser();
+  // After midnight, until the buddy wakes, the card is still about the evening before;
+  // in those hours either day can be picked.
+  const [early] = useState(() => shareDayOf(calendarToday, hourInTz(user?.timezone)));
+  const [dayWord, setDayWord] = useState<ShareDayWord>(early.word);
+  const today = dayWord === "yesterday" ? early.day : calendarToday;
   // A fixed three months (hooks can't loop): this one and the two before.
   const [m0, m1, m2] = shareMonths(today);
   const q0 = useGetLedgerEntries({ ledgerId: ledger.id, month: m0 });
@@ -107,6 +115,7 @@ const DailyShare = ({
     categories,
     noSpendDays: noSpend.days,
     isSoleMember: (ledger.memberUids?.length ?? 0) <= 1,
+    dayWord,
   });
   const todaySlices = breakdownSlices({
     entries,
@@ -121,7 +130,7 @@ const DailyShare = ({
 
   const spec: CardSpec | null = lines.length
     ? {
-        heading: "today",
+        heading: dayWord,
         date: dayjs(today).format("ddd D MMM").toLowerCase(),
         face: shareFace(daySeed(ledger.id, today)),
         lines: lines.map((l) => l.text),
@@ -135,13 +144,33 @@ const DailyShare = ({
   return (
     <ShareCardFrame
       card="daily"
-      title="share today"
+      title={`share ${dayWord}`}
       filename={`moneylogs-${today}.png`}
       spec={spec}
       isLoading={isLoading}
       isError={isError}
-      empty="Nothing to share yet. Log today's spending, or confirm a no-spend day, and your buddy will find something to cheer about."
+      empty={
+        dayWord === "yesterday"
+          ? "Nothing to share from yesterday."
+          : "Nothing to share yet. Log today's spending, or confirm a no-spend day, and your buddy will find something to cheer about."
+      }
       onClose={onClose}
+      picker={
+        early.word === "yesterday" && (
+          <div className="ShareCardModal__formats" role="group" aria-label="Which day">
+            {(["yesterday", "today"] as const).map((word) => (
+              <Button
+                key={word}
+                text={word}
+                size="sm"
+                variant="toggle"
+                isSelected={word === dayWord}
+                onClick={() => setDayWord(word)}
+              />
+            ))}
+          </div>
+        )
+      }
       options={
         <>
           {todaySlices.length > 0 && (
@@ -151,7 +180,7 @@ const DailyShare = ({
                 checked={showPie}
                 onChange={(e) => setShowPie(e.target.checked)}
               />
-              <span>Show today's spending pie (no fixed costs)</span>
+              <span>Show {dayWord}'s spending pie (no fixed costs)</span>
             </label>
           )}
           {showPie && todaySlices.length > 0 && (
@@ -254,6 +283,7 @@ const ShareCardFrame = ({
   isLoading,
   isError,
   empty,
+  picker,
   options,
   onClose,
 }: {
@@ -264,6 +294,8 @@ const ShareCardFrame = ({
   isLoading: boolean;
   isError: boolean;
   empty: string;
+  /** Above everything, whatever the state: what the card is about (e.g. which day). */
+  picker?: ReactNode;
   options: ReactNode;
   onClose: () => void;
 }) => {
@@ -330,6 +362,7 @@ const ShareCardFrame = ({
     >
       <Modal.Header title={title} striped />
       <Modal.Body className="ShareCardModal__body">
+        {picker}
         {isError ? (
           <p className="error-message">Couldn't load your entries. Please try again.</p>
         ) : isLoading ? (

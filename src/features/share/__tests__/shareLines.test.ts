@@ -9,6 +9,7 @@ import {
   pickShareKnickKnack,
   shareFace,
   shareLines,
+  shareDayOf,
   shareMonths,
   usualDayLine,
 } from "../shareLines";
@@ -129,6 +130,19 @@ describe("usualDayLine", () => {
   });
 });
 
+describe("shareDayOf", () => {
+  it("keeps the evening before until the buddy wakes at 07:00", () => {
+    expect(shareDayOf("2026-11-22", 0)).toEqual({ day: SAT, word: "yesterday" });
+    expect(shareDayOf("2026-11-22", 6)).toEqual({ day: SAT, word: "yesterday" });
+    expect(shareDayOf("2026-11-22", 7)).toEqual({ day: "2026-11-22", word: "today" });
+    expect(shareDayOf(SAT, 23)).toEqual({ day: SAT, word: "today" });
+  });
+
+  it("crosses month and year ends", () => {
+    expect(shareDayOf("2027-01-01", 1).day).toBe("2026-12-31");
+  });
+});
+
 describe("noSpendLine", () => {
   it("names a streak, or just today", () => {
     expect(noSpendLine(new Set([SAT]), SAT)?.text).toBe("Nothing spent today ✓");
@@ -139,6 +153,10 @@ describe("noSpendLine", () => {
 
   it("says nothing unless today is confirmed", () => {
     expect(noSpendLine(new Set(["2026-11-20"]), SAT)).toBeNull();
+  });
+
+  it("names the day as the card does", () => {
+    expect(noSpendLine(new Set([SAT]), SAT, "yesterday")?.text).toBe("Nothing spent yesterday ✓");
   });
 });
 
@@ -231,6 +249,13 @@ describe("shareLines", () => {
       { kind: "kept_up", text: "Kept my log up today" },
     ]);
     expect(shareLines({ ...base, entries: [e("2026-11-20", 20)] })).toEqual([]);
+  });
+
+  it("covers yesterday after midnight, by name and without the new day's entries", () => {
+    const entries = [e(SAT, 20), e("2026-11-22", 500)];
+    expect(shareLines({ ...base, entries, dayWord: "yesterday" })).toEqual([
+      { kind: "kept_up", text: "Kept my log up yesterday" },
+    ]);
   });
 
   it("never puts an amount on the card", () => {
