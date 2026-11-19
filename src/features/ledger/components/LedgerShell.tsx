@@ -81,6 +81,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   // One buddy, never two (each would ask its own questions): in the right-hand column
   // on wide screens, at the end of the period row below that.
   const wide = useMediaQuery(ASIDE_QUERY);
+  const [aside, setAside] = useState<HTMLDivElement | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showBudgets, setShowBudgets] = useState(false);
@@ -105,6 +106,8 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
       {tip("buddy")}
       <BudgetBuddy
         ledger={ledger}
+        // In the column its bubble stays in the column; on phones it may use the screen.
+        bubbleBounds={wide ? aside : null}
         onStartReview={(m) =>
           navigate(ledgerPeriodPath(ledger.id, "stats", { kind: "month", key: m }, currentMonth))
         }
@@ -213,7 +216,9 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           </div>
           {/* The right-hand column, like the social log's comments: it holds the buddy on
               wide screens and keeps the main column centred against the sidebar. */}
-          <div className="Ledger__aside">{wide && buddy}</div>
+          <div ref={setAside} className="Ledger__aside">
+            {wide && buddy}
+          </div>
         </div>
       </div>
       <LogActionsModal

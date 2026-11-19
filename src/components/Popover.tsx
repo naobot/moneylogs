@@ -23,6 +23,11 @@ type PopoverProps = {
   onClose?: () => void;
   placement?: Placement;
   align?: Align;
+  /**
+   * An element (e.g. a page column) the panel stays inside horizontally, never wider
+   * than it. Without one, the panel only keeps to the viewport.
+   */
+  bounds?: HTMLElement | null;
   /** Tooltips aren't interactive: they ignore the pointer and don't dismiss on outside presses. */
   interactive?: boolean;
   className?: string;
@@ -44,6 +49,7 @@ export const Popover = ({
   onClose,
   placement = "bottom",
   align = "center",
+  bounds,
   interactive = true,
   className,
   role,
@@ -58,12 +64,14 @@ export const Popover = ({
     left: number;
     side: Placement;
     arrow: number;
+    maxWidth?: number;
   }>();
 
   const update = useCallback(() => {
     const panel = panelRef.current;
     if (!anchor || !panel) return;
     const rect = anchor.getBoundingClientRect();
+    const box = bounds?.getBoundingClientRect();
     const placed = computePosition(
       rect,
       { width: panel.offsetWidth, height: panel.offsetHeight },
@@ -71,9 +79,14 @@ export const Popover = ({
       { width: window.innerWidth, height: visibleViewportHeight() },
       placement,
       align,
+      box && { left: box.left, right: box.right },
     );
-    setPosition({ ...placed, arrow: arrowOffset(rect, placed.left, panel.offsetWidth) });
-  }, [anchor, placement, align]);
+    setPosition({
+      ...placed,
+      arrow: arrowOffset(rect, placed.left, panel.offsetWidth),
+      maxWidth: box?.width,
+    });
+  }, [anchor, placement, align, bounds]);
 
   useLayoutEffect(() => {
     // Positioned before paint, so a reopened panel never shows at its old spot.
@@ -123,6 +136,7 @@ export const Popover = ({
         top: position.top,
         left: position.left,
         "--popover-arrow-x": `${position.arrow}px`,
+        ...(position.maxWidth !== undefined && { maxWidth: position.maxWidth }),
       } as CSSProperties)
     : { top: 0, left: 0, visibility: "hidden" };
 

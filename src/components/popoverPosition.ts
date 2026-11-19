@@ -9,9 +9,13 @@ type Size = { width: number; height: number };
 const GAP = 6; // between anchor and panel
 const MARGIN = 8; // kept clear of the viewport edges
 
+/** A horizontal stretch a panel must stay inside (e.g. a page column), in viewport px. */
+export type Bounds = { left: number; right: number };
+
 /**
  * Where to put a panel of `panel` size next to `anchor`, preferring `placement` but
- * flipping when the other side has more room, and sliding sideways to stay on screen.
+ * flipping when the other side has more room, and sliding sideways to stay on screen,
+ * and inside `bounds` when given.
  */
 export const computePosition = (
   anchor: Rect,
@@ -19,6 +23,7 @@ export const computePosition = (
   viewport: Size,
   placement: Placement = "bottom",
   align: Align = "center",
+  bounds?: Bounds,
 ): { top: number; left: number; side: Placement } => {
   const below = viewport.height - anchor.bottom - GAP - MARGIN;
   const above = anchor.top - GAP - MARGIN;
@@ -33,8 +38,9 @@ export const computePosition = (
       : align === "end"
         ? anchor.right - panel.width
         : anchor.left + anchor.width / 2 - panel.width / 2;
-  const maxLeft = viewport.width - panel.width - MARGIN;
-  const left = Math.max(MARGIN, Math.min(preferredLeft, maxLeft));
+  const minLeft = Math.max(MARGIN, bounds?.left ?? 0);
+  const maxLeft = Math.min(viewport.width - MARGIN, bounds?.right ?? viewport.width) - panel.width;
+  const left = Math.max(minLeft, Math.min(preferredLeft, maxLeft));
   return { top: Math.max(MARGIN, top), left, side };
 };
 

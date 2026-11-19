@@ -77,10 +77,13 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
 export const BudgetBuddy = ({
   ledger,
   onStartReview,
+  bubbleBounds,
 }: {
   ledger: Pick<Ledger, "id" | "categories">;
   /** Opens the stats for the month being reviewed. Without it the buddy doesn't ask. */
   onStartReview?: (month: string) => void;
+  /** The column the speech bubble keeps inside (and to its width), if any. */
+  bubbleBounds?: HTMLElement | null;
 }) => {
   const { user } = useCurrentUser();
   const find = useUnseenFind(user?.id, ledger.id);
@@ -302,6 +305,7 @@ export const BudgetBuddy = ({
         open={!!bubble}
         onClose={() => setBubble(null)}
         placement="bottom"
+        bounds={bubbleBounds}
         className={cx("BuddyBubble", { "BuddyBubble--find": bubble?.teaser })}
         role="dialog"
         aria-label="Budget buddy says"
