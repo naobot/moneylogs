@@ -25,7 +25,11 @@ vi.mock("@/hooks/useProfiles", () => ({
   }),
 }));
 vi.mock("@/hooks/useFriendships", () => ({
-  useFriendships: () => ({ stateWith: () => state.friendState, isLoading: false }),
+  useFriendships: () => ({
+    stateWith: () => state.friendState,
+    uidOf: () => null,
+    isLoading: false,
+  }),
   requestFriend: (...args: unknown[]) => state.requestFriend(...args),
   respondFriend: vi.fn(),
 }));

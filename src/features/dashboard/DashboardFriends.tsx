@@ -1,12 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+import Avatar from "@/components/Avatar";
+import Popover from "@/components/Popover";
 import { useProfiles } from "@/hooks/useProfiles";
 import {
   MemberProfile,
   MemberProfilesContext,
+  useMemberProfile,
 } from "@/features/moneylog/components/LogPosts/memberNames";
-import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
+import NudgeActions from "@/features/nudges/NudgeActions";
+import NudgeBubble from "@/features/nudges/NudgeBubble";
+import { Nudge, nudgedFirst } from "@/features/nudges/nudges";
+import { useNudges } from "@/features/nudges/useNudges";
 
 import { useFriendsByActivity } from "./useFriendsByActivity";
 
@@ -14,12 +20,16 @@ import { useFriendsByActivity } from "./useFriendsByActivity";
 export const DASHBOARD_FRIENDS = 12;
 
 /**
- * Your friends on the dashboard, avatar and name, each linking to their profile. They're
- * ordered by who was around most recently, which the page deliberately doesn't spell
- * out: it just tends to put the people you're likely to hear from on top.
+ * Your friends on the dashboard, avatar and name. Tapping one opens a little menu to
+ * poke them, cheer them on or visit their profile; anything they've sent you shows as
+ * a bouncing "!" over their avatar. They're ordered by who was around most recently,
+ * which the page deliberately doesn't spell out (anyone with something waiting for you
+ * comes first, so it's never cut off).
  */
 export const DashboardFriends = () => {
-  const { friends, isLoading } = useFriendsByActivity();
+  const { friends: byActivity, uidOf, isLoading } = useFriendsByActivity();
+  const nudges = useNudges();
+  const friends = useMemo(() => nudgedFirst(byActivity, nudges), [byActivity, nudges]);
   const shown = friends.slice(0, DASHBOARD_FRIENDS);
   const { profiles, isLoading: profilesLoading } = useProfiles(shown);
   const memberProfiles = useMemo(
@@ -52,7 +62,7 @@ export const DashboardFriends = () => {
           <ul className="DashboardFriends__list" aria-label="friends">
             {shown.map((id) => (
               <li key={id}>
-                <MemberAvatarLink userDocId={id} withName />
+                <DashboardFriend userDocId={id} uid={uidOf(id)} nudge={nudges.get(id)} />
               </li>
             ))}
           </ul>
@@ -64,6 +74,64 @@ export const DashboardFriends = () => {
         </MemberProfilesContext.Provider>
       )}
     </section>
+  );
+};
+
+/** One friend: avatar and name opening the poke / cheer / profile menu. */
+const DashboardFriend = ({
+  userDocId,
+  uid,
+  nudge,
+}: {
+  userDocId: string;
+  uid: string | null;
+  nudge?: Nudge;
+}) => {
+  const profile = useMemberProfile(userDocId);
+  const name = profile?.displayName ?? "someone";
+  const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="DashboardFriends__friend">
+      <button
+        ref={setAnchor}
+        type="button"
+        className="DashboardFriends__person"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Avatar avatar={profile?.avatar} name={name} size={30} />
+        <span className="DashboardFriends__name keep-case">{name}</span>
+      </button>
+      {nudge && (
+        <span className="DashboardFriends__nudge">
+          <NudgeBubble nudge={nudge} name={name} />
+        </span>
+      )}
+      <Popover
+        anchor={anchor}
+        open={open}
+        onClose={() => setOpen(false)}
+        placement="bottom"
+        align="start"
+        role="menu"
+        aria-label={name}
+        className="DashboardFriends__menu"
+      >
+        <NudgeActions
+          userDocId={userDocId}
+          toUid={uid}
+          name={name}
+          inline
+          onCheered={() => setOpen(false)}
+        />
+        <Link to={`/u/${userDocId}`} className="DashboardFriends__profile" role="menuitem">
+          profile →
+        </Link>
+      </Popover>
+    </div>
   );
 };
 

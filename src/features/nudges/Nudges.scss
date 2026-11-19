@@ -1,0 +1,148 @@
+// Pokes and cheers between friends. Tokens only; emphasis is inversion.
+
+.NudgeActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__anchor {
+    display: inline-flex;
+  }
+
+  // Popover panel, or listed in place inside another menu.
+  &__cheers {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-1);
+  }
+
+  &__cheer {
+    display: block;
+    width: 100%;
+    padding: 0.2em 0.6em;
+    font: inherit;
+    font-size: 0.85em;
+    text-align: left;
+    color: var(--ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+}
+
+// The "!" over a friend's avatar: a small inverted block that keeps hopping until
+// it's read.
+.NudgeBubble__alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3em;
+  height: 1.3em;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--inverse-ink);
+  background: var(--inverse-surface);
+  border: var(--border-hairline) solid var(--inverse-surface);
+  border-radius: var(--radius-none);
+  cursor: pointer;
+  animation: nudge-hop 1.1s ease-in-out infinite;
+
+  &:focus-visible {
+    outline: var(--border-hairline) dashed var(--ink);
+    outline-offset: 2px;
+  }
+
+  &[aria-expanded="true"] {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes nudge-hop {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-5px);
+  }
+  38% {
+    transform: translateY(1px);
+  }
+}
+
+// What they said: a speech bubble (--radius-bubble is the token for exactly this),
+// its tail pointing at the "!" (see BuddyBubble).
+.NudgeBubble {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: min(18em, calc(100vw - 32px));
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-width: var(--border-rule);
+  border-radius: var(--radius-bubble);
+  overflow: visible;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: var(--popover-arrow-x, 50%);
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    background: var(--paper);
+    border-top: var(--border-rule) solid var(--ink);
+    border-left: var(--border-rule) solid var(--ink);
+    transform: rotate(45deg);
+  }
+
+  &.Popover--top::before {
+    top: auto;
+    bottom: -7px;
+    transform: rotate(225deg);
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    padding: 0 0.2em;
+    font: inherit;
+    line-height: 1.2;
+    color: var(--ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+}

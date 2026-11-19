@@ -241,6 +241,13 @@ export const deleteUserData = async (db: Firestore, uid: string): Promise<Delete
       }
       bulk.delete(pair.ref).catch(failures.record(`delete friendship ${pair.id}`));
     }
+    // Pokes and cheers they sent or were sent (src/features/nudges).
+    for (const field of ["fromUid", "toUid"]) {
+      const nudges = await db.collection("nudges").where(field, "==", uid).get();
+      for (const nudge of nudges.docs) {
+        bulk.delete(nudge.ref).catch(failures.record(`delete nudge ${nudge.id}`));
+      }
+    }
     // Their invite links stop working.
     for (const me of userDocIds) {
       const invites = await db.collection("invites").where("inviterId", "==", me).get();

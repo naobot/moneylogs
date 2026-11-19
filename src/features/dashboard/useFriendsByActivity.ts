@@ -17,7 +17,7 @@ const friendsByActivityCallable = httpsCallable<void, { friends: string[] }>(
  * be fetched, friends show in their usual order.
  */
 export const useFriendsByActivity = () => {
-  const { friends, isLoading: friendsLoading } = useFriendships();
+  const { friends, uidOf, isLoading: friendsLoading } = useFriendships();
   const [order, setOrder] = useState<string[] | null | undefined>(undefined);
   const hasFriends = friends.length > 0;
 
@@ -40,6 +40,7 @@ export const useFriendsByActivity = () => {
 
   return {
     friends: orderFriends(friends, order ?? null),
+    uidOf,
     isLoading: friendsLoading || (hasFriends && order === undefined),
   };
 };

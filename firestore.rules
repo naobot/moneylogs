@@ -77,6 +77,48 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Pokes and cheers between friends (src/features/nudges): one doc per sender →
+    // recipient at {from}__{to}, merge-written by the sender with no read access, read and
+    // deleted by the recipient. A TTL policy on expireAt clears unread ones. The one get()
+    // of the friendship proves both the friendship and that from/to match their uids.
+    function nudgePairId(a, b) {
+      return a < b ? a + "__" + b : b + "__" + a;
+    }
+    function pairs(f, userDocId, uid) {
+      return (f.users[0] == userDocId && f.uids[0] == uid)
+        || (f.users[1] == userDocId && f.uids[1] == uid);
+    }
+    function validNudge(nudgeId) {
+      let d = request.resource.data;
+      let before = resource == null ? 0 : resource.data.pokes;
+      let f = get(/databases/$(database)/documents/friendships/$(nudgePairId(d.from, d.to))).data;
+      return request.auth != null
+        && d.keys().hasOnly(["from", "to", "fromUid", "toUid", "pokes", "cheer", "at", "expireAt"])
+        && d.fromUid == request.auth.uid
+        && d.from is string && d.to is string && d.from != d.to
+        && nudgeId == d.from + "__" + d.to
+        && (resource == null
+          || (d.from == resource.data.from && d.to == resource.data.to
+            && d.fromUid == resource.data.fromUid && d.toUid == resource.data.toUid))
+        && d.pokes is int && d.pokes >= before && d.pokes <= before + 50
+        && (!("cheer" in d) || d.cheer == null || d.cheer in [
+          // src/features/nudges/cheers.ts
+          "got_this", "proud", "keep_going", "one_day", "small_wins",
+          "treat", "rooting", "high_five", "thinking", "budget_hero"
+        ])
+        && d.at == request.time
+        && d.expireAt is timestamp
+        && d.expireAt > request.time
+        && d.expireAt <= request.time + duration.value(15, "d")
+        && f.status == "accepted"
+        && pairs(f, d.from, d.fromUid)
+        && pairs(f, d.to, d.toUid);
+    }
+    match /nudges/{nudgeId} {
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.toUid;
+      allow create, update: if validNudge(nudgeId);
+    }
+
     // Personal invite links: code → inviter. Only the invite callables touch these.
     match /invites/{code} {
       allow read, write: if false;

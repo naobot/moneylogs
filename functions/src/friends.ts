@@ -149,6 +149,9 @@ const apply = (tx: Transaction, action: FriendAction, { db, me, other, pairRef }
     case "delete":
       tx.delete(pairRef);
       clearRequests();
+      // Pokes and cheers still waiting either way (src/features/nudges) go too.
+      tx.delete(db.collection("nudges").doc(`${me.id}__${other.id}`));
+      tx.delete(db.collection("nudges").doc(`${other.id}__${me.id}`));
       return;
     case "noop":
       return;

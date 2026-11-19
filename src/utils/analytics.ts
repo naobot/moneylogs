@@ -50,6 +50,8 @@ export type AnalyticsEvents = {
   send_friend_request: Record<string, never>;
   accept_friend: Record<string, never>;
   gift_knickknack: Record<string, never>;
+  send_nudge: { kind: "poke" | "cheer" };
+  read_nudge: Record<string, never>;
   share: { method: "copy"; content_type: ShareContent };
 
   // Navigation

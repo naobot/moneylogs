@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({
   removeFriend: vi.fn((..._args: unknown[]) => Promise.resolve()),
 }));
 vi.mock("@/hooks/useFriendships", () => ({
-  useFriendships: () => ({ stateWith: () => "friends", isLoading: false }),
+  useFriendships: () => ({ stateWith: () => "friends", uidOf: () => null, isLoading: false }),
   removeFriend: (...args: unknown[]) => state.removeFriend(...args),
   requestFriend: vi.fn(),
   respondFriend: vi.fn(),
