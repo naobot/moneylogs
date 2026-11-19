@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
@@ -16,6 +16,7 @@ import {
   periodOf,
   periodSearchParams,
   samePeriod,
+  ledgerPeriodPath,
   shiftPeriod,
 } from "@/utils/ledgerPeriods";
 import CopyTextArea from "@/features/layout/components/CopyTextArea";
@@ -69,6 +70,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const { user } = useCurrentUser();
   const { tip } = useLedgerTour();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showBudgets, setShowBudgets] = useState(false);
@@ -177,7 +179,14 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               {/* Always about this month, whichever period is being browsed. */}
               <div className="Ledger__month__buddy">
                 {tip("buddy")}
-                <BudgetBuddy ledger={ledger} />
+                <BudgetBuddy
+                  ledger={ledger}
+                  onStartReview={(m) =>
+                    navigate(
+                      ledgerPeriodPath(ledger.id, "stats", { kind: "month", key: m }, currentMonth),
+                    )
+                  }
+                />
               </div>
             </nav>
 

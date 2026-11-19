@@ -114,6 +114,17 @@ service cloud.firestore {
     match /users/{userDocId}/noSpendDays/{day} {
       allow read: if ownsUserDoc(userDocId);
     }
+    // The buddy's month-start review (src/features/ledger/buddy/monthReview.ts): the
+    // owner's own answer per log and month. Not a reward input, so the client writes it.
+    match /users/{userDocId}/monthReviews/{reviewId} {
+      allow read: if ownsUserDoc(userDocId);
+      allow create, update: if ownsUserDoc(userDocId)
+        && request.resource.data.keys().hasOnly(["status", "snoozedUntil", "updatedAt"])
+        && request.resource.data.status in ["snoozed", "dismissed", "reviewing", "done"]
+        && (request.resource.data.snoozedUntil == null
+          || request.resource.data.snoozedUntil is string)
+        && request.resource.data.updatedAt == request.time;
+    }
     match /users/{userDocId}/knickknacks/{findId} {
       // Owner only: how many of anything someone has is private. Other people see the
       // shelves/ mirror instead, which lists each kept item once. The one exception: a

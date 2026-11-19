@@ -48,6 +48,7 @@ values in bold. Those are the ones that get missed.
 | Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}` |
 | This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                   |
 | Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                            |
+| Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)        |
 | Device        | **first visit** · returning · stored theme / drawers / dismissed tips                                                                              | `ML__*` keys in browser storage                                                                               |
 | Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)**                                                                               | `data-theme`, `isNative()`                                                                                    |
 
@@ -97,6 +98,7 @@ As: `lapsed@test.com`.
 
 - Home and the personal log open on the current, empty month without errors or misleading "over budget" leftovers.
 - Old months, stats and the buddy still make sense; no tour or nudge reappears.
+- On the 1st–3rd after an empty month the buddy doesn't offer a month review; it only asks when last month had entries.
 - Nothing that counts "since your last visit" overflows or reads oddly after months.
 
 ### F6. Spectator and signed out

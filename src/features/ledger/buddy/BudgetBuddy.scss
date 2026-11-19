@@ -124,3 +124,12 @@
     }
   }
 }
+
+// Choices under a question (the month-start review), wrapping on narrow screens.
+.BuddyBubble__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}

@@ -182,6 +182,33 @@
   }
 }
 
+// The buddy's month-start review, above last month's stats: a 2px frame with an
+// inverted header, like a tool modal.
+.MonthReview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4);
+  border: var(--border-rule) solid var(--ink);
+  background-color: var(--sheet);
+
+  &__header {
+    @include surfaces.strip(var(--space-2) var(--space-4));
+    margin: 0 calc(-1 * var(--space-4));
+    font-size: 0.9em;
+  }
+
+  &__text {
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+}
+
 .EntryForm {
   position: relative;
   display: flex;

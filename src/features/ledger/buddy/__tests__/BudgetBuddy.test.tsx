@@ -13,6 +13,10 @@ const state = vi.hoisted(() => ({
   unseenFindArgs: [] as unknown[],
   noSpend: new Set<string>(),
   noSpendLoaded: true,
+  review: null as null | { status: string; snoozedUntil?: string },
+  reviewLoaded: true,
+  reviewArgs: [] as unknown[],
+  saveMonthReview: vi.fn((..._args: unknown[]) => Promise.resolve()),
 }));
 
 vi.mock("@/contexts", () => ({
@@ -29,6 +33,14 @@ vi.mock("@/hooks/useNoSpendDays", () => ({
   useNoSpendDays: () => ({ days: state.noSpend, isSuccess: state.noSpendLoaded }),
 }));
 
+vi.mock("@/hooks/useMonthReview", () => ({
+  useMonthReview: (...args: unknown[]) => {
+    state.reviewArgs = args;
+    return { state: state.review, isLoaded: state.reviewLoaded };
+  },
+  saveMonthReview: state.saveMonthReview,
+}));
+
 vi.mock("../knickknacks/useUnseenFinds", () => ({
   useUnseenFind: (userDocId?: string, ledgerId?: string) => {
     state.unseenFindArgs = [userDocId, ledgerId];
@@ -39,7 +51,7 @@ vi.mock("../knickknacks/useUnseenFinds", () => ({
 
 import { BudgetBuddy, BUDDY_HOVER_DELAY } from "../BudgetBuddy";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES } from "../faces";
-import { CHECK_IN_LINES, NO_SPEND_LINES } from "../buddyComments";
+import { CHECK_IN_LINES, NO_SPEND_LINES, REVIEW_LINES } from "../buddyComments";
 import { KNICK_KNACKS } from "../knickknacks/catalog";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -396,5 +408,141 @@ describe("BudgetBuddy finds", () => {
     expect(bubble()!.classList.contains("BuddyBubble--find")).toBe(false);
     expect(bubble()!.querySelector(".BuddyBubble__teaser")).toBeNull();
     expect(state.markFindSeen).not.toHaveBeenCalled();
+  });
+});
+
+describe("BudgetBuddy month-start review", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+  const onStartReview = vi.fn();
+
+  const months = (octoberEntries: number) => ({
+    "2026-10": {
+      month: "2026-10",
+      entryCount: octoberEntries,
+      totals: { CAD: 300 },
+      byCategory: { food: { CAD: 300 } },
+      byMember: {},
+      byDay: { "05": { CAD: 300 } },
+    },
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    state.now = "2026-11-01T12:00:00Z";
+    state.isSuccess = true;
+    state.noSpend = new Set();
+    state.noSpendLoaded = true;
+    state.find = null;
+    state.review = null;
+    state.reviewLoaded = true;
+    state.byMonth = months(4);
+    state.saveMonthReview.mockClear();
+    onStartReview.mockClear();
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    document.querySelectorAll(".BuddyBubble").forEach((el) => el.remove());
+  });
+
+  const render = (withReview = true) =>
+    act(() =>
+      root.render(
+        <BudgetBuddy ledger={ledger} onStartReview={withReview ? onStartReview : undefined} />,
+      ),
+    );
+  const bubble = () => document.querySelector(".BuddyBubble");
+  const choice = (label: string) =>
+    [...document.querySelectorAll<HTMLButtonElement>(".BuddyBubble__actions button")].find(
+      (b) => b.textContent === label,
+    );
+  const isReviewLine = (text: string | null | undefined) =>
+    REVIEW_LINES.some((l) => text?.includes(l.replace("{month}", "october")));
+
+  it("asks about last month by itself on the 1st, with choices", () => {
+    render();
+    expect(state.reviewArgs).toEqual(["u1", "l1", "2026-10"]);
+    expect(isReviewLine(bubble()?.textContent)).toBe(true);
+    expect(choice("let's look")).toBeDefined();
+    expect(choice("ask me tomorrow")).toBeDefined();
+    expect(choice("not this month")).toBeDefined();
+  });
+
+  it("opens last month's stats and remembers it on “let's look”", () => {
+    render();
+    act(() => choice("let's look")!.click());
+    expect(state.saveMonthReview).toHaveBeenCalledWith("u1", "l1", "2026-10", {
+      status: "reviewing",
+    });
+    expect(onStartReview).toHaveBeenCalledWith("2026-10");
+    expect(bubble()).toBeNull();
+  });
+
+  it("snoozes until tomorrow, and drops that choice on the 3rd", () => {
+    render();
+    act(() => choice("ask me tomorrow")!.click());
+    expect(state.saveMonthReview).toHaveBeenCalledWith("u1", "l1", "2026-10", {
+      status: "snoozed",
+      snoozedUntil: "2026-11-02",
+    });
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    localStorage.clear();
+    state.now = "2026-11-03T12:00:00Z";
+    render();
+    expect(isReviewLine(bubble()?.textContent)).toBe(true);
+    expect(choice("ask me tomorrow")).toBeUndefined();
+    act(() => choice("not this month")!.click());
+    expect(state.saveMonthReview).toHaveBeenLastCalledWith("u1", "l1", "2026-10", {
+      status: "dismissed",
+    });
+  });
+
+  it("only opens by itself once a day, but a click asks again", () => {
+    render();
+    expect(bubble()).not.toBeNull();
+    act(() => {
+      container.querySelector<HTMLButtonElement>(".BudgetBuddy")!.click();
+    });
+    expect(bubble()).toBeNull();
+    act(() => root.unmount());
+    root = createRoot(container);
+    render();
+    expect(bubble()).toBeNull();
+    act(() => container.querySelector<HTMLButtonElement>(".BudgetBuddy")!.click());
+    expect(isReviewLine(bubble()?.textContent)).toBe(true);
+  });
+
+  it("stays quiet once answered, after the 3rd, after an empty month, or without a review", () => {
+    state.review = { status: "dismissed" };
+    render();
+    expect(bubble()).toBeNull();
+
+    state.review = null;
+    state.byMonth = months(0);
+    render();
+    expect(bubble()).toBeNull();
+
+    state.byMonth = months(4);
+    state.now = "2026-11-04T12:00:00Z";
+    render();
+    expect(bubble()).toBeNull();
+
+    state.now = "2026-11-01T12:00:00Z";
+    render(false);
+    expect(bubble()).toBeNull();
+    expect(state.reviewArgs[2]).toBeNull();
+  });
+
+  it("waits for a snooze to run out", () => {
+    state.review = { status: "snoozed", snoozedUntil: "2026-11-02" };
+    render();
+    expect(bubble()).toBeNull();
   });
 });
