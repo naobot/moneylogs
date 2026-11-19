@@ -207,7 +207,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         categories={ledger.categories ?? []}
         defaultCurrency={ledger.defaultCurrency}
         onClose={() => setShowCategories(false)}
-        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
+        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops, month: currentMonth })}
         checkInUse={(categoryId) => isCategoryUsed.mutate({ ledgerId: ledger.id, categoryId })}
       />
       <BudgetManager
@@ -215,7 +215,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         categories={ledger.categories ?? []}
         defaultCurrency={ledger.defaultCurrency}
         onClose={() => setShowBudgets(false)}
-        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
+        onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops, month: currentMonth })}
       />
       <ImportModal isOpen={showImport} ledger={ledger} onClose={() => setShowImport(false)} />
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>

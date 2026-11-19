@@ -250,6 +250,19 @@ service cloud.firestore {
         allow read: if isLedgerMember(ledgerId);
         allow write: if false;
       }
+
+      // The budgets a finished month had, kept by the first budget edit after it (see
+      // src/utils/budgetHistory.ts). Write-once: a later edit never rewrites history.
+      match /budgetSnapshots/{month} {
+        allow read: if isLedgerMember(ledgerId);
+        allow create: if isLedgerMember(ledgerId)
+          && month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && request.resource.data.keys().hasOnly(['budgets', 'names', 'snapshotAt'])
+          && request.resource.data.budgets is map
+          && request.resource.data.names is map
+          && request.resource.data.snapshotAt == request.time;
+        allow update, delete: if false;
+      }
     }
   }
 }
