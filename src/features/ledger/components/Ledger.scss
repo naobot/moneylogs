@@ -95,13 +95,13 @@
     text-align: center;
   }
 
-  // Period controls on the left, the budget buddy dead centre (the empty third column
-  // balances the controls). On phones there's no room to balance them, so the buddy
-  // takes the centre of the space beside the controls instead.
+  // Period controls dead centre, the budget buddy at the right end (the empty first
+  // column balances it). On phones there's no room to balance them, so the controls
+  // sit on the left and the buddy at the right end of the same line.
   &__month {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    grid-template-areas: "controls buddy .";
+    grid-template-areas: ". controls buddy";
     align-items: center;
     gap: 0.5em 0.75em;
     padding-bottom: 0.5em;
@@ -115,6 +115,7 @@
     &__controls {
       grid-area: controls;
       display: flex;
+      justify-content: center;
       flex-wrap: wrap;
       align-items: center;
       gap: 0.5em 0.75em;
@@ -123,7 +124,7 @@
 
     &__buddy {
       grid-area: buddy;
-      justify-self: center;
+      justify-self: end;
       min-height: 1.6em;
     }
 

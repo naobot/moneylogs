@@ -53,6 +53,7 @@ export const ledgerTourSteps = (isPersonal: boolean): readonly LedgerTourStep[] 
   {
     target: "buddy",
     text: "Your budget buddy keeps an eye on the month. Tap it any time.",
+    align: "end",
   },
 ];
 
