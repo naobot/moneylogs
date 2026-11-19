@@ -5,6 +5,7 @@ import {
   CardSpec,
   DrawOp,
   layoutCard,
+  readFont,
   textWidth,
   truncate,
   wrapText,
@@ -139,5 +140,13 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
         expect(o.y).toBeLessThan(top);
       }
     }
+  });
+});
+
+describe("readFont", () => {
+  it("reads the typeface from --font-mono", () => {
+    document.documentElement.style.setProperty("--font-mono", "Hack, monospace");
+    expect(readFont()).toBe("Hack, monospace");
+    document.documentElement.style.removeProperty("--font-mono");
   });
 });

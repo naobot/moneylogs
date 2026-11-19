@@ -457,8 +457,18 @@ export const readInks = (): Inks => {
   return { ink: ink || FALLBACK_INKS.ink, paper: paper || FALLBACK_INKS.paper };
 };
 
+const FALLBACK_FONT = "Hack, monospace";
+
+/** The app's typeface, from `--font-mono`. */
+export const readFont = (): string => {
+  if (typeof document === "undefined") return FALLBACK_FONT;
+  const font = getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
+  return font || FALLBACK_FONT;
+};
+
 // Kaomoji need glyphs Hack doesn't have; the system fonts fill in.
-const FONT_STACK = 'Hack, "Hiragino Sans", "Noto Sans", "Noto Sans Thai", sans-serif';
+const fontStack = (font: string) =>
+  `${font}, "Hiragino Sans", "Noto Sans", "Noto Sans Thai", sans-serif`;
 
 const tilePattern = (
   ctx: CanvasRenderingContext2D,
@@ -489,7 +499,13 @@ const fillStyle = (ctx: CanvasRenderingContext2D, fill: SliceFill, inks: Inks) =
       : tilePattern(ctx, fill, FILL_SCALE, inks);
 
 /** Run draw ops on a 2D context. */
-export const paintOps = (ctx: CanvasRenderingContext2D, ops: ReadonlyArray<DrawOp>, inks: Inks) => {
+export const paintOps = (
+  ctx: CanvasRenderingContext2D,
+  ops: ReadonlyArray<DrawOp>,
+  inks: Inks,
+  font: string = readFont(),
+) => {
+  const family = fontStack(font);
   ctx.textBaseline = "middle";
   for (const o of ops) {
     switch (o.op) {
@@ -511,7 +527,7 @@ export const paintOps = (ctx: CanvasRenderingContext2D, ops: ReadonlyArray<DrawO
         break;
       case "text":
         ctx.fillStyle = inks[o.fill];
-        ctx.font = `${o.weight} ${o.size}px ${FONT_STACK}`;
+        ctx.font = `${o.weight} ${o.size}px ${family}`;
         ctx.textAlign = o.align;
         ctx.fillText(o.text, o.x, o.y);
         break;
@@ -562,10 +578,13 @@ export const paintOps = (ctx: CanvasRenderingContext2D, ops: ReadonlyArray<DrawO
   }
 };
 
-/** Make sure Hack is loaded before drawing with it (a canvas won't wait for it). */
-const loadFonts = async () => {
+/** Make sure the typeface is loaded before drawing with it (a canvas won't wait for it). */
+const loadFonts = async (font: string) => {
   if (typeof document === "undefined" || !document.fonts) return;
-  await Promise.all([document.fonts.load("400 40px Hack"), document.fonts.load("700 40px Hack")]);
+  await Promise.all([
+    document.fonts.load(`400 40px ${font}`),
+    document.fonts.load(`700 40px ${font}`),
+  ]);
 };
 
 /** The card as a PNG. */
@@ -573,15 +592,16 @@ export const renderCard = async (
   spec: CardSpec,
   format: CardFormat,
   inks: Inks = readInks(),
+  font: string = readFont(),
 ): Promise<Blob> => {
-  await loadFonts();
+  await loadFonts(font);
   const { width, height } = CARD_SIZES[format];
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D isn't available");
-  paintOps(ctx, layoutCard(spec, format), inks);
+  paintOps(ctx, layoutCard(spec, format), inks, font);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Couldn't encode the card"))),
