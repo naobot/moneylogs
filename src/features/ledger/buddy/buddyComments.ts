@@ -184,3 +184,21 @@ export const buddyCheckInComment = (
   const lines = CHECK_IN_LINES[kind];
   return drowsy(lines[seed % lines.length], asleep, seed);
 };
+
+/**
+ * What it says when asking to look back at last month (the 1st to the 3rd). `{month}` is
+ * last month's name.
+ */
+export const REVIEW_LINES = [
+  "{month}'s all wrapped up! want to look back at it together?",
+  "a new month! shall we see how {month} went? ♪",
+  "psst… {month} is done. wanna go over it with me? (=^･ω･^=)",
+  "{month} is in the books! let's take a peek, then think about this month's budget~",
+] as const;
+
+/** Stable for the day (seed). */
+export const buddyReviewComment = (
+  month: string,
+  { asleep, seed }: Pick<BuddyState, "asleep" | "seed">,
+): string =>
+  drowsy(REVIEW_LINES[seed % REVIEW_LINES.length].replace("{month}", month), asleep, seed);

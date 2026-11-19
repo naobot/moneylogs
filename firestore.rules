@@ -114,6 +114,17 @@ service cloud.firestore {
     match /users/{userDocId}/noSpendDays/{day} {
       allow read: if ownsUserDoc(userDocId);
     }
+    // The buddy's month-start review (src/features/ledger/buddy/monthReview.ts): the
+    // owner's own answer per log and month. Not a reward input, so the client writes it.
+    match /users/{userDocId}/monthReviews/{reviewId} {
+      allow read: if ownsUserDoc(userDocId);
+      allow create, update: if ownsUserDoc(userDocId)
+        && request.resource.data.keys().hasOnly(["status", "snoozedUntil", "updatedAt"])
+        && request.resource.data.status in ["snoozed", "dismissed", "reviewing", "done"]
+        && (request.resource.data.snoozedUntil == null
+          || request.resource.data.snoozedUntil is string)
+        && request.resource.data.updatedAt == request.time;
+    }
     match /users/{userDocId}/knickknacks/{findId} {
       // Owner only: how many of anything someone has is private. Other people see the
       // shelves/ mirror instead, which lists each kept item once. The one exception: a
@@ -249,6 +260,19 @@ service cloud.firestore {
       match /months/{month} {
         allow read: if isLedgerMember(ledgerId);
         allow write: if false;
+      }
+
+      // The budgets a finished month had, kept by the first budget edit after it (see
+      // src/utils/budgetHistory.ts). Write-once: a later edit never rewrites history.
+      match /budgetSnapshots/{month} {
+        allow read: if isLedgerMember(ledgerId);
+        allow create: if isLedgerMember(ledgerId)
+          && month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && request.resource.data.keys().hasOnly(['budgets', 'names', 'snapshotAt'])
+          && request.resource.data.budgets is map
+          && request.resource.data.names is map
+          && request.resource.data.snapshotAt == request.time;
+        allow update, delete: if false;
       }
     }
   }

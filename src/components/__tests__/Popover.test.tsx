@@ -42,6 +42,18 @@ describe("computePosition", () => {
     expect(computePosition(anchorAt(100, 390), panel, viewport, "bottom", "start").left).toBe(192);
     expect(computePosition(anchorAt(100, 0), panel, viewport, "bottom", "end").left).toBe(8);
   });
+
+  it("keeps the panel inside bounds, such as a page column", () => {
+    const column = { left: 150, right: 380 };
+    // Centred would start at 100; the column starts at 150.
+    expect(
+      computePosition(anchorAt(100, 190), panel, viewport, "bottom", "center", column).left,
+    ).toBe(150);
+    // Near the column's right edge it slides left to end there.
+    expect(
+      computePosition(anchorAt(100, 350), panel, viewport, "bottom", "center", column).left,
+    ).toBe(180);
+  });
 });
 
 describe("arrowOffset", () => {

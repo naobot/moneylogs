@@ -3,33 +3,85 @@
 @use "@/surfaces.scss";
 
 .Ledger {
-  // Phones: the shared log header's three columns can't hold a ledger's actions (manage,
-  // categories, import, invite, spots left), which pushed the page sideways. Kind and
-  // title share the top row; the actions get their own row and wrap.
+  // Phones: one row like on wide screens (kind · title · actions), but the side columns
+  // can't be equal widths there without pushing the page sideways, so each side takes
+  // what it needs and the title is centred in the space between. The kind ellipsises
+  // first, and "(2 spots left)" shortens to "(2 left)".
   > .Group__header {
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      grid-template-areas:
-        "left center"
-        "right right";
-      grid-gap: 0.5em 1em;
+      grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+      grid-gap: 0.75em;
 
-      .Group__header__left {
-        grid-area: left;
-      }
-
+      .Group__header__left,
       .Group__header__center {
-        grid-area: center;
-        justify-content: flex-end;
         min-width: 0;
       }
 
       .Group__header__right {
-        grid-area: right;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        row-gap: 0.5em;
+        grid-gap: 0.75em;
       }
+
+      .Ledger__kind {
+        display: block;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .Ledger__spots__long {
+        display: none;
+      }
+    }
+  }
+
+  // Sidebar · main column · aside, like the social log's members · posts · comments
+  // (.Group__body). The aside holds the buddy and mirrors the sidebar's width so the
+  // main column stays centred. Below md the sidebar becomes a strip on top, the aside
+  // goes and the buddy moves into the period row.
+  &__layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+
+    @media (max-width: constants.$breakpoint-md) {
+      flex-direction: column;
+      gap: 0.75em;
+    }
+
+    @media (min-width: constants.$breakpoint-md) {
+      justify-content: center;
+
+      // The side columns share what's left beside the main column, but never shrink
+      // below a usable width: the main column gives way first.
+      > .LedgerSidebar,
+      > .Ledger__aside {
+        flex: 1 1 0;
+        min-width: 10em;
+        max-width: var(--sidebar-width);
+      }
+
+      > .Ledger__body {
+        flex: 0 1 var(--main-width);
+      }
+    }
+  }
+
+  // The buddy sits centred at the top, level with the period row beside it.
+  &__aside {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    @media (max-width: constants.$breakpoint-md) {
+      display: none;
+    }
+
+    // Level with the middle of the period row beside it.
+    > .Ledger__month__buddy {
+      padding-top: 0.15em;
     }
   }
 
@@ -39,11 +91,15 @@
     grid-gap: 1em;
     width: 100%;
     max-width: var(--main-width);
-    align-self: center;
-    flex: 1;
+    min-width: 0;
     min-height: 0;
     overflow-y: auto;
     padding-bottom: 1em;
+
+    @media (max-width: constants.$breakpoint-md) {
+      align-self: center;
+      flex: 1;
+    }
   }
 
   &__empty {
@@ -52,27 +108,27 @@
     text-align: center;
   }
 
-  // Month controls on the left, the budget buddy dead centre, the view switch on the
-  // right. On phones the buddy gets its own row on top.
+  // Period controls dead centre, the budget buddy at the right end (the empty first
+  // column balances it). On phones there's no room to balance them, so the controls
+  // sit on the left and the buddy at the right end of the same line.
   &__month {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    grid-template-areas: "controls buddy view";
+    grid-template-areas: ". controls buddy";
     align-items: center;
     gap: 0.5em 0.75em;
     padding-bottom: 0.5em;
     border-bottom: var(--border-rule) solid var(--ink);
 
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: 1fr auto;
-      grid-template-areas:
-        "buddy buddy"
-        "controls view";
+      grid-template-columns: auto 1fr;
+      grid-template-areas: "controls buddy";
     }
 
     &__controls {
       grid-area: controls;
       display: flex;
+      justify-content: center;
       flex-wrap: wrap;
       align-items: center;
       gap: 0.5em 0.75em;
@@ -81,27 +137,8 @@
 
     &__buddy {
       grid-area: buddy;
-      justify-self: center;
-      min-height: 1.6em;
-    }
-
-    // Switch between the entries and stats views (pushed to the right).
-    &__view {
-      grid-area: view;
       justify-self: end;
-      margin-left: auto;
-      padding: 0.1em 0.75em;
-      font-weight: 700;
-      color: var(--paper);
-      background: var(--ink);
-      border: var(--border-hairline) solid var(--ink);
-      text-decoration: none;
-
-      &:hover,
-      &:focus-visible {
-        color: var(--ink);
-        background: var(--paper);
-      }
+      min-height: 1.6em;
     }
 
     &__label {
@@ -113,6 +150,80 @@
 
 // Visually matches the social post editor (.LogPosts__posts__item--selected + its
 // header row): white card, 2px border, small bold label-less controls.
+// The left column: views, then stats periods. Rows come from .LogsMenu__item; these are
+// links, so they keep the menu's ink instead of link styling.
+.LedgerSidebar {
+  gap: 1em;
+
+  @media (max-width: constants.$breakpoint-md) {
+    font-size: 0.8em;
+    gap: var(--space-5);
+    padding-right: 0;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+
+    @media (max-width: constants.$breakpoint-md) {
+      flex-direction: row;
+      flex-shrink: 0;
+    }
+  }
+
+  // Periods are a sub-choice, so they sit a step quieter than the views.
+  &__group + &__group {
+    padding-top: 1em;
+    border-top: var(--border-hairline) dotted var(--ink);
+
+    @media (max-width: constants.$breakpoint-md) {
+      padding-top: 0;
+      border-top: 0;
+      padding-left: var(--space-5);
+      border-left: var(--border-hairline) dotted var(--ink);
+    }
+  }
+
+  &__item {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 700;
+
+    &--period {
+      font-weight: 400;
+      border-width: var(--border-hairline);
+    }
+  }
+}
+
+// The buddy's month-start review, above last month's stats: a 2px frame with an
+// inverted header, like a tool modal.
+.MonthReview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4);
+  border: var(--border-rule) solid var(--ink);
+  background-color: var(--sheet);
+
+  &__header {
+    @include surfaces.strip(var(--space-2) var(--space-4));
+    margin: 0 calc(-1 * var(--space-4));
+    font-size: 0.9em;
+  }
+
+  &__text {
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+}
+
 .EntryForm {
   position: relative;
   display: flex;
@@ -520,6 +631,11 @@
 // One category's settings: titles on the line with their inputs, fine print at the end
 // of each section.
 .CategoryDetail {
+  // The category's name over its budget (Budgets window, where it isn't editable).
+  &__title {
+    margin: 0 0 0.25em;
+  }
+
   &__section {
     padding: 0.6em 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
@@ -620,14 +736,9 @@
   }
 }
 
-// Monthly budgets per category: name left, amount and its currency right.
+// The Budgets window: the Categories window's list + detail (see .CategoryManager),
+// plus the way into the budget helper.
 .BudgetManager {
-  &__hint {
-    margin: 0 0 0.25em;
-    font-size: 0.8em;
-    opacity: 0.7;
-  }
-
   // Entry to the budget helper: a quiet, centred text link, not a framed button.
   &__helper {
     display: block;
@@ -648,33 +759,12 @@
     }
   }
 
-  // After using a helper plan: what Save will do.
+  // After using a helper plan: that it's saved.
   &__notice {
     margin: 0 0 0.75em;
     padding: 0.5em 0.75em;
     border: var(--border-rule) dashed var(--ink);
     font-size: 0.8em;
-  }
-
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
-    padding: 0.4em 0;
-    border-bottom: var(--border-hairline) dashed var(--ink);
-  }
-
-  &__name {
-    min-width: 0;
-    font-weight: 700;
-    overflow-wrap: anywhere;
   }
 }
 

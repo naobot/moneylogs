@@ -35,3 +35,18 @@ export const friendState = (
 /** The other person in a friendship. */
 export const otherUser = (friendship: Pick<Friendship, "users">, me: string): string =>
   friendship.users[0] === me ? friendship.users[1] : friendship.users[0];
+
+/**
+ * Friends in the server's order, kept in step with the live friend list: ids the order
+ * doesn't know yet (a friend added since) go at the end, and ids no longer friends drop.
+ */
+export const orderFriends = (
+  friends: ReadonlyArray<string>,
+  order: ReadonlyArray<string> | null,
+): string[] => {
+  if (!order) return [...friends];
+  const current = new Set(friends);
+  const ordered = order.filter((id) => current.has(id));
+  const known = new Set(ordered);
+  return [...ordered, ...friends.filter((id) => !known.has(id))];
+};
