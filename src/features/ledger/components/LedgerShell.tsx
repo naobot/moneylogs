@@ -28,6 +28,7 @@ import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
 import LedgerSidebar from "./LedgerSidebar";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { creatorUid } from "@/utils/logOwnership";
 import { shareUrl } from "@/utils/shareUrl";
 import InviteFriends from "@/features/invites/FriendPicker";
@@ -35,6 +36,12 @@ import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
 import "./Ledger.scss";
+
+/**
+ * When the right-hand column shows (Ledger.scss hides it at max-width: md, 768px, where
+ * the layout stacks). One pixel past md so the two never disagree at exactly 768px.
+ */
+const ASIDE_QUERY = "(min-width: 769px)";
 
 export type LedgerShellContext = {
   /** The month shown on the entries view, or the month within the stats period. */
@@ -71,6 +78,9 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const { tip } = useLedgerTour();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  // One buddy, never two (each would ask its own questions): in the right-hand column
+  // on wide screens, at the end of the period row below that.
+  const wide = useMediaQuery(ASIDE_QUERY);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showBudgets, setShowBudgets] = useState(false);
@@ -88,6 +98,19 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const currentPeriod = periodOf(currentMonth, period.kind);
   const setPeriod = (next: Period) => setSearchParams(periodSearchParams(next, currentMonth));
   const setMonth = (next: string) => setPeriod({ kind: "month", key: next });
+
+  // Always about this month, whichever period is being browsed.
+  const buddy = (
+    <div className="Ledger__month__buddy">
+      {tip("buddy")}
+      <BudgetBuddy
+        ledger={ledger}
+        onStartReview={(m) =>
+          navigate(ledgerPeriodPath(ledger.id, "stats", { kind: "month", key: m }, currentMonth))
+        }
+      />
+    </div>
+  );
 
   return (
     <>
@@ -177,18 +200,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
                   </RowButton>
                 )}
               </div>
-              {/* Always about this month, whichever period is being browsed. */}
-              <div className="Ledger__month__buddy">
-                {tip("buddy")}
-                <BudgetBuddy
-                  ledger={ledger}
-                  onStartReview={(m) =>
-                    navigate(
-                      ledgerPeriodPath(ledger.id, "stats", { kind: "month", key: m }, currentMonth),
-                    )
-                  }
-                />
-              </div>
+              {!wide && buddy}
             </nav>
 
             {children({
@@ -199,8 +211,9 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               openBudgets: () => setShowBudgets(true),
             })}
           </div>
-          {/* Keeps the main column centred against the sidebar on wide screens. */}
-          <div className="Ledger__spacer" aria-hidden />
+          {/* The right-hand column, like the social log's comments: it holds the buddy on
+              wide screens and keeps the main column centred against the sidebar. */}
+          <div className="Ledger__aside">{wide && buddy}</div>
         </div>
       </div>
       <LogActionsModal

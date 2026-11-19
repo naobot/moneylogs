@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 import cx from "classnames";
 
 import { visibleViewportHeight } from "@/utils/keyboardInset";
-import { Align, computePosition, Placement } from "./popoverPosition";
+import { Align, arrowOffset, computePosition, Placement } from "./popoverPosition";
 import "./Popover.scss";
 
 type PopoverProps = {
@@ -53,21 +53,26 @@ export const Popover = ({
   children,
 }: PopoverProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{ top: number; left: number; side: Placement }>();
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+    side: Placement;
+    arrow: number;
+  }>();
 
   const update = useCallback(() => {
     const panel = panelRef.current;
     if (!anchor || !panel) return;
-    setPosition(
-      computePosition(
-        anchor.getBoundingClientRect(),
-        { width: panel.offsetWidth, height: panel.offsetHeight },
-        // Above the on-screen keyboard, not behind it.
-        { width: window.innerWidth, height: visibleViewportHeight() },
-        placement,
-        align,
-      ),
+    const rect = anchor.getBoundingClientRect();
+    const placed = computePosition(
+      rect,
+      { width: panel.offsetWidth, height: panel.offsetHeight },
+      // Above the on-screen keyboard, not behind it.
+      { width: window.innerWidth, height: visibleViewportHeight() },
+      placement,
+      align,
     );
+    setPosition({ ...placed, arrow: arrowOffset(rect, placed.left, panel.offsetWidth) });
   }, [anchor, placement, align]);
 
   useLayoutEffect(() => {
@@ -110,9 +115,15 @@ export const Popover = ({
 
   if (!open || !anchor) return null;
 
-  // Measured before it's shown, so it never flashes in the wrong place.
+  // Measured before it's shown, so it never flashes in the wrong place. Panels with a
+  // tail point it at the anchor with --popover-arrow-x (px from the panel's left edge),
+  // which stays right when the panel slides sideways to fit on screen.
   const style: CSSProperties = position
-    ? { top: position.top, left: position.left }
+    ? ({
+        top: position.top,
+        left: position.left,
+        "--popover-arrow-x": `${position.arrow}px`,
+      } as CSSProperties)
     : { top: 0, left: 0, visibility: "hidden" };
 
   return createPortal(

@@ -56,7 +56,7 @@
 }
 
 // What it says: a speech bubble (--radius-bubble is the token for exactly this),
-// with a small tail pointing up at the cat.
+// with a small tail pointing up at the cat (wherever the cat is: see Popover).
 .BuddyBubble {
   max-width: min(18em, calc(100vw - 32px));
   padding: var(--space-3) var(--space-4);
@@ -68,7 +68,8 @@
     content: "";
     position: absolute;
     top: -7px;
-    left: 50%;
+    // Under the cat, even when the bubble has slid sideways to stay on screen.
+    left: var(--popover-arrow-x, 50%);
     width: 10px;
     height: 10px;
     margin-left: -5px;

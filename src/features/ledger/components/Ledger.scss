@@ -35,9 +35,10 @@
     }
   }
 
-  // Sidebar · main column · spacer, like the social log's members · posts · comments
-  // (.Group__body). The spacer mirrors the sidebar so the main column stays centred.
-  // Below md the sidebar becomes a strip on top and the spacer goes.
+  // Sidebar · main column · aside, like the social log's members · posts · comments
+  // (.Group__body). The aside holds the buddy and mirrors the sidebar's width so the
+  // main column stays centred. Below md the sidebar becomes a strip on top, the aside
+  // goes and the buddy moves into the period row.
   &__layout {
     display: flex;
     gap: 20px;
@@ -54,7 +55,7 @@
       justify-content: center;
 
       > .LedgerSidebar,
-      > .Ledger__spacer {
+      > .Ledger__aside {
         flex: 1 1 0;
         min-width: 0;
         max-width: var(--sidebar-width);
@@ -66,9 +67,19 @@
     }
   }
 
-  &__spacer {
+  // The buddy sits centred at the top, level with the period row beside it.
+  &__aside {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
     @media (max-width: constants.$breakpoint-md) {
       display: none;
+    }
+
+    // Level with the middle of the period row beside it.
+    > .Ledger__month__buddy {
+      padding-top: 0.15em;
     }
   }
 
