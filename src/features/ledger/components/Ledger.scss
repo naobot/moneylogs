@@ -3,32 +3,34 @@
 @use "@/surfaces.scss";
 
 .Ledger {
-  // Phones: the shared log header's three columns can't hold a ledger's actions (manage,
-  // categories, import, invite, spots left), which pushed the page sideways. Kind and
-  // title share the top row; the actions get their own row and wrap.
+  // Phones: one row like on wide screens (kind · title · actions), but the side columns
+  // can't be equal widths there without pushing the page sideways, so each side takes
+  // what it needs and the title is centred in the space between. The kind ellipsises
+  // first, and "(2 spots left)" shortens to "(2 left)".
   > .Group__header {
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      grid-template-areas:
-        "left center"
-        "right right";
-      grid-gap: 0.5em 1em;
+      grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+      grid-gap: 0.75em;
 
-      .Group__header__left {
-        grid-area: left;
-      }
-
+      .Group__header__left,
       .Group__header__center {
-        grid-area: center;
-        justify-content: flex-end;
         min-width: 0;
       }
 
       .Group__header__right {
-        grid-area: right;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        row-gap: 0.5em;
+        grid-gap: 0.75em;
+      }
+
+      .Ledger__kind {
+        display: block;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .Ledger__spots__long {
+        display: none;
       }
     }
   }

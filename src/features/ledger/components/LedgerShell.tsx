@@ -94,7 +94,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
       <div className="Group Ledger">
         <div className="Group__header">
           <div className="Group__header__left">
-            <div className="Group__header__item">
+            <div className="Group__header__item Ledger__kind">
               {isShared ? `financial · ${ledger.memberUids.length} members` : "financial"}
             </div>
           </div>
@@ -134,9 +134,10 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
                 >
                   <IconText type={"plus"} fill={"white"} text="invite" />
                 </div>
-                <div className="Group__header__item">
+                <div className="Group__header__item Ledger__spots">
                   <small>
-                    ({spots} spot{spots > 1 && "s"} left)
+                    ({spots}
+                    <span className="Ledger__spots__long"> spot{spots > 1 && "s"}</span> left)
                   </small>
                 </div>
               </>
