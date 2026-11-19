@@ -195,10 +195,11 @@ describe("KnickKnackDrawer", () => {
     expect(reveal()!.textContent).not.toContain("deleted user");
   });
 
-  it("makes found items giftable once you have a friend; gifts you got are not", () => {
+  it("makes opened items giftable once you have a friend, gifts included but not milestones", () => {
     state.finds = [
       find("f1", "acorn", true),
       { ...find("f2", "holly", true), source: "gift", giftedBy: "mina", ledgerId: null },
+      { ...find("f3", "copper_coin", true), source: "milestone" },
     ];
     render();
     expect(container.querySelector(".KnickKnackDrawer__item--giftable")).toBeNull();
@@ -210,6 +211,7 @@ describe("KnickKnackDrawer", () => {
     );
     expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual([
       "Give one acorn to a friend",
+      "Give one holly to a friend",
     ]);
     act(() => buttons[0].click());
     expect(container.querySelector(".mock-gift-modal")!.textContent).toBe("give acorn to anyone");

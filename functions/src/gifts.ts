@@ -9,7 +9,6 @@ import { withSentryCall } from "./sentry";
 const BLOCK_MESSAGES = {
   missing: "That knick-knack isn't in your drawer any more.",
   unseen: "Open it first before giving it away.",
-  was_gift: "Gifts can't be passed on.",
   milestone: "Knick-knacks that come with an achievement stay with whoever earned them.",
 } as const;
 

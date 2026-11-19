@@ -1,19 +1,15 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
 import { KNICK_KNACK_IDS, KnickKnackId } from "./catalog";
-import { FOREST_SPIRIT_ID } from "./provenance";
 import type { KnickKnackFind } from "./useUnseenFinds";
 
 /**
- * A find can be given to a friend once you've seen it, and only if you found it
- * yourself (or got from the forest spirit): gifts from friends can't be passed on, and milestone knick-knacks
- * (the ones that come with an achievement) stay with whoever earned them. Mirrors
- * functions/src/giftsPlan.ts (canGift).
+ * A find can be given to a friend once you've seen it, gifts included (re-gifted), except
+ * milestone knick-knacks (the ones that come with an achievement), which stay with
+ * whoever earned them. Mirrors functions/src/giftsPlan.ts (canGift).
  */
-export const isGiftable = (find: Pick<KnickKnackFind, "seenAt" | "source" | "giftedBy">): boolean =>
-  find.seenAt != null &&
-  (find.source !== "gift" || find.giftedBy === FOREST_SPIRIT_ID) &&
-  find.source !== "milestone";
+export const isGiftable = (find: Pick<KnickKnackFind, "seenAt" | "source">): boolean =>
+  find.seenAt != null && find.source !== "milestone";
 
 const ms = (f: KnickKnackFind) => f.foundAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
 

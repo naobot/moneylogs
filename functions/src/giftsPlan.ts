@@ -1,8 +1,9 @@
 /**
  * Pure rules for gifting knick-knacks, kept free of the SDK for root Vitest.
  * A gift moves the find: it leaves the giver's drawer and arrives wrapped (unseen) in
- * the friend's. Only finds the giver found themselves (or got from the forest spirit),
- * and has already seen, can go: gifts from friends can't be passed on, and milestone knick-knacks stay with whoever earned them.
+ * the friend's. Any find the giver has already seen can go, gifts included (re-gifted,
+ * the new copy names the new giver), except milestone knick-knacks, which stay with
+ * whoever earned them.
  */
 
 const DOC_ID = /^[A-Za-z0-9_-]{1,128}$/;
@@ -23,15 +24,12 @@ export const parseGiftRequest = (data: unknown): { findId: string; toUserDocId: 
   return { findId, toUserDocId };
 };
 
-export type GiftBlock = "missing" | "unseen" | "was_gift" | "milestone";
+export type GiftBlock = "missing" | "unseen" | "milestone";
 
 /** Why a find can't be given, or null if it can. */
 export const giftBlock = (find: Record<string, unknown> | undefined): GiftBlock | null => {
   if (!find) return "missing";
   if (find.seenAt == null) return "unseen";
-  // Gifts from friends can't be passed on; the forest spirit's can (re-gifted, the new
-  // copy names the new giver).
-  if (find.source === "gift" && find.giftedBy !== FOREST_SPIRIT_ID) return "was_gift";
   // Milestones are earned, not found: they stay with the person who earned them.
   if (find.source === "milestone") return "milestone";
   return null;

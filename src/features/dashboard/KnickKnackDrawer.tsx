@@ -39,7 +39,7 @@ const AlertMark = () => (
  * Everything the budget buddies have found for you, on the dashboard. Always there,
  * even empty. Finds your buddy hasn't shown you yet, and gifts from friends, wait
  * behind centred alerts with a bouncing "!"; clicking one opens the reveal pop-up,
- * which is what completes the event. With a friend to give to, each knick-knack you found yourself is
+ * which is what completes the event. With a friend to give to, each opened knick-knack (except milestone ones) is
  * a button that gives one copy (after a confirmation). `?giftTo=<userDocId>` (from a
  * friend's profile) preselects who it goes to.
  */
@@ -106,7 +106,7 @@ export const KnickKnackDrawer = () => {
         <div className="KnickKnackDrawer__givingTo" role="status">
           <span className="keep-case">
             pick something to give to {givingToName}
-            {giftable.size ? "" : ". you don't have anything you found yourself to give yet"}
+            {giftable.size ? "" : ". you don't have anything to give yet"}
           </span>
           <RowButton onClick={stopGivingTo}>cancel</RowButton>
         </div>

@@ -30,15 +30,14 @@ type GiftModalProps = {
 
 /**
  * Confirm giving one copy of a knick-knack to a friend. That copy leaves your drawer
- * and arrives wrapped in theirs; your oldest copy you found yourself is the one that
- * goes. Render it only while open, so it starts fresh each time.
+ * and arrives wrapped in theirs; your oldest opened copy is the one that goes. Render it only while open, so it starts fresh each time.
  */
 export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProps) => {
   const { user } = useCurrentUser();
   const { showToast } = useToastContext();
   const { data: finds, isLoading: findsLoading } = useKnickKnackFinds(user?.id);
   const { friends, isLoading: friendsLoading } = useFriendships();
-  // Until both are in, "every one was a gift" or "add a friend first" would be a guess.
+  // Until both are in, "open it first" or "add a friend first" would be a guess.
   const isLoading = findsLoading || friendsLoading;
   const profiles = useProfiles(friends);
   const friendSelectId = useId();
@@ -88,8 +87,8 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
           <p>…</p>
         ) : !giftable.length ? (
           <p>
-            Every {itemName} you have was a gift, and gifts can't be passed on. Only knick-knacks
-            you found yourself can be given.
+            Open your {itemName} first, then you can give it away. Knick-knacks that come with an
+            achievement stay with whoever earned them.
           </p>
         ) : !friends.length ? (
           <p>Add a friend first. Gifts can only go to friends.</p>
@@ -110,8 +109,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
               </select>
             </div>
             <p className="GiftModal__note">
-              {giftLeftLine(itemName, owned)} it arrives wrapped in their drawer, and they can't
-              pass it on.
+              {giftLeftLine(itemName, owned)} it arrives wrapped in their drawer.
             </p>
           </>
         )}
