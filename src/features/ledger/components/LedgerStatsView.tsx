@@ -3,6 +3,7 @@ import { Ledger } from "@/types/ledger";
 import { formatMonth } from "@/utils/ledger";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsPanel } from "./LedgerStats";
+import PeriodStats from "./PeriodStats";
 
 type LedgerStatsViewProps = {
   ledger: Ledger;
@@ -11,7 +12,19 @@ type LedgerStatsViewProps = {
 /** The stats view of a financial log (/l/:ledgerId/stats). */
 export const LedgerStatsView = ({ ledger }: LedgerStatsViewProps) => (
   <LedgerShell ledger={ledger} view="stats">
-    {(ctx) => <MonthStats ledger={ledger} {...ctx} />}
+    {(ctx) =>
+      ctx.period.kind === "month" ? (
+        <MonthStats ledger={ledger} {...ctx} />
+      ) : (
+        <PeriodStats
+          key={ctx.period.key}
+          ledger={ledger}
+          period={ctx.period}
+          today={ctx.today}
+          onEditBudget={ctx.openBudgets}
+        />
+      )
+    }
   </LedgerShell>
 );
 

@@ -321,7 +321,7 @@ const pct = (share: number) => `${Math.round(share * 100)}%`;
  * Horizontal bars. Rows with a budget show progress toward it (capped fill, heavy border
  * when over); rows without show their share of the month's spending.
  */
-const ShareRows = ({
+export const ShareRows = ({
   rows,
   currency,
   label,
@@ -444,7 +444,7 @@ const BudgetSection = ({
  * A monochrome stacked bar: largest categories as distinct fills (drawn in the order set
  * in the Categories panel), the rest grouped at the end.
  */
-const CategoryBar = ({
+export const CategoryBar = ({
   shares,
   currency,
   categories,
