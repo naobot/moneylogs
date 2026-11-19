@@ -197,7 +197,6 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         categories={ledger.categories ?? []}
         defaultCurrency={ledger.defaultCurrency}
         onClose={() => setShowBudgets(false)}
-        isSaving={saveCategoryOps.isLoading}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops })}
       />
       <ImportModal isOpen={showImport} ledger={ledger} onClose={() => setShowImport(false)} />

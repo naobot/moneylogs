@@ -174,7 +174,7 @@ export const CategoryList = ({
   );
 };
 
-const SelectButton = ({
+export const SelectButton = ({
   category,
   selected,
   onSelect,

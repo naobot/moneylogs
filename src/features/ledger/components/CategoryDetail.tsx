@@ -1,10 +1,8 @@
 import { FormEvent, ReactNode, useId, useState } from "react";
 
 import Button from "@/components/Button";
-import RowButton from "@/components/RowButton";
 import { LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { CURRENCIES } from "@/utils/currency";
 import { MAX_CATEGORY_NAME_LENGTH } from "@/utils/ledger";
 import {
   BudgetDrafts,
@@ -12,7 +10,7 @@ import {
   CategoryOp,
   isFixedCategory,
 } from "@/utils/ledgerCategories";
-import { BudgetField } from "./BudgetManager";
+import CategoryBudget from "./CategoryBudget";
 
 export const FIXED_HELP =
   "Fixed costs like rent and bills still count toward the budget, but the buddy won't fuss over them or judge the month's pace by them.";
@@ -56,10 +54,7 @@ export const CategoryDetail = ({
 }: CategoryDetailProps) => {
   const { id, name, archived } = category;
   const [renaming, setRenaming] = useState<string | null>(null);
-  const [mixedOpen, setMixedOpen] = useState(false);
-  const [pickedCurrency, setPickedCurrency] = useState<Currency | null>(null);
   const nameId = useId();
-  const mixedId = useId();
   const fixedId = useId();
 
   const renameError = renaming !== null ? categoryNameError(renaming, all, id) : undefined;
@@ -70,28 +65,6 @@ export const CategoryDetail = ({
   };
 
   const fixed = isFixedCategory(category);
-  const budgeted = CURRENCIES.filter((c) => category.budget?.[c] !== undefined);
-  const unbudgeted = CURRENCIES.filter((c) => !budgeted.includes(c));
-  // The currency a new budget field starts in: the picked one, else the log's.
-  const newCurrency =
-    pickedCurrency && unbudgeted.includes(pickedCurrency)
-      ? pickedCurrency
-      : unbudgeted.includes(defaultCurrency)
-        ? defaultCurrency
-        : unbudgeted[0];
-
-  const newBudgetField = (label: string) => (
-    <BudgetField
-      category={category}
-      currency={newCurrency}
-      drafts={budgetDrafts}
-      label={label}
-      currencies={unbudgeted}
-      onChange={(raw) => onBudgetChange(newCurrency, raw)}
-      onBlur={onBudgetCommit}
-      onCurrencyChange={setPickedCurrency}
-    />
-  );
 
   return (
     <div className="CategoryDetail">
@@ -145,63 +118,14 @@ export const CategoryDetail = ({
       )}
 
       {!archived && (
-        <Section
-          help={
-            budgeted.length === 0
-              ? "Empty means no budget: spending here isn't tracked against a limit."
-              : "Spending is tracked against this each month. Remove it to stop budgeting this category."
-          }
-        >
-          {budgeted.length === 0 ? (
-            <div className="CategoryDetail__field">
-              <span className="CategoryDetail__label">monthly budget</span>
-              {newBudgetField(`Monthly budget for ${name}`)}
-            </div>
-          ) : (
-            <ul className="CategoryDetail__budgets" aria-label={`${name} budgets`}>
-              {budgeted.map((currency, i) => (
-                <li key={currency} className="CategoryDetail__field">
-                  <span className="CategoryDetail__label">{i === 0 ? "monthly budget" : ""}</span>
-                  <span className="CategoryDetail__budget">
-                    <BudgetField
-                      category={category}
-                      currency={currency}
-                      drafts={budgetDrafts}
-                      label={`${name} budget in ${currency}`}
-                      onChange={(raw) => onBudgetChange(currency, raw)}
-                      onBlur={onBudgetCommit}
-                    />
-                    <RowButton
-                      aria-label={`Remove ${name} budget in ${currency}`}
-                      onClick={() => onBudgetRemove(currency)}
-                    >
-                      remove
-                    </RowButton>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {budgeted.length > 0 && newCurrency && (
-            <>
-              <button
-                type="button"
-                className="CategoryDetail__drawerToggle"
-                aria-expanded={mixedOpen}
-                aria-controls={mixedId}
-                onClick={() => setMixedOpen((open) => !open)}
-              >
-                {mixedOpen ? "[− mixed currency budget]" : "[+ mixed currency budget]"}
-              </button>
-              {mixedOpen && (
-                <div id={mixedId} className="CategoryDetail__field CategoryDetail__drawer">
-                  <span className="CategoryDetail__label">also</span>
-                  {newBudgetField(`Monthly budget for ${name} in another currency`)}
-                </div>
-              )}
-            </>
-          )}
-        </Section>
+        <CategoryBudget
+          category={category}
+          defaultCurrency={defaultCurrency}
+          budgetDrafts={budgetDrafts}
+          onBudgetChange={onBudgetChange}
+          onBudgetCommit={onBudgetCommit}
+          onBudgetRemove={onBudgetRemove}
+        />
       )}
 
       <Section

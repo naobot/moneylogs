@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { AcceptedPlan, BudgetWizard } from "@/features/ledger/budgetWizard/BudgetWizard";
 import BudgetManager from "@/features/ledger/components/BudgetManager";
+import { ToastProvider } from "@/contexts/ToastContext";
 import { DEFAULT_CATEGORIES } from "@/utils/ledger";
 import { CategoryOp } from "@/utils/ledgerCategories";
 import { LedgerCategory } from "@/types/ledger";
@@ -189,62 +190,61 @@ describe("BudgetWizard", () => {
 });
 
 describe("Budgets window with the budget helper", () => {
-  it("fills the fields from the plan, then saves the reset and the budgets together", async () => {
-    const onSave = vi.fn<(ops: CategoryOp[]) => Promise<unknown>>(async () => {});
+  const renderBudgets = (
+    categories: LedgerCategory[],
+    onSave: (ops: CategoryOp[]) => Promise<unknown> = async () => {},
+  ) =>
     act(() =>
       root.render(
-        <BudgetManager
-          isOpen
-          categories={customised()}
-          defaultCurrency="JPY"
-          onClose={() => {}}
-          onSave={onSave}
-          isSaving={false}
-        />,
+        <ToastProvider>
+          <BudgetManager
+            isOpen
+            categories={categories}
+            defaultCurrency="JPY"
+            onClose={() => {}}
+            onSave={onSave}
+          />
+        </ToastProvider>,
       ),
     );
+
+  it("warns about the category reset on the plan step, then saves it with the budgets in one write", async () => {
+    const onSave = vi.fn<(ops: CategoryOp[]) => Promise<unknown>>(async () => {});
+    renderBudgets(customised(), onSave);
     click(button("Need help setting a budget?"));
     walkToPlan();
+    // Using the plan saves straight away, so the reset is spelled out right there.
+    expect(document.body.textContent).toContain("Using it will reset your categories");
+    expect(document.body.textContent).toContain("Archive Coffee");
     click(button("Use this plan"));
+    await act(async () => {});
 
-    // Back in the Budgets window, with the defaults' rows filled in and a notice.
-    expect(document.body.textContent).toContain("reset to the defaults when you save");
-    expect(byLabel("Monthly budget for Housing").value).toBe("100000");
-    expect(byLabel("Monthly budget for Groceries").value).not.toBe("");
-    expect(byLabel("Monthly budget for Coffee")).toBeNull(); // will be archived
-    type(byLabel("Monthly budget for Travel"), "5000"); // still adjustable
-
-    await act(async () => button("Save").click());
+    expect(onSave).toHaveBeenCalledTimes(1);
     const ops = onSave.mock.calls[0][0];
     const firstBudget = ops.findIndex((op) => op.type === "setBudget");
     // Category reset first, then budgets.
     expect(ops.slice(0, firstBudget)).toContainEqual({ type: "archive", id: "coffee" });
     expect(ops.slice(firstBudget).every((op) => op.type === "setBudget")).toBe(true);
-    expect(ops).toContainEqual({ type: "setBudget", id: "travel", currency: "JPY", amount: 5000 });
     expect(ops).toContainEqual({
       type: "setBudget",
       id: "housing",
       currency: "JPY",
       amount: 100_000,
     });
+
+    // Back in the Budgets window, saying so, with the budgets shown.
+    expect(document.body.textContent).toContain("The helper's plan is saved");
+    expect(document.body.textContent).toContain("100,000 JPY/mo");
+    expect(document.body.textContent).not.toContain("Coffee"); // archived
   });
 
-  it("goes back to the budgets untouched from the helper's first step", () => {
-    act(() =>
-      root.render(
-        <BudgetManager
-          isOpen
-          categories={defaults()}
-          defaultCurrency="JPY"
-          onClose={() => {}}
-          onSave={async () => {}}
-          isSaving={false}
-        />,
-      ),
-    );
+  it("goes back to the budgets untouched from the helper's first step", async () => {
+    const onSave = vi.fn<(ops: CategoryOp[]) => Promise<unknown>>(async () => {});
+    renderBudgets(defaults(), onSave);
     click(button("Need help setting a budget?"));
     click(button("Back to budgets"));
-    expect(byLabel("Monthly budget for Food").value).toBe("");
-    expect(button("Save").disabled).toBe(true);
+    await act(async () => {});
+    expect(document.querySelector('[aria-label="Category budgets"]')).not.toBeNull();
+    expect(onSave).not.toHaveBeenCalled();
   });
 });
