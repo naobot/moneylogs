@@ -42,6 +42,7 @@ export type AnalyticsEvents = {
   no_spend_day: Record<string, never>;
   delete_category: Record<string, never>;
   remove_budget: Record<string, never>;
+  stats_period: { period: "month" | "quarter" | "year" };
 
   // Social / profile
   update_profile: Record<string, never>;

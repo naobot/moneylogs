@@ -77,7 +77,6 @@ export const LedgerPreview = () => (
               {FACES.happy.resting[0]}
             </span>
           </div>
-          <span className="Ledger__month__view">stats ›</span>
         </nav>
 
         <LedgerStatsStrip

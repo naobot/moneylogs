@@ -33,17 +33,58 @@
     }
   }
 
+  // Sidebar · main column · spacer, like the social log's members · posts · comments
+  // (.Group__body). The spacer mirrors the sidebar so the main column stays centred.
+  // Below md the sidebar becomes a strip on top and the spacer goes.
+  &__layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+
+    @media (max-width: constants.$breakpoint-md) {
+      flex-direction: column;
+      gap: 0.75em;
+    }
+
+    @media (min-width: constants.$breakpoint-md) {
+      justify-content: center;
+
+      > .LedgerSidebar,
+      > .Ledger__spacer {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: var(--sidebar-width);
+      }
+
+      > .Ledger__body {
+        flex: 0 1 var(--main-width);
+      }
+    }
+  }
+
+  &__spacer {
+    @media (max-width: constants.$breakpoint-md) {
+      display: none;
+    }
+  }
+
   &__body {
     display: flex;
     flex-direction: column;
     grid-gap: 1em;
     width: 100%;
     max-width: var(--main-width);
-    align-self: center;
-    flex: 1;
+    min-width: 0;
     min-height: 0;
     overflow-y: auto;
     padding-bottom: 1em;
+
+    @media (max-width: constants.$breakpoint-md) {
+      align-self: center;
+      flex: 1;
+    }
   }
 
   &__empty {
@@ -52,22 +93,22 @@
     text-align: center;
   }
 
-  // Month controls on the left, the budget buddy dead centre, the view switch on the
-  // right. On phones the buddy gets its own row on top.
+  // Period controls on the left, the budget buddy dead centre (the empty third column
+  // balances the controls). On phones the buddy gets its own row on top.
   &__month {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    grid-template-areas: "controls buddy view";
+    grid-template-areas: "controls buddy .";
     align-items: center;
     gap: 0.5em 0.75em;
     padding-bottom: 0.5em;
     border-bottom: var(--border-rule) solid var(--ink);
 
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr;
       grid-template-areas:
-        "buddy buddy"
-        "controls view";
+        "buddy"
+        "controls";
     }
 
     &__controls {
@@ -85,25 +126,6 @@
       min-height: 1.6em;
     }
 
-    // Switch between the entries and stats views (pushed to the right).
-    &__view {
-      grid-area: view;
-      justify-self: end;
-      margin-left: auto;
-      padding: 0.1em 0.75em;
-      font-weight: 700;
-      color: var(--paper);
-      background: var(--ink);
-      border: var(--border-hairline) solid var(--ink);
-      text-decoration: none;
-
-      &:hover,
-      &:focus-visible {
-        color: var(--ink);
-        background: var(--paper);
-      }
-    }
-
     &__label {
       min-width: 8ch;
       text-align: center;
@@ -113,6 +135,53 @@
 
 // Visually matches the social post editor (.LogPosts__posts__item--selected + its
 // header row): white card, 2px border, small bold label-less controls.
+// The left column: views, then stats periods. Rows come from .LogsMenu__item; these are
+// links, so they keep the menu's ink instead of link styling.
+.LedgerSidebar {
+  gap: 1em;
+
+  @media (max-width: constants.$breakpoint-md) {
+    font-size: 0.8em;
+    gap: var(--space-5);
+    padding-right: 0;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+
+    @media (max-width: constants.$breakpoint-md) {
+      flex-direction: row;
+      flex-shrink: 0;
+    }
+  }
+
+  // Periods are a sub-choice, so they sit a step quieter than the views.
+  &__group + &__group {
+    padding-top: 1em;
+    border-top: var(--border-hairline) dotted var(--ink);
+
+    @media (max-width: constants.$breakpoint-md) {
+      padding-top: 0;
+      border-top: 0;
+      padding-left: var(--space-5);
+      border-left: var(--border-hairline) dotted var(--ink);
+    }
+  }
+
+  &__item {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 700;
+
+    &--period {
+      font-weight: 400;
+      border-width: var(--border-hairline);
+    }
+  }
+}
+
 .EntryForm {
   position: relative;
   display: flex;
