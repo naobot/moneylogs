@@ -5,7 +5,11 @@ import {
   sortAchievementsByGroupEnd,
   mergeGroupAchievements,
 } from "@/hooks/useAchievements";
-import type { Achievement, MilestoneAchievement } from "@/hooks/useAchievements";
+import type {
+  Achievement,
+  EngagementAchievement,
+  MilestoneAchievement,
+} from "@/hooks/useAchievements";
 import type { Group, LogPost } from "@/types/user";
 
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
@@ -399,6 +403,16 @@ describe("sortAchievementsByGroupEnd", () => {
     } as MilestoneAchievement;
     const sorted = sortAchievementsByGroupEnd([achievement("a", "jun", 100), coin], groups);
     expect(sorted.map((a) => a.id)).toEqual(["coin__silver_coin", "a"]);
+  });
+
+  it("places engagement achievements (no group) by when they were unlocked", () => {
+    const lucky = {
+      id: "engagement__super_lucky",
+      type: "super_lucky",
+      unlockedAt: { seconds: 0, toDate: () => new Date() },
+    } as EngagementAchievement;
+    const sorted = sortAchievementsByGroupEnd([lucky, achievement("a", "jun", 100)], groups);
+    expect(sorted.map((a) => a.id)).toEqual(["a", "engagement__super_lucky"]);
   });
 
   it("does not mutate the input array", () => {

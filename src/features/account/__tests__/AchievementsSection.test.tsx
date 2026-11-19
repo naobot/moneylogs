@@ -6,7 +6,11 @@ import { MemoryRouter } from "react-router-dom";
 vi.mock("@/config/firebase-config", () => ({ db: {} }));
 
 import { AchievementsSection } from "@/features/account/AchievementsSection";
-import type { Achievement, MilestoneAchievement } from "@/hooks/useAchievements";
+import type {
+  Achievement,
+  EngagementAchievement,
+  MilestoneAchievement,
+} from "@/hooks/useAchievements";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -50,5 +54,21 @@ describe("AchievementsSection", () => {
 
     const link = container.querySelector("a.AchievementsList__item")!;
     expect(link.getAttribute("href")).toBe("/g/g1");
+  });
+
+  it("shows an engagement achievement with its icon and description, not as a link", () => {
+    const gift = { id: "engagement__first_gift", type: "first_gift" } as EngagementAchievement;
+    act(() =>
+      root.render(
+        <MemoryRouter>
+          <AchievementsSection achievements={[gift]} />
+        </MemoryRouter>,
+      ),
+    );
+
+    expect(container.querySelector("a")).toBeNull();
+    const tile = container.querySelector(".AchievementsList__item")!;
+    expect(tile.getAttribute("aria-label")).toBe("Gift Giver: Gave a friend a first gift");
+    expect(tile.querySelector(".AchievementsList__item__icon")).not.toBeNull();
   });
 });

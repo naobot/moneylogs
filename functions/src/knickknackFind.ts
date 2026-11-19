@@ -1,4 +1,5 @@
 import { DocumentReference, FieldValue, Firestore } from "firebase-admin/firestore";
+import { awardEngagementQuietly } from "./awardEngagement";
 import { BudgetCategory, budgetPaceRatio, HISTORY_MONTHS, historyPaceRatio } from "./ledgerBudget";
 import {
   dayIn,
@@ -101,10 +102,14 @@ export const refreshLuckTier = async ({
   momentum: number;
 }): Promise<number> => {
   const luck = luckOf({ spending: await spendingAcrossLogs({ db, uid, today, now }), momentum });
+  const tier = luckTier(luck);
   await userRef
     .collection("luck")
     .doc("current")
-    .set({ tier: luckTier(luck), updatedAt: FieldValue.serverTimestamp() });
+    .set({ tier, updatedAt: FieldValue.serverTimestamp() });
+  if (tier === "super_lucky") {
+    await awardEngagementQuietly({ db, userId: userRef.id, type: "super_lucky" });
+  }
   return luck;
 };
 

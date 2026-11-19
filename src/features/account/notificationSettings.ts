@@ -33,7 +33,13 @@ export const NOTIFICATION_SETTING_GROUPS: ReadonlyArray<{
   },
   {
     title: "friends & finds",
-    keys: ["friend_request", "friend_accepted", "gift_received", "milestone_earned"],
+    keys: [
+      "friend_request",
+      "friend_accepted",
+      "gift_received",
+      "milestone_earned",
+      "achievement_earned",
+    ],
   },
 ];
 

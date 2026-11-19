@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
 
-import { ACHIEVEMENT_META, HeldAchievement, isMilestoneAchievement } from "@/hooks/useAchievements";
+import {
+  ACHIEVEMENT_META,
+  HeldAchievement,
+  isEngagementAchievement,
+  isMilestoneAchievement,
+} from "@/hooks/useAchievements";
 import Icon from "@/components/Icon";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import { MILESTONE_ACHIEVEMENTS } from "@/features/ledger/buddy/knickknacks/milestoneAchievements";
+import { ENGAGEMENT_ACHIEVEMENTS } from "@/utils/engagementAchievements";
 
 import "@/features/moneylog/components/LogsSummary/styles.scss";
 
@@ -16,8 +22,8 @@ export const AchievementsSection = ({ achievements }: AchievementsSectionProps) 
   if (achievements.length === 0) {
     return (
       <p className="GroupArchive__empty">
-        No achievements yet. They are awarded when a log group ends, and for habits like keeping up
-        a financial log.
+        No achievements yet. They are awarded when a log group ends, for habits like keeping up a
+        financial log, and for trying things like gifting a knick-knack.
       </p>
     );
   }
@@ -40,6 +46,25 @@ export const AchievementsSection = ({ achievements }: AchievementsSectionProps) 
               <div className="AchievementsList__item__text">
                 <strong>{milestone.title}</strong>
                 <span>{milestone.description}</span>
+              </div>
+            </div>
+          );
+        }
+        if (isEngagementAchievement(achievement)) {
+          // Not tied to one log either, so not a link.
+          const engagement = ENGAGEMENT_ACHIEVEMENTS[achievement.type];
+          return (
+            <div
+              key={achievement.id}
+              className="AchievementsList__item"
+              aria-label={`${engagement.title}: ${engagement.description}`}
+            >
+              <span className="AchievementsList__item__icon" aria-hidden="true">
+                <Icon type={engagement.icon} />
+              </span>
+              <div className="AchievementsList__item__text">
+                <strong>{engagement.title}</strong>
+                <span>{engagement.description}</span>
               </div>
             </div>
           );

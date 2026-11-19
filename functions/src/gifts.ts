@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { awardEngagementQuietly } from "./awardEngagement";
 import { pairId } from "./friendsPlan";
 import { giftBlock, giftNotificationId, parseGiftRequest } from "./giftsPlan";
 import { isNotificationEnabled } from "./notificationPrefs";
@@ -68,6 +69,7 @@ export const giftKnickKnack = onCall(
       }
     });
 
+    await awardEngagementQuietly({ db, userId: me.id, type: "first_gift" });
     return { ok: true };
   }),
 );
