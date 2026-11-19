@@ -117,7 +117,7 @@ const DailyShare = ({
   });
   const isLoading =
     q0.isLoading || q1.isLoading || q2.isLoading || !noSpend.isSuccess || keepsakes.isLoading;
-  const isError = q0.isError || q1.isError || q2.isError;
+  const isError = q0.isError || q1.isError || q2.isError || noSpend.isError;
 
   const spec: CardSpec | null = lines.length
     ? {
