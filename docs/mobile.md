@@ -10,6 +10,7 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 - Android builds need JDK 17–24 (CI uses 21). Recent Android Studio bundles a newer JDK that this project's Gradle 8.14 can't run on, so point `JAVA_HOME` at one, e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. `cap:android` checks this first.
 - Capacitor recreates the iOS Swift Package symlinks (`ios/App/CapApp-SPM/symlinks/`) with absolute paths on every sync. The `capacitor:update:after` script (`scripts/relative-spm-symlinks.mjs`) rewrites them as relative paths straight afterwards, so they work in any checkout and syncing doesn't dirty the tree.
 - Native-only code sits behind `isNative()` in `@/platform`. Use `@/platform` for storage, the clipboard, links and sharing.
+- Share cards (`shareImage`) write the PNG to the app's cache with `@capacitor/filesystem`, then hand the file URI to `@capacitor/share`. Android serves it through the Capacitor template's FileProvider (`res/xml/file_paths.xml` must keep its `cache-path` entry). After pulling this plugin in, run `npm run cap:sync` so the native projects pick it up.
 
 ## Release
 

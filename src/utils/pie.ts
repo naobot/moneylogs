@@ -56,6 +56,14 @@ export const PIXEL_TILES = {
       [0, 3],
     ],
   },
+  // horizontal 1-on-1-off, like the striped modal headers
+  stripe: {
+    size: 2,
+    cells: [
+      [0, 0],
+      [1, 0],
+    ],
+  },
 } as const satisfies Record<
   string,
   { size: number; cells: ReadonlyArray<readonly [number, number]> }
