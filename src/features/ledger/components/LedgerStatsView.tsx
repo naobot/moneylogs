@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
 import { Ledger } from "@/types/ledger";
 import { formatMonth } from "@/utils/ledger";
@@ -5,6 +6,10 @@ import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsPanel } from "./LedgerStats";
 import PeriodStats from "./PeriodStats";
 import MonthReviewCard from "./MonthReviewCard";
+import RowButton from "@/components/RowButton";
+import { useCurrentUser } from "@/contexts";
+import ShareCardModal from "@/features/share/ShareCardModal";
+import { monthName } from "@/features/ledger/buddy/monthReview";
 
 type LedgerStatsViewProps = {
   ledger: Ledger;
@@ -35,7 +40,10 @@ const MonthStats = ({
   today,
   openBudgets,
 }: LedgerStatsViewProps & LedgerShellContext) => {
+  const { user } = useCurrentUser();
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
+  const [sharing, setSharing] = useState(false);
+  const hasMine = entries.some((e) => e.authorUid === user?.userId);
   if (isError) {
     return <p className="error-message">Couldn't load stats for {formatMonth(month)}.</p>;
   }
@@ -50,6 +58,20 @@ const MonthStats = ({
         isLoading={isLoading}
         onEditBudget={openBudgets}
       />
+      {hasMine && (
+        <div className="LedgerStats__share">
+          <RowButton onClick={() => setSharing(true)}>share {monthName(month)}</RowButton>
+        </div>
+      )}
+      {sharing && (
+        <ShareCardModal
+          card="breakdown"
+          ledger={ledger}
+          month={month}
+          today={today}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </>
   );
 };

@@ -53,6 +53,11 @@ export type AnalyticsEvents = {
   send_nudge: { kind: "poke" | "cheer" };
   read_nudge: Record<string, never>;
   share: { method: "copy"; content_type: ShareContent };
+  share_card: {
+    card: "daily" | "breakdown";
+    format: "story" | "square";
+    result: ShareCardResult;
+  };
 
   // Navigation
   open_drawer: { drawer: string };
@@ -60,6 +65,8 @@ export type AnalyticsEvents = {
 
 export type AnalyticsEvent = keyof AnalyticsEvents;
 export type ShareContent = "log_invite" | "friend_invite" | "profile";
+/** How a share card left the app: the share sheet, dismissed, or saved as a download. */
+export type ShareCardResult = "shared" | "cancelled" | "downloaded";
 
 /** Log kinds as the app names them: notifications say "ledger", the UI "financial". */
 export type LogKindParam = "social" | "financial";
