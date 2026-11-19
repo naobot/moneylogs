@@ -50,8 +50,8 @@
     padding: 0;
     list-style: none;
 
-    // Plain friend rows (no actions) flow into as many columns as fit on wider
-    // screens; one column on phones.
+    // Friend rows (and sent requests, with their compact × cancel) flow into as many
+    // columns as fit on wider screens; one column on phones.
     &--columns {
       @media (min-width: constants.$breakpoint-sm) {
         display: grid;

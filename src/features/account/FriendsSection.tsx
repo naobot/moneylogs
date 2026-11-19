@@ -140,17 +140,23 @@ export const FriendsSection = () => {
       {outgoing.length > 0 && (
         <div>
           <h4>sent</h4>
-          <ul className="FriendsSection__list">
-            {outgoing.map((id) => (
-              <PersonRow key={id} id={id} profiles={profiles}>
-                <RowButton
-                  disabled={!!pending}
-                  onClick={() => void run(`cancel-${id}`, () => removeFriend(id))}
-                >
-                  cancel
-                </RowButton>
-              </PersonRow>
-            ))}
+          <ul className="FriendsSection__list FriendsSection__list--columns">
+            {outgoing.map((id) => {
+              const label = `Cancel friend request to ${profileName(profiles, id) ?? "them"}`;
+              return (
+                <PersonRow key={id} id={id} profiles={profiles}>
+                  <RowButton
+                    glyph
+                    aria-label={label}
+                    title={label}
+                    disabled={!!pending}
+                    onClick={() => void run(`cancel-${id}`, () => removeFriend(id))}
+                  >
+                    ×
+                  </RowButton>
+                </PersonRow>
+              );
+            })}
           </ul>
         </div>
       )}
