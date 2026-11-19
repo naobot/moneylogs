@@ -21,33 +21,34 @@ amounts or free text.
 
 ## Events
 
-| Event                   | When                                    | Params                                           |
-| ----------------------- | --------------------------------------- | ------------------------------------------------ |
-| `page_view`             | Route change (pathname only)            | `page_path` (pattern), `page_title`, `signed_in` |
-| `sign_up`               | Account created                         | `method`                                         |
-| `login`                 | Signed in from the login form           | `method`                                         |
-| `tutorial_complete`     | Welcome wizard, ledger tour, first post | `tutorial`                                       |
-| `create_log`            | Create wizard finished                  | `log_kind`, `invited_friends`                    |
-| `join_log`              | Joined from an invite page              | `log_kind`                                       |
-| `archive_log`           | Archived / unarchived                   | `log_kind`, `archived`                           |
-| `delete_log`            | Deleted                                 | `log_kind`                                       |
-| `invite_friends_to_log` | Invites sent from the invite modal      | `log_kind`, `invited_friends`                    |
-| `add_post`              | New post in a social log                | `travelling`                                     |
-| `open_comments`         | A post's comments opened                | `has_comments`                                   |
-| `add_comment`           | Comment added                           | —                                                |
-| `add_reaction`          | Reaction added                          | —                                                |
-| `add_entry`             | Entry added to a financial log          | `shared_log`, `has_note`                         |
-| `import_entries`        | CSV import finished                     | `source`, `created`                              |
-| `no_spend_day`          | No-spend day confirmed                  | —                                                |
-| `delete_category`       | Category deleted from a financial log   | —                                                |
-| `remove_budget`         | A category's monthly budget removed     | —                                                |
-| `stats_period`          | Stats period switched in a ledger       | `period` (`month`, `quarter`, `year`)            |
-| `update_profile`        | Profile saved on /me                    | —                                                |
-| `send_friend_request`   | Friend request sent                     | —                                                |
-| `accept_friend`         | Friend request accepted                 | —                                                |
-| `gift_knickknack`       | Knick-knack gifted                      | —                                                |
-| `share`                 | Invite / profile link copied            | `method`, `content_type`                         |
-| `open_drawer`           | A /me drawer opened                     | `drawer`                                         |
+| Event                   | When                                     | Params                                                    |
+| ----------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `page_view`             | Route change (pathname only)             | `page_path` (pattern), `page_title`, `signed_in`          |
+| `sign_up`               | Account created                          | `method`                                                  |
+| `login`                 | Signed in from the login form            | `method`                                                  |
+| `tutorial_complete`     | Welcome wizard, ledger tour, first post  | `tutorial`                                                |
+| `create_log`            | Create wizard finished                   | `log_kind`, `invited_friends`                             |
+| `join_log`              | Joined from an invite page               | `log_kind`                                                |
+| `archive_log`           | Archived / unarchived                    | `log_kind`, `archived`                                    |
+| `delete_log`            | Deleted                                  | `log_kind`                                                |
+| `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                             |
+| `add_post`              | New post in a social log                 | `travelling`                                              |
+| `open_comments`         | A post's comments opened                 | `has_comments`                                            |
+| `add_comment`           | Comment added                            | —                                                         |
+| `add_reaction`          | Reaction added                           | —                                                         |
+| `add_entry`             | Entry added to a financial log           | `shared_log`, `has_note`                                  |
+| `import_entries`        | CSV import finished                      | `source`, `created`                                       |
+| `no_spend_day`          | No-spend day confirmed                   | —                                                         |
+| `delete_category`       | Category deleted from a financial log    | —                                                         |
+| `remove_budget`         | A category's monthly budget removed      | —                                                         |
+| `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                     |
+| `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`) |
+| `update_profile`        | Profile saved on /me                     | —                                                         |
+| `send_friend_request`   | Friend request sent                      | —                                                         |
+| `accept_friend`         | Friend request accepted                  | —                                                         |
+| `gift_knickknack`       | Knick-knack gifted                       | —                                                         |
+| `share`                 | Invite / profile link copied             | `method`, `content_type`                                  |
+| `open_drawer`           | A /me drawer opened                      | `drawer`                                                  |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.
 
@@ -63,7 +64,7 @@ In the Firebase console → Analytics (or analytics.google.com, property for mon
 2. **Register custom dimensions.** Admin → Custom definitions → Create custom dimension,
    scope **Event**, one for each param below (dimension name can match the param):
    `log_kind`, `tutorial`, `archived`, `travelling`, `has_comments`, `shared_log`,
-   `has_note`, `source`, `drawer`, `signed_in`, `period`.
+   `has_note`, `source`, `drawer`, `signed_in`, `period`, `action`.
    And as custom **metrics** (unit: standard): `invited_friends`, `created`.
    `method` and `content_type` are built in. Dimensions only apply to data from the
    time they're created, not before.

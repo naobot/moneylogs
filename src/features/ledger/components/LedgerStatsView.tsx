@@ -4,6 +4,7 @@ import { formatMonth } from "@/utils/ledger";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsPanel } from "./LedgerStats";
 import PeriodStats from "./PeriodStats";
+import MonthReviewCard from "./MonthReviewCard";
 
 type LedgerStatsViewProps = {
   ledger: Ledger;
@@ -39,14 +40,17 @@ const MonthStats = ({
     return <p className="error-message">Couldn't load stats for {formatMonth(month)}.</p>;
   }
   return (
-    <LedgerStatsPanel
-      ledger={ledger}
-      month={month}
-      today={today}
-      entries={entries}
-      isLoading={isLoading}
-      onEditBudget={openBudgets}
-    />
+    <>
+      <MonthReviewCard ledger={ledger} month={month} today={today} onEditBudget={openBudgets} />
+      <LedgerStatsPanel
+        ledger={ledger}
+        month={month}
+        today={today}
+        entries={entries}
+        isLoading={isLoading}
+        onEditBudget={openBudgets}
+      />
+    </>
   );
 };
 

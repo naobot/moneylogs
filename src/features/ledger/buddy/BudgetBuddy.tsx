@@ -4,20 +4,34 @@ import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
 import Icon from "@/components/Icon";
 import Popover from "@/components/Popover";
+import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
 import { useNoSpendDays } from "@/hooks/useNoSpendDays";
+import { saveMonthReview, useMonthReview } from "@/hooks/useMonthReview";
 import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
 import { shiftMonth, todayInTz } from "@/utils/ledger";
+import { track } from "@/utils/analytics";
 import { buddyMood } from "./buddyMood";
 import {
   buddyCheckInComment,
   buddyComment,
   buddyFindTeaser,
   buddyNoSpendComment,
+  buddyReviewComment,
 } from "./buddyComments";
+import {
+  canSnooze,
+  markReviewShown,
+  MonthReviewState,
+  monthName,
+  reviewedMonth,
+  reviewShownToday,
+  shouldPrompt,
+  tomorrowOf,
+} from "./monthReview";
 import { checkedInToday, CheckIn, eveningCheckIn, markCheckedIn } from "./buddyCheckIn";
 import { ASLEEP_HOVER_FACE, FACES, HOVER_FACES, pick } from "./faces";
 import KnickKnackReveal from "./knickknacks/KnickKnackReveal";
@@ -55,8 +69,19 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
  * - When it has a knick-knack from this log to show (a seasonal find, or a coin), a "!"
  *   shows beside it. A click opens a teaser bubble; clicking that opens the reveal
  *   pop-up, which completes it. Everything else waits in the dashboard's drawer.
+ * - On the 1st to the 3rd, if last month had entries, it asks whether to look back at
+ *   last month (see monthReview.ts), with choices in the bubble: look (onStartReview
+ *   opens last month's stats, where a card asks about budgets), ask again tomorrow, or
+ *   not this month. It opens by itself once a day per log until answered.
  */
-export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categories"> }) => {
+export const BudgetBuddy = ({
+  ledger,
+  onStartReview,
+}: {
+  ledger: Pick<Ledger, "id" | "categories">;
+  /** Opens the stats for the month being reviewed. Without it the buddy doesn't ask. */
+  onStartReview?: (month: string) => void;
+}) => {
   const { user } = useCurrentUser();
   const find = useUnseenFind(user?.id, ledger.id);
   const now = useNow();
@@ -98,14 +123,25 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
   // cheer below says so instead.
   const checkIn = evening === "quiet" && confirmedToday ? null : evening;
 
+  // Month-start review: only for a month that had something in it.
+  const reviewMonth = onStartReview ? reviewedMonth(today) : null;
+  const review = useMonthReview(user?.id, ledger.id, reviewMonth);
+  const reviewDue =
+    !!reviewMonth &&
+    review.isLoaded &&
+    (byMonth[previousMonth]?.entryCount ?? 0) > 0 &&
+    shouldPrompt(review.state, today);
+
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const [hoverFace, setHoverFace] = useState<string | null>(null);
   // The face is set when the bubble speaks for itself; clicks use the mood's click face.
   // `teaser` is set when it's saying it has a find to show.
+  // `review` is set when it's asking about last month (the bubble shows the choices).
   const [bubble, setBubble] = useState<{
     text: string;
     face?: string;
     teaser?: boolean;
+    review?: boolean;
   } | null>(null);
   // The find in the reveal pop-up, held so it stays put while seenAt lands.
   const [revealing, setRevealing] = useState<KnickKnackFind | null>(null);
@@ -131,6 +167,25 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
         },
     );
   }, [isSuccess, anchor, checkIn, ledger.id, today, asleep, seed]);
+
+  // Ask about last month by itself once a day per log (on this device) while it's due,
+  // and not in its sleep. A click on the buddy asks again any time.
+  const reviewShown = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isSuccess || !anchor || !reviewDue || asleep) return;
+    const key = `${ledger.id}:${today}`;
+    if (reviewShown.current === key || reviewShownToday(ledger.id, today)) return;
+    reviewShown.current = key;
+    markReviewShown(ledger.id, today);
+    setBubble(
+      (open) =>
+        open ?? {
+          text: buddyReviewComment(monthName(previousMonth), { asleep, seed }),
+          face: pick(FACES.happy.click, seed),
+          review: true,
+        },
+    );
+  }, [isSuccess, anchor, reviewDue, ledger.id, today, previousMonth, asleep, seed]);
 
   // Cheer a confirmed no-spend day, once a day whichever log it's in. It takes over an
   // open bubble: the person has just told it something worth celebrating.
@@ -188,11 +243,28 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
       });
       return;
     }
+    if (reviewDue) {
+      setBubble({
+        text: buddyReviewComment(monthName(previousMonth), state),
+        face: pick(FACES.happy.click, state.seed),
+        review: true,
+      });
+      return;
+    }
     setBubble({ text: buddyComment(state, clicks.current) });
     clicks.current += 1;
   };
 
   const feeling = state.asleep ? "asleep" : state.mood;
+
+  const answerReview = (next: MonthReviewState, action: "start" | "snooze" | "dismiss") => {
+    setBubble(null);
+    track("month_review", { action });
+    if (!user?.id || !reviewMonth) return;
+    // A failed save only means it may ask again (reported in saveMonthReview).
+    saveMonthReview(user.id, ledger.id, reviewMonth, next).catch(() => undefined);
+    if (action === "start") onStartReview?.(reviewMonth);
+  };
 
   return (
     <>
@@ -247,6 +319,25 @@ export const BudgetBuddy = ({ ledger }: { ledger: Pick<Ledger, "id" | "categorie
           </button>
         ) : (
           <p className="BuddyBubble__text keep-case">{bubble?.text}</p>
+        )}
+        {bubble?.review && reviewDue && (
+          <div className="BuddyBubble__actions">
+            <RowButton onClick={() => answerReview({ status: "reviewing" }, "start")}>
+              let&apos;s look
+            </RowButton>
+            {canSnooze(today) && (
+              <RowButton
+                onClick={() =>
+                  answerReview({ status: "snoozed", snoozedUntil: tomorrowOf(today) }, "snooze")
+                }
+              >
+                ask me tomorrow
+              </RowButton>
+            )}
+            <RowButton onClick={() => answerReview({ status: "dismissed" }, "dismiss")}>
+              not this month
+            </RowButton>
+          </div>
         )}
       </Popover>
       {revealing && user?.id && (
