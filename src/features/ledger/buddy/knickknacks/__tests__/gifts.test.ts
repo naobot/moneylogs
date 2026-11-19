@@ -20,10 +20,11 @@ const find = (item: string, ms: number, extra: Partial<KnickKnackFind> = {}) =>
   }) as KnickKnackFind;
 
 describe("isGiftable", () => {
-  it("only seen finds you found yourself", () => {
+  it("only seen finds, gifts included", () => {
     expect(isGiftable(find("acorn", 1))).toBe(true);
     expect(isGiftable(find("acorn", 1, { seenAt: null }))).toBe(false);
-    expect(isGiftable(find("acorn", 1, { source: "gift" }))).toBe(false);
+    expect(isGiftable(find("acorn", 1, { source: "gift", giftedBy: "mina" }))).toBe(true);
+    expect(isGiftable(find("acorn", 1, { source: "gift", seenAt: null }))).toBe(false);
   });
 
   it("lets special knick-knacks be given", () => {
@@ -45,8 +46,9 @@ describe("giftableByItem", () => {
       old,
       find("holly", 2, { source: "gift" }),
       find("daisy", 2, { seenAt: null }),
+      find("copper_coin", 2, { source: "milestone" }),
     ]);
-    expect(result.map((r) => r.item)).toEqual(["acorn", "pinecone"]);
+    expect(result.map((r) => r.item)).toEqual(["acorn", "pinecone", "holly"]);
     expect(result[0].finds).toEqual([old, newer]);
   });
 });

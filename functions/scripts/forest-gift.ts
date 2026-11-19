@@ -4,8 +4,8 @@
 // user. They arrive like a friend's gift: wrapped (unseen) in the knick-knack drawer, with
 // a "gift_received" notification (unless they've switched those off), so the push and
 // email digest go out as usual. Once opened, the shelf says "gift from a forest spirit".
-// Unlike a friend's gift, they can be passed on to a friend (who then sees it as a gift
-// from that friend). Milestone knick-knacks can't be sent: they're
+// Like any gift, they can be passed on to a friend (who then sees it as a gift from that
+// friend). Milestone knick-knacks can't be sent: they're
 // earned, not given.
 //
 // Not idempotent: every --write run sends `--count` more. The admin panel (/admin) does the

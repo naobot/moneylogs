@@ -29,10 +29,17 @@ describe("giftBlock", () => {
     expect(giftBlock({ item: "acorn", seenAt: seen, source: "found" })).toBeNull();
   });
 
-  it("blocks missing, unseen and gifted finds", () => {
+  it("blocks missing and unseen finds", () => {
     expect(giftBlock(undefined)).toBe("missing");
     expect(giftBlock({ item: "acorn", seenAt: null })).toBe("unseen");
-    expect(giftBlock({ item: "acorn", seenAt: seen, source: "gift" })).toBe("was_gift");
+  });
+
+  it("lets opened gifts be passed on, from friends or the forest spirit", () => {
+    expect(giftBlock({ item: "acorn", seenAt: seen, source: "gift", giftedBy: "mina" })).toBeNull();
+    expect(
+      giftBlock({ item: "acorn", seenAt: seen, source: "gift", giftedBy: FOREST_SPIRIT_ID }),
+    ).toBeNull();
+    expect(giftBlock({ item: "acorn", seenAt: null, source: "gift" })).toBe("unseen");
   });
 
   it("agrees with the client", () => {
@@ -41,6 +48,8 @@ describe("giftBlock", () => {
       { seenAt: null },
       { seenAt: seen, source: "gift" },
       { seenAt: seen, source: "found" },
+      { seenAt: seen, source: "milestone" },
+      { seenAt: seen, source: "special" },
     ]) {
       expect(isGiftable(f as never)).toBe(canGift(f));
     }
@@ -53,16 +62,5 @@ describe("spiritGiftBlock", () => {
     expect(spiritGiftBlock("mini_robot_charm", KNICK_KNACK_FINDS)).toBeNull();
     expect(spiritGiftBlock("gold_coin", KNICK_KNACK_FINDS)).toBe("milestone");
     expect(spiritGiftBlock("unicorn", KNICK_KNACK_FINDS)).toBe("unknown");
-  });
-});
-
-describe("forest spirit gifts", () => {
-  it("can be passed on once opened, unlike a friend's", () => {
-    const spirit = { item: "acorn", source: "gift", giftedBy: FOREST_SPIRIT_ID, seenAt: seen };
-    expect(giftBlock(spirit)).toBeNull();
-    expect(giftBlock({ ...spirit, seenAt: null })).toBe("unseen");
-    expect(giftBlock({ ...spirit, giftedBy: "mina" })).toBe("was_gift");
-    expect(isGiftable(spirit as never)).toBe(true);
-    expect(isGiftable({ ...spirit, giftedBy: "mina" } as never)).toBe(false);
   });
 });
