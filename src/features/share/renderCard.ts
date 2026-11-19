@@ -1,6 +1,7 @@
 import { PIXEL_TILES, PixelTile, toArcs } from "@/utils/pie";
 import type { PixelGrid } from "@/utils/pixelArt";
 import type { BreakdownSlice } from "./shareLines";
+import TOKENS_SCSS from "@/tokens.scss?raw";
 
 /**
  * Share cards as images: a pure layout (layoutCard → DrawOps, testable without a canvas)
@@ -110,55 +111,129 @@ export const truncate = (text: string, size: number, maxWidth: number): string =
   return `${chars.join("")}…`;
 };
 
+/**
+ * One format's composition: where things sit and how big the type is, in image pixels for
+ * a fixed-size export. Line weights aren't here: they come from the design tokens
+ * (CardStyle), scaled by CARD_SCALE.
+ */
 type Metrics = {
+  /** Paper margin outside the frame. */
   inset: number;
-  frame: number;
+  /** Room between the frame and the content. */
+  padding: number;
   header: { top: number; height: number; size: number; stripe: number };
   date: { y: number; size: number };
   face: { y: number; size: number };
-  shelf: { y: number; scale: number; gap: number; rule: number; caption: number };
+  shelf: { y: number; scale: number; gap: number; caption: number };
   lines: { size: number; leading: number; gap: number };
-  pie: { maxR: number; minR: number; gap: number; rim: number; sideBySide: boolean };
+  pie: { maxR: number; minR: number; sideBySide: boolean };
   legend: { swatch: number; size: number; row: number };
-  footer: { rule: number; word: number; url: number; height: number };
+  footer: { word: number; url: number; height: number };
 };
 
 const METRICS: Record<CardFormat, Metrics> = {
   story: {
     inset: 36,
-    frame: 12,
+    padding: 36,
     header: { top: 84, height: 120, size: 56, stripe: 6 },
     date: { y: 262, size: 40 },
     face: { y: 400, size: 120 },
-    shelf: { y: 700, scale: 6, gap: 120, rule: 6, caption: 34 },
+    shelf: { y: 700, scale: 6, gap: 120, caption: 34 },
     lines: { size: 60, leading: 82, gap: 36 },
-    pie: { maxR: 300, minR: 120, gap: 8, rim: 8, sideBySide: false },
+    pie: { maxR: 300, minR: 120, sideBySide: false },
     legend: { swatch: 48, size: 40, row: 68 },
-    footer: { rule: 6, word: 52, url: 36, height: 190 },
+    footer: { word: 52, url: 36, height: 190 },
   },
   square: {
     inset: 24,
-    frame: 9,
+    padding: 36,
     header: { top: 56, height: 90, size: 44, stripe: 5 },
     date: { y: 186, size: 30 },
     face: { y: 286, size: 84 },
-    shelf: { y: 520, scale: 4, gap: 80, rule: 5, caption: 26 },
+    shelf: { y: 520, scale: 4, gap: 80, caption: 26 },
     lines: { size: 44, leading: 60, gap: 22 },
-    pie: { maxR: 170, minR: 80, gap: 6, rim: 6, sideBySide: true },
+    pie: { maxR: 170, minR: 80, sideBySide: true },
     legend: { swatch: 36, size: 30, row: 50 },
-    footer: { rule: 5, word: 38, url: 26, height: 128 },
+    footer: { word: 38, url: 26, height: 128 },
   },
+};
+
+// ---- Style ------------------------------------------------------------------------
+
+/**
+ * What a card takes from the design tokens: the two inks, the typeface and the frame
+ * weights (CSS px). Serializable, so the layout stays pure: read once at the browser
+ * boundary (readCardStyle) and passed in.
+ */
+export type CardStyle = {
+  ink: string;
+  paper: string;
+  font: string;
+  /** --border-hairline: secondary lines (the shelf, the footer rule, key swatches). */
+  hairline: number;
+  /** --border-rule: containers (the card's frame, the pie's rim and the gaps between slices). */
+  rule: number;
+};
+
+/**
+ * Image pixels per CSS pixel. A 1080px card is shown about 360 CSS px wide on a phone, so a
+ * token drawn at 3× keeps the weight it has in the app.
+ */
+export const CARD_SCALE = 3;
+
+const TOKEN_NAMES = {
+  ink: "ink",
+  paper: "paper",
+  font: "font-mono",
+  hairline: "border-hairline",
+  rule: "border-rule",
+} as const satisfies Record<keyof CardStyle, string>;
+
+/** A token's light-theme value as written in src/tokens.scss (its first definition). */
+export const tokenFromSource = (source: string, name: string): string | undefined =>
+  source.match(new RegExp(`(?<![\\w-])--${name}:\\s*([^;]+);`))?.[1].trim();
+
+const toStyle = (value: (name: string) => string | undefined): CardStyle => {
+  const fromSource = (name: string) => tokenFromSource(TOKENS_SCSS, name) ?? "";
+  const get = (name: string) => value(name) || fromSource(name);
+  const px = (name: string) => parseFloat(get(name)) || parseFloat(fromSource(name));
+  return {
+    ink: get(TOKEN_NAMES.ink),
+    paper: get(TOKEN_NAMES.paper),
+    font: get(TOKEN_NAMES.font),
+    hairline: px(TOKEN_NAMES.hairline),
+    rule: px(TOKEN_NAMES.rule),
+  };
+};
+
+/** The tokens as src/tokens.scss defines them (light theme): for layout and tests. */
+export const TOKEN_CARD_STYLE: CardStyle = toStyle(() => undefined);
+
+/**
+ * The tokens as the page has them now (Night shift included), so the card looks like the
+ * app; any the page can't resolve fall back to src/tokens.scss.
+ */
+export const readCardStyle = (): CardStyle => {
+  if (typeof document === "undefined") return TOKEN_CARD_STYLE;
+  const computed = getComputedStyle(document.documentElement);
+  return toStyle((name) => computed.getPropertyValue(`--${name}`).trim() || undefined);
 };
 
 /** Below this a key row's name would be too small to read on a phone. */
 const MIN_KEY_ROW = 34;
 
 /** Where the card's parts go, as draw ops, for one format. Pure. */
-export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
+export const layoutCard = (
+  spec: CardSpec,
+  format: CardFormat,
+  style: CardStyle = TOKEN_CARD_STYLE,
+): DrawOp[] => {
   const { width: W, height: H } = CARD_SIZES[format];
   const m = METRICS[format];
+  const frame = style.rule * CARD_SCALE;
+  const hairline = style.hairline * CARD_SCALE;
   const ops: DrawOp[] = [];
-  const pad = m.inset + m.frame + 36;
+  const pad = m.inset + frame + m.padding;
   const contentW = W - 2 * pad;
 
   // Paper, then the frame.
@@ -169,11 +244,12 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
     y: m.inset,
     w: W - 2 * m.inset,
     h: H - 2 * m.inset,
-    width: m.frame,
+    width: frame,
   });
 
   // Striped header with the heading in a paper box.
-  const band = { x: m.inset + m.frame + 12, w: W - 2 * (m.inset + m.frame + 12) };
+  const bandX = m.inset + frame + m.padding / 3;
+  const band = { x: bandX, w: W - 2 * bandX };
   ops.push({
     op: "tile",
     x: band.x,
@@ -242,7 +318,7 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
         op: "text",
         text: truncate(spec.knickKnack.name, s.caption, kkW + s.gap),
         x: x + kkW / 2,
-        y: s.y + s.rule + s.caption,
+        y: s.y + hairline + s.caption,
         size: s.caption,
         weight: 400,
         align: "center",
@@ -250,13 +326,13 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
       });
     }
     const ruleW = Math.min(contentW, rowW + 2 * s.gap);
-    ops.push({ op: "rect", x: (W - ruleW) / 2, y: s.y, w: ruleW, h: s.rule, fill: "ink" });
+    ops.push({ op: "rect", x: (W - ruleW) / 2, y: s.y, w: ruleW, h: hairline, fill: "ink" });
   }
 
   // Footer, from the bottom up, so the middle knows how much room it has.
   const f = m.footer;
-  const footerTop = H - m.inset - m.frame - f.height;
-  ops.push({ op: "rect", x: pad, y: footerTop, w: contentW, h: f.rule, fill: "ink" });
+  const footerTop = H - m.inset - frame - f.height;
+  ops.push({ op: "rect", x: pad, y: footerTop, w: contentW, h: hairline, fill: "ink" });
   ops.push({
     op: "text",
     text: "moneylogs",
@@ -281,7 +357,7 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
   // The middle: lines, then the pie and its key. Laid out from the top of the space, then
   // centred in it, so a short card doesn't leave a gap above the footer.
   const middle: DrawOp[] = [];
-  const top = s.y + s.rule + s.caption * 2 + m.lines.gap;
+  const top = s.y + hairline + s.caption * 2 + m.lines.gap;
   const bottom = footerTop - m.lines.gap;
   let y = top;
   for (const paragraph of spec.lines) {
@@ -305,6 +381,7 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
 
   // The pie (and its key), in whatever room is left; left out if that's too little.
   const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
+  const rim = frame;
   if (arcs.length) {
     const fills = arcs.map((_, i) => SLICE_FILLS[i % SLICE_FILLS.length]);
     const lg = m.legend;
@@ -324,29 +401,29 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
         size: Math.min(lg.size, Math.floor(row * 0.62)),
       };
       const showKey = keyRows > 0 && row >= MIN_KEY_ROW;
-      const r = Math.min(m.pie.maxR, (room - 2 * m.pie.rim) / 2, contentW / 4);
+      const r = Math.min(m.pie.maxR, (room - 2 * rim) / 2, contentW / 4);
       if (r >= m.pie.minR) {
-        const pieW = 2 * (r + m.pie.rim);
+        const pieW = 2 * (r + rim);
         const keyW = showKey ? keyWidth(key, contentW - pieW - lg.swatch) : 0;
         const groupW = pieW + (showKey ? lg.swatch + keyW : 0);
         const pieCx = (W - groupW) / 2 + pieW / 2;
-        const cy = y + m.pie.rim + r;
-        middle.push(pieOp(pieCx, cy, r, arcs, fills, m));
+        const cy = y + rim + r;
+        middle.push(pieOp(pieCx, cy, r, arcs, fills, frame));
         if (showKey) {
           const keyX = pieCx + pieW / 2 + lg.swatch;
           const keyH = keyRows * key.row;
-          legendOps(middle, arcs, fills, keyX, cy - keyH / 2, keyW, key, m.frame / 2);
+          legendOps(middle, arcs, fills, keyX, cy - keyH / 2, keyW, key, hairline);
         }
       }
     } else {
       const keyCols = keyRows > 2 ? 2 : 1;
       const perCol = Math.ceil(keyRows / keyCols);
       const keyH = perCol * lg.row;
-      const r = Math.min(m.pie.maxR, (room - keyH - lg.row) / 2 - m.pie.rim);
+      const r = Math.min(m.pie.maxR, (room - keyH - lg.row) / 2 - rim);
       if (r >= m.pie.minR) {
-        const cy = y + m.pie.rim + r;
-        middle.push(pieOp(W / 2, cy, r, arcs, fills, m));
-        const keyTop = cy + r + m.pie.rim + lg.row / 2;
+        const cy = y + rim + r;
+        middle.push(pieOp(W / 2, cy, r, arcs, fills, frame));
+        const keyTop = cy + r + rim + lg.row / 2;
         const colW = contentW / keyCols;
         for (let c = 0; c < keyCols; c++) {
           const col = arcs.slice(c * perCol, (c + 1) * perCol);
@@ -360,7 +437,7 @@ export const layoutCard = (spec: CardSpec, format: CardFormat): DrawOp[] => {
             keyTop,
             width,
             lg,
-            m.frame / 2,
+            hairline,
           );
         }
       }
@@ -397,15 +474,16 @@ const pieOp = (
   r: number,
   arcs: ReadonlyArray<{ start: number; end: number }>,
   fills: ReadonlyArray<SliceFill>,
-  m: Metrics,
+  /** The rim and the paper gaps between slices: the container weight. */
+  weight: number,
 ): DrawOp => ({
   op: "pie",
   cx,
   cy,
   r: Math.floor(r),
   slices: arcs.map(({ start, end }, i) => ({ start, end, fill: fills[i] })),
-  gap: m.pie.gap,
-  rim: m.pie.rim,
+  gap: weight,
+  rim: weight,
 });
 
 /** A key: one row per slice, swatch then name, starting at (x, top), names cut to width. */
@@ -444,27 +522,7 @@ const legendOps = (
 
 // ---- Painting ---------------------------------------------------------------------
 
-export type Inks = { ink: string; paper: string };
-
-const FALLBACK_INKS: Inks = { ink: "#242424", paper: "#f5f3f0" };
-
-/** The current theme's inks (Night shift included), so the card looks like the app. */
-export const readInks = (): Inks => {
-  if (typeof document === "undefined") return FALLBACK_INKS;
-  const style = getComputedStyle(document.documentElement);
-  const ink = style.getPropertyValue("--ink").trim();
-  const paper = style.getPropertyValue("--paper").trim();
-  return { ink: ink || FALLBACK_INKS.ink, paper: paper || FALLBACK_INKS.paper };
-};
-
-const FALLBACK_FONT = "Hack, monospace";
-
-/** The app's typeface, from `--font-mono`. */
-export const readFont = (): string => {
-  if (typeof document === "undefined") return FALLBACK_FONT;
-  const font = getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
-  return font || FALLBACK_FONT;
-};
+type Inks = Pick<CardStyle, "ink" | "paper">;
 
 // Kaomoji need glyphs Hack doesn't have; the system fonts fill in.
 const fontStack = (font: string) =>
@@ -502,10 +560,10 @@ const fillStyle = (ctx: CanvasRenderingContext2D, fill: SliceFill, inks: Inks) =
 export const paintOps = (
   ctx: CanvasRenderingContext2D,
   ops: ReadonlyArray<DrawOp>,
-  inks: Inks,
-  font: string = readFont(),
+  style: CardStyle,
 ) => {
-  const family = fontStack(font);
+  const inks: Inks = style;
+  const family = fontStack(style.font);
   ctx.textBaseline = "middle";
   for (const o of ops) {
     switch (o.op) {
@@ -591,17 +649,16 @@ const loadFonts = async (font: string) => {
 export const renderCard = async (
   spec: CardSpec,
   format: CardFormat,
-  inks: Inks = readInks(),
-  font: string = readFont(),
+  style: CardStyle = readCardStyle(),
 ): Promise<Blob> => {
-  await loadFonts(font);
+  await loadFonts(style.font);
   const { width, height } = CARD_SIZES[format];
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D isn't available");
-  paintOps(ctx, layoutCard(spec, format), inks, font);
+  paintOps(ctx, layoutCard(spec, format, style), style);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Couldn't encode the card"))),

@@ -5,7 +5,10 @@ import {
   CardSpec,
   DrawOp,
   layoutCard,
-  readFont,
+  readCardStyle,
+  CARD_SCALE,
+  TOKEN_CARD_STYLE,
+  tokenFromSource,
   textWidth,
   truncate,
   wrapText,
@@ -143,10 +146,55 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
   });
 });
 
-describe("readFont", () => {
-  it("reads the typeface from --font-mono", () => {
-    document.documentElement.style.setProperty("--font-mono", "Hack, monospace");
-    expect(readFont()).toBe("Hack, monospace");
-    document.documentElement.style.removeProperty("--font-mono");
+describe("card style", () => {
+  it("reads tokens as src/tokens.scss writes them", () => {
+    const source = `:root {\n  --ink: #111;\n  --inverse-ink: var(--paper);\n  --ink-muted: rgba(0, 0, 0, 0.7);\n}\n.night { --ink: #eee; }`;
+    expect(tokenFromSource(source, "ink")).toBe("#111");
+    expect(tokenFromSource(source, "ink-muted")).toBe("rgba(0, 0, 0, 0.7)");
+    expect(tokenFromSource(source, "paper")).toBeUndefined();
+  });
+
+  it("defaults to the light theme's tokens", () => {
+    expect(TOKEN_CARD_STYLE).toEqual({
+      ink: "#242424",
+      paper: "#f5f3f0",
+      font: "Hack, monospace",
+      hairline: 1,
+      rule: 2,
+    });
+  });
+
+  it("prefers the page's current values, falling back token by token", () => {
+    const root = document.documentElement.style;
+    root.setProperty("--ink", "#f5f3f0");
+    root.setProperty("--paper", "#242424");
+    root.setProperty("--border-rule", "3px");
+    try {
+      expect(readCardStyle()).toEqual({
+        ...TOKEN_CARD_STYLE,
+        ink: "#f5f3f0",
+        paper: "#242424",
+        rule: 3,
+      });
+    } finally {
+      root.removeProperty("--ink");
+      root.removeProperty("--paper");
+      root.removeProperty("--border-rule");
+    }
+  });
+
+  it("draws line weights from the style it's given, at the card scale", () => {
+    const style = { ...TOKEN_CARD_STYLE, hairline: 2, rule: 5 };
+    const ops = layoutCard(spec({ lines: ["Where my money went"], slices }), "story", style);
+    const frame = ops.find((o) => o.op === "frame");
+    const pie = ops.find((o) => o.op === "pie");
+    const swatch = ops.find((o) => o.op === "swatch");
+    expect(frame && frame.op === "frame" && frame.width).toBe(5 * CARD_SCALE);
+    expect(pie && pie.op === "pie" && [pie.rim, pie.gap]).toEqual([15, 15]);
+    expect(swatch && swatch.op === "swatch" && swatch.border).toBe(2 * CARD_SCALE);
+    const shelfRule = ops.find(
+      (o) => o.op === "rect" && o.fill === "ink" && o.h === 2 * CARD_SCALE,
+    );
+    expect(shelfRule).toBeDefined();
   });
 });

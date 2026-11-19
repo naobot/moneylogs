@@ -2,7 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import { useVisualHarness } from "@/test/visual";
 import { ART } from "@/features/ledger/buddy/knickknacks/art";
 import { PRESET_AVATARS } from "@/features/account/avatar/presets";
-import { CardFormat, CardSpec, readInks, renderCard } from "../renderCard";
+import { CardFormat, CardSpec, renderCard } from "../renderCard";
 
 const daily: CardSpec = {
   heading: "today",
@@ -37,9 +37,7 @@ const showCards = async (
   cards: ReadonlyArray<[CardSpec, CardFormat]>,
 ) => {
   const urls = await Promise.all(
-    cards.map(async ([spec, format]) =>
-      URL.createObjectURL(await renderCard(spec, format, readInks())),
-    ),
+    cards.map(async ([spec, format]) => URL.createObjectURL(await renderCard(spec, format))),
   );
   v.render(
     <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
