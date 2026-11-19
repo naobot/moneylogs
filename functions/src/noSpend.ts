@@ -1,5 +1,6 @@
 import { DocumentReference, FieldValue, Firestore, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { awardEngagementQuietly } from "./awardEngagement";
 import { callerUserRef } from "./checkIn";
 import { dayIn } from "./knickknacks";
 import { refreshLuckTier } from "./knickknackFind";
@@ -55,18 +56,19 @@ export const confirmNoSpendDayFor = async ({
 
   const dayRef = userRef.collection("noSpendDays").doc(today);
   const luckRef = userRef.collection("buddy").doc("luck");
-  const momentum = await db.runTransaction(async (tx) => {
+  const { created, momentum } = await db.runTransaction(async (tx) => {
     const [daySnap, luckSnap] = await Promise.all([tx.get(dayRef), tx.get(luckRef)]);
-    if (daySnap.exists) return null;
+    if (daySnap.exists) return { created: false, momentum: null };
     const { next, rewarded } = applyNoSpend({
       state: luckSnap.data() as LuckState | undefined,
       today,
     });
     tx.create(dayRef, { confirmedAt: FieldValue.serverTimestamp(), rewarded });
     if (next) tx.set(luckRef, next);
-    return next?.momentum ?? null;
+    return { created: true, momentum: next?.momentum ?? null };
   });
   if (momentum !== null) await refreshLuckTier({ db, userRef, uid, today, now, momentum });
+  if (created) await awardEngagementQuietly({ db, userId: userRef.id, type: "first_no_spend_day" });
   return { ok: true };
 };
 

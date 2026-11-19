@@ -21,6 +21,7 @@ export const NOTIFICATION_PREF_DEFAULTS = {
   friend_accepted: true,
   gift_received: true,
   milestone_earned: true,
+  achievement_earned: true,
   // Per-category budget alerts are noisier than the month's total, so they're opt-in.
   budget_category: false,
 } as const;
@@ -58,6 +59,7 @@ export const EMAIL_PREF_DEFAULTS = {
   friend_accepted: false,
   gift_received: false,
   milestone_earned: false,
+  achievement_earned: false,
 } as const;
 
 export type EmailPrefKey = keyof typeof EMAIL_PREF_DEFAULTS;

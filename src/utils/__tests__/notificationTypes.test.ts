@@ -142,6 +142,27 @@ describe("describeNotification", () => {
     );
   });
 
+  it("names an engagement achievement and links to the /me list", () => {
+    const n = {
+      id: "achievement_first_gift",
+      type: "achievement_earned",
+      achievement: "first_gift",
+      createdAt: at("2026-11-10T11:00:00Z"),
+      readAt: null,
+    } as AppNotification;
+    expect(describeNotification(n, NOW)).toEqual([
+      "achievement unlocked",
+      ": ",
+      { keep: "Gift Giver" },
+    ]);
+    expect(notificationDetail(n)).toBe("gave a friend a first gift");
+    expect(notificationHref(n)).toBe("/me#achievements");
+    expect(notificationIcon(n)).toBe("star");
+    const newer = { ...n, achievement: "from_the_future" } as AppNotification;
+    expect(notificationText(newer, NOW)).toBe("achievement unlocked");
+    expect(notificationDetail(newer)).toBeUndefined();
+  });
+
   it("falls back to a generic line for a type this build doesn't know", () => {
     const unknown = { ...base, type: "from_the_future" } as unknown as AppNotification;
     expect(notificationText(unknown)).toBe("something happened in Tokyo Trip");

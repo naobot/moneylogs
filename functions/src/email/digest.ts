@@ -11,6 +11,7 @@
  *
  * Dependency-free, so the root Vitest run can test it.
  */
+import { engagementTitle } from "../engagement";
 import { dayIn } from "../knickknacks";
 import { wallClockToInstant } from "../logTimeline";
 import { isEmailEnabled, isNotificationEnabled } from "../notificationPrefs";
@@ -58,6 +59,8 @@ export type DigestNotification = {
   budget?: unknown;
   projected?: unknown;
   categoryName?: unknown;
+  /** achievement_earned: which one. */
+  achievement?: unknown;
 };
 
 type PrefsSource = Parameters<typeof isEmailEnabled>[0];
@@ -234,6 +237,14 @@ export const DIGEST_LINES: Record<string, LineSpec> = {
     detail: "your budget buddy has something for you",
     href: "/#knickknacks",
   }),
+  achievement_earned: (n) => {
+    const name = engagementTitle(n.achievement);
+    return {
+      section: "friends & finds",
+      parts: name ? ["achievement unlocked: ", { name }] : ["achievement unlocked"],
+      href: "/me#achievements",
+    };
+  },
 };
 
 export const digestLine = (n: DigestNotification): DigestLine =>

@@ -8,6 +8,10 @@ import {
   MILESTONE_ACHIEVEMENTS,
 } from "@/features/ledger/buddy/knickknacks/milestoneAchievements";
 import {
+  ENGAGEMENT_ACHIEVEMENTS,
+  isEngagementAchievementType,
+} from "@/utils/engagementAchievements";
+import {
   AppNotification,
   BudgetNotification,
   EmailPrefs,
@@ -206,6 +210,24 @@ export const NOTIFICATION_TYPES: Specs = {
     ],
     detail: () => "your budget buddy has something for you",
     href: () => "/#knickknacks",
+  },
+  achievement_earned: {
+    label: "Other achievements",
+    defaultEnabled: true,
+    email: "off",
+    icon: "star",
+    describe: (n) => [
+      "achievement unlocked",
+      // One from a newer build still gets a line, just without its title.
+      ...(isEngagementAchievementType(n.achievement)
+        ? [": ", { keep: ENGAGEMENT_ACHIEVEMENTS[n.achievement].title }]
+        : []),
+    ],
+    detail: (n) =>
+      isEngagementAchievementType(n.achievement)
+        ? ENGAGEMENT_ACHIEVEMENTS[n.achievement].description.toLowerCase()
+        : undefined,
+    href: () => "/me#achievements",
   },
   budget_projected: {
     label: "You're on track to go over this month's budget",

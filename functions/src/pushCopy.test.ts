@@ -69,6 +69,13 @@ describe("pushCopy", () => {
       title: "moneylogs",
       body: "Achievement unlocked: your budget buddy has something for you.",
     });
+    expect(pushCopy({ type: "achievement_earned", achievement: "first_gift" })).toEqual({
+      title: "moneylogs",
+      body: "Achievement unlocked: Gift Giver",
+    });
+    expect(pushCopy({ type: "achievement_earned", achievement: "from_the_future" })?.body).toBe(
+      "Achievement unlocked!",
+    );
   });
 
   it("falls back when a friend's name is missing", () => {

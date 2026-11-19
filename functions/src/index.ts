@@ -489,6 +489,7 @@ export { friendsByActivity } from "./friendsByActivity";
 export { getInviteCode, acceptInvite } from "./invites";
 export { inviteFriendsToLog } from "./logInvites";
 export { giftKnickKnack } from "./gifts";
+export { awardSocialLogJoin } from "./awardSocialLogJoin";
 export { scheduleEmailDigest, sendEmailDigests } from "./emailDigest";
 export { emailUnsubscribe } from "./emailUnsubscribe";
 export { sendPushOnNotification } from "./sendPush";

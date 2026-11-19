@@ -23,7 +23,8 @@ export type NotificationType =
   | "friend_request"
   | "friend_accepted"
   | "gift_received"
-  | "milestone_earned";
+  | "milestone_earned"
+  | "achievement_earned";
 
 /** Which collection `groupId` points into. Missing on older docs, which are all social. */
 export type LogKind = "social" | "ledger";
@@ -132,9 +133,20 @@ export type MilestoneNotification = Omit<Base, "groupId" | "groupName" | "logKin
   logKind?: undefined;
 };
 
+/** A plain achievement (no knick-knack) for a first go at something. */
+export type AchievementNotification = Omit<Base, "groupId" | "groupName" | "logKind"> & {
+  type: "achievement_earned";
+  /** The achievement's type (src/utils/engagementAchievements.ts). */
+  achievement: string;
+  groupId?: undefined;
+  groupName?: undefined;
+  logKind?: undefined;
+};
+
 export type AppNotification =
   | FriendNotification
   | MilestoneNotification
+  | AchievementNotification
   | GiftNotification
   | CommentNotification
   | ReactionNotification

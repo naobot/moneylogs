@@ -1,3 +1,5 @@
+import { engagementTitle } from "./engagement";
+
 /**
  * The title and body of a push notification for an inbox notification.
  *
@@ -71,6 +73,10 @@ export const pushCopy = (data: Data): PushCopy | null => {
       // The achievement's title lives in the app's catalog, so the push (like the email
       // digest) doesn't name it; the knick-knack itself stays a surprise either way.
       return { title, body: "Achievement unlocked: your budget buddy has something for you." };
+    case "achievement_earned": {
+      const name = engagementTitle(data.achievement);
+      return { title, body: name ? `Achievement unlocked: ${name}` : "Achievement unlocked!" };
+    }
     default:
       return null;
   }

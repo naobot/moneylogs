@@ -36,13 +36,16 @@ service cloud.firestore {
     }
     match /users/{userDocId}/achievements/{path=**} {
       // Milestone achievements come with a knick-knack and only the server writes them
-      // (functions/src/awardMilestone.ts); the group ones are still awarded client-side.
-      // Their types are the knick-knacks' ids (MILESTONE_ACHIEVEMENTS).
+      // (functions/src/awardMilestone.ts); their types are the knick-knacks' ids
+      // (MILESTONE_ACHIEVEMENTS). Engagement achievements are server-only too
+      // (functions/src/awardEngagement.ts, ENGAGEMENT_ACHIEVEMENTS). The group ones are
+      // still awarded client-side.
       allow read, delete: if ownsUserDoc(userDocId);
       allow create, update: if ownsUserDoc(userDocId)
         && !(request.resource.data.type in [
           "copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin",
-          "heart_leaf", "paper_crane", "friendship_bracelet", "little_envelope"
+          "heart_leaf", "paper_crane", "friendship_bracelet", "little_envelope",
+          "first_gift", "first_no_spend_day", "super_lucky", "first_social_log"
         ]);
     }
 
