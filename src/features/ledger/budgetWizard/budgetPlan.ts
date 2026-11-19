@@ -1,3 +1,4 @@
+import { Arc, toArcs } from "@/utils/pie";
 import { LedgerCategory } from "@/types/ledger";
 import { DEFAULT_CATEGORIES, normaliseCategoryName } from "@/utils/ledger";
 import { parseAmount } from "@/utils/ledgerEntries";
@@ -93,21 +94,12 @@ export const planGroupOf = (id: string): PlanGroup =>
 /** One slice of the plan's pie: a category (or savings), its group, value and label. */
 export type PieDatum = { id: string; name: string; group: PlanGroup; value: number; label: string };
 
-export type PieSlice = PieDatum & { start: number; end: number };
+export type PieSlice = PieDatum & Arc;
 
 /** Slices in group order, as angles in radians clockwise from 12 o'clock; zeros dropped. */
 export const pieSlices = (data: ReadonlyArray<PieDatum>): PieSlice[] => {
   const order = PLAN_GROUPS.map((g) => g.id);
-  const shown = data
-    .filter((d) => d.value > 0)
-    .sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
-  const total = shown.reduce((s, d) => s + d.value, 0);
-  let angle = 0;
-  return shown.map((d) => {
-    const start = angle;
-    angle += (d.value / total) * 2 * Math.PI;
-    return { ...d, start, end: angle };
-  });
+  return toArcs([...data].sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group)));
 };
 
 /** At least this share of income is left for everyday categories; savings give way. */
