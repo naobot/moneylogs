@@ -617,7 +617,7 @@ h6,
 
 .Window {
   margin-bottom: 1em;
-  padding: 30px;
+  padding: var(--window-padding);
   border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
   width: 100%;

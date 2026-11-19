@@ -12,7 +12,9 @@
   // scroll inside the frame instead of being clipped by .Content's overflow: hidden.
   min-height: 0;
   overflow-y: auto;
-  max-width: var(--main-width);
+  // border-box (for the height cap below) would count the frame's padding and border
+  // against the width too; add them back so the content stays --main-width wide.
+  max-width: calc(var(--main-width) + 2 * var(--window-padding) + 2 * var(--border-rule));
   align-self: flex-start;
   box-sizing: border-box;
   max-height: calc(100% - 1em);
