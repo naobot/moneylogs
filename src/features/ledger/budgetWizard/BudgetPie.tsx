@@ -1,4 +1,5 @@
-import { PLAN_GROUPS, PieSlice, PlanGroup, pieSlices, PieDatum } from "./budgetPlan";
+import { PIXEL_TILES, rimPoint, slicePath } from "@/utils/pie";
+import { PLAN_GROUPS, PlanGroup, pieSlices, PieDatum } from "./budgetPlan";
 
 import "./BudgetPie.scss";
 
@@ -13,36 +14,13 @@ const SIZE = 160;
 const C = SIZE / 2;
 const R = C - 2;
 
-const point = (angle: number) => {
-  const x = C + R * Math.sin(angle);
-  const y = C - R * Math.cos(angle);
-  return `${x.toFixed(2)} ${y.toFixed(2)}`;
-};
-
-const slicePath = ({ start, end }: PieSlice) =>
-  end - start >= 2 * Math.PI - 1e-9
-    ? `M${C} ${C - R}A${R} ${R} 0 1 1 ${C - 0.01} ${C - R}Z`
-    : `M${C} ${C}L${point(start)}A${R} ${R} 0 ${end - start > Math.PI ? 1 : 0} 1 ${point(end)}Z`;
+const point = (angle: number) =>
+  rimPoint(angle, C, R)
+    .map((n) => n.toFixed(2))
+    .join(" ");
 
 /** The same pixel tiles as src/texture.scss, as SVG patterns in the current ink. */
-const PATTERNS = {
-  dither: {
-    size: 2,
-    cells: [
-      [0, 0],
-      [1, 1],
-    ],
-  },
-  hatch: {
-    size: 4,
-    cells: [
-      [3, 0],
-      [2, 1],
-      [1, 2],
-      [0, 3],
-    ],
-  },
-} as const;
+const PATTERNS = { dither: PIXEL_TILES.dither, hatch: PIXEL_TILES.hatch };
 
 /** The swatch beside a list row or legend entry: a tiny framed piece of its fill. */
 const GROUP_SWATCH: Record<PlanGroup, string> = {
@@ -104,7 +82,7 @@ export const BudgetPie = ({
           <path
             key={slice.id}
             className={`BudgetPie__slice BudgetPie__slice--${slice.group}`}
-            d={slicePath(slice)}
+            d={slicePath(slice, C, R)}
           >
             <title>{`${slice.name}: ${slice.label}`}</title>
           </path>
