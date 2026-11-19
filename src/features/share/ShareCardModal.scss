@@ -8,7 +8,7 @@
 
   &__formats {
     display: inline-flex;
-    gap: 0.4em;
+    gap: var(--space-2);
   }
 
   // The card at a glance: scaled down, framed like a print.
@@ -16,7 +16,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--ink);
+    border: var(--border-hairline) solid var(--ink);
     background: var(--sheet);
 
     img {
