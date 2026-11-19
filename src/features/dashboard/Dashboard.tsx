@@ -10,6 +10,7 @@ import { formatMonth, monthKeyOf, todayInTz } from "@/utils/ledger";
 import { formatTotals } from "@/utils/ledgerEntries";
 import { formatNewCount } from "@/utils/logActivity";
 
+import { DashboardFriends } from "./DashboardFriends";
 import { KnickKnackDrawer } from "./KnickKnackDrawer";
 import { LogCard } from "./LogCard";
 
@@ -142,6 +143,7 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
       </div>
 
       <aside className="Dashboard__side">
+        <DashboardFriends />
         <KnickKnackDrawer />
       </aside>
     </div>

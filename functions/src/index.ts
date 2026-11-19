@@ -485,6 +485,7 @@ export { mirrorProfile } from "./mirrorProfile";
 export { mirrorShelf } from "./mirrorShelf";
 export { mirrorFriendList } from "./mirrorFriendList";
 export { requestFriend, respondFriend, removeFriend } from "./friends";
+export { friendsByActivity } from "./friendsByActivity";
 export { getInviteCode, acceptInvite } from "./invites";
 export { inviteFriendsToLog } from "./logInvites";
 export { giftKnickKnack } from "./gifts";

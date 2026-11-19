@@ -13,6 +13,7 @@ vi.mock("@/hooks/useLogActivity", () => ({
 vi.mock("@/features/ledger/buddy/knickknacks/useUnseenFinds", () => ({
   useKnickKnackFinds: () => ({ data: [], isLoading: false }),
 }));
+vi.mock("@/features/dashboard/DashboardFriends", () => ({ DashboardFriends: () => null }));
 vi.mock("@/hooks/useLedgerMonthTotals", () => ({
   useLedgerMonthTotals: () => ({ l1: { JPY: 12000 } }),
 }));
