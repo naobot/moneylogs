@@ -12,7 +12,8 @@ import { getDisplayPrefs } from "@/utils/displayPrefs";
  * modals, and the theme's chart colours for the pie (1-bit fills when charts are mono).
  * Laid out like an ID card that turns into a receipt: the sharer's photo, name and place
  * under the header with the buddy at their right, dashed tear lines between sections, and a knick-knack tucked into the
- * footer's corner as a sticker. Pixel art (avatar, knick-knack) is drawn cell by cell
+ * footer's corner as a sticker. Photos the sharer picks go in framed tiles above (or
+ * beside) the pie, cropped to fill. Pixel art (avatar, knick-knack) is drawn cell by cell
  * at whole-number scales so it stays crisp.
  */
 
@@ -39,14 +40,31 @@ export type CardSpec = {
   /** The pie's small caps-lock heading ("where my money went"). */
   pieTitle: string;
   /** A pie of shares; empty for none. */
-  slices: ReadonlyArray<BreakdownSlice>;
+  slices: ReadonlyArray<CardSlice>;
+  /** The pie's total ("2,340 JPY"), right of its title; only when the sharer shows amounts. */
+  total?: string | null;
   /** Show the pie's category names in a key. */
   showNames: boolean;
   /** The sharer's 30×30 avatar grid (or initial fallback); null leaves it out. */
   avatar: PixelGrid | null;
   /** A kept knick-knack's 32×32 art, a decoration in the footer's corner; null for none. */
   knickKnack: { grid: PixelGrid } | null;
+  /**
+   * Photos the sharer picked, up to three, by size only: the pixels stay on the device and
+   * are handed to the painter (renderCard's `sources`, in this order). Any photos make the
+   * header thinner and the pie smaller to make room.
+   */
+  photos?: ReadonlyArray<CardPhoto>;
 };
+
+/** A slice as the card draws it: `amountLabel` ("1,200 JPY") goes on its key row. */
+export type CardSlice = Pick<BreakdownSlice, "id" | "name" | "share"> & { amountLabel?: string };
+
+/** A picked photo's size; `id` makes the card change when the photos do. */
+export type CardPhoto = { id: string; width: number; height: number };
+
+/** Most photos a card takes. */
+export const MAX_CARD_PHOTOS = 3;
 
 export type Ink = "ink" | "paper" | "sheet";
 /** A two-ink fill, or a chart colour (any CSS colour the canvas takes). */
@@ -80,6 +98,19 @@ export type DrawOp =
       fill: Ink;
     }
   | { op: "pixels"; grid: PixelGrid; x: number; y: number; scale: number }
+  /** Photo `index` (of spec.photos), its (sx, sy, sw, sh) crop filling the tile (x, y, w, h). */
+  | {
+      op: "photo";
+      index: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      sx: number;
+      sy: number;
+      sw: number;
+      sh: number;
+    }
   | {
       op: "pie";
       cx: number;
@@ -162,6 +193,19 @@ type Metrics = {
   legend: { swatch: number; size: number; row: number };
   /** kkScale: the corner knick-knack's pixel scale (32 cells). */
   footer: { word: number; url: number; height: number; kkScale: number };
+  /**
+   * With photos: a thinner header, a smaller pie, the gap between tiles, the tallest a tile
+   * gets (min: what the photos keep before the pie shrinks below its best), and on a square
+   * the share of the row the pie's box takes beside them.
+   */
+  photos: {
+    header: { height: number; size: number };
+    pieMaxR: number;
+    gap: number;
+    min: number;
+    max: number;
+    boxShare: number;
+  };
 };
 
 const METRICS: Record<CardFormat, Metrics> = {
@@ -177,6 +221,14 @@ const METRICS: Record<CardFormat, Metrics> = {
     pie: { maxR: 270, minR: 100, sideBySide: false, title: 26, gap: 40, pad: 40 },
     legend: { swatch: 28, size: 26, row: 48 },
     footer: { word: 52, url: 36, height: 190, kkScale: 5 },
+    photos: {
+      header: { height: 84, size: 44 },
+      pieMaxR: 170,
+      gap: 24,
+      min: 300,
+      max: 560,
+      boxShare: 1,
+    },
   },
   square: {
     inset: 24,
@@ -190,6 +242,14 @@ const METRICS: Record<CardFormat, Metrics> = {
     pie: { maxR: 140, minR: 70, sideBySide: true, title: 20, gap: 28, pad: 28 },
     legend: { swatch: 20, size: 19, row: 34 },
     footer: { word: 38, url: 26, height: 128, kkScale: 3 },
+    photos: {
+      header: { height: 64, size: 34 },
+      pieMaxR: 110,
+      gap: 16,
+      min: 0,
+      max: 600,
+      boxShare: 0.6,
+    },
   },
 };
 
@@ -280,7 +340,12 @@ export const layoutCard = (
   style: CardStyle = TOKEN_CARD_STYLE,
 ): DrawOp[] => {
   const { width: W, height: H } = CARD_SIZES[format];
-  const m = METRICS[format];
+  const photos = (spec.photos ?? []).slice(0, MAX_CARD_PHOTOS);
+  const base = METRICS[format];
+  // Photos need room: a thinner header, and a smaller pie (below).
+  const m: Metrics = photos.length
+    ? { ...base, header: { ...base.header, ...base.photos.header } }
+    : base;
   const frame = style.rule * CARD_SCALE;
   const hairline = style.hairline * CARD_SCALE;
   const ops: DrawOp[] = [];
@@ -436,6 +501,7 @@ export const layoutCard = (
   // The middle, on the card's left edge like the ID line and the footer: brag lines, then
   // the pie in its box, one section gap apart. The box fills the room down to the footer
   // and the pie grows into it (up to a cap); with no pie, the lines sit centred instead.
+  // Photos go between the lines and the box on a story, beside the box on a square.
   const S = m.section;
   const top = tearY + S;
   const bottom = footerTop - S;
@@ -457,52 +523,158 @@ export const layoutCard = (
     y += ln.gap;
   }
   const linesBottom = middle.length ? y - ln.gap : top;
+  const restTop = middle.length ? linesBottom + S : top;
+  const box = (layout: Partial<PieLayout> & Pick<PieLayout, "x" | "w" | "top">) =>
+    pieBox({ spec, style, m, hairline, bottom, ...layout });
+  const centreWithLines = (below: DrawOp[]) => {
+    const blockBottom = Math.max(linesBottom, ...below.map(opBottom));
+    const shift = Math.max(0, (bottom - blockBottom) / 2);
+    for (const o of [...middle, ...below]) ops.push(shiftDown(o, shift));
+  };
 
-  const box = pieBox({
-    spec,
-    style,
-    m,
-    x: pad,
-    w: contentW,
-    top: middle.length ? linesBottom + S : top,
-    bottom,
-    hairline,
-  });
-  if (box.length) {
-    ops.push(...middle, ...box);
-  } else {
-    const shift = Math.max(0, (bottom - linesBottom) / 2);
-    for (const o of middle) ops.push(shiftDown(o, shift));
+  if (!photos.length) {
+    const pie = box({ x: pad, w: contentW, top: restTop });
+    if (pie.length) ops.push(...middle, ...pie);
+    else centreWithLines([]);
+    return ops;
   }
 
+  const ph = m.photos;
+  const tileOps = (tiles: ReadonlyArray<Rect>) =>
+    tiles.flatMap((t, i): DrawOp[] => [
+      { op: "photo", index: i, ...t, ...coverCrop(photos[i], t) },
+      { op: "frame", ...t, width: hairline },
+    ]);
+  const hasPie = toArcs(spec.slices.map((sl) => ({ value: sl.share }))).length > 0;
+  const room = bottom - restTop;
+
+  if (hasPie && !base.pie.sideBySide) {
+    // Story: a row of photos, then a shorter box with the key beside the pie. The photos
+    // keep `min` height before the pie gives up its best size; past that, the pie shrinks.
+    const layout = { sideBySide: true, maxR: ph.pieMaxR };
+    const boxAt = (r: number) => 2 * m.pie.pad + m.pie.title + m.pie.gap + 2 * (r + hairline);
+    const fits = room - S - boxAt(m.pie.minR);
+    const rowH = Math.min(ph.max, Math.max(room - S - boxAt(ph.pieMaxR), Math.min(ph.min, fits)));
+    const tiles = rowTiles(photos.length, { x: pad, y: restTop, w: contentW, h: rowH }, ph.gap);
+    const tilesBottom = Math.max(...tiles.map((t) => t.y + t.h));
+    const pie = box({ x: pad, w: contentW, top: tilesBottom + S, ...layout });
+    if (pie.length) {
+      ops.push(...middle, ...tileOps(tiles), ...pie);
+      return ops;
+    }
+  } else if (hasPie) {
+    // Square: the photos on the left, the box on the right with the key beside the pie.
+    const boxW = Math.round(contentW * ph.boxShare);
+    const photosW = contentW - boxW - S;
+    const pie = box({
+      x: pad + photosW + S,
+      w: boxW,
+      top: restTop,
+      sideBySide: true,
+      maxR: ph.pieMaxR,
+    });
+    if (pie.length) {
+      const tiles = mosaicTiles(photos.length, { x: pad, y: restTop, w: photosW, h: room }, ph.gap);
+      ops.push(...middle, ...tileOps(tiles), ...pie);
+      return ops;
+    }
+  }
+  // No pie (or no room for one): the photos in a row under the lines, the two centred.
+  const rowH = Math.min(ph.max, room);
+  centreWithLines(
+    tileOps(rowTiles(photos.length, { x: pad, y: restTop, w: contentW, h: rowH }, ph.gap)),
+  );
   return ops;
+};
+
+type Rect = { x: number; y: number; w: number; h: number };
+
+/** Tiles keep to between portrait 3:4 and landscape 4:3, so no photo is cropped to a sliver. */
+const TILE_ASPECT = { min: 3 / 4, max: 4 / 3 };
+
+/**
+ * `n` equal tiles side by side in `area`, centred across it and top-aligned: as tall as the
+ * area allows, unless that would make them narrower than 3:4 or wider than 4:3.
+ */
+export const rowTiles = (n: number, area: Rect, gap: number): Rect[] => {
+  if (n < 1) return [];
+  const share = (area.w - (n - 1) * gap) / n;
+  const h = Math.floor(Math.min(area.h, share / TILE_ASPECT.min));
+  const w = Math.floor(Math.min(share, h * TILE_ASPECT.max));
+  const rowW = n * w + (n - 1) * gap;
+  const x0 = area.x + (area.w - rowW) / 2;
+  return Array.from({ length: n }, (_, i) => ({ x: x0 + i * (w + gap), y: area.y, w, h }));
+};
+
+/**
+ * Tiles filling `area`, centred in it: one or two in a row, three as one tall tile with two
+ * stacked beside it (each half as tall).
+ */
+export const mosaicTiles = (n: number, area: Rect, gap: number): Rect[] => {
+  if (n < 3) {
+    const tiles = rowTiles(n, area, gap);
+    const shift = tiles.length ? (area.h - tiles[0].h) / 2 : 0;
+    return tiles.map((t) => ({ ...t, y: t.y + shift }));
+  }
+  const w = Math.floor((area.w - gap) / 2);
+  // The tall tile no taller than 2:1, so the small ones stay near square.
+  const h = Math.floor(Math.min(area.h, 2 * w));
+  const small = Math.floor((h - gap) / 2);
+  const y = area.y + (area.h - h) / 2;
+  const x2 = area.x + area.w - w;
+  return [
+    { x: area.x, y, w, h },
+    { x: x2, y, w, h: small },
+    { x: x2, y: y + h - small, w, h: small },
+  ];
+};
+
+/** The part of a photo that fills `tile` without stretching: centred, cut to its shape. */
+export const coverCrop = (
+  photo: Pick<CardPhoto, "width" | "height">,
+  tile: Pick<Rect, "w" | "h">,
+): { sx: number; sy: number; sw: number; sh: number } => {
+  const target = tile.w / tile.h;
+  if (photo.width / photo.height > target) {
+    const sw = photo.height * target;
+    return { sx: (photo.width - sw) / 2, sy: 0, sw, sh: photo.height };
+  }
+  const sh = photo.width / target;
+  return { sx: 0, sy: (photo.height - sh) / 2, sw: photo.width, sh };
+};
+
+/** How the pie's box sits: where, and how its pie and key share it. */
+type PieLayout = {
+  x: number;
+  w: number;
+  top: number;
+  bottom: number;
+  /** The key beside the pie, or below it in columns. */
+  sideBySide: boolean;
+  maxR: number;
 };
 
 /**
  * The pie and its key in a framed sheet box from `top` to `bottom`, headed by a small
- * caps-lock title at its top left. The pie takes the room the box has (up to maxR) and the
- * pie and key sit centred in it: below the pie in columns on a story, beside it on a
- * square. Empty when there's no pie or too little room for one.
+ * caps-lock title at its top left (and the total, when shown, at its top right). The pie
+ * takes the room the box has (up to maxR) and the pie and key sit centred in it: below the
+ * pie in columns on a story, beside it on a square. Empty when there's no pie or too
+ * little room for one.
  */
 const pieBox = ({
   spec,
   style,
   m,
-  x,
-  w,
-  top,
-  bottom,
   hairline,
+  ...layout
 }: {
   spec: CardSpec;
   style: CardStyle;
   m: Metrics;
-  x: number;
-  w: number;
-  top: number;
-  bottom: number;
   hairline: number;
-}): DrawOp[] => {
+} & Pick<PieLayout, "x" | "w" | "top" | "bottom"> &
+  Partial<PieLayout>): DrawOp[] => {
+  const { x, w, top, bottom, sideBySide = m.pie.sideBySide, maxR = m.pie.maxR } = layout;
   const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
   if (!arcs.length) return [];
   const pp = m.pie;
@@ -510,88 +682,133 @@ const pieBox = ({
   // The pie's rim and the gaps between slices: hairlines, so small slices still show.
   const rim = hairline;
   const fills = sliceFills(arcs, style);
-  const rows = spec.showNames ? arcs.length : 0;
+  const amounts = arcs.map((a) => a.amountLabel ?? "");
+  const hasAmounts = amounts.some(Boolean);
+  const rows = spec.showNames || hasAmounts ? arcs.length : 0;
   const innerX = x + pp.pad;
   const innerW = w - 2 * pp.pad;
   const areaTop = top + pp.pad + pp.title + pp.gap;
   const areaH = bottom - pp.pad - areaTop;
   const cx = x + w / 2;
+  const titleY = top + pp.pad + pp.title / 2;
+  const total = spec.total ? truncate(spec.total, pp.title, innerW / 2) : "";
+  const totalW = total ? textWidth(total, pp.title) + pp.title : 0;
   const ops: DrawOp[] = [
     { op: "rect", x, y: top, w, h: bottom - top, fill: "sheet" },
     { op: "frame", x, y: top, w, h: bottom - top, width: hairline },
     {
       op: "text",
-      text: truncate(spec.pieTitle.toUpperCase(), pp.title, innerW),
+      text: truncate(spec.pieTitle.toUpperCase(), pp.title, innerW - totalW),
       x: innerX,
-      y: top + pp.pad + pp.title / 2,
+      y: titleY,
       size: pp.title,
       weight: 700,
       align: "left",
       fill: "ink",
     },
   ];
+  if (total) {
+    ops.push({
+      op: "text",
+      text: total,
+      x: innerX + innerW,
+      y: titleY,
+      size: pp.title,
+      weight: 700,
+      align: "right",
+      fill: "ink",
+    });
+  }
+  const names = spec.showNames ? arcs.map((a) => a.name.toUpperCase()) : arcs.map(() => "");
   // +1: room for float rounding, so a name that fits isn't cut by a hair.
-  const nameW = (key: Metrics["legend"]) =>
-    key.swatch + key.size / 2 + Math.max(0, ...arcs.map((a) => textWidth(a.name, key.size))) + 1;
-
-  if (pp.sideBySide) {
-    // Key rows shrink to fit beside the pie, down to a readable minimum.
-    const row = rows ? Math.min(lg.row, areaH / rows) : lg.row;
-    const key: Metrics["legend"] = {
+  const keyW = (key: Metrics["legend"]) =>
+    key.swatch +
+    key.size / 2 +
+    Math.max(0, ...names.map((n) => textWidth(n, key.size))) +
+    (hasAmounts && spec.showNames ? key.size : 0) +
+    Math.max(0, ...amounts.map((a) => textWidth(a, key.size))) +
+    1;
+  // Key rows shrink to `room`, down to a readable minimum; past that the key is left out.
+  const fitKey = (room: number): Metrics["legend"] => {
+    const row = Math.min(lg.row, room);
+    return {
       row,
       swatch: Math.min(lg.swatch, Math.floor(row * 0.6)),
       size: Math.min(lg.size, Math.floor(row * 0.56)),
     };
-    const showKey = rows > 0 && row >= MIN_KEY_ROW;
-    const r = Math.min(pp.maxR, areaH / 2 - rim, innerW / 4);
+  };
+
+  if (sideBySide) {
+    const key = fitKey(rows ? areaH / rows : lg.row);
+    const showKey = rows > 0 && key.row >= MIN_KEY_ROW;
+    const r = Math.min(maxR, areaH / 2 - rim, innerW / 4);
     if (r < pp.minR) return [];
     const pieW = 2 * (r + rim);
     const keyGap = pp.gap * 1.5;
-    const keyW = showKey ? Math.min(nameW(key), innerW - pieW - keyGap) : 0;
-    const groupW = pieW + (showKey ? keyGap + keyW : 0);
+    const width = showKey ? Math.min(keyW(key), innerW - pieW - keyGap) : 0;
+    const groupW = pieW + (showKey ? keyGap + width : 0);
     const pieCx = cx - groupW / 2 + pieW / 2;
     const cy = areaTop + areaH / 2;
     ops.push(pieOp(pieCx, cy, r, arcs, fills, rim));
     if (showKey) {
-      legendOps(
-        ops,
-        arcs,
+      legendOps(ops, {
+        names,
+        amounts,
         fills,
-        pieCx + pieW / 2 + keyGap,
-        cy - (rows * row) / 2,
-        keyW,
-        key,
-        hairline,
-      );
+        x: pieCx + pieW / 2 + keyGap,
+        top: cy - (rows * key.row) / 2,
+        width,
+        lg: key,
+        border: hairline,
+      });
     }
     return ops;
   }
 
-  // Story: the title anchors the box's top and the key, in up to three columns on its left
-  // edge, its bottom; the pie sits centred in the room between them.
-  const cols = rows <= 2 ? Math.max(rows, 1) : rows <= 4 ? 2 : 3;
+  // Stacked: the title anchors the box's top and the key, in up to three columns on its
+  // left edge, its bottom; the pie sits centred in the room between them. Amounts need the
+  // width, so they keep the key to two columns. Rows shrink before the pie would be lost.
+  const cols = Math.min(hasAmounts ? 2 : 3, rows <= 2 ? Math.max(rows, 1) : rows <= 4 ? 2 : 3);
   const perCol = Math.ceil(rows / cols);
-  const keyH = rows ? perCol * lg.row : 0;
+  const key = fitKey(
+    perCol ? Math.max(MIN_KEY_ROW, (areaH - pp.gap - 2 * (pp.minR + rim)) / perCol) : lg.row,
+  );
+  const keyH = rows ? perCol * key.row : 0;
   const keyTop = areaTop + areaH - keyH;
   const pieRoom = keyTop - (rows ? pp.gap : 0) - areaTop;
-  const r = Math.min(pp.maxR, pieRoom / 2 - rim);
+  const r = Math.min(maxR, pieRoom / 2 - rim, innerW / 2 - rim);
   if (r < pp.minR) return [];
   ops.push(pieOp(cx, areaTop + pieRoom / 2, r, arcs, fills, rim));
   const colW = innerW / cols;
   for (let c = 0; c < cols && rows; c++) {
-    legendOps(
-      ops,
-      arcs.slice(c * perCol, (c + 1) * perCol),
-      fills.slice(c * perCol, (c + 1) * perCol),
-      innerX + c * colW,
-      keyTop,
-      colW - lg.swatch,
-      lg,
-      hairline,
-    );
+    const part = <T>(list: ReadonlyArray<T>) => list.slice(c * perCol, (c + 1) * perCol);
+    legendOps(ops, {
+      names: part(names),
+      amounts: part(amounts),
+      fills: part(fills),
+      x: innerX + c * colW,
+      top: keyTop,
+      width: cols > 1 ? colW - key.swatch : colW,
+      lg: key,
+      border: hairline,
+    });
   }
   return ops;
 };
+
+/** Where an op's bottom edge is (for centring a block of them). */
+const opBottom = (o: DrawOp): number =>
+  o.op === "pie"
+    ? o.cy + o.r
+    : o.op === "text"
+      ? o.y + o.size / 2
+      : "h" in o
+        ? o.y + o.h
+        : o.op === "swatch"
+          ? o.y + o.size
+          : o.op === "pixels"
+            ? o.y + o.grid.length * o.scale
+            : 0;
 
 const shiftDown = (o: DrawOp, by: number): DrawOp =>
   !by ? o : o.op === "pie" ? { ...o, cy: o.cy + by } : "y" in o ? { ...o, y: o.y + by } : o;
@@ -630,18 +847,36 @@ const pieOp = (
   rim: weight,
 });
 
-/** A key: one row per slice, swatch then name in small caps-lock, from (x, top), cut to width. */
+/**
+ * A key: one row per slice from (x, top), cut to width: swatch, then the name in small
+ * caps-lock, and the amount (when shown) at the row's right end. Names are cut before
+ * amounts.
+ */
 const legendOps = (
   ops: DrawOp[],
-  arcs: ReadonlyArray<{ name: string }>,
-  fills: ReadonlyArray<SliceFill>,
-  x: number,
-  top: number,
-  width: number,
-  lg: Metrics["legend"],
-  border: number,
+  {
+    names,
+    amounts,
+    fills,
+    x,
+    top,
+    width,
+    lg,
+    border,
+  }: {
+    names: ReadonlyArray<string>;
+    amounts: ReadonlyArray<string>;
+    fills: ReadonlyArray<SliceFill>;
+    x: number;
+    top: number;
+    width: number;
+    lg: Metrics["legend"];
+    border: number;
+  },
 ) => {
-  arcs.forEach(({ name }, i) => {
+  const textX = x + lg.swatch + lg.size / 2;
+  const right = x + width;
+  names.forEach((name, i) => {
     const mid = top + i * lg.row + lg.row / 2;
     ops.push({
       op: "swatch",
@@ -651,16 +886,30 @@ const legendOps = (
       fill: fills[i],
       border,
     });
-    ops.push({
-      op: "text",
-      text: truncate(name.toUpperCase(), lg.size, width - lg.swatch - lg.size / 2),
-      x: x + lg.swatch + lg.size / 2,
-      y: mid,
-      size: lg.size,
-      weight: 400,
-      align: "left",
-      fill: "ink",
-    });
+    const text = { y: mid, size: lg.size, align: "left", fill: "ink" } as const;
+    const amount = truncate(amounts[i] ?? "", lg.size, right - textX);
+    const amountW = amount ? textWidth(amount, lg.size) : 0;
+    if (amount) {
+      // Alone (names hidden), the amount sits where the name would.
+      const alone = !name;
+      ops.push({
+        op: "text",
+        ...text,
+        text: amount,
+        x: alone ? textX : right,
+        align: alone ? "left" : "right",
+        weight: 700,
+      });
+    }
+    if (name) {
+      ops.push({
+        op: "text",
+        ...text,
+        text: truncate(name, lg.size, right - textX - (amount ? amountW + lg.size / 2 : 0)),
+        x: textX,
+        weight: 400,
+      });
+    }
   });
 };
 
@@ -707,6 +956,8 @@ export const paintOps = (
   ctx: CanvasRenderingContext2D,
   ops: ReadonlyArray<DrawOp>,
   style: CardStyle,
+  /** The picked photos' pixels, in spec.photos order. */
+  sources: ReadonlyArray<CanvasImageSource> = [],
 ) => {
   const inks: Inks = style;
   const family = fontStack(style.font);
@@ -777,6 +1028,17 @@ export const paintOps = (
         ctx.stroke();
         break;
       }
+      case "photo": {
+        const source = sources[o.index];
+        if (source) {
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(source, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.w, o.h);
+        } else {
+          ctx.fillStyle = inks.sheet;
+          ctx.fillRect(o.x, o.y, o.w, o.h);
+        }
+        break;
+      }
       case "swatch":
         ctx.fillStyle = fillStyle(ctx, o.fill, inks);
         ctx.fillRect(o.x, o.y, o.size, o.size);
@@ -802,6 +1064,8 @@ export const renderCard = async (
   spec: CardSpec,
   format: CardFormat,
   style: CardStyle = readCardStyle(),
+  /** The picked photos' pixels, in spec.photos order (never uploaded anywhere). */
+  sources: ReadonlyArray<CanvasImageSource> = [],
 ): Promise<Blob> => {
   await loadFonts(style.font);
   const { width, height } = CARD_SIZES[format];
@@ -810,7 +1074,7 @@ export const renderCard = async (
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D isn't available");
-  paintOps(ctx, layoutCard(spec, format, style), style);
+  paintOps(ctx, layoutCard(spec, format, style), style, sources);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Couldn't encode the card"))),

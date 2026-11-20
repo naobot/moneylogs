@@ -59,6 +59,9 @@ export type AnalyticsEvents = {
     card: "daily" | "breakdown";
     format: "story" | "square";
     result: ShareCardResult;
+    /** How many photos the sharer added (0–3). */
+    photos: number;
+    amounts: boolean;
   };
 
   // Display
