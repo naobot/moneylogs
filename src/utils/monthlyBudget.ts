@@ -1,5 +1,6 @@
 import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
+import { monthKeyOf } from "@/utils/ledger";
 import { isValidBudgetAmount } from "@/utils/ledgerCategories";
 import { budgetsFor } from "@/utils/ledgerStats";
 
@@ -23,6 +24,13 @@ export const applyTotalOps = (
   }
   return out;
 };
+
+/**
+ * Whether the stats page for `month` may edit the total. There is one standing total, saved
+ * against this month's snapshot, so only the current month edits it: a finished month keeps
+ * its own snapshot, and a future month would really be changing this one.
+ */
+export const canEditTotal = (month: string, today: string): boolean => month === monthKeyOf(today);
 
 export type Allocation = {
   /** What the category budgets add up to in this currency. */

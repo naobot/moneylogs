@@ -17,6 +17,7 @@ import {
 import { formatAmount } from "@/utils/ledgerEntries";
 import Totals from "./Totals";
 import { hasAnyBudget } from "@/utils/ledgerCategories";
+import { canEditTotal } from "@/utils/monthlyBudget";
 import {
   aggregateEntries,
   BudgetRow,
@@ -174,9 +175,8 @@ export const LedgerStatsPanel = ({
   const catShares = categoryShares(agg, currency, categories);
   const catRows = categoryBudgetRows(agg, currency, categories);
   const budget = budgetSummary({ month, today, currency, agg, categories, totals });
-  // Edits change the standing total, which a finished month no longer uses.
   const editTotal =
-    onEditTotal && month >= monthKeyOf(today) ? () => onEditTotal(currency) : undefined;
+    onEditTotal && canEditTotal(month, today) ? () => onEditTotal(currency) : undefined;
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const names: Record<string, string> = {};
   for (const e of entries) names[e.authorUid] = e.authorName;
