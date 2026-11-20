@@ -1,5 +1,5 @@
 import { DocumentReference, FieldValue, Firestore, DocumentData } from "firebase-admin/firestore";
-import { budgetAlerts, BudgetCategory } from "./ledgerBudget";
+import { budgetAlerts, BudgetCategory, MonthlyTotals } from "./ledgerBudget";
 import { isNotificationEnabled } from "./notificationPrefs";
 
 // Firestore's gRPC code for a create() whose document already exists.
@@ -31,6 +31,7 @@ export const notifyLedgerBudgets = async ({
     ledgerName: typeof ledger.title === "string" ? ledger.title : "",
     month,
     categories: (ledger.categories ?? []) as BudgetCategory[],
+    totals: (ledger.monthlyBudget ?? undefined) as MonthlyTotals | undefined,
     byCategory,
     now,
   });

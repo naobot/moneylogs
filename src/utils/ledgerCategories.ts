@@ -4,7 +4,12 @@ import { CURRENCIES, isCurrency } from "@/utils/currency";
 import { parseAmount } from "@/utils/ledgerEntries";
 import { MAX_CATEGORY_NAME_LENGTH, normaliseCategoryName } from "@/utils/ledger";
 // Shared with the Cloud Functions, so budget alerts and the buddy agree on what's fixed.
-import { DEFAULT_FIXED_IDS, isFixedCategory } from "../../functions/src/ledgerBudget";
+import {
+  DEFAULT_FIXED_IDS,
+  isBudgetAmount,
+  isFixedCategory,
+  MAX_BUDGET_AMOUNT,
+} from "../../functions/src/ledgerBudget";
 
 export { DEFAULT_FIXED_IDS, isFixedCategory };
 
@@ -28,10 +33,13 @@ export type CategoryOp =
   | { type: "setBudget"; id: string; currency: Currency; amount: number | null };
 
 /** Largest budget accepted (sanity bound against typos like an extra few zeros). */
-export const MAX_BUDGET = 1_000_000_000;
+export const MAX_BUDGET = MAX_BUDGET_AMOUNT;
 
-export const isValidBudgetAmount = (amount: number): boolean =>
-  Number.isFinite(amount) && amount > 0 && amount <= MAX_BUDGET;
+/** Budgets are stored to the cent. */
+export const roundBudget = (amount: number): number => Math.round(amount * 100) / 100;
+
+/** Whether an amount is a budget once stored to the cent (so 0.004, which rounds to 0, isn't). */
+export const isValidBudgetAmount = (amount: number): boolean => isBudgetAmount(roundBudget(amount));
 
 /**
  * Budget fields being typed into, keyed by budgetDraftKey: the raw text of each field
@@ -72,7 +80,7 @@ export const budgetDraftOps = (
       const raw = drafts[budgetDraftKey(category.id, currency)];
       if (raw === undefined || budgetFieldError(raw)) continue;
       const saved = category.budget?.[currency];
-      const amount = raw.trim() === "" ? null : Math.round(parseAmount(raw) * 100) / 100;
+      const amount = raw.trim() === "" ? null : roundBudget(parseAmount(raw));
       if (amount === (saved ?? null)) continue;
       ops.push({ type: "setBudget", id: category.id, currency, amount });
     }
@@ -100,7 +108,12 @@ export const preferredBudgetCurrency = (
 };
 
 /** True when any active category has a positive monthly budget, in any currency. */
-export const hasAnyBudget = (categories: ReadonlyArray<LedgerCategory>): boolean =>
+/** Whether anything is budgeted: a category budget, or a monthly total (`totals`). */
+export const hasAnyBudget = (
+  categories: ReadonlyArray<LedgerCategory>,
+  totals?: Partial<Record<Currency, number>>,
+): boolean =>
+  Object.values(totals ?? {}).some((amount) => (amount ?? 0) > 0) ||
   categories.some(
     (c) => !c.archived && Object.values(c.budget ?? {}).some((amount) => (amount ?? 0) > 0),
   );
@@ -271,7 +284,7 @@ export const applyCategoryOp = (
         if (c.id !== op.id) return c;
         const budget = { ...c.budget };
         if (op.amount === null) delete budget[op.currency];
-        else budget[op.currency] = Math.round(op.amount * 100) / 100;
+        else budget[op.currency] = roundBudget(op.amount);
         const { budget: _old, ...rest } = c;
         // Drop the field entirely when no budgets remain.
         return Object.keys(budget).length > 0 ? { ...rest, budget } : rest;

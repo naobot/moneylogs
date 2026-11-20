@@ -241,6 +241,9 @@ describe("budget drafts", () => {
     expect(budgetFieldError("  ")).toBeUndefined();
     expect(budgetFieldError("25,000")).toBeUndefined();
     expect(budgetFieldError("abc")).toMatch(/between 0 and/);
+    // Stored to the cent, this would be 0: no budget at all.
+    expect(budgetFieldError("0.004")).toMatch(/between 0 and/);
+    expect(budgetFieldError("0.005")).toBeUndefined();
     expect(budgetFieldError("0")).toMatch(/between 0 and/);
   });
 

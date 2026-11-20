@@ -214,7 +214,27 @@ service cloud.firestore {
         && d.defaultCurrency is string
         && d.memberUids is list && d.members is list
         && d.memberUids.size() == d.members.size()
-        && d.memberUids.size() <= d.max_participants;
+        && d.memberUids.size() <= d.max_participants
+        // The month's total budget per currency (see Ledger.monthlyBudget).
+        && (!('monthlyBudget' in d) || validTotals(d.monthlyBudget));
+    }
+
+    // A positive amount up to MAX_BUDGET (src/utils/ledgerCategories.ts), if present.
+    function validAmountAt(m, currency) {
+      return !(currency in m)
+        || ((m[currency] is int || m[currency] is float)
+            && m[currency] > 0 && m[currency] <= 1000000000);
+    }
+
+    // Monthly totals per currency: only known currencies (CURRENCIES in
+    // src/utils/currency.ts), each a real amount.
+    function validTotals(m) {
+      return m is map
+        && m.keys().hasOnly(['JPY', 'USD', 'CAD', 'KRW', 'CNY', 'SGD', 'EUR', 'GBP', 'NTD', 'AUD', 'MYR'])
+        && validAmountAt(m, 'JPY') && validAmountAt(m, 'USD') && validAmountAt(m, 'CAD')
+        && validAmountAt(m, 'KRW') && validAmountAt(m, 'CNY') && validAmountAt(m, 'SGD')
+        && validAmountAt(m, 'EUR') && validAmountAt(m, 'GBP') && validAmountAt(m, 'NTD')
+        && validAmountAt(m, 'AUD') && validAmountAt(m, 'MYR');
     }
 
     match /ledgers/{ledgerId} {
@@ -240,7 +260,7 @@ service cloud.firestore {
       allow update: if signedIn()
         && request.auth.uid in resource.data.memberUids
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['title', 'categories', 'defaultCurrency', 'max_participants'])
+             .hasOnly(['title', 'categories', 'monthlyBudget', 'defaultCurrency', 'max_participants'])
         && validLedgerFields(request.resource.data);
 
       // A signed-in non-member joins via the invite link: they may only add
@@ -313,9 +333,11 @@ service cloud.firestore {
         allow read: if isLedgerMember(ledgerId);
         allow create: if isLedgerMember(ledgerId)
           && month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
-          && request.resource.data.keys().hasOnly(['budgets', 'names', 'snapshotAt'])
+          && request.resource.data.keys().hasOnly(['budgets', 'names', 'monthlyBudget', 'snapshotAt'])
           && request.resource.data.budgets is map
           && request.resource.data.names is map
+          && (!('monthlyBudget' in request.resource.data)
+              || validTotals(request.resource.data.monthlyBudget))
           && request.resource.data.snapshotAt == request.time;
         allow update, delete: if false;
       }

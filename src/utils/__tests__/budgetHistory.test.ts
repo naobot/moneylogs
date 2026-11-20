@@ -8,6 +8,8 @@ import {
   effectiveBudgets,
   snapshotForMonth,
   snapshotOf,
+  totalsChanged,
+  totalsForMonth,
   withSnapshotBudgets,
 } from "@/utils/budgetHistory";
 import { budgetsFor } from "@/utils/ledgerStats";
@@ -90,5 +92,24 @@ describe("withSnapshotBudgets", () => {
 
   it("leaves categories alone without a snapshot", () => {
     expect(categoriesForMonth("2026-11", cats, [])).toEqual(cats);
+  });
+});
+
+describe("monthly totals in history", () => {
+  it("notices a changed total, ignoring empty amounts", () => {
+    expect(totalsChanged({ CAD: 2000 }, { CAD: 2500 })).toBe(true);
+    expect(totalsChanged(undefined, { CAD: 2000 })).toBe(true);
+    expect(totalsChanged({ CAD: 2000, USD: 0 }, { CAD: 2000 })).toBe(false);
+    expect(totalsChanged(undefined, {})).toBe(false);
+  });
+
+  it("keeps the total in the snapshot and reads each month's own", () => {
+    const snapshot = snapshotOf("2026-10", cats, { CAD: 2000, USD: 0 });
+    expect(snapshot.monthlyBudget).toEqual({ CAD: 2000 });
+    expect(totalsForMonth("2026-10", { CAD: 2500 }, [snapshot])).toEqual({ CAD: 2000 });
+    expect(totalsForMonth("2026-11", { CAD: 2500 }, [snapshot])).toEqual({ CAD: 2500 });
+    // Snapshots from before totals existed had none.
+    const older: BudgetSnapshot = { month: "2026-09", budgets: {}, names: {} };
+    expect(totalsForMonth("2026-09", { CAD: 2500 }, [older])).toEqual({});
   });
 });

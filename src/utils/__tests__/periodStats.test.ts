@@ -78,6 +78,27 @@ describe("periodBudget", () => {
     expect(rows.find((r) => r.id === "fun")?.budget).toBeUndefined();
   });
 
+  it("judges a month with a total by all its spending", () => {
+    // October had no total; November has 600, which counts fun's spending too.
+    const snapshots: BudgetSnapshot[] = [
+      { month: "2026-10", budgets: { food: { CAD: 300 } }, names: { food: "Food" } },
+    ];
+    const months = { ...byMonth, "2026-11": doc({ food: { CAD: 150 }, fun: { CAD: 500 } }) };
+    const result = periodBudget({
+      months: Q4,
+      currentMonth: "2026-11",
+      byMonth: months,
+      categories: cats,
+      totals: { CAD: 600 },
+      snapshots,
+      currency: "CAD",
+    })!;
+    expect(result.months).toEqual([
+      { month: "2026-10", budget: 300, spent: 350, over: true },
+      { month: "2026-11", budget: 600, spent: 650, over: true },
+    ]);
+  });
+
   it("is null when no begun month had a budget in the currency", () => {
     expect(
       periodBudget({

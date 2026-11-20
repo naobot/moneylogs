@@ -285,6 +285,40 @@ describe("budgets", () => {
     });
   });
 
+  it("measures all spending against a monthly total", () => {
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-11-10",
+      currency: "JPY",
+      agg: aggregateEntries([
+        e(30000, "JPY", "food", "2026-11-02"),
+        e(20000, "JPY", "gone", "2026-11-03"),
+      ]),
+      categories: [{ id: "food", name: "Food", order: 0, budget: { JPY: 60000 } }],
+      totals: { JPY: 200000, CAD: 1000 },
+    })!;
+    expect(s).toMatchObject({
+      budget: 200000,
+      spent: 50000, // the unbudgeted 20,000 counts too
+      remaining: 150000,
+      isTotal: true,
+      allocated: 60000,
+    });
+    expect(s.projected).toBe(150000);
+  });
+
+  it("budgets by a monthly total alone", () => {
+    const s = budgetSummary({
+      month: "2026-11",
+      today: "2026-11-10",
+      currency: "JPY",
+      agg: aggregateEntries([e(1000, "JPY", "food", "2026-11-02")]),
+      categories: [],
+      totals: { JPY: 30000 },
+    });
+    expect(s).toMatchObject({ budget: 30000, spent: 1000, isTotal: true, allocated: 0 });
+  });
+
   it("returns null when nothing is budgeted in the currency", () => {
     expect(
       budgetSummary({

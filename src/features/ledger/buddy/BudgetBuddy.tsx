@@ -67,7 +67,7 @@ export const BudgetBuddy = ({
   onStartReview,
   bubbleBounds,
 }: {
-  ledger: Pick<Ledger, "id" | "categories">;
+  ledger: Pick<Ledger, "id" | "categories" | "monthlyBudget">;
   /** Opens the stats for the month being reviewed. Without it the buddy doesn't ask. */
   onStartReview?: (month: string) => void;
   /** The column the speech bubble keeps inside (and to its width), if any. */

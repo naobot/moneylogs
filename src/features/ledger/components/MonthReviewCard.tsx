@@ -8,7 +8,7 @@ import { track } from "@/utils/analytics";
 import { monthName, reviewedMonth } from "@/features/ledger/buddy/monthReview";
 
 type MonthReviewCardProps = {
-  ledger: Pick<Ledger, "id" | "categories">;
+  ledger: Pick<Ledger, "id" | "categories" | "monthlyBudget">;
   /** The month the stats view shows. */
   month: string;
   today: string;
@@ -27,7 +27,7 @@ export const MonthReviewCard = ({ ledger, month, today, onEditBudget }: MonthRev
   const { state } = useMonthReview(user?.id, ledger.id, active ? month : null);
   if (!active || !user?.id || state?.status !== "reviewing") return null;
 
-  const hasBudgets = hasAnyBudget(ledger.categories ?? []);
+  const hasBudgets = hasAnyBudget(ledger.categories ?? [], ledger.monthlyBudget);
   const thisMonth = monthName(monthKeyOf(today));
 
   const answer = (action: "adjust" | "keep") => {

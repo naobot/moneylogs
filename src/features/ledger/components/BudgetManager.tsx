@@ -3,7 +3,8 @@ import cx from "classnames";
 
 import Modal from "@/components/Modal";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { LedgerCategory } from "@/types/ledger";
+import RowButton from "@/components/RowButton";
+import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { activeCategories } from "@/utils/ledger";
 import { formatTotals } from "@/utils/ledgerEntries";
@@ -28,6 +29,10 @@ type BudgetManagerProps = {
   onClose: () => void;
   /** Writes edits straight away; rejects if they couldn't be saved. */
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
+  /** The log's monthly totals (Ledger.monthlyBudget). */
+  totals?: CurrencyAmounts;
+  /** Opens the monthly total, on one currency. */
+  onEditTotal?: (currency: Currency) => void;
 };
 
 /**
@@ -45,6 +50,8 @@ const BudgetManagerDialog = ({
   defaultCurrency,
   onClose,
   onSave,
+  totals,
+  onEditTotal,
 }: BudgetManagerProps) => {
   const wide = useMediaQuery(WIDE_QUERY);
   const edits = useCategoryEdits(categories, onSave);
@@ -102,6 +109,23 @@ const BudgetManagerDialog = ({
 
   const list = (
     <div className="CategoryManager__listPane">
+      {onEditTotal && (
+        <div className="BudgetManager__total">
+          <span className="CategoryDetail__label">monthly total</span>
+          <RowButton
+            className="keep-case"
+            aria-label="edit the monthly total"
+            onClick={() => {
+              commitBudgets();
+              onEditTotal(budgetCurrency);
+            }}
+          >
+            {totals && Object.values(totals).some((n) => (n ?? 0) > 0)
+              ? `${formatTotals(totals)}/mo`
+              : "set a total"}
+          </RowButton>
+        </div>
+      )}
       <p className="CategoryManager__hint">
         Monthly limits per category. Tap one to set, change or remove its budget.
       </p>

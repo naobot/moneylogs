@@ -97,7 +97,81 @@ export const budgetPace = ({
     flexibleBudget: r2(flexibleBudget),
     flexibleSpent: r2(flexibleSpent),
     projected: r2(committed + (flexibleSpent / e) * days),
-    pace: flexibleBudget > 0 ? r2(flexibleSpent) / (flexibleBudget * (e / days)) : null,
+    // No everyday allowance: nothing to judge by, unless something was spent anyway (a
+    // monthly total that fixed costs already use up), which is over any pace.
+    pace:
+      flexibleBudget > 0
+        ? r2(flexibleSpent) / (flexibleBudget * (e / days))
+        : flexibleSpent > 0
+          ? Infinity
+          : null,
+  };
+};
+
+/** Id of the budget line for the part of a monthly total no category budget claims. */
+export const UNALLOCATED = "__unallocated";
+
+/** The largest budget or total the app accepts (MAX_BUDGET in src/utils/ledgerCategories.ts). */
+export const MAX_BUDGET_AMOUNT = 1_000_000_000;
+
+/**
+ * Whether a stored value is a usable budget amount. Ledgers are written by members, so
+ * read-side code checks rather than trusting the type.
+ */
+export const isBudgetAmount = (amount: unknown): amount is number =>
+  typeof amount === "number" &&
+  Number.isFinite(amount) &&
+  amount > 0 &&
+  amount <= MAX_BUDGET_AMOUNT;
+
+/** A log's monthly totals (expected income, or a spending cap), per currency. */
+export type MonthlyTotals = { [currency: string]: number | undefined };
+
+/** The monthly total in one currency, if one is set. */
+export const totalIn = (totals: MonthlyTotals | undefined, currency: string): number | null => {
+  const amount: unknown = totals?.[currency];
+  return isBudgetAmount(amount) ? amount : null;
+};
+
+/**
+ * One currency's budget lines, ready for budgetPace. Without a monthly total they're the
+ * category budgets, and spending in unbudgeted categories doesn't count. With one, the
+ * total is the budget: whatever the categories don't claim becomes one more everyday
+ * line (UNALLOCATED) that collects spending in categories without a budget, so all
+ * spending counts against the total.
+ */
+export const budgetLines = ({
+  budgets,
+  total,
+  byCategory,
+  currency,
+}: {
+  /** Budgeted category id → monthly budget, in this currency. */
+  budgets: Iterable<[string, number]>;
+  total: number | null;
+  byCategory: { [categoryId: string]: { [currency: string]: number | undefined } | undefined };
+  currency: string;
+}): {
+  lines: Map<string, number>;
+  spentIn: (id: string) => number;
+  /** What spending is measured against: the total if set, else the categories' sum. */
+  budget: number;
+} => {
+  const lines = new Map(budgets);
+  const allocated = r2([...lines.values()].reduce((s, n) => s + n, 0));
+  const spentInCategory = (id: string) => byCategory[id]?.[currency] ?? 0;
+  if (total === null) return { lines, spentIn: spentInCategory, budget: allocated };
+
+  lines.set(UNALLOCATED, r2(Math.max(0, total - allocated)));
+  const unbudgeted = r2(
+    Object.keys(byCategory)
+      .filter((id) => !lines.has(id))
+      .reduce((s, id) => s + spentInCategory(id), 0),
+  );
+  return {
+    lines,
+    spentIn: (id) => (id === UNALLOCATED ? unbudgeted : spentInCategory(id)),
+    budget: total,
   };
 };
 
@@ -158,6 +232,18 @@ const budgetsByCurrency = (categories: ReadonlyArray<BudgetCategory>) => {
   return out;
 };
 
+/** Category budgets by currency, including currencies budgeted only by a monthly total. */
+const budgetedCurrencies = (
+  categories: ReadonlyArray<BudgetCategory>,
+  totals: MonthlyTotals | undefined,
+) => {
+  const out = budgetsByCurrency(categories);
+  for (const currency of Object.keys(totals ?? {})) {
+    if (totalIn(totals, currency) !== null && !out.has(currency)) out.set(currency, new Map());
+  }
+  return out;
+};
+
 const alertId = (type: BudgetAlertType, ledgerId: string, month: string, ...rest: string[]) =>
   [type, ledgerId, month, ...rest].join("_");
 
@@ -166,6 +252,7 @@ export const budgetAlerts = ({
   ledgerName,
   month,
   categories,
+  totals,
   byCategory,
   now,
 }: {
@@ -173,6 +260,8 @@ export const budgetAlerts = ({
   ledgerName: string;
   month: string;
   categories: ReadonlyArray<BudgetCategory>;
+  /** The log's monthly totals, if any (see budgetLines). */
+  totals?: MonthlyTotals;
   /** From the month aggregate: spending per category, per currency. */
   byCategory: { [categoryId: string]: { [currency: string]: number } };
   now: number;
@@ -213,7 +302,7 @@ export const budgetAlerts = ({
 
   const fixed = new Set(categories.filter(isFixedCategory).map((c) => c.id));
 
-  for (const [currency, budgets] of budgetsByCurrency(categories)) {
+  for (const [currency, budgets] of budgetedCurrencies(categories, totals)) {
     for (const [categoryId, budget] of budgets) {
       threshold(
         byCategory[categoryId]?.[currency] ?? 0,
@@ -222,14 +311,23 @@ export const budgetAlerts = ({
         categories.find((c) => c.id === categoryId),
       );
     }
-    const pace = budgetPace({
+    const {
+      lines,
+      spentIn,
+      budget: total,
+    } = budgetLines({
       budgets,
+      total: totalIn(totals, currency),
+      byCategory,
+      currency,
+    });
+    const { spent, projected } = budgetPace({
+      budgets: lines,
       isFixed: (id) => fixed.has(id),
-      spentIn: (id) => byCategory[id]?.[currency] ?? 0,
+      spentIn,
       elapsed,
       days,
     });
-    const { budget: total, spent, projected } = pace;
     threshold(spent, total, currency);
 
     // Pace: only while still under budget, and not in the first few days. Fixed costs
@@ -256,11 +354,13 @@ export const budgetAlerts = ({
  */
 export const budgetPaceRatio = ({
   categories,
+  totals,
   byCategory,
   month,
   now,
 }: {
   categories: ReadonlyArray<BudgetCategory>;
+  totals?: MonthlyTotals;
   byCategory: { [categoryId: string]: { [currency: string]: number } };
   month: string;
   now: number;
@@ -269,12 +369,18 @@ export const budgetPaceRatio = ({
   const elapsed = elapsedDays(month, now);
   const days = daysIn(month);
   let worst: number | null = null;
-  for (const [currency, budgets] of budgetsByCurrency(categories)) {
+  for (const [currency, budgets] of budgetedCurrencies(categories, totals)) {
     // Fixed costs don't say anything about pace; currencies with only those are skipped.
-    const { pace } = budgetPace({
+    const { lines, spentIn } = budgetLines({
       budgets,
+      total: totalIn(totals, currency),
+      byCategory,
+      currency,
+    });
+    const { pace } = budgetPace({
+      budgets: lines,
       isFixed: (id) => fixed.has(id),
-      spentIn: (id) => byCategory[id]?.[currency] ?? 0,
+      spentIn,
       elapsed,
       days,
     });

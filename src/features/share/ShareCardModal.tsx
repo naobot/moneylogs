@@ -37,7 +37,7 @@ import "./ShareCardModal.scss";
 export type ShareCardKind = "daily" | "breakdown";
 
 type ShareCardModalProps = {
-  ledger: Pick<Ledger, "id" | "categories" | "defaultCurrency" | "memberUids">;
+  ledger: Pick<Ledger, "id" | "categories" | "monthlyBudget" | "defaultCurrency" | "memberUids">;
   today: string;
   onClose: () => void;
 } & ({ card: "daily" } | { card: "breakdown"; month: string });
@@ -117,6 +117,7 @@ const DailyShare = ({
     today,
     currency,
     categories,
+    totals: ledger.monthlyBudget,
     noSpendDays: noSpend.days,
     isSoleMember: (ledger.memberUids?.length ?? 0) <= 1,
     dayWord,

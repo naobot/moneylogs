@@ -1,7 +1,7 @@
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerCategory, LedgerMonth } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
-import { BudgetSnapshot, categoriesForMonth } from "@/utils/budgetHistory";
+import { BudgetSnapshot, categoriesForMonth, totalsForMonth } from "@/utils/budgetHistory";
 import { budgetsFor } from "@/utils/ledgerStats";
 
 /**
@@ -68,7 +68,7 @@ export type MonthBudgetResult = { month: string; budget: number; spent: number; 
 export type PeriodBudget = {
   /** Sum of each begun month's budget in this currency. */
   budget: number;
-  /** Spending in each month's budgeted categories. */
+  /** Spending each month measured against its budget (see budgetSummary). */
   spent: number;
   used: number;
   over: boolean;
@@ -94,6 +94,7 @@ export const periodBudget = ({
   currentMonth,
   byMonth,
   categories,
+  totals,
   snapshots,
   currency,
 }: {
@@ -101,6 +102,8 @@ export const periodBudget = ({
   currentMonth: string;
   byMonth: MonthDocs;
   categories: ReadonlyArray<LedgerCategory>;
+  /** The standing monthly totals (Ledger.monthlyBudget). */
+  totals?: CurrencyAmounts;
   snapshots: ReadonlyArray<BudgetSnapshot>;
   currency: Currency;
 }): PeriodBudget | null => {
@@ -109,11 +112,14 @@ export const periodBudget = ({
 
   for (const month of monthsSoFar(months, currentMonth)) {
     const cats = categoriesForMonth(month, categories, snapshots);
-    const { total, byCategory } = budgetsFor(cats, currency);
+    const { total: allocated, byCategory } = budgetsFor(cats, currency);
+    // A monthly total, when that month had one, is its budget and counts all spending.
+    const monthTotal = totalsForMonth(month, totals, snapshots)[currency] ?? 0;
+    const total = monthTotal > 0 ? monthTotal : allocated;
     if (total <= 0) continue;
-    let spent = 0;
+    let spent = monthTotal > 0 ? (byMonth[month]?.totals?.[currency] ?? 0) : 0;
     for (const [id, amount] of Object.entries(byCategory)) {
-      spent += byMonth[month]?.byCategory?.[id]?.[currency] ?? 0;
+      if (monthTotal <= 0) spent += byMonth[month]?.byCategory?.[id]?.[currency] ?? 0;
       const prev = summed.get(id);
       const category = cats.find((c) => c.id === id)!;
       summed.set(id, {

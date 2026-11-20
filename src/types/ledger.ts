@@ -29,6 +29,12 @@ export type Ledger = {
   members: Array<DocumentReference>; // user doc refs (matches log_groups for reuse)
   memberUids: Array<string>; // auth uids — used by security rules and list queries
   categories: Array<LedgerCategory>;
+  /**
+   * The month's total budget per currency: expected income, or a cap on spending. When
+   * set, all spending counts against it and category budgets are carved out of it (see
+   * budgetLines in functions/src/ledgerBudget.ts). Unset: the category budgets' sum.
+   */
+  monthlyBudget?: CurrencyAmounts;
   defaultCurrency: Currency;
   createdAt: Timestamp;
   /** Auth uid of the creator. Older ledgers lack it; memberUids[0] is the creator there. */

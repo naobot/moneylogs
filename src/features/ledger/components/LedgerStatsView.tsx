@@ -39,6 +39,7 @@ const MonthStats = ({
   month,
   today,
   openBudgets,
+  openTotal,
 }: LedgerStatsViewProps & LedgerShellContext) => {
   const { user } = useCurrentUser();
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
@@ -57,6 +58,7 @@ const MonthStats = ({
         entries={entries}
         isLoading={isLoading}
         onEditBudget={openBudgets}
+        onEditTotal={openTotal}
       />
       {hasMine && (
         <div className="LedgerStats__share">

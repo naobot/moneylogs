@@ -21,7 +21,7 @@ const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
  * cards). `isSuccess` is false until the month docs and no-spend days are in, so the face
  * doesn't flash from idle.
  */
-export const useBuddyMood = (ledger: Pick<Ledger, "id" | "categories">) => {
+export const useBuddyMood = (ledger: Pick<Ledger, "id" | "categories" | "monthlyBudget">) => {
   const { user } = useCurrentUser();
   const now = useNow();
   const today = todayInTz(user?.timezone, now.valueOf());
@@ -45,6 +45,7 @@ export const useBuddyMood = (ledger: Pick<Ledger, "id" | "categories">) => {
   const state = buddyMood({
     ledgerId: ledger.id,
     categories: ledger.categories ?? [],
+    monthlyBudget: ledger.monthlyBudget,
     current: byMonth[month],
     previous: byMonth[previousMonth],
     today,
