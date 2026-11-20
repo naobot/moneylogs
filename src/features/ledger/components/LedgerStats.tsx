@@ -28,12 +28,18 @@ import {
   BarSegment,
   categoryBarSegments,
   categoryShares,
+  CategorySort,
   currenciesByUse,
   dailySeries,
   memberShares,
+  monthElapsedShare,
   monthlySeries,
   Share,
+  SortedCategoryRow,
+  sortCategoryRows,
 } from "@/utils/ledgerStats";
+import { track } from "@/utils/analytics";
+import { storage } from "@/platform";
 
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
@@ -255,20 +261,16 @@ export const LedgerStatsPanel = ({
 
       {(hasEntries || catRows.length > 0) && (
         <>
-          <h4 className="LedgerStats__heading">
-            By category · <span className="keep-case">{currency}</span>
-          </h4>
-          {budget && (
-            <p className="LedgerStats__note">
-              Categories with a budget show progress toward it; the rest show their share of
-              spending.
-            </p>
-          )}
-          <ShareRows
+          <CategorySection
             rows={catRows}
             currency={currency}
-            label="Spending by category"
+            categories={categories}
             segmentOf={categoryBarSegments(catShares, categories).segmentOf}
+            elapsedShare={monthElapsedShare(month, today)}
+            note={
+              budget &&
+              "Categories with a budget show progress toward it; the rest show their share of spending."
+            }
           />
         </>
       )}
@@ -340,17 +342,21 @@ export const ShareRows = ({
   currency,
   label,
   segmentOf,
+  showPace = false,
 }: {
-  rows: Array<Share & Partial<Pick<BudgetRow, "budget" | "over">>>;
+  rows: Array<Share & Partial<Pick<SortedCategoryRow, "budget" | "over" | "pace">>>;
   currency: Currency;
   label: string;
   /** Category rows: each row's fill in the stacked bar, shown as a key swatch. */
   segmentOf?: ReadonlyMap<string, BarSegment>;
+  /** Budgeted rows show their pace (1.0× = on pace) instead of the share used. */
+  showPace?: boolean;
 }) => (
   <ul className="LedgerStats__shares" aria-label={label}>
     {rows.map((row) => {
       const budgeted = row.budget !== undefined;
       const ratio = budgeted ? row.amount / row.budget! : row.share;
+      const pace = showPace && row.pace !== undefined ? row.pace : undefined;
       return (
         <li key={row.id} className={cx({ "LedgerStats__shares--over": row.over })}>
           <span className="LedgerStats__shares__name">
@@ -375,14 +381,113 @@ export const ShareRows = ({
             {formatAmount(row.amount, currency)}
             {budgeted && <small> / {formatAmount(row.budget!, currency)}</small>}
           </span>
-          <span className="LedgerStats__shares__pct" title={budgeted ? "of budget" : "of spending"}>
-            {pct(ratio)}
-          </span>
+          {pace !== undefined ? (
+            <span
+              className="LedgerStats__shares__pct"
+              title={`pace: ${pace.toFixed(1)}× what the budget allows so far`}
+            >
+              {pace.toFixed(1)}×
+            </span>
+          ) : (
+            <span
+              className="LedgerStats__shares__pct"
+              title={budgeted ? "of budget" : "of spending"}
+            >
+              {pct(ratio)}
+            </span>
+          )}
         </li>
       );
     })}
   </ul>
 );
+
+const SORT_KEY = "ML__stats_category_sort";
+const SORTS: ReadonlyArray<{ sort: CategorySort; label: string }> = [
+  { sort: "order", label: "default" },
+  { sort: "amount", label: "amount" },
+  { sort: "pace", label: "pace" },
+];
+const isSort = (v: unknown): v is CategorySort => SORTS.some((s) => s.sort === v);
+
+/** The device's last category sort (a per-viewer convenience, so browser storage). */
+const useCategorySort = () => {
+  const [sort, setSort] = useState<CategorySort>(() => {
+    const stored = storage.get(SORT_KEY);
+    return isSort(stored) ? stored : "order";
+  });
+  const pick = (next: CategorySort) => {
+    if (next === sort) return;
+    setSort(next);
+    storage.set(SORT_KEY, next);
+    track("stats_sort", { sort: next });
+  };
+  return [sort, pick] as const;
+};
+
+/**
+ * "By category" on the month and period stats: the rows in the Categories-panel order,
+ * by amount, or by budget pace (offered once anything has a budget).
+ */
+export const CategorySection = ({
+  rows,
+  currency,
+  categories,
+  segmentOf,
+  elapsedShare,
+  note,
+}: {
+  rows: ReadonlyArray<BudgetRow>;
+  currency: Currency;
+  categories: ReadonlyArray<LedgerCategory>;
+  segmentOf: ReadonlyMap<string, BarSegment>;
+  /** How much of the month or period has gone by (0–1), for pace. */
+  elapsedShare: number;
+  note?: string | null | false;
+}) => {
+  const [picked, setSort] = useCategorySort();
+  const canPace = rows.some((r) => r.budget !== undefined);
+  const options = canPace ? SORTS : SORTS.filter((s) => s.sort !== "pace");
+  const sort = picked === "pace" && !canPace ? "order" : picked;
+  const sorted = sortCategoryRows(rows, sort, { categories, elapsedShare });
+  return (
+    <>
+      <div className="LedgerStats__chartHeader">
+        <h4 className="LedgerStats__heading">
+          By category · <span className="keep-case">{currency}</span>
+        </h4>
+        {rows.length > 1 && (
+          <div className="Segmented" role="group" aria-label="sort categories by">
+            {options.map((o) => (
+              <Button
+                key={o.sort}
+                text={o.label}
+                size="sm"
+                variant="toggle"
+                isSelected={o.sort === sort}
+                onClick={() => setSort(o.sort)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      {note && <p className="LedgerStats__note">{note}</p>}
+      {sort === "pace" && (
+        <p className="LedgerStats__note">
+          Budgets spending fastest come first: 1.0× is on pace for the time gone by, and a fixed
+          cost counts as on pace once it&apos;s paid in full.
+        </p>
+      )}
+      <ShareRows
+        rows={sorted}
+        currency={currency}
+        label="Spending by category"
+        segmentOf={segmentOf}
+        showPace={sort === "pace"}
+      />
+    </>
+  );
+};
 
 const BudgetSection = ({
   budget,

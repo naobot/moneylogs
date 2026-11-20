@@ -7,6 +7,7 @@ import {
   aggregatePeriod,
   busiestMonth,
   periodBudget,
+  periodElapsedShare,
   periodCurrencies,
   vsPreviousPeriod,
 } from "@/utils/periodStats";
@@ -144,5 +145,16 @@ describe("busiestMonth", () => {
   it("finds the biggest month", () => {
     expect(busiestMonth(Q4, byMonth, "CAD")).toEqual({ month: "2026-10", amount: 400 });
     expect(busiestMonth(["2027-01"], byMonth, "CAD")).toBeNull();
+  });
+});
+
+describe("periodElapsedShare", () => {
+  it("is the share of the begun months' days gone by", () => {
+    // Oct (31) done + 15 of Nov (30); Dec hasn't begun.
+    expect(periodElapsedShare(["2026-10", "2026-11", "2026-12"], "2026-11-15")).toBeCloseTo(
+      46 / 61,
+    );
+    expect(periodElapsedShare(["2026-01", "2026-02"], "2026-11-15")).toBe(1);
+    expect(periodElapsedShare(["2027-01"], "2026-11-15")).toBe(0);
   });
 });

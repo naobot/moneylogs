@@ -43,6 +43,7 @@ amounts or free text.
 | `remove_budget`         | A category's monthly budget removed      | —                                                                                                           |
 | `monthly_total`         | A log's monthly total set or removed     | `action` (`set`, `remove`)                                                                                  |
 | `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                                                                       |
+| `stats_sort`            | Stats categories sorted differently      | `sort` (`order`, `amount`, `pace`)                                                                          |
 | `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                   |
 | `update_profile`        | Profile saved on /me                     | —                                                                                                           |
 | `send_friend_request`   | Friend request sent                      | —                                                                                                           |

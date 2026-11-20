@@ -12,7 +12,9 @@ import {
   elapsedDays,
   inCategoryOrder,
   memberShares,
+  monthElapsedShare,
   monthlySeries,
+  sortCategoryRows,
   spentThroughDay,
 } from "@/utils/ledgerStats";
 import { LedgerCategory, LedgerEntry } from "@/types/ledger";
@@ -371,5 +373,62 @@ describe("categoryBarSegments", () => {
     expect(top.map((s) => s.id)).toEqual(["b", "d"]);
     expect(rest).toBe(0);
     expect(segmentOf.size).toBe(2);
+  });
+});
+
+describe("sortCategoryRows", () => {
+  const CATS: LedgerCategory[] = [
+    { id: "food", name: "Food", order: 0, budget: { JPY: 30000 } },
+    { id: "rent", name: "Rent", order: 1, budget: { JPY: 100000 }, fixed: true },
+    { id: "fun", name: "Fun", order: 2, budget: { JPY: 10000 } },
+    { id: "misc", name: "Misc", order: 3 },
+    { id: "gifts", name: "Gifts", order: 4 },
+  ];
+  // Ten days into a 30-day month.
+  const rows = categoryBudgetRows(
+    aggregateEntries([
+      e(15000, "JPY", "food", "2026-11-01"), // 50% used, a third through: 1.5x
+      e(100000, "JPY", "rent", "2026-11-01"), // fixed, paid in full: 1x
+      e(2000, "JPY", "fun", "2026-11-02"), // 20% used: 0.6x
+      e(500, "JPY", "misc", "2026-11-03"),
+      e(8000, "JPY", "gifts", "2026-11-04"),
+    ]),
+    "JPY",
+    CATS,
+  );
+  const opts = { categories: CATS, elapsedShare: monthElapsedShare("2026-11", "2026-11-10") };
+  const ids = (sort: "order" | "amount" | "pace") =>
+    sortCategoryRows(rows, sort, opts).map((r) => r.id);
+
+  it("keeps the Categories panel order by default", () => {
+    expect(ids("order")).toEqual(["food", "rent", "fun", "misc", "gifts"]);
+  });
+
+  it("sorts by amount, most first", () => {
+    expect(ids("amount")).toEqual(["rent", "food", "gifts", "fun", "misc"]);
+  });
+
+  it("sorts budgets by pace, fastest first, then unbudgeted rows by amount", () => {
+    expect(ids("pace")).toEqual(["food", "rent", "fun", "gifts", "misc"]);
+    const pace = Object.fromEntries(
+      sortCategoryRows(rows, "pace", opts).map((r) => [r.id, r.pace]),
+    );
+    expect(pace.food).toBeCloseTo(1.5);
+    expect(pace.rent).toBe(1);
+    expect(pace.fun).toBeCloseTo(0.6);
+    expect(pace.misc).toBeUndefined();
+  });
+
+  it("judges a finished month (or no elapsed time) by share used", () => {
+    const done = sortCategoryRows(rows, "pace", { categories: CATS, elapsedShare: 1 });
+    expect(done.find((r) => r.id === "food")?.pace).toBeCloseTo(0.5);
+    const future = sortCategoryRows(rows, "pace", { categories: CATS, elapsedShare: 0 });
+    expect(future.find((r) => r.id === "food")?.pace).toBeCloseTo(0.5);
+  });
+
+  it("measures how much of a month has gone by", () => {
+    expect(monthElapsedShare("2026-11", "2026-11-15")).toBeCloseTo(0.5);
+    expect(monthElapsedShare("2026-10", "2026-11-15")).toBe(1);
+    expect(monthElapsedShare("2026-12", "2026-11-15")).toBe(0);
   });
 });
