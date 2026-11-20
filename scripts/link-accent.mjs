@@ -2,27 +2,31 @@
 /**
  * Check, or design, each theme's link accent in src/tokens.scss.
  *
- *   node scripts/link-accent.mjs                                  # check every theme
- *   node scripts/link-accent.mjs <paper> <sheet> <ink> <hue> [chroma]  # suggest a pair
+ *   node scripts/link-accent.mjs                               # check every theme
+ *   node scripts/link-accent.mjs <paper> <sheet> <ink> [chroma]  # suggest a pair
  *
- * Links in posts are the one place text takes a colour other than the two inks. Each
- * theme's accent(...) include gives two: --accent for links on the ground (paper and
- * sheet) and --accent-inverse for links on an inverted block (pinned posts, the log
- * owner's comments), where the ground is --ink. Checks, per theme:
+ * Links in posts are the one place text leaves the two inks, and only just: the accent is
+ * the theme's own ink, brighter and more saturated. Each theme's accent(...) include
+ * gives two: --accent for links on the ground (paper and sheet), the ink's hue pushed
+ * up in chroma, and --accent-inverse for links on an inverted block (pinned posts, the
+ * log owner's comments), the paper's hue on an --ink ground. A theme whose inks are
+ * neutral grey (Paper, Night shift) has no hue to push, so its links stay ink: bold and
+ * underline still mark them. Checks, per theme:
  *   - --accent is >= 4.5:1 on paper and on sheet, and --accent-inverse >= 4.5:1 on ink;
- *   - each reads as a colour, not as the ink beside it (OKLab distance >= 0.08 from the
- *     text around it).
- * To design one: pick an OKLCH hue that stands apart from the theme's ink (a cool blue
- * on a warm ink, a warm gold on a cool one) and run the suggest form. It solves OKLCH
- * lightness at that hue so each colour sits just past 5:1, the most colourful value that
- * still reads comfortably, lowering chroma until it fits in sRGB.
+ *   - each keeps the hue of the ink it stands in for (within 30 degrees of OKLCH hue),
+ *     or equals that ink when the ink is neutral.
+ * The suggest form solves OKLCH lightness at the ink's (and paper's) hue so each colour
+ * sits just past 5:1, the brightest, most saturated value that still reads comfortably,
+ * lowering chroma until it fits in sRGB.
  * Exits 1 if any theme fails.
  */
 import { readFileSync } from "node:fs";
 
 const MIN_CONTRAST = 4.5;
-const TARGET = 5;
-const MIN_DISTANCE = 0.08;
+const TARGET = 5; // on a light ground: the lightest value past this
+const TARGET_DARK = 7; // on a dark ground: never dimmer than this
+const MAX_HUE_SHIFT = 30;
+const NEUTRAL = 0.01; // OKLCH chroma below which an ink has no hue to push
 
 const hexToRgb = (hex) => {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -53,9 +57,17 @@ const oklab = (hex) => {
     0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
   ];
 };
-const distance = (a, b) => {
-  const [p, q] = [oklab(a), oklab(b)];
-  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+const chroma = (hex) => {
+  const [, a, b] = oklab(hex);
+  return Math.hypot(a, b);
+};
+const hue = (hex) => {
+  const [, a, b] = oklab(hex);
+  return ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360;
+};
+const hueShift = (a, b) => {
+  const d = Math.abs(hue(a) - hue(b)) % 360;
+  return d > 180 ? 360 - d : d;
 };
 // OKLCH -> sRGB hex, or null when out of gamut.
 const oklch = (L, C, h) => {
@@ -73,29 +85,48 @@ const oklch = (L, C, h) => {
   return rgbToHex(lin.map((v) => Math.round(Math.max(0, Math.min(1, fromLin(v))) * 255)));
 };
 
-/** The lightness at `hue` that sits just past TARGET contrast on every ground. */
-const solve = (grounds, hue, maxChroma) => {
-  const dark = grounds.every((g) => luminance(g) < 0.18); // light text on a dark ground
-  // Walk lightness from the ground's own end towards the far end; the first passing value
-  // is the least extreme one, so it keeps the most colour. Each step takes the most
-  // chroma (up to maxChroma) that fits in sRGB at that lightness.
-  for (let i = 0; i <= 1000; i++) {
-    const L = dark ? i / 1000 : 1 - i / 1000;
-    for (let C = maxChroma; C >= 0; C -= 0.002) {
-      const hex = oklch(L, C, hue);
-      if (!hex) continue;
-      if (grounds.every((g) => contrast(hex, g) >= TARGET)) return hex;
-      break;
-    }
+const lightness = (hex) => oklab(hex)[0];
+// The most chroma (up to maxChroma) that fits in sRGB at lightness L and hue h.
+const richest = (L, h, maxChroma) => {
+  for (let C = maxChroma; C > 0; C -= 0.002) {
+    const hex = oklch(L, C, h);
+    if (hex) return { hex, C };
   }
-  return null;
+  return { hex: oklch(L, 0, h), C: 0 };
+};
+
+/**
+ * A brighter, more saturated `text` for links on `grounds`. On a light ground the link
+ * is dark, so brighter means lighter: the lightest value at the text's hue that still
+ * sits past TARGET. On a dark ground the text is already bright, so the link stays
+ * between TARGET_DARK and the text's own lightness and takes whichever value there holds
+ * the most chroma.
+ */
+const tint = (text, grounds, maxChroma) => {
+  if (chroma(text) < NEUTRAL) return text; // a grey ink has no hue to push
+  const h = hue(text);
+  const passes = (hex, target) => grounds.every((g) => contrast(hex, g) >= target);
+  if (grounds.every((g) => luminance(g) >= 0.18)) {
+    for (let L = 1; L >= 0; L -= 0.001) {
+      const { hex } = richest(L, h, maxChroma);
+      if (passes(hex, TARGET)) return hex;
+    }
+    return null;
+  }
+  let best = null;
+  for (let L = lightness(text); L >= 0; L -= 0.001) {
+    const r = richest(L, h, maxChroma);
+    if (!passes(r.hex, TARGET_DARK)) break;
+    if (!best || r.C > best.C + 1e-3) best = r;
+  }
+  return best?.hex ?? text;
 };
 
 const args = process.argv.slice(2);
-if (args.length >= 4) {
-  const [paper, sheet, ink, hue, chroma = "0.14"] = args;
-  const accent = solve([paper, sheet], Number(hue), Number(chroma));
-  const inverse = solve([ink], Number(hue), Number(chroma));
+if (args.length >= 3) {
+  const [paper, sheet, ink, maxChroma = "0.17"] = args;
+  const accent = tint(ink, [paper, sheet], Number(maxChroma));
+  const inverse = tint(paper, [ink], Number(maxChroma));
   console.log(`@include accent(${accent}, ${inverse});`);
   console.log(
     `accent ${contrast(accent, paper).toFixed(1)}:1 on paper, ${contrast(accent, sheet).toFixed(1)}:1 on sheet · ` +
@@ -123,10 +154,14 @@ for (const { id, paper, sheet, ink, accent } of themes) {
   } else {
     const k = Math.min(contrast(onGround, paper), contrast(onGround, sheet));
     if (k < MIN_CONTRAST) issues.push(`accent ${k.toFixed(2)}:1 on the ground`);
-    if (distance(onGround, ink) < MIN_DISTANCE) issues.push("accent too close to ink");
+    const keeps = (link, of) =>
+      chroma(of) < NEUTRAL
+        ? link.toLowerCase() === of.toLowerCase()
+        : hueShift(link, of) <= MAX_HUE_SHIFT;
+    if (!keeps(onGround, ink)) issues.push("accent strays from the ink's hue");
     const ki = contrast(onInverse, ink);
     if (ki < MIN_CONTRAST) issues.push(`accent-inverse ${ki.toFixed(2)}:1 on ink`);
-    if (distance(onInverse, paper) < MIN_DISTANCE) issues.push("accent-inverse too close to paper");
+    if (!keeps(onInverse, paper)) issues.push("accent-inverse strays from the paper's hue");
   }
   if (issues.length) failed++;
   console.log(`${id.padEnd(10)} ${accent.join(" ")}  ${issues.length ? issues.join("; ") : "ok"}`);

@@ -55,7 +55,8 @@ html {
   font-size: 1em !important;
 }
 
-// Links in posts take the theme's accent, underlined so they never rely on colour alone.
+// Links in posts take the theme's accent (its ink, more saturated), underlined so they
+// never rely on colour alone.
 // An inverted block (pinned post, the log owner's comment) sets --link-ink to the
 // accent drawn for an --ink ground.
 .wmde-markdown a:any-link {
