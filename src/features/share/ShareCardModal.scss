@@ -11,6 +11,15 @@
     gap: var(--space-2);
   }
 
+  // The preview with its re-roll button tucked under its right edge.
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-2);
+    max-width: 100%;
+  }
+
   // The card at a glance: scaled down, framed like a print.
   &__preview {
     display: flex;
@@ -31,8 +40,11 @@
       aspect-ratio: 9 / 16;
     }
 
+    // A fixed width (capped by the modal): a percentage would have nothing to resolve
+    // against inside the shrink-wrapped __card.
     &--square {
-      width: min(100%, 320px);
+      width: 320px;
+      max-width: 100%;
       aspect-ratio: 1;
     }
   }
@@ -43,6 +55,8 @@
     align-items: flex-start;
     gap: var(--space-2);
     align-self: stretch;
+    // Clear of the re-roll button above.
+    margin-top: var(--space-5);
   }
 
   &__option {
@@ -52,18 +66,22 @@
     cursor: pointer;
   }
 
-  // Picked photos: small framed thumbnails, each with its remove button, then "add".
+  // Picked photos: small framed thumbnails, each with its remove button over its top
+  // right corner, and "[+] photo" at the row's right end.
   &__photos {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
+    align-self: stretch;
+  }
+
+  &__addPhoto {
+    margin-left: auto;
   }
 
   &__thumb {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: var(--space-1);
+    position: relative;
 
     img {
       display: block;
@@ -72,6 +90,12 @@
       object-fit: cover;
       border: var(--border-hairline) solid var(--ink);
     }
+  }
+
+  &__removePhoto {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   &__note {

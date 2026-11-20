@@ -202,6 +202,7 @@ const DailyShare = ({
           </div>
         )
       }
+      reroll={keepsakes.reroll}
       options={
         <>
           {todaySlices.length > 0 && (
@@ -226,9 +227,6 @@ const DailyShare = ({
             </label>
           )}
           <PhotoPicker {...photos} />
-          {keepsakes.reroll && (
-            <RowButton onClick={keepsakes.reroll}>another knick-knack</RowButton>
-          )}
         </>
       }
     />
@@ -284,12 +282,10 @@ const BreakdownShare = ({
       isError={isError}
       empty={`Nothing of yours spent in ${name} yet.`}
       onClose={onClose}
+      reroll={keepsakes.reroll}
       options={
         <>
           <NamesOption checked={showNames} onChange={setShowNames} />
-          {keepsakes.reroll && (
-            <RowButton onClick={keepsakes.reroll}>another knick-knack</RowButton>
-          )}
         </>
       }
     />
@@ -310,8 +306,9 @@ const NamesOption = ({
 );
 
 /**
- * Up to three photos from the device for the card: thumbnails to remove, and a button
- * that opens the photo picker until the card is full.
+ * Up to three photos from the device for the card: thumbnails, each with a remove button
+ * in its corner, and at the row's right end a button that opens the photo picker until
+ * the card is full.
  */
 const PhotoPicker = ({
   photos,
@@ -326,18 +323,24 @@ const PhotoPicker = ({
       {photos.map((photo, i) => (
         <span key={photo.id} className="ShareCardModal__thumb">
           <img src={photo.thumb} alt={`photo ${i + 1}`} />
-          <RowButton glyph aria-label={`remove photo ${i + 1}`} onClick={() => remove(photo.id)}>
+          <RowButton
+            glyph
+            className="ShareCardModal__removePhoto"
+            aria-label={`remove photo ${i + 1}`}
+            onClick={() => remove(photo.id)}
+          >
             ×
           </RowButton>
         </span>
       ))}
       {!isFull && (
-        <RowButton disabled={loading} onClick={() => input.current?.click()}>
-          {loading
-            ? "…"
-            : photos.length
-              ? "add another photo"
-              : `add photos (up to ${MAX_CARD_PHOTOS})`}
+        <RowButton
+          className="ShareCardModal__addPhoto"
+          disabled={loading}
+          aria-label={`add a photo (up to ${MAX_CARD_PHOTOS})`}
+          onClick={() => input.current?.click()}
+        >
+          {loading ? "…" : "[+] photo"}
         </RowButton>
       )}
       <input
@@ -378,6 +381,7 @@ const ShareCardFrame = ({
   empty,
   picker,
   options,
+  reroll,
   photos = NO_PHOTOS,
   amounts = false,
   onClose,
@@ -392,6 +396,8 @@ const ShareCardFrame = ({
   /** Above everything, whatever the state: what the card is about (e.g. which day). */
   picker?: ReactNode;
   options: ReactNode;
+  /** Swap the card's knick-knack for another (null when there's nothing to swap to). */
+  reroll?: (() => void) | null;
   /** Photos drawn into the card (spec.photos describes the same ones, in order). */
   photos?: ReadonlyArray<SharePhoto>;
   /** The card shows amounts (the sharer turned them on). */
@@ -484,14 +490,17 @@ const ShareCardFrame = ({
                 />
               ))}
             </div>
-            <div className={`ShareCardModal__preview ShareCardModal__preview--${format}`}>
-              {renderFailed ? (
-                <p className="error-message">Couldn't draw the card.</p>
-              ) : shown ? (
-                <img src={image.url} alt={`Share card: ${spec.lines.join(" ")}`} />
-              ) : (
-                <p>…</p>
-              )}
+            <div className="ShareCardModal__card">
+              <div className={`ShareCardModal__preview ShareCardModal__preview--${format}`}>
+                {renderFailed ? (
+                  <p className="error-message">Couldn't draw the card.</p>
+                ) : shown ? (
+                  <img src={image.url} alt={`Share card: ${spec.lines.join(" ")}`} />
+                ) : (
+                  <p>…</p>
+                )}
+              </div>
+              {reroll && <RowButton onClick={reroll}>re-roll knick-knack</RowButton>}
             </div>
             <div className="ShareCardModal__options">{options}</div>
             <p className="ShareCardModal__note">
