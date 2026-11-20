@@ -3,7 +3,10 @@ import MDEditor from "@uiw/react-md-editor";
 import Button from "@/components/Button";
 import dayjs from "@/utils/configuredDayjs";
 import { formatShortDate, formatTime, useDateFormat } from "@/utils/dateFormat";
+import { track } from "@/utils/analytics";
 import {
+  CHART_COLOURS,
+  ChartColours,
   CLOCKS,
   DATE_ORDERS,
   DisplayPrefs,
@@ -39,6 +42,17 @@ const ALIGN_LABELS: Record<EntryAlign, string> = {
   center: "Center",
   justify: "Justify",
 };
+
+const CHART_LABELS: Record<ChartColours, string> = { colour: "Colour", mono: "Mono" };
+
+/** Sample categories for the preview bar: four chart fills and the grouped rest. */
+const SAMPLE_CHART = [
+  { slot: "0", name: "groceries", share: 34 },
+  { slot: "1", name: "eating out", share: 24 },
+  { slot: "2", name: "transport", share: 18 },
+  { slot: "3", name: "home", share: 12 },
+  { slot: "rest", name: "other", share: 12 },
+] as const;
 
 // A fixed, unambiguous moment (day > 12, afternoon) so every option label reads clearly.
 const SAMPLE_MOMENT = dayjs("2026-11-24T14:05:00");
@@ -107,6 +121,11 @@ const ColourSwatches = ({
               >
                 <span className="ThemeSwatch__chip" data-theme={id} aria-hidden="true">
                   Aa
+                  <span className="ThemeSwatch__palette">
+                    {[1, 2, 3, 4].map((n) => (
+                      <span key={n} style={{ background: `var(--chart-${n})` }} />
+                    ))}
+                  </span>
                 </span>
                 <span className="ThemeSwatch__label">{THEME_LABELS[id]}</span>
               </button>
@@ -120,8 +139,9 @@ const ColourSwatches = ({
 
 /**
  * Viewing preferences remembered on this device: theme (Paper, the last colour theme as
- * a star, or Night shift, plus a row picking the colour theme), how dates and times read, and the size and alignment of entry text. A sample entry shows the
- * result live.
+ * a star, or Night shift, plus a row picking the colour theme), whether charts use the
+ * theme's colours or 1-bit textures, how dates and times read, and the size and alignment
+ * of entry text. A sample entry and chart show the result live.
  */
 export const DisplaySection = () => {
   const theme = useTheme();
@@ -164,6 +184,17 @@ export const DisplaySection = () => {
 
       <ColourSwatches value={isColourTheme(theme) ? theme : null} onChange={setTheme} />
       <Segmented
+        label="Charts"
+        options={CHART_COLOURS}
+        value={prefs.charts}
+        labelFor={(charts) => CHART_LABELS[charts]}
+        onChange={(charts) => {
+          if (charts === prefs.charts) return;
+          setDisplayPrefs({ charts });
+          track("chart_colours", { charts });
+        }}
+      />
+      <Segmented
         label="Clock"
         options={CLOCKS}
         value={prefs.clock}
@@ -196,6 +227,25 @@ export const DisplaySection = () => {
         <div className="DisplaySample__meta">{formatDate(now)}</div>
         <div data-color-mode={markdownColorMode(theme)}>
           <MDEditor.Markdown source={SAMPLE_ENTRY} />
+        </div>
+        <div className="DisplaySample__chart">
+          <span className="DisplaySample__bar" role="img" aria-label="Sample chart">
+            {SAMPLE_CHART.map((c) => (
+              <span
+                key={c.slot}
+                className={`chart-fill-${c.slot}`}
+                style={{ width: `${c.share}%` }}
+              />
+            ))}
+          </span>
+          <ul className="DisplaySample__key" aria-hidden="true">
+            {SAMPLE_CHART.map((c) => (
+              <li key={c.slot}>
+                <span className={`DisplaySample__swatch chart-fill-${c.slot}`} />
+                {c.name}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

@@ -2,13 +2,14 @@ import { PIXEL_TILES, PixelTile, toArcs } from "@/utils/pie";
 import type { PixelGrid } from "@/utils/pixelArt";
 import type { BreakdownSlice } from "./shareLines";
 import TOKENS_SCSS from "@/tokens.scss?raw";
+import { getDisplayPrefs } from "@/utils/displayPrefs";
 
 /**
  * Share cards as images: a pure layout (layoutCard → DrawOps, testable without a canvas)
  * and a thin painter that runs those ops on a canvas (renderCard → PNG blob).
  *
  * Same look as the app: two inks, Hack, square corners, a striped header like the tool
- * modals, 1-bit fills for the pie. Pixel art (avatar, knick-knack) is drawn cell by cell
+ * modals, and the theme's chart colours for the pie (1-bit fills when charts are mono). Pixel art (avatar, knick-knack) is drawn cell by cell
  * at whole-number scales so it stays crisp.
  */
 
@@ -39,9 +40,10 @@ export type CardSpec = {
 };
 
 export type Ink = "ink" | "paper";
-export type SliceFill = "solid" | "paper" | PixelTile;
+/** A two-ink fill, or a chart colour (any CSS colour the canvas takes). */
+export type SliceFill = "solid" | "paper" | PixelTile | { colour: string };
 
-/** Fills in slice order: as different from their neighbours as two inks allow. */
+/** Mono fills in slice order: as different from their neighbours as two inks allow. */
 export const SLICE_FILLS: readonly SliceFill[] = [
   "solid",
   "dither",
@@ -173,6 +175,10 @@ export type CardStyle = {
   hairline: number;
   /** --border-rule: containers (the card's frame, the pie's rim and the gaps between slices). */
   rule: number;
+  /** --chart-1…6 for the pie's slices, or null when Display → Charts is mono. */
+  chart: string[] | null;
+  /** --chart-rest (the ink-faint wash) for the "other" slice. */
+  chartRest: string;
 };
 
 /**
@@ -187,13 +193,15 @@ const TOKEN_NAMES = {
   font: "font-mono",
   hairline: "border-hairline",
   rule: "border-rule",
-} as const satisfies Record<keyof CardStyle, string>;
+} as const satisfies Record<Exclude<keyof CardStyle, "chart" | "chartRest">, string>;
+
+const CHART_TOKENS = [1, 2, 3, 4, 5, 6].map((n) => `chart-${n}`);
 
 /** A token's light-theme value as written in src/tokens.scss (its first definition). */
 export const tokenFromSource = (source: string, name: string): string | undefined =>
   source.match(new RegExp(`(?<![\\w-])--${name}:\\s*([^;]+);`))?.[1].trim();
 
-const toStyle = (value: (name: string) => string | undefined): CardStyle => {
+const toStyle = (value: (name: string) => string | undefined, mono = false): CardStyle => {
   const fromSource = (name: string) => tokenFromSource(TOKENS_SCSS, name) ?? "";
   const get = (name: string) => value(name) || fromSource(name);
   const px = (name: string) => parseFloat(get(name)) || parseFloat(fromSource(name));
@@ -203,6 +211,9 @@ const toStyle = (value: (name: string) => string | undefined): CardStyle => {
     font: get(TOKEN_NAMES.font),
     hairline: px(TOKEN_NAMES.hairline),
     rule: px(TOKEN_NAMES.rule),
+    chart: mono ? null : CHART_TOKENS.map(get),
+    // --chart-rest is var(--ink-faint): read that directly, so the source fallback is a colour.
+    chartRest: get("ink-faint"),
   };
 };
 
@@ -216,7 +227,10 @@ export const TOKEN_CARD_STYLE: CardStyle = toStyle(() => undefined);
 export const readCardStyle = (): CardStyle => {
   if (typeof document === "undefined") return TOKEN_CARD_STYLE;
   const computed = getComputedStyle(document.documentElement);
-  return toStyle((name) => computed.getPropertyValue(`--${name}`).trim() || undefined);
+  return toStyle(
+    (name) => computed.getPropertyValue(`--${name}`).trim() || undefined,
+    getDisplayPrefs().charts === "mono",
+  );
 };
 
 /** Below this a key row's name would be too small to read on a phone. */
@@ -383,7 +397,7 @@ export const layoutCard = (
   const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
   const rim = frame;
   if (arcs.length) {
-    const fills = arcs.map((_, i) => SLICE_FILLS[i % SLICE_FILLS.length]);
+    const fills = sliceFills(arcs, style);
     const lg = m.legend;
     const keyRows = spec.showNames ? arcs.length : 0;
     const room = bottom - y;
@@ -468,6 +482,21 @@ const opsBottom = (ops: ReadonlyArray<DrawOp>, fallback: number): number =>
 const shiftDown = (o: DrawOp, by: number): DrawOp =>
   !by ? o : o.op === "pie" ? { ...o, cy: o.cy + by } : "y" in o ? { ...o, y: o.y + by } : o;
 
+/**
+ * Fills in slice order: the chart colours ("other" in the neutral rest wash), or in mono
+ * the 1-bit SLICE_FILLS. A breakdown has at most six slices, so colours never repeat.
+ */
+export const sliceFills = (
+  arcs: ReadonlyArray<{ id: string }>,
+  style: Pick<CardStyle, "chart" | "chartRest">,
+): SliceFill[] => {
+  const { chart } = style;
+  if (!chart) return arcs.map((_, i) => SLICE_FILLS[i % SLICE_FILLS.length]);
+  return arcs.map(({ id }, i) => ({
+    colour: id === "other" ? style.chartRest : chart[i % chart.length],
+  }));
+};
+
 const pieOp = (
   cx: number,
   cy: number,
@@ -550,11 +579,13 @@ const tilePattern = (
 const FILL_SCALE = 4;
 
 const fillStyle = (ctx: CanvasRenderingContext2D, fill: SliceFill, inks: Inks) =>
-  fill === "solid"
-    ? inks.ink
-    : fill === "paper"
-      ? inks.paper
-      : tilePattern(ctx, fill, FILL_SCALE, inks);
+  typeof fill === "object"
+    ? fill.colour
+    : fill === "solid"
+      ? inks.ink
+      : fill === "paper"
+        ? inks.paper
+        : tilePattern(ctx, fill, FILL_SCALE, inks);
 
 /** Run draw ops on a 2D context. */
 export const paintOps = (

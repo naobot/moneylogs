@@ -24,6 +24,54 @@
     color: var(--ink-muted);
     margin-bottom: var(--space-2);
   }
+
+  // A sample category bar and key, painted like the ledger's (src/charts.scss).
+  &__chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+
+  &__bar {
+    display: flex;
+    height: 0.8em;
+    border: var(--border-hairline) solid var(--ink);
+
+    > span {
+      display: block;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    > span + span {
+      border-left: var(--border-hairline) solid var(--ink);
+    }
+  }
+
+  &__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8em;
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+  }
+
+  &__swatch {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: var(--border-hairline) solid var(--ink);
+    box-sizing: border-box;
+  }
 }
 
 .DisplaySection__hint {
@@ -85,6 +133,7 @@
   }
 
   &__chip {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -93,6 +142,23 @@
     color: var(--ink);
     background-color: var(--paper);
     border: var(--border-hairline) solid var(--ink);
+  }
+
+  // The theme's first four chart colours along the chip's foot (hidden for mono charts).
+  &__palette {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    height: 4px;
+    border-top: var(--border-hairline) solid var(--ink);
+
+    > span {
+      flex: 1;
+    }
+
+    :root[data-charts="mono"] & {
+      display: none;
+    }
   }
 
   &__label {

@@ -7,6 +7,8 @@ import {
   layoutCard,
   readCardStyle,
   CARD_SCALE,
+  SLICE_FILLS,
+  sliceFills,
   TOKEN_CARD_STYLE,
   tokenFromSource,
   textWidth,
@@ -128,10 +130,14 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
     expect(texts(hidden)).not.toContain("Food");
   });
 
-  it("gives neighbouring slices different fills", () => {
-    const pie = layoutCard(spec({ lines: [], slices }), format).find((o) => o.op === "pie");
-    const fills = pie && pie.op === "pie" ? pie.slices.map((s) => s.fill) : [];
-    for (let i = 1; i < fills.length; i++) expect(fills[i]).not.toBe(fills[i - 1]);
+  it("gives neighbouring slices different fills, in colour and in mono", () => {
+    for (const style of [TOKEN_CARD_STYLE, { ...TOKEN_CARD_STYLE, chart: null }]) {
+      const ops = layoutCard(spec({ lines: [], slices }), format, style);
+      const pie = ops.find((o) => o.op === "pie");
+      const fills = pie && pie.op === "pie" ? pie.slices.map((s) => JSON.stringify(s.fill)) : [];
+      expect(fills.length).toBeGreaterThan(1);
+      for (let i = 1; i < fills.length; i++) expect(fills[i]).not.toBe(fills[i - 1]);
+    }
   });
 
   it("keeps lines clear of the footer, however many there are", () => {
@@ -161,7 +167,24 @@ describe("card style", () => {
       font: "Hack, monospace",
       hairline: 1,
       rule: 2,
+      chart: expect.arrayContaining([expect.stringMatching(/^#[0-9a-f]{6}$/)]),
+      chartRest: "rgba(36, 36, 36, 0.3)",
     });
+    expect(TOKEN_CARD_STYLE.chart).toHaveLength(6);
+  });
+
+  it("fills slices with chart colours in order, other in the rest wash", () => {
+    const style = { chart: ["#1", "#2", "#3", "#4", "#5", "#6"], chartRest: "rest" };
+    expect(sliceFills([{ id: "a" }, { id: "b" }, { id: "other" }], style)).toEqual([
+      { colour: "#1" },
+      { colour: "#2" },
+      { colour: "rest" },
+    ]);
+  });
+
+  it("falls back to the 1-bit fills when charts are mono", () => {
+    const arcs = [{ id: "a" }, { id: "b" }, { id: "other" }];
+    expect(sliceFills(arcs, { chart: null, chartRest: "rest" })).toEqual(SLICE_FILLS.slice(0, 3));
   });
 
   it("prefers the page's current values, falling back token by token", () => {

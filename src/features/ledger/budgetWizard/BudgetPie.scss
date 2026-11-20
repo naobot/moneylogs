@@ -1,6 +1,8 @@
-// The budget helper's pie: two inks, groups told apart by 1-bit fills, paper gaps
-// between slices, a hairline rim. Fills are set here (not as SVG attributes) so they
-// follow Night shift.
+@use "@/texture.scss" as tex;
+
+// The budget helper's pie: groups told apart by the theme's chart colours (or, with
+// Display → Charts on mono, by 1-bit fills in two inks), paper gaps between slices, a
+// hairline rim. Fills are set here (not as SVG attributes) so they follow the theme.
 .BudgetPie {
   display: flex;
   flex-wrap: wrap;
@@ -33,12 +35,22 @@
 
   &__slice {
     &--fixed {
-      fill: var(--ink);
+      fill: var(--chart-1);
     }
     &--essentials {
-      fill: url(#BudgetPie-dither);
+      fill: var(--chart-2);
     }
     &--lifestyle {
+      fill: var(--chart-3);
+    }
+
+    :root[data-charts="mono"] &--fixed {
+      fill: var(--ink);
+    }
+    :root[data-charts="mono"] &--essentials {
+      fill: url(#BudgetPie-dither);
+    }
+    :root[data-charts="mono"] &--lifestyle {
       fill: url(#BudgetPie-hatch);
     }
     // Money not spent: blank paper inside the rim.
@@ -81,7 +93,25 @@
     box-sizing: border-box;
 
     &--fixed {
+      background: var(--chart-1);
+    }
+    &--essentials {
+      background: var(--chart-2);
+    }
+    &--lifestyle {
+      background: var(--chart-3);
+    }
+
+    :root[data-charts="mono"] &--fixed {
       background: var(--ink);
+    }
+    :root[data-charts="mono"] &--essentials {
+      background: var(--paper);
+      @include tex.texture(dither);
+    }
+    :root[data-charts="mono"] &--lifestyle {
+      background: var(--paper);
+      @include tex.texture(hatch);
     }
   }
 }
