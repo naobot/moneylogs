@@ -19,7 +19,6 @@ import { reportError } from "@/utils/reportError";
 import { daySeed } from "@/features/ledger/buddy/buddyMood";
 import { monthName } from "@/features/ledger/buddy/monthReview";
 import { ART } from "@/features/ledger/buddy/knickknacks/art";
-import { KNICK_KNACKS } from "@/features/ledger/buddy/knickknacks/catalog";
 import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 
 import { CardFormat, CardSpec, renderCard } from "./renderCard";
@@ -55,7 +54,7 @@ export const ShareCardModal = (props: ShareCardModalProps) =>
 const myCurrency = (mine: ReadonlyArray<LedgerEntry>, fallback: Currency): Currency =>
   currenciesByUse(mine)[0] ?? fallback;
 
-/** The sharer's avatar and a random kept knick-knack, with a re-roll. */
+/** The sharer's ID (avatar, name, place) and a random kept knick-knack, with a re-roll. */
 const useKeepsakes = () => {
   const { user } = useCurrentUser();
   const { data: finds, isLoading } = useKnickKnackFinds(user?.id);
@@ -65,7 +64,9 @@ const useKeepsakes = () => {
   return {
     isLoading,
     avatar: normaliseAvatar(user?.avatar) ?? initialAvatarGrid(user?.displayName),
-    knickKnack: item ? { grid: ART[item], name: KNICK_KNACKS[item].name } : null,
+    name: user?.displayName ?? "",
+    location: user?.displayLocation?.trim() || null,
+    knickKnack: item ? { grid: ART[item] } : null,
     // A different item, if there is one to change to.
     reroll:
       keptItems > 1
@@ -137,6 +138,8 @@ const DailyShare = ({
         slices: showPie ? todaySlices : [],
         showNames,
         avatar: keepsakes.avatar,
+        name: keepsakes.name,
+        location: keepsakes.location,
         knickKnack: keepsakes.knickKnack,
       }
     : null;
@@ -227,6 +230,8 @@ const BreakdownShare = ({
         slices,
         showNames,
         avatar: keepsakes.avatar,
+        name: keepsakes.name,
+        location: keepsakes.location,
         knickKnack: keepsakes.knickKnack,
       }
     : null;

@@ -21,12 +21,14 @@ const grid = (n: number) => Array.from({ length: n }, () => "#".repeat(n));
 const spec = (extra: Partial<CardSpec> = {}): CardSpec => ({
   heading: "today",
   date: "sat 21 nov",
+  name: "Alice",
+  location: "Kyoto",
   face: "ฅ^•ω•^ฅ",
   lines: ["I spent 3× less than on a usual Saturday!", "4 no-spend days in a row!"],
   slices: [],
   showNames: true,
   avatar: grid(30),
-  knickKnack: { grid: grid(32), name: "pebble" },
+  knickKnack: { grid: grid(32) },
   ...extra,
 });
 
@@ -94,25 +96,59 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
     }
   });
 
-  it("draws the heading, date, buddy, lines and footer", () => {
+  it("draws the heading, ID line, buddy, lines and footer", () => {
     const t = texts(layoutCard(spec(), format));
     expect(t).toEqual(
-      expect.arrayContaining(["today", "sat 21 nov", "ฅ^•ω•^ฅ", "moneylogs", "moneylogs.app"]),
+      expect.arrayContaining([
+        "today",
+        "Alice",
+        "(Kyoto)",
+        "sat 21 nov",
+        "ฅ^•ω•^ฅ",
+        "moneylogs",
+        "moneylogs.app",
+      ]),
     );
     expect(t.join(" ")).toContain("usual Saturday!");
-    expect(t).toContain("pebble");
   });
 
-  it("puts the avatar and knick-knack on the shelf at whole-pixel scales", () => {
-    const pixels = layoutCard(spec(), format).filter((o) => o.op === "pixels");
-    expect(pixels).toHaveLength(2);
-    for (const p of pixels) expect(Number.isInteger(p.scale)).toBe(true);
+  it("puts the photo top left beside the name, at a whole-pixel scale", () => {
+    const ops = layoutCard(spec(), format);
+    const [photo] = ops.filter((o) => o.op === "pixels");
+    const name = ops.find((o) => o.op === "text" && o.text === "Alice");
+    const heading = ops.find((o) => o.op === "text" && o.text === "today");
+    expect(photo.op === "pixels" && Number.isInteger(photo.scale)).toBe(true);
+    if (photo.op !== "pixels" || name?.op !== "text" || heading?.op !== "text") throw 0;
+    expect(photo.x).toBeLessThan(name.x);
+    expect(photo.y).toBeGreaterThan(heading.y);
+    expect(name.y).toBeGreaterThan(photo.y);
+    expect(name.y).toBeLessThan(photo.y + photo.grid.length * photo.scale);
+  });
+
+  it("tucks the knick-knack into the footer's bottom-right corner, unlabelled", () => {
+    const ops = layoutCard(spec(), format);
+    const kk = ops.filter((o) => o.op === "pixels")[1];
+    if (kk?.op !== "pixels") throw 0;
+    expect(Number.isInteger(kk.scale)).toBe(true);
+    expect(kk.x + kk.grid.length * kk.scale).toBeGreaterThan(width * 0.85);
+    expect(kk.y).toBeGreaterThanOrEqual(footerTop(ops) - kk.grid.length * kk.scale);
+    expect(kk.y + kk.grid.length * kk.scale).toBeLessThan(height);
+    // Only the header, ID line, buddy, lines and footer carry words: no item name.
+    expect(texts(ops)).toHaveLength(texts(layoutCard(spec({ knickKnack: null }), format)).length);
   });
 
   it("leaves out what isn't there", () => {
-    const ops = layoutCard(spec({ avatar: null, knickKnack: null }), format);
+    const ops = layoutCard(spec({ avatar: null, knickKnack: null, location: null }), format);
     expect(ops.filter((o) => o.op === "pixels")).toHaveLength(0);
-    expect(texts(ops)).not.toContain("pebble");
+    expect(texts(ops).some((t) => t.startsWith("("))).toBe(false);
+    expect(texts(ops)).toContain("Alice");
+  });
+
+  it("cuts a long name to fit beside the photo", () => {
+    const ops = layoutCard(spec({ name: "Bartholomew Montgomery-Fitzwilliam III" }), format);
+    const name = ops.find((o) => o.op === "text" && o.weight === 700 && o.text.startsWith("Bart"));
+    if (name?.op !== "text") throw 0;
+    expect(name.x + textWidth(name.text, name.size)).toBeLessThanOrEqual(width);
   });
 
   it("draws a pie with a key, or without names when hidden", () => {
@@ -213,11 +249,11 @@ describe("card style", () => {
     const pie = ops.find((o) => o.op === "pie");
     const swatch = ops.find((o) => o.op === "swatch");
     expect(frame && frame.op === "frame" && frame.width).toBe(5 * CARD_SCALE);
-    expect(pie && pie.op === "pie" && [pie.rim, pie.gap]).toEqual([15, 15]);
+    // The pie's rim and gaps are hairlines, like the tear lines.
+    expect(pie && pie.op === "pie" && [pie.rim, pie.gap]).toEqual([6, 6]);
     expect(swatch && swatch.op === "swatch" && swatch.border).toBe(2 * CARD_SCALE);
-    const shelfRule = ops.find(
-      (o) => o.op === "rect" && o.fill === "ink" && o.h === 2 * CARD_SCALE,
-    );
-    expect(shelfRule).toBeDefined();
+    const tears = ops.filter((o) => o.op === "dashes");
+    expect(tears).toHaveLength(2);
+    for (const t of tears) expect(t.op === "dashes" && t.h).toBe(2 * CARD_SCALE);
   });
 });

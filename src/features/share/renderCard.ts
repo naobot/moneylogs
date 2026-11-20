@@ -9,7 +9,10 @@ import { getDisplayPrefs } from "@/utils/displayPrefs";
  * and a thin painter that runs those ops on a canvas (renderCard → PNG blob).
  *
  * Same look as the app: two inks, Hack, square corners, a striped header like the tool
- * modals, and the theme's chart colours for the pie (1-bit fills when charts are mono). Pixel art (avatar, knick-knack) is drawn cell by cell
+ * modals, and the theme's chart colours for the pie (1-bit fills when charts are mono).
+ * Laid out like an ID card that turns into a receipt: the sharer's photo, name and place
+ * under the header, dashed tear lines between sections, and a knick-knack tucked into the
+ * footer's corner as a sticker. Pixel art (avatar, knick-knack) is drawn cell by cell
  * at whole-number scales so it stays crisp.
  */
 
@@ -23,8 +26,12 @@ export const CARD_SIZES: Record<CardFormat, { width: number; height: number }> =
 export type CardSpec = {
   /** In the header's paper box: "today", "november". Lowercase, like the app's headings. */
   heading: string;
-  /** Under the header: "sat 21 nov". */
+  /** On the ID line: "sat 21 nov". */
   date: string;
+  /** The sharer's display name, beside the photo. */
+  name: string;
+  /** Their public display location ("Kyoto"), shown in brackets; null leaves it out. */
+  location: string | null;
   /** The buddy's kaomoji. */
   face: string;
   /** The brag lines (daily) or a caption (breakdown). */
@@ -35,8 +42,8 @@ export type CardSpec = {
   showNames: boolean;
   /** The sharer's 30×30 avatar grid (or initial fallback); null leaves it out. */
   avatar: PixelGrid | null;
-  /** A kept knick-knack's 32×32 art and name; null leaves the shelf without it. */
-  knickKnack: { grid: PixelGrid; name: string } | null;
+  /** A kept knick-knack's 32×32 art, a decoration in the footer's corner; null for none. */
+  knickKnack: { grid: PixelGrid } | null;
 };
 
 export type Ink = "ink" | "paper";
@@ -56,6 +63,8 @@ export const SLICE_FILLS: readonly SliceFill[] = [
 export type DrawOp =
   | { op: "rect"; x: number; y: number; w: number; h: number; fill: Ink }
   | { op: "frame"; x: number; y: number; w: number; h: number; width: number }
+  /** A receipt's tear line: a dashed horizontal rule in ink. */
+  | { op: "dashes"; x: number; y: number; w: number; h: number; dash: number; space: number }
   | { op: "tile"; x: number; y: number; w: number; h: number; tile: PixelTile; scale: number }
   | {
       op: "text";
@@ -124,13 +133,17 @@ type Metrics = {
   /** Room between the frame and the content. */
   padding: number;
   header: { top: number; height: number; size: number; stripe: number };
-  date: { y: number; size: number };
-  face: { y: number; size: number };
-  shelf: { y: number; scale: number; gap: number; caption: number };
+  /** The ID line: photo scale, room around it, name and sub-line type sizes and leading. */
+  id: { gap: number; scale: number; name: number; sub: number; leading: number };
+  /** The buddy, centred under the ID line; gap is the room above and below it. */
+  face: { size: number; gap: number };
+  /** Tear lines: dash and space lengths. */
+  tear: { dash: number; space: number };
   lines: { size: number; leading: number; gap: number };
   pie: { maxR: number; minR: number; sideBySide: boolean };
   legend: { swatch: number; size: number; row: number };
-  footer: { word: number; url: number; height: number };
+  /** kkScale: the corner knick-knack's pixel scale (32 cells). */
+  footer: { word: number; url: number; height: number; kkScale: number };
 };
 
 const METRICS: Record<CardFormat, Metrics> = {
@@ -138,25 +151,25 @@ const METRICS: Record<CardFormat, Metrics> = {
     inset: 36,
     padding: 36,
     header: { top: 84, height: 120, size: 56, stripe: 6 },
-    date: { y: 262, size: 40 },
-    face: { y: 400, size: 120 },
-    shelf: { y: 700, scale: 6, gap: 120, caption: 34 },
-    lines: { size: 60, leading: 82, gap: 36 },
+    id: { gap: 44, scale: 5, name: 52, sub: 36, leading: 54 },
+    face: { size: 110, gap: 44 },
+    tear: { dash: 18, space: 12 },
+    lines: { size: 42, leading: 60, gap: 26 },
     pie: { maxR: 300, minR: 120, sideBySide: false },
-    legend: { swatch: 48, size: 40, row: 68 },
-    footer: { word: 52, url: 36, height: 190 },
+    legend: { swatch: 44, size: 36, row: 62 },
+    footer: { word: 52, url: 36, height: 190, kkScale: 5 },
   },
   square: {
     inset: 24,
     padding: 36,
     header: { top: 56, height: 90, size: 44, stripe: 5 },
-    date: { y: 186, size: 30 },
-    face: { y: 286, size: 84 },
-    shelf: { y: 520, scale: 4, gap: 80, caption: 26 },
-    lines: { size: 44, leading: 60, gap: 22 },
+    id: { gap: 30, scale: 3, name: 38, sub: 27, leading: 38 },
+    face: { size: 76, gap: 26 },
+    tear: { dash: 14, space: 10 },
+    lines: { size: 31, leading: 44, gap: 16 },
     pie: { maxR: 170, minR: 80, sideBySide: true },
-    legend: { swatch: 36, size: 30, row: 50 },
-    footer: { word: 38, url: 26, height: 128 },
+    legend: { swatch: 32, size: 27, row: 44 },
+    footer: { word: 38, url: 26, height: 128, kkScale: 3 },
   },
 };
 
@@ -171,9 +184,9 @@ export type CardStyle = {
   ink: string;
   paper: string;
   font: string;
-  /** --border-hairline: secondary lines (the shelf, the footer rule, key swatches). */
+  /** --border-hairline: secondary lines (tear lines, the photo frame, the pie, key swatches). */
   hairline: number;
-  /** --border-rule: containers (the card's frame, the pie's rim and the gaps between slices). */
+  /** --border-rule: containers (the card's frame). */
   rule: number;
   /** --chart-1…6 for the pie's slices, or null when Display → Charts is mono. */
   chart: string[] | null;
@@ -293,85 +306,110 @@ export const layoutCard = (
     align: "center",
     fill: "ink",
   });
-  ops.push({
-    op: "text",
-    text: spec.date,
-    x: W / 2,
-    y: m.date.y,
-    size: m.date.size,
-    weight: 400,
-    align: "center",
-    fill: "ink",
+  // The ID line: a framed photo, then name, (place) and date beside it.
+  const id = m.id;
+  const idTop = m.header.top + m.header.height + id.gap;
+  const photoPad = id.scale * 2;
+  const photoW = spec.avatar ? spec.avatar.length * id.scale + 2 * (photoPad + hairline) : 0;
+  if (spec.avatar) {
+    ops.push({ op: "frame", x: pad, y: idTop, w: photoW, h: photoW, width: hairline });
+    ops.push({
+      op: "pixels",
+      grid: spec.avatar,
+      x: pad + hairline + photoPad,
+      y: idTop + hairline + photoPad,
+      scale: id.scale,
+    });
+  }
+  const textX = pad + (photoW ? photoW + id.gap : 0);
+  const textW = W - pad - textX;
+  const idLines = [
+    { text: spec.name, size: id.name, weight: 700 as const },
+    ...(spec.location ? [{ text: `(${spec.location})`, size: id.sub, weight: 400 as const }] : []),
+    { text: spec.date, size: id.sub, weight: 400 as const },
+  ];
+  const textH = idLines.length * id.leading;
+  const idH = Math.max(photoW, textH);
+  idLines.forEach((line, i) => {
+    ops.push({
+      op: "text",
+      text: truncate(line.text, line.size, textW),
+      x: textX,
+      y: idTop + (idH - textH) / 2 + (i + 0.5) * id.leading,
+      size: line.size,
+      weight: line.weight,
+      align: "left",
+      fill: "ink",
+    });
   });
 
-  // The buddy, then the avatar and knick-knack side by side on a shelf.
-  const faceSize = Math.min(m.face.size, contentW / Math.max(1, textWidth(spec.face, 1)));
+  // A tear line, then the buddy.
+  const tear = (y: number) =>
+    ops.push({
+      op: "dashes",
+      x: pad,
+      y,
+      w: contentW,
+      h: hairline,
+      dash: m.tear.dash,
+      space: m.tear.space,
+    });
+  const tearY = idTop + idH + id.gap;
+  tear(tearY);
+  const faceSize = Math.floor(
+    Math.min(m.face.size, contentW / Math.max(1, textWidth(spec.face, 1))),
+  );
   ops.push({
     op: "text",
     text: spec.face,
     x: W / 2,
-    y: m.face.y,
-    size: Math.floor(faceSize),
+    y: tearY + m.face.gap + faceSize / 2,
+    size: faceSize,
     weight: 700,
     align: "center",
     fill: "ink",
   });
-  const s = m.shelf;
-  const avatarW = spec.avatar ? spec.avatar.length * s.scale : 0;
-  const kkW = spec.knickKnack ? spec.knickKnack.grid.length * s.scale : 0;
-  if (avatarW || kkW) {
-    const rowW = avatarW + kkW + (avatarW && kkW ? s.gap : 0);
-    let x = (W - rowW) / 2;
-    if (spec.avatar) {
-      ops.push({ op: "pixels", grid: spec.avatar, x, y: s.y - avatarW, scale: s.scale });
-      x += avatarW + (kkW ? s.gap : 0);
-    }
-    if (spec.knickKnack) {
-      ops.push({ op: "pixels", grid: spec.knickKnack.grid, x, y: s.y - kkW, scale: s.scale });
-      ops.push({
-        op: "text",
-        text: truncate(spec.knickKnack.name, s.caption, kkW + s.gap),
-        x: x + kkW / 2,
-        y: s.y + hairline + s.caption,
-        size: s.caption,
-        weight: 400,
-        align: "center",
-        fill: "ink",
-      });
-    }
-    const ruleW = Math.min(contentW, rowW + 2 * s.gap);
-    ops.push({ op: "rect", x: (W - ruleW) / 2, y: s.y, w: ruleW, h: hairline, fill: "ink" });
-  }
 
-  // Footer, from the bottom up, so the middle knows how much room it has.
+  // Footer, from the bottom up, so the middle knows how much room it has: a tear line,
+  // the wordmark on the left and the knick-knack, unlabelled, in the corner.
   const f = m.footer;
   const footerTop = H - m.inset - frame - f.height;
-  ops.push({ op: "rect", x: pad, y: footerTop, w: contentW, h: hairline, fill: "ink" });
+  tear(footerTop);
   ops.push({
     op: "text",
     text: "moneylogs",
-    x: W / 2,
+    x: pad,
     y: footerTop + f.height * 0.38,
     size: f.word,
     weight: 700,
-    align: "center",
+    align: "left",
     fill: "ink",
   });
   ops.push({
     op: "text",
     text: "moneylogs.app",
-    x: W / 2,
+    x: pad,
     y: footerTop + f.height * 0.72,
     size: f.url,
     weight: 400,
-    align: "center",
+    align: "left",
     fill: "ink",
   });
+  if (spec.knickKnack) {
+    const kkW = spec.knickKnack.grid.length * f.kkScale;
+    ops.push({
+      op: "pixels",
+      grid: spec.knickKnack.grid,
+      x: W - pad - kkW,
+      y: footerTop + (f.height - kkW) / 2,
+      scale: f.kkScale,
+    });
+  }
 
   // The middle: lines, then the pie and its key. Laid out from the top of the space, then
   // centred in it, so a short card doesn't leave a gap above the footer.
   const middle: DrawOp[] = [];
-  const top = s.y + hairline + s.caption * 2 + m.lines.gap;
+  const top = tearY + 2 * m.face.gap + faceSize;
   const bottom = footerTop - m.lines.gap;
   let y = top;
   for (const paragraph of spec.lines) {
@@ -395,7 +433,8 @@ export const layoutCard = (
 
   // The pie (and its key), in whatever room is left; left out if that's too little.
   const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
-  const rim = frame;
+  // The pie's rim and the paper gaps between slices: hairlines, so small slices still show.
+  const rim = hairline;
   if (arcs.length) {
     const fills = sliceFills(arcs, style);
     const lg = m.legend;
@@ -422,7 +461,7 @@ export const layoutCard = (
         const groupW = pieW + (showKey ? lg.swatch + keyW : 0);
         const pieCx = (W - groupW) / 2 + pieW / 2;
         const cy = y + rim + r;
-        middle.push(pieOp(pieCx, cy, r, arcs, fills, frame));
+        middle.push(pieOp(pieCx, cy, r, arcs, fills, rim));
         if (showKey) {
           const keyX = pieCx + pieW / 2 + lg.swatch;
           const keyH = keyRows * key.row;
@@ -436,7 +475,7 @@ export const layoutCard = (
       const r = Math.min(m.pie.maxR, (room - keyH - lg.row) / 2 - rim);
       if (r >= m.pie.minR) {
         const cy = y + rim + r;
-        middle.push(pieOp(W / 2, cy, r, arcs, fills, frame));
+        middle.push(pieOp(W / 2, cy, r, arcs, fills, rim));
         const keyTop = cy + r + rim + lg.row / 2;
         const colW = contentW / keyCols;
         for (let c = 0; c < keyCols; c++) {
@@ -503,7 +542,7 @@ const pieOp = (
   r: number,
   arcs: ReadonlyArray<{ start: number; end: number }>,
   fills: ReadonlyArray<SliceFill>,
-  /** The rim and the paper gaps between slices: the container weight. */
+  /** The rim and the paper gaps between slices. */
   weight: number,
 ): DrawOp => ({
   op: "pie",
@@ -606,6 +645,12 @@ export const paintOps = (
         ctx.strokeStyle = inks.ink;
         ctx.lineWidth = o.width;
         ctx.strokeRect(o.x + o.width / 2, o.y + o.width / 2, o.w - o.width, o.h - o.width);
+        break;
+      case "dashes":
+        ctx.fillStyle = inks.ink;
+        for (let x = o.x; x < o.x + o.w; x += o.dash + o.space) {
+          ctx.fillRect(x, o.y, Math.min(o.dash, o.x + o.w - x), o.h);
+        }
         break;
       case "tile":
         ctx.fillStyle = tilePattern(ctx, o.tile, o.scale, inks);

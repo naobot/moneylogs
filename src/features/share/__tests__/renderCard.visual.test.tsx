@@ -7,6 +7,8 @@ import { CardFormat, CardSpec, renderCard } from "../renderCard";
 const daily: CardSpec = {
   heading: "today",
   date: "sat 21 nov",
+  name: "Alice",
+  location: "Kyoto",
   face: "ฅ(=✧ω✧=)ฅ",
   lines: ["I spent 3× less than on a usual Saturday!", "4 no-spend days in a row!"],
   slices: [
@@ -16,7 +18,7 @@ const daily: CardSpec = {
   ],
   showNames: true,
   avatar: PRESET_AVATARS[0].grid,
-  knickKnack: { grid: ART.pebble, name: "pebble" },
+  knickKnack: { grid: ART.pebble },
 };
 
 const breakdown: CardSpec = {
