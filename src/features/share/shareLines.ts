@@ -246,7 +246,8 @@ export const shareLines = ({
     : [];
 };
 
-export type BreakdownSlice = { id: string; name: string; share: number };
+/** A pie slice: its share, and the amount behind it (shown only when the sharer opts in). */
+export type BreakdownSlice = { id: string; name: string; share: number; amount: number };
 
 /** Most slices a breakdown shows before the rest become "other". */
 export const MAX_BREAKDOWN_SLICES = 5;
@@ -281,9 +282,15 @@ export const breakdownSlices = ({
   );
   const shares = categoryShares(aggregateEntries(mine), currency, categories);
   const shown = shares.length > MAX_BREAKDOWN_SLICES + 1 ? MAX_BREAKDOWN_SLICES : shares.length;
-  const slices = shares.slice(0, shown).map(({ id, name, share }) => ({ id, name, share }));
-  const rest = shares.slice(shown).reduce((sum, s) => sum + s.share, 0);
-  return rest > 0 ? [...slices, { id: "other", name: "other", share: rest }] : slices;
+  const slices = shares
+    .slice(0, shown)
+    .map(({ id, name, share, amount }) => ({ id, name, share, amount }));
+  const folded = shares.slice(shown);
+  const rest = folded.reduce((sum, s) => sum + s.share, 0);
+  const restAmount = folded.reduce((sum, s) => sum + s.amount, 0);
+  return rest > 0
+    ? [...slices, { id: "other", name: "other", share: rest, amount: restAmount }]
+    : slices;
 };
 
 /**

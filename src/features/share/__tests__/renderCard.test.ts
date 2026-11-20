@@ -3,9 +3,12 @@ import {
   CARD_SIZES,
   CardFormat,
   CardSpec,
+  coverCrop,
   DrawOp,
   layoutCard,
+  mosaicTiles,
   readCardStyle,
+  rowTiles,
   CARD_SCALE,
   SLICE_FILLS,
   sliceFills,
@@ -270,6 +273,171 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
         expect(o.y).toBeLessThan(top);
       }
     }
+  });
+});
+
+const photo = (i: number, width = 4032, height = 3024) => ({ id: `p${i}`, width, height });
+const threeLines = [
+  "I spent 3× less than on a usual Saturday!",
+  "4 no-spend days in a row!",
+  "15% less than this point last month",
+];
+
+type PhotoOp = Extract<DrawOp, { op: "photo" }>;
+const photoOps = (ops: DrawOp[]) => ops.filter((o): o is PhotoOp => o.op === "photo");
+const overlaps = (
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+describe.each(FORMATS)("layoutCard with photos (%s)", (format) => {
+  const { width, height } = CARD_SIZES[format];
+  const header = (ops: DrawOp[]) => ops.find((o) => o.op === "tile")!;
+
+  it("draws each photo in a framed tile, clear of the pie's box and the footer", () => {
+    for (const n of [1, 2, 3]) {
+      const photos = Array.from({ length: n }, (_, i) => photo(i));
+      const ops = layoutCard(spec({ lines: threeLines, slices, photos }), format);
+      const tiles = photoOps(ops);
+      expect(tiles.map((t) => t.index)).toEqual(photos.map((_, i) => i));
+      const sheet = ops.find((o) => o.op === "rect" && o.fill === "sheet");
+      if (sheet?.op !== "rect") throw new Error(`no pie box with ${n} photos`);
+      expect(ops.filter((o) => o.op === "pie")).toHaveLength(1);
+      for (const t of tiles) {
+        expect(ops.some((o) => o.op === "frame" && o.x === t.x && o.y === t.y)).toBe(true);
+        expect(t.x).toBeGreaterThan(0);
+        expect(t.x + t.w).toBeLessThan(width);
+        expect(t.y + t.h).toBeLessThan(footerTop(ops));
+        expect(overlaps(t, sheet)).toBe(false);
+        for (const u of tiles) if (u !== t) expect(overlaps(t, u)).toBe(false);
+      }
+      // Below the brag lines.
+      const lastLine = ops.filter((o) => o.op === "text" && o.text.includes("last month"));
+      for (const t of tiles) expect(t.y).toBeGreaterThan((lastLine[0] as { y: number }).y);
+    }
+  });
+
+  it("crops each photo to its tile's shape, inside the photo", () => {
+    const photos = [photo(0, 4032, 3024), photo(1, 1080, 1920), photo(2, 1000, 1000)];
+    const ops = layoutCard(spec({ slices, photos }), format);
+    for (const t of photoOps(ops)) {
+      const p = photos[t.index];
+      expect(t.sw / t.sh).toBeCloseTo(t.w / t.h, 5);
+      expect(t.sx).toBeGreaterThanOrEqual(0);
+      expect(t.sy).toBeGreaterThanOrEqual(0);
+      expect(t.sx + t.sw).toBeLessThanOrEqual(p.width + 1e-6);
+      expect(t.sy + t.sh).toBeLessThanOrEqual(p.height + 1e-6);
+    }
+  });
+
+  it("thins the header and shrinks the pie to make room", () => {
+    const plain = layoutCard(spec({ slices }), format);
+    const withPhotos = layoutCard(spec({ slices, photos: [photo(0)] }), format);
+    const tile = header(withPhotos);
+    if (tile.op !== "tile") throw 0;
+    expect(tile.h).toBeLessThan((header(plain) as { h: number }).h);
+    const r = (ops: DrawOp[]) => (ops.find((o) => o.op === "pie") as { r: number }).r;
+    expect(r(withPhotos)).toBeLessThan(r(plain));
+  });
+
+  it("puts the photos under the lines when there's no pie", () => {
+    const ops = layoutCard(spec({ photos: [photo(0), photo(1)] }), format);
+    const tiles = photoOps(ops);
+    expect(tiles).toHaveLength(2);
+    expect(ops.some((o) => o.op === "pie")).toBe(false);
+    const line = ops.find((o) => o.op === "text" && o.text.startsWith("4 no-spend"));
+    if (line?.op !== "text") throw 0;
+    for (const t of tiles) {
+      expect(t.y).toBeGreaterThan(line.y);
+      expect(t.y + t.h).toBeLessThan(footerTop(ops));
+    }
+  });
+
+  it("takes three photos at most", () => {
+    const photos = Array.from({ length: 5 }, (_, i) => photo(i));
+    expect(photoOps(layoutCard(spec({ slices, photos }), format))).toHaveLength(3);
+  });
+
+  it("keeps the card's height", () => {
+    const ops = layoutCard(spec({ slices, photos: [photo(0)] }), format);
+    expect(ops[0]).toMatchObject({ op: "rect", w: width, h: height });
+  });
+});
+
+describe.each(FORMATS)("layoutCard with amounts (%s)", (format) => {
+  const withAmounts = slices.map((sl, i) => ({ ...sl, amountLabel: `${(6 - i) * 100} JPY` }));
+
+  it("shows the total by the title and each amount on its key row", () => {
+    for (const photos of [[], [photo(0), photo(1), photo(2)]]) {
+      const ops = layoutCard(spec({ slices: withAmounts, total: "2,100 JPY", photos }), format);
+      const all = texts(ops);
+      expect(all).toContain("2,100 JPY");
+      for (const sl of withAmounts) expect(all).toContain(sl.amountLabel);
+      expect(all).toEqual(expect.arrayContaining(["FOOD", "OTHER"]));
+      const total = ops.find((o) => o.op === "text" && o.text === "2,100 JPY");
+      const title = ops.find((o) => o.op === "text" && o.text === "WHERE MY MONEY WENT");
+      if (total?.op !== "text" || title?.op !== "text") throw 0;
+      expect(total.y).toBe(title.y);
+      expect(total.align).toBe("right");
+    }
+  });
+
+  it("keeps amounts when names are hidden", () => {
+    const ops = layoutCard(spec({ slices: withAmounts, showNames: false }), format);
+    expect(ops.filter((o) => o.op === "swatch")).toHaveLength(slices.length);
+    expect(texts(ops)).toContain("600 JPY");
+    expect(texts(ops)).not.toContain("FOOD");
+  });
+
+  it("cuts a long name before its amount", () => {
+    const long = [{ id: "x", name: "A".repeat(80), share: 1, amountLabel: "12,345 JPY" }];
+    const ops = layoutCard(spec({ slices: long }), format);
+    expect(texts(ops)).toContain("12,345 JPY");
+    expect(texts(ops).some((t) => t.endsWith("…"))).toBe(true);
+  });
+
+  it("shows no amounts unless given", () => {
+    const ops = layoutCard(spec({ slices }), format);
+    expect(texts(ops).some((t) => /\d/.test(t) && t.includes("JPY"))).toBe(false);
+  });
+});
+
+describe("photo tiles", () => {
+  const area = { x: 0, y: 0, w: 900, h: 400 };
+
+  it("sets tiles side by side between 3:4 and 4:3, centred", () => {
+    const one = rowTiles(1, area, 20);
+    expect(one).toEqual([{ x: (900 - 533) / 2, y: 0, w: 533, h: 400 }]);
+    const three = rowTiles(3, area, 20);
+    for (const t of three) {
+      expect(t.w / t.h).toBeGreaterThanOrEqual(0.75 - 0.01);
+      expect(t.w / t.h).toBeLessThanOrEqual(4 / 3 + 0.01);
+    }
+    expect(three[2].x + three[2].w - three[0].x).toBeLessThanOrEqual(900);
+  });
+
+  it("puts three as one tall tile and two stacked", () => {
+    const [tall, a, b] = mosaicTiles(3, { x: 0, y: 0, w: 500, h: 440 }, 16);
+    expect(tall.h).toBe(440);
+    expect(a.x).toBe(b.x);
+    expect(a.x).toBeGreaterThan(tall.x + tall.w);
+    expect(b.y).toBeGreaterThan(a.y + a.h);
+    expect(b.y + b.h).toBe(tall.y + tall.h);
+  });
+
+  it("crops to fill without stretching", () => {
+    expect(coverCrop({ width: 4000, height: 3000 }, { w: 300, h: 300 })).toEqual({
+      sx: 500,
+      sy: 0,
+      sw: 3000,
+      sh: 3000,
+    });
+    expect(coverCrop({ width: 1000, height: 2000 }, { w: 400, h: 200 })).toEqual({
+      sx: 0,
+      sy: 750,
+      sw: 1000,
+      sh: 500,
+    });
   });
 });
 

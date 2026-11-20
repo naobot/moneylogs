@@ -34,13 +34,54 @@ const breakdown: CardSpec = {
   })),
 };
 
+/** A stand-in photo: a two-tone gradient with a disc, so crops and framing show. */
+const fakePhoto = (width: number, height: number, hue: number) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d")!;
+  const fill = ctx.createLinearGradient(0, 0, width, height);
+  fill.addColorStop(0, `hsl(${hue}, 50%, 65%)`);
+  fill.addColorStop(1, `hsl(${hue + 60}, 40%, 30%)`);
+  ctx.fillStyle = fill;
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(width / 2, height / 2, Math.min(width, height) / 4, 0, 2 * Math.PI);
+  ctx.fill();
+  return canvas;
+};
+
+const PHOTO_SIZES: [number, number][] = [
+  [1008, 756],
+  [540, 960],
+  [600, 600],
+];
+const photoSources = PHOTO_SIZES.map(([w, h], i) => fakePhoto(w, h, i * 90));
+
+/** The daily card with three photos and amounts shown. */
+const withPhotos: CardSpec = {
+  ...daily,
+  lines: [...daily.lines, "15% less than this point last month"],
+  slices: breakdown.slices.map((sl) => ({
+    ...sl,
+    amountLabel: `${Math.round(sl.share * 10000).toLocaleString("en-US")} JPY`,
+  })),
+  total: "10,000 JPY",
+  photos: PHOTO_SIZES.map(([width, height], i) => ({ id: `p${i}`, width, height })),
+};
+
 /** Render cards to PNGs and show them as images (scaled down), waiting for each to load. */
 const showCards = async (
   v: ReturnType<typeof useVisualHarness>,
   cards: ReadonlyArray<[CardSpec, CardFormat]>,
 ) => {
   const urls = await Promise.all(
-    cards.map(async ([spec, format]) => URL.createObjectURL(await renderCard(spec, format))),
+    cards.map(async ([spec, format]) =>
+      URL.createObjectURL(
+        await renderCard(spec, format, undefined, spec.photos?.length ? photoSources : []),
+      ),
+    ),
   );
   v.render(
     <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
@@ -71,6 +112,16 @@ describe("share cards (visual)", () => {
     expect(imgs[0].naturalHeight).toBe(1920);
     expect(imgs[1].naturalHeight).toBe(1080);
     await v.snapshot("share cards");
+  });
+
+  it("makes room for photos, and shows amounts when asked", async () => {
+    const imgs = await showCards(v, [
+      [withPhotos, "story"],
+      [withPhotos, "square"],
+      [{ ...withPhotos, photos: withPhotos.photos!.slice(0, 1) }, "story"],
+    ]);
+    expect(imgs).toHaveLength(3);
+    await v.snapshot("share cards with photos and amounts");
   });
 
   it("follows night shift", async () => {

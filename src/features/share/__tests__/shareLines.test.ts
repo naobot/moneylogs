@@ -274,14 +274,15 @@ describe("breakdownSlices", () => {
   })) as LedgerCategory[];
   const args = { myUid: ME, period: { month: "2026-11" }, currency: "CAD" as const, categories };
 
-  it("gives shares only, biggest first, folding the tail into other", () => {
+  it("gives shares and amounts, biggest first, folding the tail into other", () => {
     const entries = [70, 60, 50, 40, 30, 20, 10].map((amount, i) =>
       e("2026-11-03", amount, { categoryId: categories[i].id }),
     );
     const slices = breakdownSlices({ ...args, entries });
     expect(slices.map((s) => s.name)).toEqual(["A", "B", "C", "D", "E", "other"]);
     expect(slices.reduce((sum, s) => sum + s.share, 0)).toBeCloseTo(1);
-    expect(slices[0]).toEqual({ id: "a", name: "A", share: 70 / 280 });
+    expect(slices[0]).toEqual({ id: "a", name: "A", share: 70 / 280, amount: 70 });
+    expect(slices.at(-1)).toMatchObject({ id: "other", amount: 30 });
   });
 
   it("keeps a sixth category rather than calling one category other", () => {
@@ -304,7 +305,9 @@ describe("breakdownSlices", () => {
       e("2026-11-03", 90, { authorUid: "them", categoryId: "b" }),
       e("2026-10-03", 90, { categoryId: "c" }),
     ];
-    expect(breakdownSlices({ ...args, entries })).toEqual([{ id: "a", name: "A", share: 1 }]);
+    expect(breakdownSlices({ ...args, entries })).toEqual([
+      { id: "a", name: "A", share: 1, amount: 10 },
+    ]);
   });
 });
 
@@ -332,8 +335,8 @@ describe("breakdownSlices for a day", () => {
       categories,
     });
     expect(slices).toEqual([
-      { id: "food", name: "Food", share: 0.75 },
-      { id: "fun", name: "Fun", share: 0.25 },
+      { id: "food", name: "Food", share: 0.75, amount: 30 },
+      { id: "fun", name: "Fun", share: 0.25, amount: 10 },
     ]);
   });
 

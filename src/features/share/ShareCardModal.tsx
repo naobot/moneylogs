@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import dayjs from "@/utils/configuredDayjs";
 import Button from "@/components/Button";
@@ -14,6 +14,7 @@ import { Currency } from "@/types/user";
 import { ShareCardResult, track } from "@/utils/analytics";
 import { initialAvatarGrid, normaliseAvatar } from "@/utils/avatar";
 import { hourInTz } from "@/utils/ledger";
+import { formatAmount } from "@/utils/ledgerEntries";
 import { currenciesByUse } from "@/utils/ledgerStats";
 import { reportError } from "@/utils/reportError";
 import { restingFace } from "@/features/ledger/buddy/buddyMood";
@@ -22,7 +23,8 @@ import { monthName } from "@/features/ledger/buddy/monthReview";
 import { ART } from "@/features/ledger/buddy/knickknacks/art";
 import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 
-import { CardFormat, CardSpec, renderCard } from "./renderCard";
+import { CardFormat, CardSpec, MAX_CARD_PHOTOS, renderCard } from "./renderCard";
+import { SharePhoto, useSharePhotos } from "./sharePhotos";
 import {
   breakdownSlices,
   pickShareKnickKnack,
@@ -102,6 +104,9 @@ const DailyShare = ({
   const keepsakes = useKeepsakes(ledger);
   const [showPie, setShowPie] = useState(true);
   const [showNames, setShowNames] = useState(true);
+  // Off unless asked for: by default a card never shows an amount.
+  const [showAmounts, setShowAmounts] = useState(false);
+  const photos = useSharePhotos();
 
   const myUid = user?.userId ?? "";
   const entries = useMemo(
@@ -129,6 +134,8 @@ const DailyShare = ({
     currency,
     categories,
   });
+  const pieShown = showPie && todaySlices.length > 0;
+  const amountsShown = pieShown && showAmounts;
   const isLoading =
     q0.isLoading || q1.isLoading || q2.isLoading || !noSpend.isSuccess || keepsakes.isLoading;
   const isError = q0.isError || q1.isError || q2.isError || noSpend.isError;
@@ -140,8 +147,22 @@ const DailyShare = ({
         face: keepsakes.face,
         lines: lines.map((l) => l.text),
         pieTitle: "where my money went",
-        slices: showPie ? todaySlices : [],
+        slices: !pieShown
+          ? []
+          : todaySlices.map(({ id, name, share, amount }) => ({
+              id,
+              name,
+              share,
+              ...(amountsShown && { amountLabel: formatAmount(amount, currency) }),
+            })),
+        total: amountsShown
+          ? formatAmount(
+              todaySlices.reduce((sum, sl) => sum + sl.amount, 0),
+              currency,
+            )
+          : null,
         showNames,
+        photos: photos.photos.map(({ id, width, height }) => ({ id, width, height })),
         avatar: keepsakes.avatar,
         name: keepsakes.name,
         location: keepsakes.location,
@@ -157,6 +178,8 @@ const DailyShare = ({
       spec={spec}
       isLoading={isLoading}
       isError={isError}
+      photos={photos.photos}
+      amounts={amountsShown}
       empty={
         dayWord === "yesterday"
           ? "Nothing to share from yesterday."
@@ -191,9 +214,18 @@ const DailyShare = ({
               <span>Show {dayWord}'s spending pie (no fixed costs)</span>
             </label>
           )}
-          {showPie && todaySlices.length > 0 && (
-            <NamesOption checked={showNames} onChange={setShowNames} />
+          {pieShown && <NamesOption checked={showNames} onChange={setShowNames} />}
+          {pieShown && (
+            <label className="ShareCardModal__option">
+              <input
+                type="checkbox"
+                checked={showAmounts}
+                onChange={(e) => setShowAmounts(e.target.checked)}
+              />
+              <span>Show amounts</span>
+            </label>
           )}
+          <PhotoPicker {...photos} />
           {keepsakes.reroll && (
             <RowButton onClick={keepsakes.reroll}>another knick-knack</RowButton>
           )}
@@ -277,6 +309,56 @@ const NamesOption = ({
   </label>
 );
 
+/**
+ * Up to three photos from the device for the card: thumbnails to remove, and a button
+ * that opens the photo picker until the card is full.
+ */
+const PhotoPicker = ({
+  photos,
+  loading,
+  isFull,
+  add,
+  remove,
+}: ReturnType<typeof useSharePhotos>) => {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <div className="ShareCardModal__photos">
+      {photos.map((photo, i) => (
+        <span key={photo.id} className="ShareCardModal__thumb">
+          <img src={photo.thumb} alt={`photo ${i + 1}`} />
+          <RowButton glyph aria-label={`remove photo ${i + 1}`} onClick={() => remove(photo.id)}>
+            ×
+          </RowButton>
+        </span>
+      ))}
+      {!isFull && (
+        <RowButton disabled={loading} onClick={() => input.current?.click()}>
+          {loading
+            ? "…"
+            : photos.length
+              ? "add another photo"
+              : `add photos (up to ${MAX_CARD_PHOTOS})`}
+        </RowButton>
+      )}
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          // Cleared, so picking the same photo again still counts as a change.
+          e.target.value = "";
+          void add(files);
+        }}
+      />
+    </div>
+  );
+};
+
+const NO_PHOTOS: ReadonlyArray<SharePhoto> = [];
+
 const FORMATS: { id: CardFormat; label: string }[] = [
   { id: "story", label: "story" },
   { id: "square", label: "square" },
@@ -296,6 +378,8 @@ const ShareCardFrame = ({
   empty,
   picker,
   options,
+  photos = NO_PHOTOS,
+  amounts = false,
   onClose,
 }: {
   card: ShareCardKind;
@@ -308,6 +392,10 @@ const ShareCardFrame = ({
   /** Above everything, whatever the state: what the card is about (e.g. which day). */
   picker?: ReactNode;
   options: ReactNode;
+  /** Photos drawn into the card (spec.photos describes the same ones, in order). */
+  photos?: ReadonlyArray<SharePhoto>;
+  /** The card shows amounts (the sharer turned them on). */
+  amounts?: boolean;
   onClose: () => void;
 }) => {
   const { showToast } = useToastContext();
@@ -319,11 +407,13 @@ const ShareCardFrame = ({
 
   // Re-render only when what's on the card changes, not on every snapshot.
   const specKey = spec && !isLoading ? JSON.stringify(spec) : null;
+  // The pixels for spec.photos (which names the same photos by id, so the key follows them).
+  const sources = useMemo(() => photos.map((p) => p.source), [photos]);
   useEffect(() => {
     if (!specKey) return;
     let cancelled = false;
     let url: string | null = null;
-    renderCard(JSON.parse(specKey) as CardSpec, format)
+    renderCard(JSON.parse(specKey) as CardSpec, format, undefined, sources)
       .then((blob) => {
         if (cancelled) return;
         url = URL.createObjectURL(blob);
@@ -339,7 +429,7 @@ const ShareCardFrame = ({
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [specKey, format]);
+  }, [specKey, format, sources]);
 
   const share = async () => {
     if (!image || pending) return;
@@ -351,7 +441,7 @@ const ShareCardFrame = ({
       // No share sheet for files here (or it failed to open): save the image instead.
       if (shared === "unavailable") downloadBlob(image.blob, filename);
       const result: ShareCardResult = shared === "unavailable" ? "downloaded" : shared;
-      track("share_card", { card, format, result });
+      track("share_card", { card, format, result, photos: photos.length, amounts });
       if (result === "shared") onClose();
     } catch (err) {
       reportError(err, { feature: "share_card", action: "share_card" });
@@ -404,7 +494,13 @@ const ShareCardFrame = ({
               )}
             </div>
             <div className="ShareCardModal__options">{options}</div>
-            <p className="ShareCardModal__note">Only your own entries, and never an amount.</p>
+            <p className="ShareCardModal__note">
+              {amounts
+                ? "Only your own entries, with the amounts you chose to show."
+                : "Only your own entries, and never an amount."}
+              {photos.length > 0 &&
+                " Photos are only drawn into the image, never uploaded to moneylogs."}
+            </p>
           </>
         )}
       </Modal.Body>
