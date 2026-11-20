@@ -6,6 +6,7 @@
 @mixin inverted {
   background-color: var(--inverse-surface);
   color: var(--inverse-ink);
+  --link-ink: var(--accent-inverse);
 
   a {
     color: inherit;

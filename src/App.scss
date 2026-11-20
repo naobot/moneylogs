@@ -55,6 +55,16 @@ html {
   font-size: 1em !important;
 }
 
+// Links in posts take the theme's accent (its ink, more saturated), underlined so they
+// never rely on colour alone.
+// An inverted block (pinned post, the log owner's comment) sets --link-ink to the
+// accent drawn for an --ink ground.
+.wmde-markdown a:any-link {
+  color: var(--link-ink, var(--accent));
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 // Entry text follows the viewer's display prefs (the --entry-* tokens). Images are
 // always centred whatever the alignment; code keeps its own left edge.
 .LogPosts__posts__item__content,
@@ -1256,6 +1266,7 @@ h6,
         }
 
         .wmde-markdown {
+          --link-ink: var(--accent-inverse);
           color: var(--inverse-ink) !important;
         }
       }
@@ -1706,6 +1717,7 @@ h6,
       }
 
       .wmde-markdown {
+        --link-ink: var(--accent-inverse);
         background-color: var(--ink);
         color: var(--paper);
       }
