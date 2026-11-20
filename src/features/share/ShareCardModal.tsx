@@ -16,7 +16,8 @@ import { initialAvatarGrid, normaliseAvatar } from "@/utils/avatar";
 import { hourInTz } from "@/utils/ledger";
 import { currenciesByUse } from "@/utils/ledgerStats";
 import { reportError } from "@/utils/reportError";
-import { daySeed } from "@/features/ledger/buddy/buddyMood";
+import { restingFace } from "@/features/ledger/buddy/buddyMood";
+import { useBuddyMood } from "@/features/ledger/buddy/useBuddyMood";
 import { monthName } from "@/features/ledger/buddy/monthReview";
 import { ART } from "@/features/ledger/buddy/knickknacks/art";
 import { useKnickKnackFinds } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
@@ -25,7 +26,6 @@ import { CardFormat, CardSpec, renderCard } from "./renderCard";
 import {
   breakdownSlices,
   pickShareKnickKnack,
-  shareFace,
   ShareDayWord,
   shareDayOf,
   shareLines,
@@ -55,14 +55,17 @@ const myCurrency = (mine: ReadonlyArray<LedgerEntry>, fallback: Currency): Curre
   currenciesByUse(mine)[0] ?? fallback;
 
 /** The sharer's ID (avatar, name, place) and a random kept knick-knack, with a re-roll. */
-const useKeepsakes = () => {
+const useKeepsakes = (ledger: ShareCardModalProps["ledger"]) => {
+  // The buddy as the log shows it right now (mood, sleep and all).
+  const buddy = useBuddyMood(ledger);
   const { user } = useCurrentUser();
   const { data: finds, isLoading } = useKnickKnackFinds(user?.id);
   const [roll, setRoll] = useState(() => Math.random());
   const item = pickShareKnickKnack(finds, () => roll);
   const keptItems = new Set(finds.filter((f) => f.seenAt).map((f) => f.item)).size;
   return {
-    isLoading,
+    isLoading: isLoading || !buddy.isSuccess,
+    face: restingFace(buddy.state),
     avatar: normaliseAvatar(user?.avatar) ?? initialAvatarGrid(user?.displayName),
     name: user?.displayName ?? "",
     location: user?.displayLocation?.trim() || null,
@@ -96,7 +99,7 @@ const DailyShare = ({
   const q1 = useGetLedgerEntries({ ledgerId: ledger.id, month: m1 });
   const q2 = useGetLedgerEntries({ ledgerId: ledger.id, month: m2 });
   const noSpend = useNoSpendDays();
-  const keepsakes = useKeepsakes();
+  const keepsakes = useKeepsakes(ledger);
   const [showPie, setShowPie] = useState(true);
   const [showNames, setShowNames] = useState(true);
 
@@ -133,8 +136,9 @@ const DailyShare = ({
     ? {
         heading: dayWord,
         date: dayjs(today).format("ddd D MMM").toLowerCase(),
-        face: shareFace(daySeed(ledger.id, today)),
+        face: keepsakes.face,
         lines: lines.map((l) => l.text),
+        pieTitle: "where my money went",
         slices: showPie ? todaySlices : [],
         showNames,
         avatar: keepsakes.avatar,
@@ -206,7 +210,7 @@ const BreakdownShare = ({
 }: Omit<ShareCardModalProps, "card"> & { card: "breakdown"; month: string }) => {
   const { user } = useCurrentUser();
   const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
-  const keepsakes = useKeepsakes();
+  const keepsakes = useKeepsakes(ledger);
   const [showNames, setShowNames] = useState(true);
 
   const myUid = user?.userId ?? "";
@@ -225,8 +229,9 @@ const BreakdownShare = ({
     ? {
         heading: name,
         date: dayjs(`${month}-01`).format("MMM YYYY").toLowerCase(),
-        face: shareFace(daySeed(ledger.id, today)),
-        lines: [month === today.slice(0, 7) ? "Where my money's going" : "Where my money went"],
+        face: keepsakes.face,
+        lines: [],
+        pieTitle: month === today.slice(0, 7) ? "where my money's going" : "where my money went",
         slices,
         showNames,
         avatar: keepsakes.avatar,

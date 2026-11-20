@@ -25,6 +25,7 @@ const spec = (extra: Partial<CardSpec> = {}): CardSpec => ({
   location: "Kyoto",
   face: "ฅ^•ω•^ฅ",
   lines: ["I spent 3× less than on a usual Saturday!", "4 no-spend days in a row!"],
+  pieTitle: "where my money went",
   slices: [],
   showNames: true,
   avatar: grid(30),
@@ -102,7 +103,7 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
       expect.arrayContaining([
         "today",
         "Alice",
-        "(Kyoto)",
+        "Kyoto",
         "sat 21 nov",
         "ฅ^•ω•^ฅ",
         "moneylogs",
@@ -125,6 +126,27 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
     expect(name.y).toBeLessThan(photo.y + photo.grid.length * photo.scale);
   });
 
+  it("puts a smaller buddy at the right end of the ID line, clear of the name", () => {
+    const ops = layoutCard(spec({ name: "Bartholomew Montgomery-Fitzwilliam III" }), format);
+    const find = (pred: (o: Extract<DrawOp, { op: "text" }>) => boolean) =>
+      ops.find((o): o is Extract<DrawOp, { op: "text" }> => o.op === "text" && pred(o))!;
+    const face = find((o) => o.text === "ฅ^•ω•^ฅ");
+    const name = find((o) => o.text.startsWith("Bart"));
+    const date = find((o) => o.text === "sat 21 nov");
+    const firstLine = find((o) => o.text.includes("usual"));
+    expect(face.align).toBe("right");
+    expect(face.x).toBeLessThanOrEqual(width);
+    expect(face.size).toBeLessThan(name.size * 1.25);
+    // Level with the ID line, above the lines below it.
+    expect(face.y).toBeGreaterThan(name.y);
+    expect(face.y).toBeLessThan(date.y + date.size);
+    expect(firstLine.y).toBeGreaterThan(face.y);
+    // The name is cut short of the buddy.
+    expect(name.x + textWidth(name.text, name.size)).toBeLessThan(
+      face.x - textWidth(face.text, face.size),
+    );
+  });
+
   it("tucks the knick-knack into the footer's bottom-right corner, unlabelled", () => {
     const ops = layoutCard(spec(), format);
     const kk = ops.filter((o) => o.op === "pixels")[1];
@@ -140,7 +162,7 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
   it("leaves out what isn't there", () => {
     const ops = layoutCard(spec({ avatar: null, knickKnack: null, location: null }), format);
     expect(ops.filter((o) => o.op === "pixels")).toHaveLength(0);
-    expect(texts(ops).some((t) => t.startsWith("("))).toBe(false);
+    expect(texts(ops)).not.toContain("Kyoto");
     expect(texts(ops)).toContain("Alice");
   });
 
@@ -155,7 +177,7 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
     const named = layoutCard(spec({ lines: ["Where my money went"], slices }), format);
     expect(named.filter((o) => o.op === "pie")).toHaveLength(1);
     expect(named.filter((o) => o.op === "swatch")).toHaveLength(slices.length);
-    expect(texts(named)).toEqual(expect.arrayContaining(["Food", "other"]));
+    expect(texts(named)).toEqual(expect.arrayContaining(["FOOD", "OTHER"]));
 
     const hidden = layoutCard(
       spec({ lines: ["Where my money went"], slices, showNames: false }),
@@ -163,7 +185,70 @@ describe.each(FORMATS)("layoutCard (%s)", (format) => {
     );
     expect(hidden.filter((o) => o.op === "pie")).toHaveLength(1);
     expect(hidden.filter((o) => o.op === "swatch")).toHaveLength(0);
-    expect(texts(hidden)).not.toContain("Food");
+    expect(texts(hidden)).not.toContain("FOOD");
+  });
+
+  it("heads the pie with a small caps-lock title, and only when there's a pie", () => {
+    const ops = layoutCard(spec({ slices }), format);
+    const title = ops.find((o) => o.op === "text" && o.text === "WHERE MY MONEY WENT");
+    const pie = ops.find((o) => o.op === "pie");
+    const line = ops.find((o) => o.op === "text" && o.text.includes("usual"));
+    if (title?.op !== "text" || pie?.op !== "pie" || line?.op !== "text") throw 0;
+    expect(title.y).toBeLessThan(pie.cy - pie.r);
+    expect(title.y).toBeGreaterThan(line.y);
+    expect(title.size).toBeLessThan(line.size);
+    expect(texts(layoutCard(spec(), format))).not.toContain("WHERE MY MONEY WENT");
+  });
+
+  it("lines up the brag lines, the box and the footer on the card's left edge", () => {
+    const ops = layoutCard(spec({ slices }), format);
+    const photo = ops.find((o) => o.op === "frame" && o.w < width / 2);
+    const markers = ops.filter((o) => o.op === "text" && o.text === "›");
+    const brag = ops.find((o) => o.op === "text" && o.text.startsWith("I spent"));
+    const sheet = ops.find((o) => o.op === "rect" && o.fill === "sheet");
+    const word = ops.find((o) => o.op === "text" && o.text === "moneylogs");
+    if (photo?.op !== "frame" || brag?.op !== "text" || sheet?.op !== "rect") throw 0;
+    if (word?.op !== "text") throw 0;
+    expect(markers).toHaveLength(2);
+    for (const mk of markers) expect(mk.op === "text" && mk.x).toBe(photo.x);
+    expect(brag.align).toBe("left");
+    expect(sheet.x).toBe(photo.x);
+    expect(word.x).toBe(photo.x);
+  });
+
+  it("fills the room above the footer with the box, one section gap clear of each", () => {
+    const ops = layoutCard(spec({ lines: [], slices }), format);
+    const sheet = ops.find((o) => o.op === "rect" && o.fill === "sheet");
+    const tears = ops.filter((o) => o.op === "dashes");
+    if (sheet?.op !== "rect" || tears[0]?.op !== "dashes" || tears[1]?.op !== "dashes") throw 0;
+    const above = sheet.y - tears[0].y;
+    const below = tears[1].y - (sheet.y + sheet.h);
+    expect(above).toBeGreaterThan(0);
+    expect(below).toBe(above);
+  });
+
+  it("boxes the title, pie and key on a sheet, title at the top left", () => {
+    const ops = layoutCard(spec({ slices }), format);
+    const sheet = ops.find((o) => o.op === "rect" && o.fill === "sheet");
+    const frames = ops.filter((o) => o.op === "frame");
+    const title = ops.find((o) => o.op === "text" && o.text === "WHERE MY MONEY WENT");
+    const pie = ops.find((o) => o.op === "pie");
+    const swatches = ops.filter((o) => o.op === "swatch");
+    if (sheet?.op !== "rect" || title?.op !== "text" || pie?.op !== "pie") throw 0;
+    // Card frame, photo frame, and the box's hairline frame over the sheet.
+    expect(frames.some((f) => f.op === "frame" && f.y === sheet.y && f.h === sheet.h)).toBe(true);
+    expect(title.align).toBe("left");
+    expect(title.x).toBeGreaterThan(sheet.x);
+    expect(title.x).toBeLessThan(width / 4);
+    const inside = (top: number, bottom: number) => {
+      expect(top).toBeGreaterThan(sheet.y);
+      expect(bottom).toBeLessThan(sheet.y + sheet.h);
+    };
+    inside(title.y - title.size / 2, title.y + title.size / 2);
+    inside(pie.cy - pie.r, pie.cy + pie.r);
+    for (const sw of swatches) if (sw.op === "swatch") inside(sw.y, sw.y + sw.size);
+    // The gaps between slices show the sheet, not the paper.
+    expect(pie.ground).toBe("sheet");
   });
 
   it("gives neighbouring slices different fills, in colour and in mono", () => {
@@ -200,6 +285,7 @@ describe("card style", () => {
     expect(TOKEN_CARD_STYLE).toEqual({
       ink: "#242424",
       paper: "#f5f3f0",
+      sheet: "#ffffff",
       font: "Hack, monospace",
       hairline: 1,
       rule: 2,

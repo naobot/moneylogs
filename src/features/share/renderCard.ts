@@ -11,7 +11,7 @@ import { getDisplayPrefs } from "@/utils/displayPrefs";
  * Same look as the app: two inks, Hack, square corners, a striped header like the tool
  * modals, and the theme's chart colours for the pie (1-bit fills when charts are mono).
  * Laid out like an ID card that turns into a receipt: the sharer's photo, name and place
- * under the header, dashed tear lines between sections, and a knick-knack tucked into the
+ * under the header with the buddy at their right, dashed tear lines between sections, and a knick-knack tucked into the
  * footer's corner as a sticker. Pixel art (avatar, knick-knack) is drawn cell by cell
  * at whole-number scales so it stays crisp.
  */
@@ -30,12 +30,14 @@ export type CardSpec = {
   date: string;
   /** The sharer's display name, beside the photo. */
   name: string;
-  /** Their public display location ("Kyoto"), shown in brackets; null leaves it out. */
+  /** Their public display location ("Kyoto"), under the name; null leaves it out. */
   location: string | null;
   /** The buddy's kaomoji. */
   face: string;
   /** The brag lines (daily) or a caption (breakdown). */
   lines: ReadonlyArray<string>;
+  /** The pie's small caps-lock heading ("where my money went"). */
+  pieTitle: string;
   /** A pie of shares; empty for none. */
   slices: ReadonlyArray<BreakdownSlice>;
   /** Show the pie's category names in a key. */
@@ -46,7 +48,7 @@ export type CardSpec = {
   knickKnack: { grid: PixelGrid } | null;
 };
 
-export type Ink = "ink" | "paper";
+export type Ink = "ink" | "paper" | "sheet";
 /** A two-ink fill, or a chart colour (any CSS colour the canvas takes). */
 export type SliceFill = "solid" | "paper" | PixelTile | { colour: string };
 
@@ -85,6 +87,8 @@ export type DrawOp =
       r: number;
       slices: ReadonlyArray<{ start: number; end: number; fill: SliceFill }>;
       gap: number;
+      /** The surface under the pie, which the gaps between slices show. */
+      ground: Ink;
       rim: number;
     }
   | { op: "swatch"; x: number; y: number; size: number; fill: SliceFill; border: number };
@@ -135,12 +139,26 @@ type Metrics = {
   header: { top: number; height: number; size: number; stripe: number };
   /** The ID line: photo scale, room around it, name and sub-line type sizes and leading. */
   id: { gap: number; scale: number; name: number; sub: number; leading: number };
-  /** The buddy, centred under the ID line; gap is the room above and below it. */
-  face: { size: number; gap: number };
+  /** The buddy, at the right end of the ID line: its largest type size. */
+  face: { size: number };
   /** Tear lines: dash and space lengths. */
   tear: { dash: number; space: number };
+  /** The one gap between the middle's blocks (tear line, lines, the pie's box, footer). */
+  section: number;
+  /** Brag lines: left-aligned, each with a hanging "›". */
   lines: { size: number; leading: number; gap: number };
-  pie: { maxR: number; minR: number; sideBySide: boolean };
+  /**
+   * The pie's box: title is the heading's type size, gap the room under it, pad the box's
+   * inner padding.
+   */
+  pie: {
+    maxR: number;
+    minR: number;
+    sideBySide: boolean;
+    title: number;
+    gap: number;
+    pad: number;
+  };
   legend: { swatch: number; size: number; row: number };
   /** kkScale: the corner knick-knack's pixel scale (32 cells). */
   footer: { word: number; url: number; height: number; kkScale: number };
@@ -152,11 +170,12 @@ const METRICS: Record<CardFormat, Metrics> = {
     padding: 36,
     header: { top: 84, height: 120, size: 56, stripe: 6 },
     id: { gap: 44, scale: 5, name: 52, sub: 36, leading: 54 },
-    face: { size: 110, gap: 44 },
+    face: { size: 60 },
     tear: { dash: 18, space: 12 },
-    lines: { size: 42, leading: 60, gap: 26 },
-    pie: { maxR: 300, minR: 120, sideBySide: false },
-    legend: { swatch: 44, size: 36, row: 62 },
+    section: 48,
+    lines: { size: 34, leading: 50, gap: 16 },
+    pie: { maxR: 270, minR: 100, sideBySide: false, title: 26, gap: 40, pad: 40 },
+    legend: { swatch: 28, size: 26, row: 48 },
     footer: { word: 52, url: 36, height: 190, kkScale: 5 },
   },
   square: {
@@ -164,11 +183,12 @@ const METRICS: Record<CardFormat, Metrics> = {
     padding: 36,
     header: { top: 56, height: 90, size: 44, stripe: 5 },
     id: { gap: 30, scale: 3, name: 38, sub: 27, leading: 38 },
-    face: { size: 76, gap: 26 },
+    face: { size: 42 },
     tear: { dash: 14, space: 10 },
-    lines: { size: 31, leading: 44, gap: 16 },
-    pie: { maxR: 170, minR: 80, sideBySide: true },
-    legend: { swatch: 32, size: 27, row: 44 },
+    section: 32,
+    lines: { size: 28, leading: 40, gap: 10 },
+    pie: { maxR: 140, minR: 70, sideBySide: true, title: 20, gap: 28, pad: 28 },
+    legend: { swatch: 20, size: 19, row: 34 },
     footer: { word: 38, url: 26, height: 128, kkScale: 3 },
   },
 };
@@ -183,6 +203,8 @@ const METRICS: Record<CardFormat, Metrics> = {
 export type CardStyle = {
   ink: string;
   paper: string;
+  /** --sheet: the framed surface the pie sits on. */
+  sheet: string;
   font: string;
   /** --border-hairline: secondary lines (tear lines, the photo frame, the pie, key swatches). */
   hairline: number;
@@ -203,6 +225,7 @@ export const CARD_SCALE = 3;
 const TOKEN_NAMES = {
   ink: "ink",
   paper: "paper",
+  sheet: "sheet",
   font: "font-mono",
   hairline: "border-hairline",
   rule: "border-rule",
@@ -221,6 +244,7 @@ const toStyle = (value: (name: string) => string | undefined, mono = false): Car
   return {
     ink: get(TOKEN_NAMES.ink),
     paper: get(TOKEN_NAMES.paper),
+    sheet: get(TOKEN_NAMES.sheet),
     font: get(TOKEN_NAMES.font),
     hairline: px(TOKEN_NAMES.hairline),
     rule: px(TOKEN_NAMES.rule),
@@ -247,7 +271,7 @@ export const readCardStyle = (): CardStyle => {
 };
 
 /** Below this a key row's name would be too small to read on a phone. */
-const MIN_KEY_ROW = 34;
+const MIN_KEY_ROW = 26;
 
 /** Where the card's parts go, as draw ops, for one format. Pure. */
 export const layoutCard = (
@@ -321,11 +345,17 @@ export const layoutCard = (
       scale: id.scale,
     });
   }
+  // The buddy takes its room at the right first (at most a third of the line, shrinking
+  // a long kaomoji to fit); name, place and date fill what's between.
+  const faceSize = Math.floor(
+    Math.min(m.face.size, contentW / 3 / Math.max(1, textWidth(spec.face, 1))),
+  );
+  const faceW = textWidth(spec.face, faceSize);
   const textX = pad + (photoW ? photoW + id.gap : 0);
-  const textW = W - pad - textX;
+  const textW = W - pad - faceW - id.gap - textX;
   const idLines = [
     { text: spec.name, size: id.name, weight: 700 as const },
-    ...(spec.location ? [{ text: `(${spec.location})`, size: id.sub, weight: 400 as const }] : []),
+    ...(spec.location ? [{ text: spec.location, size: id.sub, weight: 400 as const }] : []),
     { text: spec.date, size: id.sub, weight: 400 as const },
   ];
   const textH = idLines.length * id.leading;
@@ -342,8 +372,18 @@ export const layoutCard = (
       fill: "ink",
     });
   });
+  ops.push({
+    op: "text",
+    text: spec.face,
+    x: W - pad,
+    y: idTop + idH / 2,
+    size: faceSize,
+    weight: 700,
+    align: "right",
+    fill: "ink",
+  });
 
-  // A tear line, then the buddy.
+  // A tear line under the ID line.
   const tear = (y: number) =>
     ops.push({
       op: "dashes",
@@ -356,19 +396,6 @@ export const layoutCard = (
     });
   const tearY = idTop + idH + id.gap;
   tear(tearY);
-  const faceSize = Math.floor(
-    Math.min(m.face.size, contentW / Math.max(1, textWidth(spec.face, 1))),
-  );
-  ops.push({
-    op: "text",
-    text: spec.face,
-    x: W / 2,
-    y: tearY + m.face.gap + faceSize / 2,
-    size: faceSize,
-    weight: 700,
-    align: "center",
-    fill: "ink",
-  });
 
   // Footer, from the bottom up, so the middle knows how much room it has: a tear line,
   // the wordmark on the left and the knick-knack, unlabelled, in the corner.
@@ -406,117 +433,165 @@ export const layoutCard = (
     });
   }
 
-  // The middle: lines, then the pie and its key. Laid out from the top of the space, then
-  // centred in it, so a short card doesn't leave a gap above the footer.
+  // The middle, on the card's left edge like the ID line and the footer: brag lines, then
+  // the pie in its box, one section gap apart. The box fills the room down to the footer
+  // and the pie grows into it (up to a cap); with no pie, the lines sit centred instead.
+  const S = m.section;
+  const top = tearY + S;
+  const bottom = footerTop - S;
   const middle: DrawOp[] = [];
-  const top = tearY + 2 * m.face.gap + faceSize;
-  const bottom = footerTop - m.lines.gap;
+  const ln = m.lines;
+  const marker = "› ";
+  const markerW = textWidth(marker, ln.size);
   let y = top;
   for (const paragraph of spec.lines) {
-    const wrapped = wrapText(paragraph, m.lines.size, contentW);
-    if (y + wrapped.length * m.lines.leading > bottom) break;
-    for (const line of wrapped) {
-      middle.push({
-        op: "text",
-        text: line,
-        x: W / 2,
-        y: y + m.lines.leading / 2,
-        size: m.lines.size,
-        weight: 700,
-        align: "center",
-        fill: "ink",
-      });
-      y += m.lines.leading;
-    }
-    y += m.lines.gap;
+    const wrapped = wrapText(paragraph, ln.size, contentW - markerW);
+    if (y + wrapped.length * ln.leading > bottom) break;
+    wrapped.forEach((line, i) => {
+      const mid = y + ln.leading / 2;
+      const text = { size: ln.size, weight: 700, align: "left", fill: "ink" } as const;
+      if (i === 0) middle.push({ op: "text", text: marker.trim(), x: pad, y: mid, ...text });
+      middle.push({ op: "text", text: line, x: pad + markerW, y: mid, ...text });
+      y += ln.leading;
+    });
+    y += ln.gap;
   }
+  const linesBottom = middle.length ? y - ln.gap : top;
 
-  // The pie (and its key), in whatever room is left; left out if that's too little.
-  const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
-  // The pie's rim and the paper gaps between slices: hairlines, so small slices still show.
-  const rim = hairline;
-  if (arcs.length) {
-    const fills = sliceFills(arcs, style);
-    const lg = m.legend;
-    const keyRows = spec.showNames ? arcs.length : 0;
-    const room = bottom - y;
-    const keyWidth = (key: Metrics["legend"], maxWidth: number) =>
-      Math.min(
-        maxWidth,
-        key.swatch + key.size / 2 + Math.max(0, ...arcs.map((a) => textWidth(a.name, key.size))),
-      );
-    if (m.pie.sideBySide) {
-      // Key rows shrink to fit beside the pie, down to a readable minimum.
-      const row = keyRows ? Math.min(lg.row, room / keyRows) : lg.row;
-      const key: Metrics["legend"] = {
-        row,
-        swatch: Math.min(lg.swatch, Math.floor(row * 0.7)),
-        size: Math.min(lg.size, Math.floor(row * 0.62)),
-      };
-      const showKey = keyRows > 0 && row >= MIN_KEY_ROW;
-      const r = Math.min(m.pie.maxR, (room - 2 * rim) / 2, contentW / 4);
-      if (r >= m.pie.minR) {
-        const pieW = 2 * (r + rim);
-        const keyW = showKey ? keyWidth(key, contentW - pieW - lg.swatch) : 0;
-        const groupW = pieW + (showKey ? lg.swatch + keyW : 0);
-        const pieCx = (W - groupW) / 2 + pieW / 2;
-        const cy = y + rim + r;
-        middle.push(pieOp(pieCx, cy, r, arcs, fills, rim));
-        if (showKey) {
-          const keyX = pieCx + pieW / 2 + lg.swatch;
-          const keyH = keyRows * key.row;
-          legendOps(middle, arcs, fills, keyX, cy - keyH / 2, keyW, key, hairline);
-        }
-      }
-    } else {
-      const keyCols = keyRows > 2 ? 2 : 1;
-      const perCol = Math.ceil(keyRows / keyCols);
-      const keyH = perCol * lg.row;
-      const r = Math.min(m.pie.maxR, (room - keyH - lg.row) / 2 - rim);
-      if (r >= m.pie.minR) {
-        const cy = y + rim + r;
-        middle.push(pieOp(W / 2, cy, r, arcs, fills, rim));
-        const keyTop = cy + r + rim + lg.row / 2;
-        const colW = contentW / keyCols;
-        for (let c = 0; c < keyCols; c++) {
-          const col = arcs.slice(c * perCol, (c + 1) * perCol);
-          const width = keyCols === 1 ? keyWidth(lg, colW) : colW - lg.swatch;
-          const x = keyCols === 1 ? (W - width) / 2 : pad + c * colW + lg.swatch / 2;
-          legendOps(
-            middle,
-            col,
-            fills.slice(c * perCol, (c + 1) * perCol),
-            x,
-            keyTop,
-            width,
-            lg,
-            hairline,
-          );
-        }
-      }
-    }
+  const box = pieBox({
+    spec,
+    style,
+    m,
+    x: pad,
+    w: contentW,
+    top: middle.length ? linesBottom + S : top,
+    bottom,
+    hairline,
+  });
+  if (box.length) {
+    ops.push(...middle, ...box);
+  } else {
+    const shift = Math.max(0, (bottom - linesBottom) / 2);
+    for (const o of middle) ops.push(shiftDown(o, shift));
   }
-
-  const shift = Math.max(0, (bottom - opsBottom(middle, top)) / 2);
-  for (const o of middle) ops.push(shiftDown(o, shift));
 
   return ops;
 };
 
-/** The lowest point any of these ops reaches (or `fallback` with none). */
-const opsBottom = (ops: ReadonlyArray<DrawOp>, fallback: number): number =>
-  ops.reduce((low, o) => {
-    switch (o.op) {
-      case "text":
-        return Math.max(low, o.y + o.size / 2);
-      case "pie":
-        return Math.max(low, o.cy + o.r + o.rim);
-      case "swatch":
-        return Math.max(low, o.y + o.size);
-      default:
-        return low;
+/**
+ * The pie and its key in a framed sheet box from `top` to `bottom`, headed by a small
+ * caps-lock title at its top left. The pie takes the room the box has (up to maxR) and the
+ * pie and key sit centred in it: below the pie in columns on a story, beside it on a
+ * square. Empty when there's no pie or too little room for one.
+ */
+const pieBox = ({
+  spec,
+  style,
+  m,
+  x,
+  w,
+  top,
+  bottom,
+  hairline,
+}: {
+  spec: CardSpec;
+  style: CardStyle;
+  m: Metrics;
+  x: number;
+  w: number;
+  top: number;
+  bottom: number;
+  hairline: number;
+}): DrawOp[] => {
+  const arcs = toArcs(spec.slices.map((sl) => ({ ...sl, value: sl.share })));
+  if (!arcs.length) return [];
+  const pp = m.pie;
+  const lg = m.legend;
+  // The pie's rim and the gaps between slices: hairlines, so small slices still show.
+  const rim = hairline;
+  const fills = sliceFills(arcs, style);
+  const rows = spec.showNames ? arcs.length : 0;
+  const innerX = x + pp.pad;
+  const innerW = w - 2 * pp.pad;
+  const areaTop = top + pp.pad + pp.title + pp.gap;
+  const areaH = bottom - pp.pad - areaTop;
+  const cx = x + w / 2;
+  const ops: DrawOp[] = [
+    { op: "rect", x, y: top, w, h: bottom - top, fill: "sheet" },
+    { op: "frame", x, y: top, w, h: bottom - top, width: hairline },
+    {
+      op: "text",
+      text: truncate(spec.pieTitle.toUpperCase(), pp.title, innerW),
+      x: innerX,
+      y: top + pp.pad + pp.title / 2,
+      size: pp.title,
+      weight: 700,
+      align: "left",
+      fill: "ink",
+    },
+  ];
+  // +1: room for float rounding, so a name that fits isn't cut by a hair.
+  const nameW = (key: Metrics["legend"]) =>
+    key.swatch + key.size / 2 + Math.max(0, ...arcs.map((a) => textWidth(a.name, key.size))) + 1;
+
+  if (pp.sideBySide) {
+    // Key rows shrink to fit beside the pie, down to a readable minimum.
+    const row = rows ? Math.min(lg.row, areaH / rows) : lg.row;
+    const key: Metrics["legend"] = {
+      row,
+      swatch: Math.min(lg.swatch, Math.floor(row * 0.6)),
+      size: Math.min(lg.size, Math.floor(row * 0.56)),
+    };
+    const showKey = rows > 0 && row >= MIN_KEY_ROW;
+    const r = Math.min(pp.maxR, areaH / 2 - rim, innerW / 4);
+    if (r < pp.minR) return [];
+    const pieW = 2 * (r + rim);
+    const keyGap = pp.gap * 1.5;
+    const keyW = showKey ? Math.min(nameW(key), innerW - pieW - keyGap) : 0;
+    const groupW = pieW + (showKey ? keyGap + keyW : 0);
+    const pieCx = cx - groupW / 2 + pieW / 2;
+    const cy = areaTop + areaH / 2;
+    ops.push(pieOp(pieCx, cy, r, arcs, fills, rim));
+    if (showKey) {
+      legendOps(
+        ops,
+        arcs,
+        fills,
+        pieCx + pieW / 2 + keyGap,
+        cy - (rows * row) / 2,
+        keyW,
+        key,
+        hairline,
+      );
     }
-  }, fallback);
+    return ops;
+  }
+
+  // Story: the title anchors the box's top and the key, in up to three columns on its left
+  // edge, its bottom; the pie sits centred in the room between them.
+  const cols = rows <= 2 ? Math.max(rows, 1) : rows <= 4 ? 2 : 3;
+  const perCol = Math.ceil(rows / cols);
+  const keyH = rows ? perCol * lg.row : 0;
+  const keyTop = areaTop + areaH - keyH;
+  const pieRoom = keyTop - (rows ? pp.gap : 0) - areaTop;
+  const r = Math.min(pp.maxR, pieRoom / 2 - rim);
+  if (r < pp.minR) return [];
+  ops.push(pieOp(cx, areaTop + pieRoom / 2, r, arcs, fills, rim));
+  const colW = innerW / cols;
+  for (let c = 0; c < cols && rows; c++) {
+    legendOps(
+      ops,
+      arcs.slice(c * perCol, (c + 1) * perCol),
+      fills.slice(c * perCol, (c + 1) * perCol),
+      innerX + c * colW,
+      keyTop,
+      colW - lg.swatch,
+      lg,
+      hairline,
+    );
+  }
+  return ops;
+};
 
 const shiftDown = (o: DrawOp, by: number): DrawOp =>
   !by ? o : o.op === "pie" ? { ...o, cy: o.cy + by } : "y" in o ? { ...o, y: o.y + by } : o;
@@ -551,10 +626,11 @@ const pieOp = (
   r: Math.floor(r),
   slices: arcs.map(({ start, end }, i) => ({ start, end, fill: fills[i] })),
   gap: weight,
+  ground: "sheet",
   rim: weight,
 });
 
-/** A key: one row per slice, swatch then name, starting at (x, top), names cut to width. */
+/** A key: one row per slice, swatch then name in small caps-lock, from (x, top), cut to width. */
 const legendOps = (
   ops: DrawOp[],
   arcs: ReadonlyArray<{ name: string }>,
@@ -577,7 +653,7 @@ const legendOps = (
     });
     ops.push({
       op: "text",
-      text: truncate(name, lg.size, width - lg.swatch - lg.size / 2),
+      text: truncate(name.toUpperCase(), lg.size, width - lg.swatch - lg.size / 2),
       x: x + lg.swatch + lg.size / 2,
       y: mid,
       size: lg.size,
@@ -590,7 +666,7 @@ const legendOps = (
 
 // ---- Painting ---------------------------------------------------------------------
 
-type Inks = Pick<CardStyle, "ink" | "paper">;
+type Inks = Pick<CardStyle, "ink" | "paper" | "sheet">;
 
 // Kaomoji need glyphs Hack doesn't have; the system fonts fill in.
 const fontStack = (font: string) =>
@@ -683,7 +759,7 @@ export const paintOps = (
           ctx.fill();
         }
         if (o.slices.length > 1) {
-          ctx.strokeStyle = inks.paper;
+          ctx.strokeStyle = inks[o.ground];
           ctx.lineWidth = o.gap;
           for (const slice of o.slices) {
             const x = o.cx + o.r * Math.sin(slice.start);

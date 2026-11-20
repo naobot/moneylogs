@@ -11,6 +11,7 @@ const daily: CardSpec = {
   location: "Kyoto",
   face: "ฅ(=✧ω✧=)ฅ",
   lines: ["I spent 3× less than on a usual Saturday!", "4 no-spend days in a row!"],
+  pieTitle: "where my money went",
   slices: [
     { id: "groceries", name: "Groceries", share: 0.45 },
     { id: "eating", name: "Eating out", share: 0.35 },
@@ -25,7 +26,7 @@ const breakdown: CardSpec = {
   ...daily,
   heading: "november",
   date: "nov 2026",
-  lines: ["Where my money went"],
+  lines: [],
   slices: ["Groceries", "Eating out", "Transit", "Gifts", "Books", "other"].map((name, i) => ({
     id: name,
     name,
