@@ -44,6 +44,7 @@ export type AnalyticsEvents = {
   remove_budget: Record<string, never>;
   monthly_total: { action: "set" | "remove" };
   stats_period: { period: "month" | "quarter" | "year" };
+  stats_sort: { sort: "order" | "amount" | "pace" };
   month_review: { action: "start" | "snooze" | "dismiss" | "adjust" | "keep" };
 
   // Social / profile

@@ -22,6 +22,7 @@ import {
   PeriodBudget,
   periodBudget,
   periodCurrencies,
+  periodElapsedShare,
   vsPreviousPeriod,
 } from "@/utils/periodStats";
 
@@ -29,7 +30,7 @@ import Button from "@/components/Button";
 import RowButton from "@/components/RowButton";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 import Totals from "./Totals";
-import { CategoryBar, ShareRows } from "./LedgerStats";
+import { CategoryBar, CategorySection } from "./LedgerStats";
 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
 
@@ -179,20 +180,16 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
             axisFormat="month"
           />
 
-          <h4 className="LedgerStats__heading">
-            By category · <span className="keep-case">{currency}</span>
-          </h4>
-          {budget && (
-            <p className="LedgerStats__note">
-              Budgets add up each month&apos;s budget so far; categories without one show their
-              share of spending.
-            </p>
-          )}
-          <ShareRows
+          <CategorySection
             rows={catRows}
             currency={currency}
-            label="Spending by category"
+            categories={categories}
             segmentOf={categoryBarSegments(catShares, categories).segmentOf}
+            elapsedShare={periodElapsedShare(months, today)}
+            note={
+              budget &&
+              "Budgets add up each month's budget so far; categories without one show their share of spending."
+            }
           />
         </>
       )}

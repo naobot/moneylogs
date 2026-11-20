@@ -1,8 +1,9 @@
+import dayjs from "@/utils/configuredDayjs";
 import { Currency } from "@/types/user";
 import { CurrencyAmounts, LedgerCategory, LedgerMonth } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import { BudgetSnapshot, categoriesForMonth, totalsForMonth } from "@/utils/budgetHistory";
-import { budgetsFor } from "@/utils/ledgerStats";
+import { budgetsFor, elapsedDays } from "@/utils/ledgerStats";
 
 /**
  * Quarter and year stats, summed on the client from the derived month docs
@@ -62,6 +63,17 @@ export const periodCurrencies = (months: ReadonlyArray<string>, byMonth: MonthDo
 /** The period's months that have begun as of the current month. */
 export const monthsSoFar = (months: ReadonlyArray<string>, currentMonth: string): string[] =>
   months.filter((m) => m <= currentMonth);
+
+/**
+ * How much of the period's begun months has gone by, 0–1 (1 once it's over): what a
+ * summed budget should be used up to by now, if spent evenly.
+ */
+export const periodElapsedShare = (months: ReadonlyArray<string>, today: string): number => {
+  const begun = monthsSoFar(months, today.slice(0, 7));
+  const days = begun.reduce((sum, m) => sum + dayjs(`${m}-01`).daysInMonth(), 0);
+  const gone = begun.reduce((sum, m) => sum + elapsedDays(m, today), 0);
+  return days > 0 ? gone / days : 0;
+};
 
 export type MonthBudgetResult = { month: string; budget: number; spent: number; over: boolean };
 

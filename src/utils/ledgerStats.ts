@@ -264,6 +264,57 @@ export const categoryBudgetRows = (
   return inCategoryOrder(rows, categories);
 };
 
+/** How the "by category" rows are ordered on the stats pages. */
+export type CategorySort = "order" | "amount" | "pace";
+
+export type SortedCategoryRow = BudgetRow & {
+  /**
+   * Budgeted rows: spending against what the budget allows so far (1 is on pace). An
+   * everyday budget is spread over the days, so it's judged against the share of the
+   * period gone by; a fixed cost is paid in one go, so it's simply its share used.
+   */
+  pace?: number;
+};
+
+/**
+ * The category rows in the chosen order (they arrive in Categories-panel order, which
+ * breaks ties): "amount" puts the most spent first; "pace" puts the budgets furthest
+ * ahead of the calendar first, then unbudgeted rows by amount.
+ */
+export const sortCategoryRows = (
+  rows: ReadonlyArray<BudgetRow>,
+  sort: CategorySort,
+  {
+    categories,
+    elapsedShare,
+  }: {
+    categories: ReadonlyArray<LedgerCategory>;
+    /** How much of the period has gone by (0–1); past periods are 1. */
+    elapsedShare: number;
+  },
+): SortedCategoryRow[] => {
+  const share = elapsedShare > 0 ? Math.min(elapsedShare, 1) : 1;
+  const withPace: SortedCategoryRow[] = rows.map((row) => {
+    if (row.budget === undefined || row.budget <= 0) return { ...row };
+    const fixed = isFixedCategory(categories.find((c) => c.id === row.id) ?? { id: row.id });
+    return { ...row, pace: row.amount / (row.budget * (fixed ? 1 : share)) };
+  });
+  if (sort === "amount") return withPace.sort((a, b) => b.amount - a.amount);
+  if (sort === "pace") {
+    return withPace.sort((a, b) => {
+      if (a.pace !== undefined && b.pace !== undefined) return b.pace - a.pace;
+      if (a.pace !== undefined) return -1;
+      if (b.pace !== undefined) return 1;
+      return b.amount - a.amount;
+    });
+  }
+  return withPace;
+};
+
+/** How much of `month` has gone by as of `today`, 0–1 (1 for past months). */
+export const monthElapsedShare = (month: string, today: string): number =>
+  elapsedDays(month, today) / dayjs(`${month}-01`).daysInMonth();
+
 export type BudgetSummary = {
   /** The monthly total, else the sum of category budgets, in this currency. */
   budget: number;
