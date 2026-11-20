@@ -4,8 +4,9 @@
 //
 // Two inks only: `ink` on `paper`. Every theme is one such pair — Night shift swaps
 // Paper's, the colour themes bring their own — so any component written against these
-// tokens gets every theme for free. One exception: categorical charts get a muted
-// six-colour palette per theme (--chart-*, see the chart-palette mixin). The theme list
+// tokens gets every theme for free. Two exceptions: categorical charts get a muted
+// six-colour palette per theme (--chart-*, see the chart-palette mixin), and links in
+// posts get an accent per theme (--accent*, see the accent mixin). The theme list
 // lives in src/utils/theme.ts.
 
 :root {
@@ -30,6 +31,11 @@
   --chart-5: #cba1c6;
   --chart-6: #5b9fa3;
   --chart-rest: var(--ink-faint);
+
+  // Link accent (see the accent mixin below): links in posts on the ground, and on an
+  // inverted block, where the ground is --ink.
+  --accent: #2769b7;
+  --accent-inverse: #5395e6;
 
   // Icons are black single-ink <img>s and can't inherit colour, so they are flipped
   // with a filter: --icon-filter on the ground, --icon-filter-inverse on an
@@ -162,17 +168,30 @@
   --chart-rest: var(--ink-faint);
 }
 
+// Link accent: the one colour text may take besides the two inks, for links in posts
+// (markdown entries, comments, previews) so they stand out from bold text. --accent is
+// for links on the ground (paper and sheet), --accent-inverse for links on an inverted
+// block (pinned posts, the log owner's comments), whose ground is --ink. Picked per
+// theme at a hue apart from its ink and checked with `node scripts/link-accent.mjs`
+// (>= 4.5:1 on its ground). Never for frames, fills or UI text.
+@mixin accent($accent, $accent-inverse) {
+  --accent: #{$accent};
+  --accent-inverse: #{$accent-inverse};
+}
+
 // Paper's inks as a theme, for elements that preview a theme in place (the /me picker's
 // swatches carry data-theme). The page itself uses :root above, with no attribute.
 [data-theme="paper"] {
   @include two-inks(#f5f3f0, #ffffff, #242424, rgba(0, 0, 0, 0.2), none, invert(1), light);
   @include chart-palette(#89afd6, #b27e6c, #a3c69c, #a99b69, #cba1c6, #5b9fa3);
+  @include accent(#2769b7, #5395e6);
 }
 
 // Night shift: the same two inks, swapped.
 [data-theme="night"] {
   @include two-inks(#242424, #242424, #f5f3f0, rgba(0, 0, 0, 0.5), invert(1), none, dark);
   @include chart-palette(#83a8cf, #ab7866, #9dc095, #a39563, #c59bc0, #54999d);
+  @include accent(#5395e6, #2769b7);
 }
 
 // Colour themes, in the order of THEMES in src/utils/theme.ts. Every theme block matches
@@ -194,6 +213,7 @@
     dark
   );
   @include chart-palette(#bc9865, #aa6f5f, #a2b77f, #b37b9a, #63b5b4, #7c81b6);
+  @include accent(#0398b1, #044b59);
 }
 
 // Blueprint: chalk-white lines on cyanotype blue.
@@ -210,6 +230,7 @@
     dark
   );
   @include chart-palette(#dbc18c, #d09291, #b2e3bb, #bfa9db, #8fdada, #7fb2d6);
+  @include accent(#d9b239, #7e6303);
 }
 
 // Riso: plum ink on pink stock, like a risograph print.
@@ -226,6 +247,7 @@
     light
   );
   @include chart-palette(#d28da7, #268d92, #cfb070, #7a94cd, #87ba88, #bb7962);
+  @include accent(#046d6e, #04a7a7);
 }
 
 // Gilt: pale gold leaf on graphite, like a well-loved code editor.
@@ -242,6 +264,7 @@
     dark
   );
   @include chart-palette(#bca169, #429599, #e3a19b, #948dc3, #90b888, #6291ba);
+  @include accent(#0da4d7, #045774);
 }
 
 // Mint: pastel. Bottle green on mint.
@@ -258,6 +281,7 @@
     light
   );
   @include chart-palette(#7fc2a4, #be7e7e, #d5bf85, #939ed4, #7dc3de, #bb8e63);
+  @include accent(#2567b5, #5799eb);
 }
 
 // Lavender: pastel. Deep violet on lavender.
@@ -274,6 +298,7 @@
     light
   );
   @include chart-palette(#aea1d9, #499b9b, #eaa6a5, #ab9b61, #8dc096, #b180a6);
+  @include accent(#086b6c, #00a2a2);
 }
 
 // Peach: pastel. Burnt umber on peach.
@@ -290,6 +315,7 @@
     light
   );
   @include chart-palette(#dda187, #499b9f, #e1a6c6, #7e925c, #9dafe5, #a98f57);
+  @include accent(#0467a4, #389ae2);
 }
 
 // Butter: pastel. Dark olive on butter yellow.
@@ -306,6 +332,7 @@
     light
   );
   @include chart-palette(#baab70, #b87a6f, #87c3e7, #6aab8f, #c8a1d1, #ce8d96);
+  @include accent(#2668b6, #5798eb);
 }
 
 // Aqua: aero. Deep ocean blue on clear sky.
@@ -322,6 +349,7 @@
     light
   );
   @include chart-palette(#70b5d6, #669b71, #e8ab89, #a390c9, #6bc3bd, #a29253);
+  @include accent(#a34276, #dc76a9);
 }
 
 // Meadow: aero. Forest green on spring grass.
@@ -338,6 +366,7 @@
     light
   );
   @include chart-palette(#8fb07d, #5994b6, #f1b499, #c2827c, #b9a6dd, #55a294);
+  @include accent(#2567b5, #5c9ef0);
 }
 
 // Aurora: aero after dark. Pale glassy cyan on deep teal.
@@ -354,6 +383,7 @@
     dark
   );
   @include chart-palette(#7fc2a4, #9a87bc, #82cfe1, #ca8da4, #babc80, #779bc9);
+  @include accent(#c59e1a, #6a5302);
 }
 
 // Phosphor: soft green P1 phosphor on a terminal black.
@@ -370,6 +400,7 @@
     dark
   );
   @include chart-palette(#85b286, #9c834b, #73c3cc, #c28378, #a5a4dc, #a87aa3);
+  @include accent(#bb7f06, #694602);
 }
 
 // Midnight: periwinkle on navy.
@@ -386,6 +417,7 @@
     dark
   );
   @include chart-palette(#96a1d4, #4b92a2, #daa1bb, #aa925f, #79bba4, #b57b71);
+  @include accent(#d56a8e, #912b54);
 }
 
 // Oxblood: blush on burgundy.
@@ -402,6 +434,7 @@
     dark
   );
   @include chart-palette(#d2918b, #a37f4d, #d2a2cd, #8f9d64, #69bac3, #8f83b8);
+  @include accent(#ac8807, #675001);
 }
 
 // Forest: lichen on pine.
@@ -418,4 +451,5 @@
     dark
   );
   @include chart-palette(#96ae7f, #9f8056, #e7ada3, #60a1b0, #b89fcc, #629a82);
+  @include accent(#06a0dd, #05628a);
 }
