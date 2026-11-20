@@ -9,7 +9,7 @@ import {
   elapsedDays,
   topFlexibleCategory,
 } from "@/utils/ledgerStats";
-import { BuddyMood, MOOD_SCALE, ScaleMood } from "./faces";
+import { BuddyMood, FACES, MOOD_SCALE, pick, ScaleMood } from "./faces";
 
 /** The buddy sleeps from 23:00 until 07:00 in the viewer's own timezone. */
 export const BUDDY_SLEEP_FROM = 23;
@@ -196,3 +196,7 @@ export const buddyMood = ({
 
   return { mood, asleep, facts, seed };
 };
+
+/** The face the buddy rests on for this state (asleep at night), stable for the day. */
+export const restingFace = (state: Pick<BuddyState, "mood" | "asleep" | "seed">): string =>
+  pick(FACES[state.asleep ? "asleep" : state.mood].resting, state.seed);

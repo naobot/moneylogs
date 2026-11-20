@@ -3,8 +3,9 @@
 // properties; nothing else should hard-code a colour, radius or font.
 //
 // Two inks only: `ink` on `paper`. Every theme is one such pair — Night shift swaps
-// Paper's, the colour themes bring their own — so any
-// component written against these tokens gets every theme for free. The theme list
+// Paper's, the colour themes bring their own — so any component written against these
+// tokens gets every theme for free. One exception: categorical charts get a muted
+// six-colour palette per theme (--chart-*, see the chart-palette mixin). The theme list
 // lives in src/utils/theme.ts.
 
 :root {
@@ -20,6 +21,15 @@
   --inverse-surface: var(--ink);
   --inverse-ink: var(--paper);
   --focus-ring: var(--ink);
+
+  // Chart fills (see the chart-palette mixin below); "other" is a neutral wash of ink.
+  --chart-1: #89afd6;
+  --chart-2: #b27e6c;
+  --chart-3: #a3c69c;
+  --chart-4: #a99b69;
+  --chart-5: #cba1c6;
+  --chart-6: #5b9fa3;
+  --chart-rest: var(--ink-faint);
 
   // Icons are black single-ink <img>s and can't inherit colour, so they are flipped
   // with a filter: --icon-filter on the ground, --icon-filter-inverse on an
@@ -136,15 +146,33 @@
   color-scheme: #{$scheme};
 }
 
+// Chart colours: six muted fills for categorical charts only (category bars, the budget
+// pie, share-card pies), so neighbouring series tell apart at a glance. Picked per theme
+// in OKLCH and checked with `node scripts/chart-palette.mjs`. Never use them for text,
+// frames or UI: everything else stays two inks. Under :root[data-charts="mono"] (Display
+// → Charts) the charts go back to 1-bit textures and ignore these.
+@mixin chart-palette($c1, $c2, $c3, $c4, $c5, $c6) {
+  --chart-1: #{$c1};
+  --chart-2: #{$c2};
+  --chart-3: #{$c3};
+  --chart-4: #{$c4};
+  --chart-5: #{$c5};
+  --chart-6: #{$c6};
+  // Declared with the palette so a themed swatch resolves it against its own ink.
+  --chart-rest: var(--ink-faint);
+}
+
 // Paper's inks as a theme, for elements that preview a theme in place (the /me picker's
 // swatches carry data-theme). The page itself uses :root above, with no attribute.
 [data-theme="paper"] {
   @include two-inks(#f5f3f0, #ffffff, #242424, rgba(0, 0, 0, 0.2), none, invert(1), light);
+  @include chart-palette(#89afd6, #b27e6c, #a3c69c, #a99b69, #cba1c6, #5b9fa3);
 }
 
 // Night shift: the same two inks, swapped.
 [data-theme="night"] {
   @include two-inks(#242424, #242424, #f5f3f0, rgba(0, 0, 0, 0.5), invert(1), none, dark);
+  @include chart-palette(#83a8cf, #ab7866, #9dc095, #a39563, #c59bc0, #54999d);
 }
 
 // Colour themes, in the order of THEMES in src/utils/theme.ts. Every theme block matches
@@ -152,19 +180,20 @@
 // pair and generate its icon filters with `node scripts/theme-inks.mjs <paper> <sheet>
 // <ink>`: --ink-muted must stay >= 5:1 on paper and sheet.
 
-// Amber CRT: amber phosphor on a warm black.
+// Amber CRT: soft amber phosphor on a warm black.
 [data-theme="amber"] {
   @include two-inks(
     #1c1408,
     #221a0c,
-    #ffb000,
+    #e8b060,
     rgba(0, 0, 0, 0.5),
-    brightness(0) saturate(100%) invert(66%) sepia(74%) saturate(1423%) hue-rotate(359deg)
-      brightness(101%) contrast(106%),
+    brightness(0) saturate(100%) invert(96%) sepia(57%) saturate(7305%) hue-rotate(310deg)
+      brightness(93%) contrast(96%),
     brightness(0) saturate(100%) invert(6%) sepia(10%) saturate(4556%) hue-rotate(3deg)
       brightness(95%) contrast(94%),
     dark
   );
+  @include chart-palette(#bc9865, #aa6f5f, #a2b77f, #b37b9a, #63b5b4, #7c81b6);
 }
 
 // Blueprint: chalk-white lines on cyanotype blue.
@@ -180,6 +209,7 @@
       brightness(92%) contrast(94%),
     dark
   );
+  @include chart-palette(#dbc18c, #d09291, #b2e3bb, #bfa9db, #8fdada, #7fb2d6);
 }
 
 // Riso: plum ink on pink stock, like a risograph print.
@@ -195,21 +225,23 @@
       brightness(106%) contrast(97%),
     light
   );
+  @include chart-palette(#d28da7, #268d92, #cfb070, #7a94cd, #87ba88, #bb7962);
 }
 
-// Gilt: gold leaf on graphite, like a well-loved code editor.
+// Gilt: pale gold leaf on graphite, like a well-loved code editor.
 [data-theme="gilt"] {
   @include two-inks(
     #232427,
     #29292d,
-    #ffc24d,
+    #e9c98c,
     rgba(0, 0, 0, 0.5),
-    brightness(0) saturate(100%) invert(82%) sepia(14%) saturate(2225%) hue-rotate(335deg)
-      brightness(104%) contrast(102%),
+    brightness(0) saturate(100%) invert(85%) sepia(13%) saturate(982%) hue-rotate(356deg)
+      brightness(95%) contrast(92%),
     brightness(0) saturate(100%) invert(11%) sepia(6%) saturate(687%) hue-rotate(187deg)
       brightness(96%) contrast(92%),
     dark
   );
+  @include chart-palette(#bca169, #429599, #e3a19b, #948dc3, #90b888, #6291ba);
 }
 
 // Mint: pastel. Bottle green on mint.
@@ -225,6 +257,7 @@
       brightness(103%) contrast(92%),
     light
   );
+  @include chart-palette(#7fc2a4, #be7e7e, #d5bf85, #939ed4, #7dc3de, #bb8e63);
 }
 
 // Lavender: pastel. Deep violet on lavender.
@@ -240,6 +273,7 @@
       brightness(102%) contrast(94%),
     light
   );
+  @include chart-palette(#aea1d9, #499b9b, #eaa6a5, #ab9b61, #8dc096, #b180a6);
 }
 
 // Peach: pastel. Burnt umber on peach.
@@ -255,6 +289,7 @@
       brightness(108%) contrast(98%),
     light
   );
+  @include chart-palette(#dda187, #499b9f, #e1a6c6, #7e925c, #9dafe5, #a98f57);
 }
 
 // Butter: pastel. Dark olive on butter yellow.
@@ -270,6 +305,7 @@
       brightness(107%) contrast(97%),
     light
   );
+  @include chart-palette(#baab70, #b87a6f, #87c3e7, #6aab8f, #c8a1d1, #ce8d96);
 }
 
 // Aqua: aero. Deep ocean blue on clear sky.
@@ -285,6 +321,7 @@
       brightness(103%) contrast(97%),
     light
   );
+  @include chart-palette(#70b5d6, #669b71, #e8ab89, #a390c9, #6bc3bd, #a29253);
 }
 
 // Meadow: aero. Forest green on spring grass.
@@ -300,36 +337,39 @@
       brightness(101%) contrast(93%),
     light
   );
+  @include chart-palette(#8fb07d, #5994b6, #f1b499, #c2827c, #b9a6dd, #55a294);
 }
 
-// Aurora: aero after dark. Glassy cyan on deep teal.
+// Aurora: aero after dark. Pale glassy cyan on deep teal.
 [data-theme="aurora"] {
   @include two-inks(
     #052a43,
     #093553,
-    #7fe0ff,
+    #b0dcec,
     rgba(0, 0, 0, 0.5),
-    brightness(0) saturate(100%) invert(79%) sepia(18%) saturate(4602%) hue-rotate(176deg)
-      brightness(115%) contrast(101%),
+    brightness(0) saturate(100%) invert(87%) sepia(12%) saturate(607%) hue-rotate(155deg)
+      brightness(95%) contrast(95%),
     brightness(0) saturate(100%) invert(11%) sepia(15%) saturate(7498%) hue-rotate(184deg)
       brightness(92%) contrast(96%),
     dark
   );
+  @include chart-palette(#7fc2a4, #9a87bc, #82cfe1, #ca8da4, #babc80, #779bc9);
 }
 
-// Phosphor: green P1 phosphor on a terminal black.
+// Phosphor: soft green P1 phosphor on a terminal black.
 [data-theme="phosphor"] {
   @include two-inks(
     #0b170d,
     #0f1f12,
-    #39ff6a,
+    #86d99a,
     rgba(0, 0, 0, 0.5),
-    brightness(0) saturate(100%) invert(80%) sepia(26%) saturate(1220%) hue-rotate(72deg)
-      brightness(102%) contrast(101%),
+    brightness(0) saturate(100%) invert(73%) sepia(39%) saturate(364%) hue-rotate(83deg)
+      brightness(101%) contrast(88%),
     brightness(0) saturate(100%) invert(6%) sepia(45%) saturate(539%) hue-rotate(79deg)
       brightness(100%) contrast(97%),
     dark
   );
+  @include chart-palette(#85b286, #9c834b, #73c3cc, #c28378, #a5a4dc, #a87aa3);
 }
 
 // Midnight: periwinkle on navy.
@@ -345,6 +385,7 @@
       brightness(98%) contrast(95%),
     dark
   );
+  @include chart-palette(#96a1d4, #4b92a2, #daa1bb, #aa925f, #79bba4, #b57b71);
 }
 
 // Oxblood: blush on burgundy.
@@ -360,6 +401,7 @@
       brightness(91%) contrast(99%),
     dark
   );
+  @include chart-palette(#d2918b, #a37f4d, #d2a2cd, #8f9d64, #69bac3, #8f83b8);
 }
 
 // Forest: lichen on pine.
@@ -375,4 +417,5 @@
       brightness(91%) contrast(93%),
     dark
   );
+  @include chart-palette(#96ae7f, #9f8056, #e7ada3, #60a1b0, #b89fcc, #629a82);
 }

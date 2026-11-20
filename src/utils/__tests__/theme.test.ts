@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vite-plus/test";
+import TOKENS_SCSS from "@/tokens.scss?raw";
 import {
   COLOUR_THEMES,
   THEME_FAMILIES,
@@ -101,5 +102,32 @@ describe("colour theme registry", () => {
   it("puts every colour theme in exactly one family, in registry order", () => {
     expect(THEME_FAMILIES.flatMap(themesInFamily)).toEqual([...COLOUR_THEMES]);
     for (const id of COLOUR_THEMES) expect(THEMES[id].family).toBeTruthy();
+  });
+});
+
+describe("chart palettes", () => {
+  // Each [data-theme] block in src/tokens.scss, by id.
+  const blocks = new Map(
+    [...TOKENS_SCSS.matchAll(/\[data-theme="([a-z]+)"\] \{([\s\S]*?)\n\}/g)].map(([, id, body]) => [
+      id,
+      body,
+    ]),
+  );
+
+  it("gives every theme six chart colours", () => {
+    for (const id of Object.keys(THEMES)) {
+      const palette = blocks.get(id)?.match(/chart-palette\(([^)]*)\)/)?.[1];
+      expect(palette?.match(/#[0-9a-f]{6}/gi), id).toHaveLength(6);
+    }
+  });
+
+  it("sets Paper's chart colours on :root too, for the page without a data-theme", () => {
+    const paper = blocks
+      .get("paper")!
+      .match(/#[0-9a-f]{6}/gi)!
+      .slice(-6);
+    for (const [i, hex] of paper.entries()) {
+      expect(TOKENS_SCSS).toContain(`--chart-${i + 1}: ${hex};`);
+    }
   });
 });

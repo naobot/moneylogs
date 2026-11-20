@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
 import type { LedgerCategory, LedgerMonth } from "@/types/ledger";
 import {
+  restingFace,
   buddyMood,
   daySeed,
   isBuddyAsleep,
@@ -8,7 +9,7 @@ import {
   moodForPace,
   confirmedNoSpendStreak,
 } from "../buddyMood";
-import { MOOD_SCALE } from "../faces";
+import { FACES, MOOD_SCALE } from "../faces";
 
 const TODAY = "2026-11-15"; // halfway through a 30-day month
 const budgeted: LedgerCategory[] = [
@@ -276,5 +277,17 @@ describe("buddyMood with fixed costs", () => {
     ];
     expect(stateOn({ food: { CAD: 5000 } }, "2026-11-01", onlyRent).mood).toBe("content");
     expect(stateOn({ housing: { CAD: 1600 } }, "2026-11-01", onlyRent).mood).toBe("alarmed");
+  });
+});
+
+describe("restingFace", () => {
+  it("rests on the mood's face, or the asleep face at night, stable for the seed", () => {
+    expect(FACES.worried.resting).toContain(
+      restingFace({ mood: "worried", asleep: false, seed: 7 }),
+    );
+    expect(FACES.asleep.resting).toContain(restingFace({ mood: "worried", asleep: true, seed: 7 }));
+    expect(restingFace({ mood: "happy", asleep: false, seed: 3 })).toBe(
+      restingFace({ mood: "happy", asleep: false, seed: 3 }),
+    );
   });
 });

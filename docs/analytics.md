@@ -51,6 +51,7 @@ amounts or free text.
 | `read_nudge`            | Received poke/cheer opened               | —                                                                                                           |
 | `share`                 | Invite / profile link copied             | `method`, `content_type`                                                                                    |
 | `share_card`            | Share card shared or saved               | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`) |
+| `chart_colours`         | Charts switched in /me Display           | `charts` (`colour`, `mono`)                                                                                 |
 | `open_drawer`           | A /me drawer opened                      | `drawer`                                                                                                    |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.

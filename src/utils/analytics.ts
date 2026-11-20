@@ -59,6 +59,9 @@ export type AnalyticsEvents = {
     result: ShareCardResult;
   };
 
+  // Display
+  chart_colours: { charts: "colour" | "mono" };
+
   // Navigation
   open_drawer: { drawer: string };
 };
