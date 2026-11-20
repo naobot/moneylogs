@@ -1,6 +1,6 @@
 import dayjs from "@/utils/configuredDayjs";
 import { Currency } from "@/types/user";
-import { LedgerCategory, LedgerEntry } from "@/types/ledger";
+import { CurrencyAmounts, LedgerCategory, LedgerEntry } from "@/types/ledger";
 import { resolveCategory, shiftMonth } from "@/utils/ledger";
 import { isFixedCategory } from "@/utils/ledgerCategories";
 import {
@@ -173,12 +173,15 @@ export const budgetLine = ({
   today,
   currency,
   categories,
+  totals,
   isSoleMember,
 }: {
   entries: ReadonlyArray<LedgerEntry>;
   today: string;
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
+  /** The log's monthly totals (Ledger.monthlyBudget). */
+  totals?: CurrencyAmounts;
   isSoleMember: boolean;
 }): ShareLine | null => {
   if (!isSoleMember) return null;
@@ -189,6 +192,7 @@ export const budgetLine = ({
     currency,
     agg: aggregateEntries(entries.filter((e) => e.month === month)),
     categories,
+    totals,
   });
   if (!summary || summary.over || summary.projected === null) return null;
   return summary.projected <= summary.budget
@@ -207,6 +211,7 @@ export const shareLines = ({
   today,
   currency,
   categories,
+  totals,
   noSpendDays,
   isSoleMember,
   dayWord = "today",
@@ -217,6 +222,7 @@ export const shareLines = ({
   today: string;
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
+  totals?: CurrencyAmounts;
   noSpendDays: ReadonlySet<string>;
   isSoleMember: boolean;
   /** How the lines name that day. */
@@ -232,7 +238,7 @@ export const shareLines = ({
     usualDayLine({ byDate: dailyTotals(mine, currency), firstDate, today, confirmedToday }),
     noSpendLine(noSpendDays, today, dayWord),
     monthPaceLine({ entries: mine, firstDate, today, currency }),
-    budgetLine({ entries: mine, today, currency, categories, isSoleMember }),
+    budgetLine({ entries: mine, today, currency, categories, totals, isSoleMember }),
   ].filter((l): l is ShareLine => l !== null);
   if (lines.length) return lines.slice(0, MAX_SHARE_LINES);
   const loggedToday = mine.some((e) => e.date === today);

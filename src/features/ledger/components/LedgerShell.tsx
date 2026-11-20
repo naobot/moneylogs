@@ -5,6 +5,7 @@ import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { useLedgerCategoryQuery } from "@/hooks/useLedgerCategoryQuery";
 import { Ledger } from "@/types/ledger";
+import { Currency } from "@/types/user";
 import ShareLinkButton from "@/features/layout/components/ShareLinkButton";
 import { hourInTz, LedgerView, monthKeyOf, spotsLeft, todayInTz } from "@/utils/ledger";
 import {
@@ -24,6 +25,7 @@ import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
 import BudgetManager from "./BudgetManager";
+import MonthlyTotalModal from "./MonthlyTotalModal";
 import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
@@ -54,6 +56,8 @@ export type LedgerShellContext = {
   setMonth: (month: string) => void;
   /** Opens the monthly budgets editor. */
   openBudgets: () => void;
+  /** Opens the month's total budget, on one currency. */
+  openTotal: (currency: Currency) => void;
 };
 
 type LedgerShellProps = {
@@ -87,6 +91,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showBudgets, setShowBudgets] = useState(false);
+  const [totalCurrency, setTotalCurrency] = useState<Currency | null>(null);
   const [showManageModal, setShowManageModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showShareToday, setShowShareToday] = useState(false);
@@ -218,6 +223,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               today,
               setMonth,
               openBudgets: () => setShowBudgets(true),
+              openTotal: setTotalCurrency,
             })}
           </div>
           {/* The right-hand column, like the social log's comments: it holds the buddy on
@@ -258,6 +264,22 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         defaultCurrency={ledger.defaultCurrency}
         onClose={() => setShowBudgets(false)}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops, month: currentMonth })}
+        totals={ledger.monthlyBudget}
+        onEditTotal={(currency) => {
+          setShowBudgets(false);
+          setTotalCurrency(currency);
+        }}
+      />
+      <MonthlyTotalModal
+        isOpen={totalCurrency !== null}
+        currency={totalCurrency ?? ledger.defaultCurrency}
+        totals={ledger.monthlyBudget}
+        categories={ledger.categories ?? []}
+        onClose={() => setTotalCurrency(null)}
+        onSave={(totalOps) =>
+          saveCategoryOps.mutate({ ledgerId: ledger.id, ops: [], totalOps, month: currentMonth })
+        }
+        onEditCategories={() => setShowBudgets(true)}
       />
       <ImportModal isOpen={showImport} ledger={ledger} onClose={() => setShowImport(false)} />
       <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)}>

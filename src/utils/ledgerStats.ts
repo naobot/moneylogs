@@ -6,7 +6,12 @@ import { formatMonth, resolveCategory, shiftMonth } from "@/utils/ledger";
 import { formatDate } from "@/utils/dateFormat";
 // Single source of truth for monthly aggregation, shared with the Cloud Function.
 import { aggregateMonth, MonthAggregate } from "../../functions/src/ledgerAggregate";
-import { budgetPace, isFixedCategory } from "../../functions/src/ledgerBudget";
+import {
+  budgetLines,
+  budgetPace,
+  isFixedCategory,
+  totalIn,
+} from "../../functions/src/ledgerBudget";
 
 export type { MonthAggregate };
 
@@ -260,8 +265,14 @@ export const categoryBudgetRows = (
 };
 
 export type BudgetSummary = {
-  budget: number; // sum of budgets in this currency
-  spent: number; // spending in budgeted categories only
+  /** The monthly total, else the sum of category budgets, in this currency. */
+  budget: number;
+  /** All spending with a monthly total; spending in budgeted categories without one. */
+  spent: number;
+  /** Set when the budget is a monthly total rather than the categories' sum. */
+  isTotal: boolean;
+  /** Category budgets' sum (with a total, how much of it the categories claim). */
+  allocated: number;
   remaining: number; // negative when over
   used: number; // spent / budget
   over: boolean;
@@ -286,21 +297,38 @@ export type BudgetSummary = {
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Overall budget position for one currency, or null when nothing is budgeted in it. */
+/**
+ * Overall budget position for one currency, or null when nothing is budgeted in it. A
+ * monthly total, when set, is the budget (see budgetLines).
+ */
 export const budgetSummary = ({
   month,
   today,
   currency,
   agg,
   categories,
+  totals,
 }: {
   month: string;
   today: string;
   currency: Currency;
   agg: Pick<MonthAggregate, "byCategory">;
   categories: ReadonlyArray<LedgerCategory>;
+  /** The log's monthly totals (Ledger.monthlyBudget), as they stood in `month`. */
+  totals?: CurrencyAmounts;
 }): BudgetSummary | null => {
-  const { total, byCategory } = budgetsFor(categories, currency);
+  const { total: allocated, byCategory } = budgetsFor(categories, currency);
+  const monthlyTotal = totalIn(totals, currency);
+  const {
+    lines,
+    spentIn,
+    budget: total,
+  } = budgetLines({
+    budgets: Object.entries(byCategory),
+    total: monthlyTotal,
+    byCategory: agg.byCategory,
+    currency,
+  });
   if (total <= 0) return null;
 
   const daysInMonth = dayjs(`${month}-01`).daysInMonth();
@@ -310,9 +338,9 @@ export const budgetSummary = ({
 
   const fixed = new Set(categories.filter(isFixedCategory).map((c) => c.id));
   const pace = budgetPace({
-    budgets: Object.entries(byCategory),
+    budgets: lines,
     isFixed: (id) => fixed.has(id),
-    spentIn: (id) => agg.byCategory[id]?.[currency] ?? 0,
+    spentIn,
     elapsed,
     days: daysInMonth,
   });
@@ -328,6 +356,8 @@ export const budgetSummary = ({
   return {
     budget: total,
     spent,
+    isTotal: monthlyTotal !== null,
+    allocated,
     remaining,
     used: spent / total,
     over: spent > total,

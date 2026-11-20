@@ -41,6 +41,7 @@ amounts or free text.
 | `no_spend_day`          | No-spend day confirmed                   | —                                                                                                           |
 | `delete_category`       | Category deleted from a financial log    | —                                                                                                           |
 | `remove_budget`         | A category's monthly budget removed      | —                                                                                                           |
+| `monthly_total`         | A log's monthly total set or removed     | `action` (`set`, `remove`)                                                                                  |
 | `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                                                                       |
 | `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                   |
 | `update_profile`        | Profile saved on /me                     | —                                                                                                           |

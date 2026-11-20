@@ -6,7 +6,7 @@ import { Currency } from "@/types/user";
 import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry } from "@/types/ledger";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
 import { useBudgetSnapshots } from "@/hooks/useBudgetSnapshots";
-import { categoriesForMonth } from "@/utils/budgetHistory";
+import { categoriesForMonth, totalsForMonth } from "@/utils/budgetHistory";
 import {
   formatMonth,
   ledgerViewPath,
@@ -49,6 +49,8 @@ type LedgerStatsProps = {
   isLoading: boolean;
   /** Opens the budgets editor. */
   onEditBudget: () => void;
+  /** Opens the month's total budget on one currency (stats page only). */
+  onEditTotal?: (currency: Currency) => void;
 };
 
 /** Pick the currency to show: an explicit choice if still used, else the most-used one. */
@@ -86,10 +88,11 @@ export const LedgerStatsStrip = ({
     currency,
     agg,
     categories: ledger.categories ?? [],
+    totals: ledger.monthlyBudget,
   });
 
   const statsPath = ledgerViewPath(ledger.id, "stats", month, currentMonth);
-  const noBudget = !hasAnyBudget(ledger.categories ?? []);
+  const noBudget = !hasAnyBudget(ledger.categories ?? [], ledger.monthlyBudget);
 
   return (
     <div className="LedgerStats LedgerStats__strip">
@@ -148,6 +151,7 @@ export const LedgerStatsPanel = ({
   entries,
   isLoading,
   onEditBudget,
+  onEditTotal,
 }: LedgerStatsProps) => {
   const [chartMode, setChartMode] = useState<"bars" | "cumulative">("bars");
   const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
@@ -166,9 +170,13 @@ export const LedgerStatsPanel = ({
     from: month,
   });
   const categories = categoriesForMonth(month, ledger.categories ?? [], snapshots);
+  const totals = totalsForMonth(month, ledger.monthlyBudget, snapshots);
   const catShares = categoryShares(agg, currency, categories);
   const catRows = categoryBudgetRows(agg, currency, categories);
-  const budget = budgetSummary({ month, today, currency, agg, categories });
+  const budget = budgetSummary({ month, today, currency, agg, categories, totals });
+  // Edits change the standing total, which a finished month no longer uses.
+  const editTotal =
+    onEditTotal && month >= monthKeyOf(today) ? () => onEditTotal(currency) : undefined;
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const names: Record<string, string> = {};
   for (const e of entries) names[e.authorUid] = e.authorName;
@@ -219,14 +227,20 @@ export const LedgerStatsPanel = ({
       )}
 
       {budget ? (
-        <BudgetSection budget={budget} currency={currency} onEdit={onEditBudget} />
+        <BudgetSection
+          budget={budget}
+          currency={currency}
+          onEdit={onEditBudget}
+          onEditTotal={editTotal}
+        />
       ) : (
         <p className="LedgerStats__noBudget">
-          {hasAnyBudget(categories)
+          {hasAnyBudget(categories, totals)
             ? `No ${currency} budget set.`
-            : "No monthly budget yet. Set one to see how much is left and where the month is heading."}{" "}
+            : "No monthly budget yet. Set a total for the month, or budgets per category, to see how much is left and where the month is heading."}{" "}
+          {editTotal && <RowButton onClick={editTotal}>set a total</RowButton>}{" "}
           <RowButton onClick={onEditBudget}>
-            {hasAnyBudget(categories) ? "edit budgets" : "set a budget"}
+            {hasAnyBudget(categories) ? "edit budgets" : "category budgets"}
           </RowButton>
         </p>
       )}
@@ -374,10 +388,13 @@ const BudgetSection = ({
   budget,
   currency,
   onEdit,
+  onEditTotal,
 }: {
   budget: BudgetSummary;
   currency: Currency;
   onEdit: () => void;
+  /** Makes the budget amount a button that opens the monthly total (current month). */
+  onEditTotal?: () => void;
 }) => {
   const lines: string[] = [];
   if (budget.over) {
@@ -424,8 +441,20 @@ const BudgetSection = ({
           <span className="Meter__fill" style={{ width: pct(Math.min(budget.used, 1)) }} />
         </span>
         <strong>
-          {formatAmount(budget.spent, currency)} / {formatAmount(budget.budget, currency)} (
-          {pct(budget.used)})
+          {formatAmount(budget.spent, currency)} /{" "}
+          {onEditTotal ? (
+            <button
+              type="button"
+              className="LedgerStats__budget__total"
+              aria-label={`Edit the monthly total (${formatAmount(budget.budget, currency)})`}
+              onClick={onEditTotal}
+            >
+              {formatAmount(budget.budget, currency)}
+            </button>
+          ) : (
+            formatAmount(budget.budget, currency)
+          )}{" "}
+          ({pct(budget.used)})
         </strong>
       </div>
       <ul className="LedgerStats__insights">
@@ -434,7 +463,10 @@ const BudgetSection = ({
         ))}
       </ul>
       <p className="LedgerStats__note">
-        Counts spending in categories that have a {currency} budget.
+        {budget.isTotal
+          ? `Counts all ${currency} spending against the month's total.`
+          : `Counts spending in categories that have a ${currency} budget.`}
+        {onEditTotal && " Tap the budget to change the month's total."}
       </p>
     </div>
   );

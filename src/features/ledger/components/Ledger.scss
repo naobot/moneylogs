@@ -743,6 +743,17 @@
 // The Budgets window: the Categories window's list + detail (see .CategoryManager),
 // plus the way into the budget helper.
 .BudgetManager {
+  // The monthly total above the category list: label left, amount right.
+  &__total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    margin-bottom: 0.6em;
+    padding-bottom: 0.6em;
+    border-bottom: var(--border-hairline) dashed var(--ink);
+  }
+
   // Entry to the budget helper: a quiet, centred text link, not a framed button.
   &__helper {
     display: block;
@@ -777,6 +788,11 @@
   @media (min-width: constants.$breakpoint-md) {
     max-width: 760px;
   }
+}
+
+// The monthly total modal: the intro above the field.
+.MonthlyTotal__intro {
+  margin: 0 0 0.6em;
 }
 
 // One budget amount (right-aligned) with its currency: a fixed unit or a picker.
@@ -1006,6 +1022,24 @@
       flex: 1;
       min-width: 8em;
       height: 1em;
+    }
+
+    // The budget amount: a button that opens the month's total, marked by a dotted underline.
+    &__total {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline dotted;
+      text-decoration-thickness: var(--border-hairline);
+      text-underline-offset: 0.25em;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration-style: solid;
+      }
     }
   }
 

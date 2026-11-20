@@ -79,6 +79,7 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
     currentMonth,
     byMonth,
     categories: standing,
+    totals: ledger.monthlyBudget,
     snapshots,
     currency,
   });
@@ -150,11 +151,11 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
             <PeriodBudgetSection budget={budget} currency={currency} onEdit={onEditBudget} />
           ) : (
             <p className="LedgerStats__noBudget">
-              {hasAnyBudget(standing)
+              {hasAnyBudget(standing, ledger.monthlyBudget)
                 ? `No ${currency} budget in ${label}.`
                 : "No monthly budget yet. Set one to see how each month measures up."}{" "}
               <RowButton onClick={onEditBudget}>
-                {hasAnyBudget(standing) ? "edit budgets" : "set a budget"}
+                {hasAnyBudget(standing, ledger.monthlyBudget) ? "edit budgets" : "set a budget"}
               </RowButton>
             </p>
           )}

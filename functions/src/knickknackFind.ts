@@ -1,6 +1,12 @@
 import { DocumentReference, FieldValue, Firestore } from "firebase-admin/firestore";
 import { awardEngagementQuietly } from "./awardEngagement";
-import { BudgetCategory, budgetPaceRatio, HISTORY_MONTHS, historyPaceRatio } from "./ledgerBudget";
+import {
+  BudgetCategory,
+  budgetPaceRatio,
+  HISTORY_MONTHS,
+  historyPaceRatio,
+  MonthlyTotals,
+} from "./ledgerBudget";
 import {
   dayIn,
   findableIn,
@@ -66,10 +72,17 @@ const spendingAcrossLogs = async ({
         .slice(i * span, (i + 1) * span)
         .map((s) => (s.data() ?? {}) as MonthDoc);
       const categories = (ledger.get("categories") ?? []) as BudgetCategory[];
+      const totals = (ledger.get("monthlyBudget") ?? undefined) as MonthlyTotals | undefined;
       return {
         loggedDays: loggedDaysBefore(today, { [month]: current, [monthsBack(1)]: history[0] }),
         grade: spendingGrade(
-          budgetPaceRatio({ categories, byCategory: current.byCategory ?? {}, month, now }) ??
+          budgetPaceRatio({
+            categories,
+            totals,
+            byCategory: current.byCategory ?? {},
+            month,
+            now,
+          }) ??
             historyPaceRatio({
               totals: current.totals ?? {},
               history: history.map((h) => h.totals),

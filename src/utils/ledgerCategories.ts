@@ -100,7 +100,12 @@ export const preferredBudgetCurrency = (
 };
 
 /** True when any active category has a positive monthly budget, in any currency. */
-export const hasAnyBudget = (categories: ReadonlyArray<LedgerCategory>): boolean =>
+/** Whether anything is budgeted: a category budget, or a monthly total (`totals`). */
+export const hasAnyBudget = (
+  categories: ReadonlyArray<LedgerCategory>,
+  totals?: Partial<Record<Currency, number>>,
+): boolean =>
+  Object.values(totals ?? {}).some((amount) => (amount ?? 0) > 0) ||
   categories.some(
     (c) => !c.archived && Object.values(c.budget ?? {}).some((amount) => (amount ?? 0) > 0),
   );

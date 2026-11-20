@@ -23,7 +23,12 @@ export const useBudgetSnapshots = ({ ledgerId, from }: { ledgerId?: string; from
     dataTransformer: (docs) =>
       docs.map((d) => {
         const data = d.data();
-        return { month: d.id, budgets: data.budgets ?? {}, names: data.names ?? {} };
+        return {
+          month: d.id,
+          budgets: data.budgets ?? {},
+          names: data.names ?? {},
+          monthlyBudget: data.monthlyBudget ?? {},
+        };
       }),
     dependencies: [ledgerId, from],
     enabled: !!ledgerId,

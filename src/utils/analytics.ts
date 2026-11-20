@@ -42,6 +42,7 @@ export type AnalyticsEvents = {
   no_spend_day: Record<string, never>;
   delete_category: Record<string, never>;
   remove_budget: Record<string, never>;
+  monthly_total: { action: "set" | "remove" };
   stats_period: { period: "month" | "quarter" | "year" };
   month_review: { action: "start" | "snooze" | "dismiss" | "adjust" | "keep" };
 

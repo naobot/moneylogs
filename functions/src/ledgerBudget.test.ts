@@ -7,6 +7,8 @@ import {
   budgetPaceRatio,
   historyPaceRatio,
   isFixedCategory,
+  budgetLines,
+  UNALLOCATED,
 } from "./ledgerBudget";
 
 const at = (iso: string) => new Date(iso).getTime();
@@ -241,5 +243,62 @@ describe("fixed costs", () => {
       });
     expect(ratio(withRent)).toBe(1);
     expect(ratio(withRent.filter((c) => c.id === "housing"))).toBeNull();
+  });
+});
+
+describe("monthly totals", () => {
+  const byCategory = { food: { CAD: 300 }, misc: { CAD: 250 }, fun: { USD: 40 } };
+
+  it("measures all spending against the total, the rest as one everyday line", () => {
+    const { lines, spentIn, budget } = budgetLines({
+      budgets: [["food", 400]],
+      total: 1000,
+      byCategory,
+      currency: "CAD",
+    });
+    expect(budget).toBe(1000);
+    expect([...lines]).toEqual([
+      ["food", 400],
+      [UNALLOCATED, 600],
+    ]);
+    expect(spentIn(UNALLOCATED)).toBe(250); // misc has no budget
+    expect(spentIn("food")).toBe(300);
+  });
+
+  it("keeps the categories' sum without a total, and leaves nothing unallocated when over", () => {
+    expect(
+      budgetLines({ budgets: [["food", 400]], total: null, byCategory, currency: "CAD" }).budget,
+    ).toBe(400);
+    const over = budgetLines({ budgets: [["food", 400]], total: 300, byCategory, currency: "CAD" });
+    expect(over.budget).toBe(300);
+    expect(over.lines.get(UNALLOCATED)).toBe(0);
+  });
+
+  it("alerts on the total, including a currency budgeted only by a total", () => {
+    const alerts = budgetAlerts({
+      ledgerId: "l1",
+      ledgerName: "Household",
+      month: "2026-11",
+      categories,
+      totals: { CAD: 2000, USD: 45 },
+      byCategory: { misc: { CAD: 1700 }, fun: { USD: 40 } },
+      now: at("2026-11-03T12:00:00Z"),
+    });
+    const total = (currency: string) =>
+      alerts.find((a) => !a.categoryScoped && a.data.currency === currency)?.data;
+    // Misc has no budget, but counts against the 2,000 total.
+    expect(total("CAD")).toMatchObject({ type: "budget_approaching", spent: 1700, budget: 2000 });
+    expect(total("USD")).toMatchObject({ type: "budget_approaching", spent: 40, budget: 45 });
+  });
+
+  it("paces unbudgeted spending against the unallocated part", () => {
+    const ratio = budgetPaceRatio({
+      categories: [],
+      totals: { CAD: 3000 },
+      byCategory: { misc: { CAD: 1000 } },
+      month: "2026-11",
+      now: at("2026-11-10T12:00:00Z"),
+    });
+    expect(ratio).toBeCloseTo(1000 / (3000 * (10 / 30)));
   });
 });

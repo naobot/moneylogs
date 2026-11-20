@@ -4,7 +4,6 @@ import { CurrencyAmounts, LedgerCategory, LedgerMonth } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import {
   budgetSummary,
-  budgetsFor,
   buildInsights,
   elapsedDays,
   topFlexibleCategory,
@@ -114,6 +113,7 @@ const largest = (totals: CurrencyAmounts): Currency | undefined =>
 export const buddyMood = ({
   ledgerId,
   categories,
+  monthlyBudget,
   current,
   previous,
   today,
@@ -122,6 +122,8 @@ export const buddyMood = ({
 }: {
   ledgerId: string;
   categories: ReadonlyArray<LedgerCategory>;
+  /** The log's monthly totals (Ledger.monthlyBudget). */
+  monthlyBudget?: CurrencyAmounts;
   /** Days the person confirmed as no-spend days (useNoSpendDays). */
   confirmedNoSpend?: ReadonlySet<string>;
   current?: LedgerMonth | null;
@@ -143,8 +145,14 @@ export const buddyMood = ({
   // Every budgeted currency, worst pace first. Pace is everyday spending only: fixed
   // costs paid in a lump (rent on the 1st) aren't a sign of going too fast.
   const budgeted = CURRENCIES.flatMap((currency) => {
-    if (budgetsFor(categories, currency).total <= 0) return [];
-    const summary = budgetSummary({ month, today, currency, agg, categories });
+    const summary = budgetSummary({
+      month,
+      today,
+      currency,
+      agg,
+      categories,
+      totals: monthlyBudget,
+    });
     if (!summary) return [];
     return [{ currency, summary, pace: summary.pace }];
   }).sort(

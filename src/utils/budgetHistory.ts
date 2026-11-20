@@ -7,7 +7,8 @@ import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
  * doesn't rewrite how finished months are judged, the first budget change in a month
  * stores the outgoing budgets as ledgers/{id}/budgetSnapshots/{previous month}: "these
  * were the budgets through this month". A month's budgets are then those of the earliest
- * snapshot at or after it, or the standing budgets when no later snapshot exists.
+ * snapshot at or after it, or the standing budgets when no later snapshot exists. The
+ * log's monthly total (Ledger.monthlyBudget) is kept the same way.
  */
 export type BudgetSnapshot = {
   /** "YYYY-MM": the last month these budgets applied to. */
@@ -16,6 +17,8 @@ export type BudgetSnapshot = {
   budgets: Record<string, CurrencyAmounts>;
   /** Names at the time, so deleted categories still label their budget. */
   names: Record<string, string>;
+  /** The monthly total at the time. Snapshots from before totals existed lack it. */
+  monthlyBudget?: CurrencyAmounts;
 };
 
 const positive = (amounts: CurrencyAmounts | undefined): CurrencyAmounts => {
@@ -25,6 +28,16 @@ const positive = (amounts: CurrencyAmounts | undefined): CurrencyAmounts => {
   }
   return out;
 };
+
+/** A monthly total with only the currencies actually set. */
+export const effectiveTotals = (totals: CurrencyAmounts | undefined): CurrencyAmounts =>
+  positive(totals);
+
+/** True when an edit changed the monthly total in some currency. */
+export const totalsChanged = (
+  before: CurrencyAmounts | undefined,
+  after: CurrencyAmounts | undefined,
+): boolean => !sameAmounts(positive(before), positive(after));
 
 /** The budgets that count: active categories with a positive amount in some currency. */
 export const effectiveBudgets = (
@@ -59,15 +72,16 @@ export const budgetsChanged = (
   return false;
 };
 
-/** The snapshot to store for the budgets in `categories` (before an edit). */
+/** The snapshot to store for the budgets in `categories` and the total (before an edit). */
 export const snapshotOf = (
   month: string,
   categories: ReadonlyArray<LedgerCategory>,
-): BudgetSnapshot => {
+  monthlyBudget?: CurrencyAmounts,
+): Required<BudgetSnapshot> => {
   const budgets = effectiveBudgets(categories);
   const names: Record<string, string> = {};
   for (const c of categories) if (budgets[c.id]) names[c.id] = c.name;
-  return { month, budgets, names };
+  return { month, budgets, names, monthlyBudget: positive(monthlyBudget) };
 };
 
 /** The snapshot that covers a month: the earliest one at or after it. */
@@ -112,3 +126,13 @@ export const categoriesForMonth = (
   categories: ReadonlyArray<LedgerCategory>,
   snapshots: ReadonlyArray<BudgetSnapshot>,
 ): LedgerCategory[] => withSnapshotBudgets(categories, snapshotForMonth(month, snapshots));
+
+/** The monthly total that applied in `month` (see snapshotForMonth). */
+export const totalsForMonth = (
+  month: string,
+  standing: CurrencyAmounts | undefined,
+  snapshots: ReadonlyArray<BudgetSnapshot>,
+): CurrencyAmounts => {
+  const snapshot = snapshotForMonth(month, snapshots);
+  return positive(snapshot ? snapshot.monthlyBudget : standing);
+};
