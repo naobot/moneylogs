@@ -16,6 +16,7 @@ describe("displayPrefs", () => {
     window.localStorage.clear();
     delete root.dataset.entrySize;
     delete root.dataset.entryAlign;
+    delete root.dataset.charts;
     initDisplayPrefs();
   });
 
@@ -25,6 +26,8 @@ describe("displayPrefs", () => {
     expect(getDisplayPrefs()).toEqual(DEFAULT_DISPLAY_PREFS);
     expect(root.dataset.entrySize).toBeUndefined();
     expect(root.dataset.entryAlign).toBeUndefined();
+    expect(root.dataset.charts).toBeUndefined();
+    expect(getDisplayPrefs().charts).toBe("colour");
   });
 
   it("applies, remembers and merges partial changes", () => {
@@ -36,6 +39,7 @@ describe("displayPrefs", () => {
       dateOrder: "dmy",
       entrySize: "xl",
       entryAlign: "justify",
+      charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("xl");
     expect(root.dataset.entryAlign).toBe("justify");
@@ -60,8 +64,27 @@ describe("displayPrefs", () => {
       dateOrder: "dmy",
       entrySize: "l",
       entryAlign: "left",
+      charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("l");
+  });
+
+  it("marks mono charts on <html> and clears it going back to colour", () => {
+    setDisplayPrefs({ charts: "mono" });
+    expect(root.dataset.charts).toBe("mono");
+    expect(readStoredPrefs().charts).toBe("mono");
+    setDisplayPrefs({ charts: "colour" });
+    expect(root.dataset.charts).toBeUndefined();
+  });
+
+  it("restores mono charts, and falls back to colour for a bad value only", () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ clock: "12h", charts: "mono" }));
+    initDisplayPrefs();
+    expect(root.dataset.charts).toBe("mono");
+    expect(parsePrefs({ clock: "12h", charts: "rainbow" })).toEqual({
+      ...DEFAULT_DISPLAY_PREFS,
+      clock: "12h",
+    });
   });
 
   it("ignores junk JSON and non-objects", () => {

@@ -1,6 +1,6 @@
 @use "@/constants.scss";
-@use "@/texture.scss" as tex;
 @use "@/surfaces.scss";
+@use "@/charts.scss";
 
 .Ledger {
   // Phones: one row like on wide screens (kind · title · actions), but the side columns
@@ -913,7 +913,7 @@
     }
   }
 
-  // Stacked category bar in the strip: white/black fills and patterns only.
+  // Stacked category bar in the strip: chart colours, or 1-bit fills in mono.
   &__bar {
     display: flex;
     flex: 1;
@@ -930,25 +930,11 @@
         border-left: var(--border-hairline) solid var(--ink);
       }
 
-      // A 1-bit density ramp, paper -> ink, so neighbouring categories differ in
-      // how dark they read, not only in pattern.
-      &--0 {
-        background: var(--paper);
-      }
-      &--1 {
-        background: var(--paper);
-        @include tex.texture(dots);
-      }
-      &--2 {
-        background: var(--paper);
-        @include tex.texture(hatch);
-      }
-      &--3 {
-        background: var(--paper);
-        @include tex.texture(dither);
-      }
-      &--rest {
-        background: var(--ink);
+      // The theme's chart colours, or the 1-bit ramp in mono (src/charts.scss).
+      @each $slot in (0, 1, 2, 3, rest) {
+        &--#{$slot} {
+          @include charts.fill($slot);
+        }
       }
     }
   }

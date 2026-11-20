@@ -1,0 +1,46 @@
+// Fills for categorical charts (series told apart by fill: category bars, their key
+// swatches). By default each slot takes the theme's muted --chart-* colour; with
+// Display → Charts set to mono (data-charts="mono" on <html>) they fall back to the 1-bit
+// density ramp, paper → ink, so neighbours differ in how dark they read, not only in
+// pattern. Single-series charts (spending bars and line, meters) stay in ink either way.
+//
+// Use the mixin inside a component, or the .chart-fill-* utility classes in markup.
+
+@use "sass:map";
+@use "./texture.scss" as tex;
+
+// Mono texture per slot; null is plain paper.
+$mono-ramp: (
+  0: null,
+  1: dots,
+  2: hatch,
+  3: dither,
+);
+
+/// Paints slot `$slot` (0–3, or rest for the grouped remainder).
+@mixin fill($slot) {
+  @if $slot == rest {
+    background: var(--chart-rest);
+
+    :root[data-charts="mono"] & {
+      background: var(--ink);
+    }
+  } @else {
+    background: var(--chart-#{$slot + 1});
+
+    :root[data-charts="mono"] & {
+      background: var(--paper);
+
+      $texture: map.get($mono-ramp, $slot);
+      @if $texture {
+        @include tex.texture($texture);
+      }
+    }
+  }
+}
+
+@each $slot in (0, 1, 2, 3, rest) {
+  .chart-fill-#{$slot} {
+    @include fill($slot);
+  }
+}

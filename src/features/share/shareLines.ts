@@ -10,7 +10,6 @@ import {
   spentThroughDay,
 } from "@/utils/ledgerStats";
 import { BUDDY_WAKE_AT, confirmedNoSpendStreak } from "@/features/ledger/buddy/buddyMood";
-import { FACES, pick } from "@/features/ledger/buddy/faces";
 import { KNICK_KNACK_IDS, KnickKnackId } from "@/features/ledger/buddy/knickknacks/catalog";
 import type { KnickKnackFind } from "@/features/ledger/buddy/knickknacks/useUnseenFinds";
 
@@ -246,10 +245,6 @@ export const shareLines = ({
     ? [{ kind: "kept_up", text: `Kept my log up ${dayWord}` }]
     : [];
 };
-
-/** The card's buddy: always pleased (it's a brag), picked for the day. */
-export const shareFace = (seed: number): string =>
-  pick(seed % 2 ? FACES.delighted.resting : FACES.happy.resting, Math.floor(seed / 2));
 
 export type BreakdownSlice = { id: string; name: string; share: number };
 

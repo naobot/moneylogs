@@ -7,13 +7,11 @@ import {
   monthPaceLine,
   noSpendLine,
   pickShareKnickKnack,
-  shareFace,
   shareLines,
   shareDayOf,
   shareMonths,
   usualDayLine,
 } from "../shareLines";
-import { FACES } from "@/features/ledger/buddy/faces";
 
 const ME = "me";
 const e = (date: string, amount: number, extra: Partial<LedgerEntry> = {}) =>
@@ -265,13 +263,6 @@ describe("shareLines", () => {
       .join(" ");
     for (const amount of ["61.37", "12.5", "873.21", "$", "CAD"])
       expect(text).not.toContain(amount);
-  });
-});
-
-describe("shareFace", () => {
-  it("is always a pleased face", () => {
-    const pleased = [...FACES.happy.resting, ...FACES.delighted.resting];
-    for (let seed = 0; seed < 12; seed++) expect(pleased).toContain(shareFace(seed));
   });
 });
 

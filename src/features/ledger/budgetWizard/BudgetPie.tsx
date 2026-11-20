@@ -5,7 +5,7 @@ import "./BudgetPie.scss";
 
 /**
  * The plan as a pie: one slice per category (paper gaps between them), filled by
- * group so only four fills need telling apart, two inks only. The list beside it
+ * group so only four fills need telling apart: chart colours, or 1-bit fills in mono. The list beside it
  * carries the names and figures, so the pie stays unlabelled; a legend names the groups.
  */
 
@@ -23,15 +23,8 @@ const point = (angle: number) =>
 const PATTERNS = { dither: PIXEL_TILES.dither, hatch: PIXEL_TILES.hatch };
 
 /** The swatch beside a list row or legend entry: a tiny framed piece of its fill. */
-const GROUP_SWATCH: Record<PlanGroup, string> = {
-  fixed: "BudgetPie__swatch--fixed",
-  essentials: "tex-dither",
-  lifestyle: "tex-hatch",
-  savings: "BudgetPie__swatch--savings",
-};
-
 export const Swatch = ({ group }: { group: PlanGroup }) => (
-  <span className={`BudgetPie__swatch ${GROUP_SWATCH[group]}`} aria-hidden="true" />
+  <span className={`BudgetPie__swatch BudgetPie__swatch--${group}`} aria-hidden="true" />
 );
 
 export const BudgetPie = ({
@@ -62,7 +55,7 @@ export const BudgetPie = ({
               height={size}
               patternUnits="userSpaceOnUse"
             >
-              {/* Fills come from CSS (BudgetPie.scss), so they follow Night shift. */}
+              {/* Mono fills; colours come from CSS (BudgetPie.scss), so they follow the theme. */}
               <rect className="BudgetPie__paper" width={size} height={size} />
               {cells.map(([x, y]) => (
                 <rect

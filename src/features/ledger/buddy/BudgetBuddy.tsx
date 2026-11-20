@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import cx from "classnames";
 
-import dayjs from "@/utils/configuredDayjs";
 import Icon from "@/components/Icon";
 import Popover from "@/components/Popover";
 import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
 import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
-import { useLedgerMonths } from "@/hooks/useLedgerMonths";
-import { useNoSpendDays } from "@/hooks/useNoSpendDays";
 import { saveMonthReview, useMonthReview } from "@/hooks/useMonthReview";
-import { useNow } from "@/hooks/useNow";
 import { Ledger } from "@/types/ledger";
-import { shiftMonth, todayInTz } from "@/utils/ledger";
 import { track } from "@/utils/analytics";
-import { buddyMood } from "./buddyMood";
+import { restingFace } from "./buddyMood";
+import { useBuddyMood } from "./useBuddyMood";
 import {
   buddyCheckInComment,
   buddyComment,
@@ -49,14 +45,6 @@ const CHECK_IN_FACES: Record<CheckIn, readonly string[]> = {
 /** How long the pointer has to linger before the cat notices it. */
 export const BUDDY_HOVER_DELAY = 700;
 
-const localHourIn = (now: dayjs.Dayjs, timezone?: string | null): number => {
-  try {
-    return (timezone ? now.tz(timezone) : now).hour();
-  } catch {
-    return now.hour();
-  }
-};
-
 /**
  * A kaomoji cat whose face reflects how this month's spending is going. It always shows
  * the current month, whatever month is being browsed.
@@ -87,36 +75,13 @@ export const BudgetBuddy = ({
 }) => {
   const { user } = useCurrentUser();
   const find = useUnseenFind(user?.id, ledger.id);
-  const now = useNow();
-  const today = todayInTz(user?.timezone, now.valueOf());
+  // Both month docs and no-spend days have to be in before it speaks up: without the
+  // no-spend days, an already confirmed day looks unconfirmed, and the check-in asks again
+  // (using up today's).
+  const { state, today, previousMonth, localHour, byMonth, noSpend, isSuccess } =
+    useBuddyMood(ledger);
   const month = today.slice(0, 7);
-  const localHour = localHourIn(now, user?.timezone);
-
-  const previousMonth = shiftMonth(month, -1);
-  const { byMonth, isSuccess: monthsLoaded } = useLedgerMonths({
-    ledgerId: ledger.id,
-    from: previousMonth,
-    to: month,
-  });
-
-  // Only confirmed days count as no-spend: an unlogged day may just have been forgotten.
-  const noSpend = useNoSpendDays();
   const confirmedToday = noSpend.days.has(today);
-  // Both have to be in before it speaks up: without the no-spend days, an already
-  // confirmed day looks unconfirmed, and the check-in asks again (using up today's).
-  const isSuccess = monthsLoaded && noSpend.isSuccess;
-
-  // Cheap enough to work out on every render: two month docs and a few categories.
-  const state = buddyMood({
-    ledgerId: ledger.id,
-    categories: ledger.categories ?? [],
-    monthlyBudget: ledger.monthlyBudget,
-    current: byMonth[month],
-    previous: byMonth[previousMonth],
-    today,
-    localHour,
-    confirmedNoSpend: noSpend.days,
-  });
   const evening = eveningCheckIn({
     today,
     localHour,
@@ -209,7 +174,7 @@ export const BudgetBuddy = ({
   if (!isSuccess) return null;
 
   const faces = FACES[state.asleep ? "asleep" : state.mood];
-  const resting = pick(faces.resting, state.seed);
+  const resting = restingFace(state);
   // A click face that differs from the resting one, so the click visibly lands (some
   // faces appear in both lists).
   const clicked =
