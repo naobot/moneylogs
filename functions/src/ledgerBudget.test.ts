@@ -8,6 +8,8 @@ import {
   historyPaceRatio,
   isFixedCategory,
   budgetLines,
+  isBudgetAmount,
+  totalIn,
   UNALLOCATED,
 } from "./ledgerBudget";
 
@@ -248,6 +250,36 @@ describe("fixed costs", () => {
 
 describe("monthly totals", () => {
   const byCategory = { food: { CAD: 300 }, misc: { CAD: 250 }, fun: { USD: 40 } };
+
+  it("is over pace when fixed costs use up the total and something else is spent", () => {
+    // 1,000 total, all claimed by rent: the 500 on food has no allowance at all.
+    const ratio = budgetPaceRatio({
+      categories: [{ id: "housing", name: "Rent", budget: { CAD: 1000 } }],
+      totals: { CAD: 1000 },
+      byCategory: { food: { CAD: 500 } },
+      month: "2026-11",
+      now: at("2026-11-10T12:00:00Z"),
+    });
+    expect(ratio).toBe(Infinity);
+    // Nothing spent outside the fixed costs: still nothing to judge by.
+    expect(
+      budgetPaceRatio({
+        categories: [{ id: "housing", name: "Rent", budget: { CAD: 1000 } }],
+        totals: { CAD: 1000 },
+        byCategory: { housing: { CAD: 1000 } },
+        month: "2026-11",
+        now: at("2026-11-10T12:00:00Z"),
+      }),
+    ).toBeNull();
+  });
+
+  it("only reads real, positive amounts as totals", () => {
+    expect(totalIn({ CAD: 500 }, "CAD")).toBe(500);
+    for (const bad of ["500", 0, -5, NaN, Infinity, 2e9, null, { n: 1 }]) {
+      expect(totalIn({ CAD: bad } as never, "CAD")).toBeNull();
+      expect(isBudgetAmount(bad)).toBe(false);
+    }
+  });
 
   it("measures all spending against the total, the rest as one everyday line", () => {
     const { lines, spentIn, budget } = budgetLines({

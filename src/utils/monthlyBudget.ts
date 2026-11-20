@@ -1,7 +1,7 @@
 import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { monthKeyOf } from "@/utils/ledger";
-import { isValidBudgetAmount } from "@/utils/ledgerCategories";
+import { isValidBudgetAmount, roundBudget } from "@/utils/ledgerCategories";
 import { budgetsFor } from "@/utils/ledgerStats";
 
 /**
@@ -20,7 +20,7 @@ export const applyTotalOps = (
   const out: CurrencyAmounts = { ...totals };
   for (const { currency, amount } of ops) {
     if (amount === null) delete out[currency];
-    else if (isValidBudgetAmount(amount)) out[currency] = Math.round(amount * 100) / 100;
+    else if (isValidBudgetAmount(amount)) out[currency] = roundBudget(amount);
   }
   return out;
 };

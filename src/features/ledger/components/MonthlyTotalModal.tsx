@@ -7,7 +7,7 @@ import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { Currency } from "@/types/user";
 import { track } from "@/utils/analytics";
 import { CURRENCIES } from "@/utils/currency";
-import { budgetFieldError } from "@/utils/ledgerCategories";
+import { budgetFieldError, roundBudget } from "@/utils/ledgerCategories";
 import { formatAmount, parseAmount } from "@/utils/ledgerEntries";
 import { allocationOf, TotalOp } from "@/utils/monthlyBudget";
 import { reportError } from "@/utils/reportError";
@@ -49,7 +49,7 @@ const MonthlyTotalDialog = ({
   const [saveFailed, setSaveFailed] = useState(false);
 
   const error = budgetFieldError(raw);
-  const amount = raw.trim() === "" ? null : Math.round(parseAmount(raw) * 100) / 100;
+  const amount = raw.trim() === "" ? null : roundBudget(parseAmount(raw));
   const changed = !error && amount !== (saved ?? null);
   const { allocated, unallocated, over } = allocationOf(amount ?? 0, categories, currency);
 
@@ -60,6 +60,8 @@ const MonthlyTotalDialog = ({
   };
 
   const save = async () => {
+    // Enter submits the form even while Save is disabled; keep the field open to fix.
+    if (error) return;
     if (!changed) {
       onClose();
       return;
@@ -79,8 +81,8 @@ const MonthlyTotalDialog = ({
 
   return (
     <Modal isOpen onClose={onClose} className="MonthlyTotal" disabled={isSaving}>
-      <Modal.Header striped title="Monthly total">
-        Monthly total
+      <Modal.Header striped title="monthly total">
+        monthly total
       </Modal.Header>
       <Modal.Body>
         <form
@@ -98,7 +100,7 @@ const MonthlyTotalDialog = ({
             <span className="BudgetField">
               <input
                 className="LineInput BudgetField__amount"
-                aria-label="Monthly total"
+                aria-label="monthly total"
                 aria-invalid={!!error}
                 inputMode="decimal"
                 autoComplete="off"
@@ -110,7 +112,7 @@ const MonthlyTotalDialog = ({
                 }}
               />
               <select
-                aria-label="Monthly total currency"
+                aria-label="monthly total currency"
                 value={currency}
                 onChange={(e) => pickCurrency(e.target.value as Currency)}
               >
@@ -138,7 +140,7 @@ const MonthlyTotalDialog = ({
           {saved !== undefined && amount !== null && (
             <p className="CategoryDetail__help">
               <RowButton
-                aria-label={`Remove the ${currency} monthly total`}
+                aria-label={`remove the ${currency} monthly total`}
                 onClick={() => setRaw("")}
               >
                 remove total

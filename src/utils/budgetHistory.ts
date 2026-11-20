@@ -1,4 +1,5 @@
 import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
+import { isBudgetAmount } from "../../functions/src/ledgerBudget";
 
 /**
  * Budget history for a financial log.
@@ -24,7 +25,7 @@ export type BudgetSnapshot = {
 const positive = (amounts: CurrencyAmounts | undefined): CurrencyAmounts => {
   const out: CurrencyAmounts = {};
   for (const [currency, amount] of Object.entries(amounts ?? {})) {
-    if (amount && amount > 0) out[currency as keyof CurrencyAmounts] = amount;
+    if (isBudgetAmount(amount)) out[currency as keyof CurrencyAmounts] = amount;
   }
   return out;
 };

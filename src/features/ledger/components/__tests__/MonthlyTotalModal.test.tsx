@@ -49,7 +49,7 @@ describe("MonthlyTotalModal", () => {
     document.body.innerHTML = "";
   });
 
-  const field = () => document.querySelector('[aria-label="Monthly total"]') as HTMLInputElement;
+  const field = () => document.querySelector('[aria-label="monthly total"]') as HTMLInputElement;
   const button = (text: string) =>
     Array.from(document.querySelectorAll("button")).find((b) => b.textContent === text)!;
   const type = (el: HTMLInputElement, value: string) => {
@@ -90,7 +90,7 @@ describe("MonthlyTotalModal", () => {
   it("switches currency to that currency's total", () => {
     render({ CAD: 3000, JPY: 200000 });
     const select = document.querySelector(
-      '[aria-label="Monthly total currency"]',
+      '[aria-label="monthly total currency"]',
     ) as HTMLSelectElement;
     act(() => {
       select.value = "JPY";
@@ -106,6 +106,16 @@ describe("MonthlyTotalModal", () => {
     expect(onClose).toHaveBeenCalled();
     type(field(), "abc");
     expect(button("Save").disabled).toBe(true);
+  });
+
+  it("stays open when Enter submits an invalid amount", async () => {
+    render({ CAD: 3000 });
+    type(field(), "abc");
+    await act(async () => {
+      field().form!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("keeps the modal open with a message when saving fails", async () => {

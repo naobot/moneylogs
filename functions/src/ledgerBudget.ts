@@ -97,20 +97,40 @@ export const budgetPace = ({
     flexibleBudget: r2(flexibleBudget),
     flexibleSpent: r2(flexibleSpent),
     projected: r2(committed + (flexibleSpent / e) * days),
-    pace: flexibleBudget > 0 ? r2(flexibleSpent) / (flexibleBudget * (e / days)) : null,
+    // No everyday allowance: nothing to judge by, unless something was spent anyway (a
+    // monthly total that fixed costs already use up), which is over any pace.
+    pace:
+      flexibleBudget > 0
+        ? r2(flexibleSpent) / (flexibleBudget * (e / days))
+        : flexibleSpent > 0
+          ? Infinity
+          : null,
   };
 };
 
 /** Id of the budget line for the part of a monthly total no category budget claims. */
 export const UNALLOCATED = "__unallocated";
 
+/** The largest budget or total the app accepts (MAX_BUDGET in src/utils/ledgerCategories.ts). */
+export const MAX_BUDGET_AMOUNT = 1_000_000_000;
+
+/**
+ * Whether a stored value is a usable budget amount. Ledgers are written by members, so
+ * read-side code checks rather than trusting the type.
+ */
+export const isBudgetAmount = (amount: unknown): amount is number =>
+  typeof amount === "number" &&
+  Number.isFinite(amount) &&
+  amount > 0 &&
+  amount <= MAX_BUDGET_AMOUNT;
+
 /** A log's monthly totals (expected income, or a spending cap), per currency. */
 export type MonthlyTotals = { [currency: string]: number | undefined };
 
 /** The monthly total in one currency, if one is set. */
 export const totalIn = (totals: MonthlyTotals | undefined, currency: string): number | null => {
-  const amount = totals?.[currency];
-  return amount && amount > 0 ? amount : null;
+  const amount: unknown = totals?.[currency];
+  return isBudgetAmount(amount) ? amount : null;
 };
 
 /**

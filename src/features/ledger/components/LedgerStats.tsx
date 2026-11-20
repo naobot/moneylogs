@@ -446,7 +446,7 @@ const BudgetSection = ({
             <button
               type="button"
               className="LedgerStats__budget__total"
-              aria-label={`Edit the monthly total (${formatAmount(budget.budget, currency)})`}
+              aria-label={`edit the monthly total (${formatAmount(budget.budget, currency)})`}
               onClick={onEditTotal}
             >
               {formatAmount(budget.budget, currency)}

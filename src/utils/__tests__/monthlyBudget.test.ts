@@ -17,6 +17,10 @@ describe("applyTotalOps", () => {
     expect(applyTotalOps({ CAD: 2500, USD: 40 }, [{ currency: "USD", amount: null }])).toEqual({
       CAD: 2500,
     });
+    // Rounds to 0 at the cent, so it's ignored rather than saved as no budget.
+    expect(applyTotalOps({ CAD: 2500 }, [{ currency: "CAD", amount: 0.004 }])).toEqual({
+      CAD: 2500,
+    });
   });
 
   it("ignores amounts that aren't valid budgets", () => {

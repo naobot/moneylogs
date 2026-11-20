@@ -216,7 +216,25 @@ service cloud.firestore {
         && d.memberUids.size() == d.members.size()
         && d.memberUids.size() <= d.max_participants
         // The month's total budget per currency (see Ledger.monthlyBudget).
-        && (!('monthlyBudget' in d) || (d.monthlyBudget is map && d.monthlyBudget.size() <= 20));
+        && (!('monthlyBudget' in d) || validTotals(d.monthlyBudget));
+    }
+
+    // A positive amount up to MAX_BUDGET (src/utils/ledgerCategories.ts), if present.
+    function validAmountAt(m, currency) {
+      return !(currency in m)
+        || ((m[currency] is int || m[currency] is float)
+            && m[currency] > 0 && m[currency] <= 1000000000);
+    }
+
+    // Monthly totals per currency: only known currencies (CURRENCIES in
+    // src/utils/currency.ts), each a real amount.
+    function validTotals(m) {
+      return m is map
+        && m.keys().hasOnly(['JPY', 'USD', 'CAD', 'KRW', 'CNY', 'SGD', 'EUR', 'GBP', 'NTD', 'AUD', 'MYR'])
+        && validAmountAt(m, 'JPY') && validAmountAt(m, 'USD') && validAmountAt(m, 'CAD')
+        && validAmountAt(m, 'KRW') && validAmountAt(m, 'CNY') && validAmountAt(m, 'SGD')
+        && validAmountAt(m, 'EUR') && validAmountAt(m, 'GBP') && validAmountAt(m, 'NTD')
+        && validAmountAt(m, 'AUD') && validAmountAt(m, 'MYR');
     }
 
     match /ledgers/{ledgerId} {
@@ -319,7 +337,7 @@ service cloud.firestore {
           && request.resource.data.budgets is map
           && request.resource.data.names is map
           && (!('monthlyBudget' in request.resource.data)
-              || request.resource.data.monthlyBudget is map)
+              || validTotals(request.resource.data.monthlyBudget))
           && request.resource.data.snapshotAt == request.time;
         allow update, delete: if false;
       }

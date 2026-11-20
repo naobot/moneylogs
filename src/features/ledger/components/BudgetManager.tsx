@@ -114,7 +114,7 @@ const BudgetManagerDialog = ({
           <span className="CategoryDetail__label">monthly total</span>
           <RowButton
             className="keep-case"
-            aria-label="Edit the monthly total"
+            aria-label="edit the monthly total"
             onClick={() => {
               commitBudgets();
               onEditTotal(budgetCurrency);
