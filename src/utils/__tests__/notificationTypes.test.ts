@@ -248,7 +248,14 @@ describe("isEmailEnabled", () => {
         .filter(([, on]) => on)
         .map(([t]) => t)
         .sort(),
-    ).toEqual(["budget_exceeded", "friend_request", "log_ended", "log_ending", "log_invite"]);
+    ).toEqual([
+      "budget_exceeded",
+      "friend_request",
+      "log_ended",
+      "log_ending",
+      "log_invite",
+      "sublog_counted",
+    ]);
   });
 
   it("needs email unpaused, the type on in-app, and the email pref on", async () => {
@@ -258,5 +265,35 @@ describe("isEmailEnabled", () => {
     expect(isEmailEnabled({ notificationPrefs: { log_ending: false } }, "log_ending")).toBe(false);
     expect(isEmailEnabled({ emailPrefs: { comment: true } }, "comment")).toBe(true);
     expect(isEmailEnabled({ emailPrefs: { log_joined: true } }, "log_joined")).toBe(false);
+  });
+});
+
+describe("sublog_counted", () => {
+  const base = {
+    id: "n",
+    type: "sublog_counted" as const,
+    groupId: "bali",
+    groupName: "bali 2026",
+    logKind: "ledger" as const,
+    parentId: "home",
+    parentTitle: "household",
+    lineName: "bali",
+    createdAt: {} as never,
+    readAt: null,
+  };
+
+  it("names who linked, or says a join made it count", async () => {
+    const { notificationText, notificationDetail, notificationHref } =
+      await import("@/utils/notificationTypes");
+    expect(notificationText({ ...base, reason: "linked" as const, actorName: "Alice" })).toBe(
+      "Alice linked bali 2026 to household",
+    );
+    expect(notificationText({ ...base, reason: "joined" as const })).toBe(
+      "your spending in bali 2026 now counts in household",
+    );
+    expect(notificationDetail({ ...base, reason: "joined" as const })).toContain(
+      "everyone in household",
+    );
+    expect(notificationHref({ ...base, reason: "joined" as const })).toBe("/l/bali");
   });
 });
