@@ -19,6 +19,12 @@ export type LedgerCategory = {
   /** A fixed cost (rent, bills); unset falls back to the defaults. See isFixedCategory. */
   fixed?: boolean;
   budget?: CurrencyAmounts; // reserved for budgets (monthly, per currency)
+  /**
+   * This category is another ledger (a sublog) rolled up: its amounts come from
+   * rollups/, never from entries here. Set and ended only by the link/unlink functions;
+   * category edits must carry it through. With `unlinkedAt`, past months only.
+   */
+  sublog?: { ledgerId: string; linkedAt?: Timestamp; unlinkedAt?: Timestamp };
 };
 
 // ledgers/{ledgerId}
@@ -41,6 +47,17 @@ export type Ledger = {
   createdBy?: string;
   /** Set by the deleteLog function while the ledger is being removed. */
   deleting?: boolean;
+  /**
+   * This ledger is a sublog: from `since` ("YYYY-MM") on, entries by people who are also
+   * in the parent count as the parent's `categoryId`. Written only by Cloud Functions.
+   */
+  parentLink?: {
+    ledgerId: string;
+    categoryId: string;
+    since: string;
+    linkedBy: string;
+    linkedAt?: Timestamp;
+  };
 };
 
 // ledgers/{ledgerId}/entries/{entryId}
@@ -70,7 +87,18 @@ export type LedgerMonth = {
   byCategory: Record<string, CurrencyAmounts>;
   byMember: Record<string, CurrencyAmounts>;
   byDay: Record<string, CurrencyAmounts>; // keyed "DD"
+  /** Entries that came in from sublogs, per linked category; not in entryCount. */
+  rolledUp?: Record<string, number>;
   computedAt: Timestamp;
+};
+
+// ledgers/{parentId}/rollups/{YYYY-MM}__{childId} — derived, backend-written
+export type LedgerRollup = Omit<LedgerMonth, "rolledUp"> & {
+  childId: string;
+  categoryId: string;
+  countByDay: Record<string, number>; // entries per day, keyed "DD"
+  /** The link has ended: this month keeps its totals and is never rebuilt. */
+  frozen?: boolean;
 };
 
 // Fields a client supplies when creating or editing an entry.

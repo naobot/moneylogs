@@ -30,7 +30,8 @@ const add = (bucket: Amounts, currency: string, amount: number) => {
   bucket[currency] = round2((bucket[currency] || 0) + amount);
 };
 
-const isValid = (e: Partial<AggregatableEntry>): e is AggregatableEntry =>
+/** Whether an entry counts: a positive finite amount, and well-formed keys and date. */
+export const isAggregatable = (e: Partial<AggregatableEntry>): e is AggregatableEntry =>
   typeof e.amount === "number" &&
   isFinite(e.amount) &&
   e.amount > 0 &&
@@ -51,7 +52,7 @@ export const aggregateMonth = (
     byDay: {},
   };
   for (const entry of entries) {
-    if (!isValid(entry)) continue;
+    if (!isAggregatable(entry)) continue;
     const { amount, currency, categoryId, authorUid, date } = entry;
     result.entryCount++;
     add(result.totals, currency, amount);

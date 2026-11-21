@@ -256,7 +256,8 @@ service cloud.firestore {
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.createdAt == request.time;
 
-      // Members edit settings (title, categories, default currency, cap).
+      // Members edit settings (title, categories, default currency, cap). `parentLink`
+      // (sublogs) is left out on purpose: only the link/unlink functions write it.
       allow update: if signedIn()
         && request.auth.uid in resource.data.memberUids
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -323,6 +324,13 @@ service cloud.firestore {
 
       // Derived monthly summaries — written only by Cloud Functions (Admin SDK).
       match /months/{month} {
+        allow read: if isLedgerMember(ledgerId);
+        allow write: if false;
+      }
+
+      // A sublog's month as it counts in this (parent) ledger: entries by people in both
+      // logs, under the linked category. Written only by Cloud Functions (sublogs.ts).
+      match /rollups/{rollupId} {
         allow read: if isLedgerMember(ledgerId);
         allow write: if false;
       }

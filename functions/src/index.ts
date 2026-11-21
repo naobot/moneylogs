@@ -473,6 +473,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
 }
 export { recomputeLedgerMonth } from "./ledger";
 export { checkLedgerImport, importLedgerEntries } from "./ledgerImport";
+export { linkSublog, unlinkSublog, rebuildSublogsOnMemberChange } from "./sublogs";
 export { deleteLog } from "./deleteLog";
 export { deleteAccount } from "./deleteAccount";
 export { adminLookupUser, adminGift, adminDeleteLog, adminDeleteAccount } from "./admin";

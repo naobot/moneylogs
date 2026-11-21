@@ -1,73 +1,14 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import {
-  getFirestore,
-  FieldValue,
-  DocumentData,
-  DocumentReference,
-  Firestore,
-} from "firebase-admin/firestore";
-import {
-  affectedMonths,
-  aggregateFieldsChanged,
-  aggregateMonth,
-  AggregatableEntry,
-  MonthAggregate,
-} from "./ledgerAggregate";
+import { getFirestore, DocumentReference, Firestore } from "firebase-admin/firestore";
+import { affectedMonths, aggregateFieldsChanged, AggregatableEntry } from "./ledgerAggregate";
 import { isImportCreate } from "./ledgerImportPlan";
-import { isCurrentMonth } from "./ledgerBudget";
-import { notifyLedgerBudgets } from "./ledgerBudgetNotify";
+import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
+import { hasSublogCategories } from "./ledgerRollup";
+import { rollUpMonth } from "./sublogs";
 import { takeDailyChance } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
 import { voidNoSpendDay } from "./noSpend";
 import { reportError, withSentry } from "./sentry";
-
-/**
- * Rebuild one months/{YYYY-MM} summary from its entries, in a transaction. Deletes the
- * summary when the month has no entries left. Shared with importLedgerEntries.
- */
-export const recomputeMonth = (
-  db: Firestore,
-  ledgerRef: DocumentReference,
-  month: string,
-): Promise<MonthAggregate> => {
-  const monthRef = ledgerRef.collection("months").doc(month);
-  const entriesQuery = ledgerRef.collection("entries").where("month", "==", month);
-  return db.runTransaction(async (tx) => {
-    const snap = await tx.get(entriesQuery);
-    const result = aggregateMonth(snap.docs.map((d) => d.data()));
-    if (result.entryCount === 0) {
-      tx.delete(monthRef);
-    } else {
-      tx.set(monthRef, { month, ...result, computedAt: FieldValue.serverTimestamp() });
-    }
-    return result;
-  });
-};
-
-/**
- * Send the month's newly due budget alerts, if it's the current month. Best-effort: a
- * failure is reported, never thrown, so it can't hold up the summary or an import.
- */
-export const alertBudgetsIfCurrent = async ({
-  db,
-  ledgerRef,
-  ledger,
-  month,
-  aggregate,
-}: {
-  db: Firestore;
-  ledgerRef: DocumentReference;
-  ledger: DocumentData;
-  month: string;
-  aggregate: MonthAggregate;
-}): Promise<void> => {
-  if (!isCurrentMonth(month, Date.now())) return;
-  try {
-    await notifyLedgerBudgets({ db, ledgerRef, ledger, month, byCategory: aggregate.byCategory });
-  } catch (error) {
-    reportError(error, { action: "budget_alerts", level: "warning", extra: { month } });
-  }
-};
 
 /**
  * What logging spending earns its author: today's check-in (and the copper coin for a first
@@ -121,6 +62,9 @@ export const rewardLoggedEntry = async ({
  * a coin (checkIn.ts), and gives them the buddy's roll of the day for a knick-knack
  * (knickknackFind.ts).
  *
+ * A sublog's months also roll up into its parent (sublogs.ts): the parent's months/ doc
+ * for that month is rebuilt with the sublog's line.
+ *
  * Entries created by a bulk import (importLedgerEntries) are skipped: that callable does
  * the same work once for the whole batch (each month recomputed and alerted once, one
  * check-in and knick-knack roll).
@@ -147,15 +91,14 @@ export const recomputeLedgerMonth = onDocumentWritten(
     const ledgerSnap = await ledgerRef.get();
     if (!ledgerSnap.exists || ledgerSnap.get("deleting") === true) return;
 
+    const ledger = ledgerSnap.data() ?? {};
     for (const month of affectedMonths(before, after)) {
-      const aggregate = await recomputeMonth(db, ledgerRef, month);
-      await alertBudgetsIfCurrent({
-        db,
-        ledgerRef,
-        ledger: ledgerSnap.data() ?? {},
-        month,
-        aggregate,
+      const aggregate = await recomputeMonth(db, ledgerRef, month, {
+        withRollups: hasSublogCategories(ledger.categories),
       });
+      await alertBudgetsIfCurrent({ db, ledgerRef, ledger, month, aggregate });
+      // A sublog: the parent's line for this month follows (see sublogs.ts).
+      if (ledger.parentLink) await rollUpMonth(db, ledgerRef, month);
     }
 
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
