@@ -55,8 +55,14 @@ export type LinkableLedger = {
   deleting?: boolean;
 };
 
-/** A month's roll-up: the aggregate plus how many entries fell on each day ("DD"). */
-export type RollupAggregate = MonthAggregate & { countByDay: { [day: string]: number } };
+/**
+ * A month's roll-up: the aggregate, how many entries fell on each day ("DD"), and the
+ * counted authors' names (so the parent can show people who only spent in the sublog).
+ */
+export type RollupAggregate = MonthAggregate & {
+  countByDay: { [day: string]: number };
+  names: { [uid: string]: string };
+};
 
 export type RollupDoc = RollupAggregate & {
   month: string;
@@ -82,7 +88,7 @@ export const isActiveSublog = (c: Pick<LinkableCategory, "sublog">): boolean =>
  * parent, all filed under the parent's linked category.
  */
 export const rollupFor = (
-  entries: ReadonlyArray<Partial<AggregatableEntry>>,
+  entries: ReadonlyArray<Partial<AggregatableEntry> & { authorName?: unknown }>,
   parentMemberUids: ReadonlyArray<string>,
   categoryId: string,
 ): RollupAggregate => {
@@ -91,12 +97,15 @@ export const rollupFor = (
     .filter((e) => typeof e.authorUid === "string" && members.has(e.authorUid))
     .map((e) => ({ ...e, categoryId }));
   const countByDay: { [day: string]: number } = {};
+  const names: { [uid: string]: string } = {};
   for (const e of counted) {
+    const { authorName } = e;
     if (!isAggregatable(e)) continue;
     const day = e.date.slice(8, 10);
     countByDay[day] = (countByDay[day] ?? 0) + 1;
+    if (typeof authorName === "string" && authorName) names[e.authorUid] = authorName;
   }
-  return { ...aggregateMonth(counted), countByDay };
+  return { ...aggregateMonth(counted), countByDay, names };
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

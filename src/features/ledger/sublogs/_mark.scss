@@ -1,0 +1,13 @@
+// A frame inset inside a swatch or bar segment. Put on the element that already has the
+// category's fill; the inner square shows the sheet through it.
+@mixin nested-frame($inset: 2px) {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: $inset;
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+  }
+}

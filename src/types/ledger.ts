@@ -97,6 +97,7 @@ export type LedgerRollup = Omit<LedgerMonth, "rolledUp"> & {
   childId: string;
   categoryId: string;
   countByDay: Record<string, number>; // entries per day, keyed "DD"
+  names?: Record<string, string>; // counted authors' display names, by uid
   /** The link has ended: this month keeps its totals and is never rebuilt. */
   frozen?: boolean;
 };

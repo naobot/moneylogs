@@ -1,6 +1,7 @@
 @use "@/constants.scss";
 @use "@/surfaces.scss";
 @use "@/charts.scss";
+@use "@/features/ledger/sublogs/mark";
 
 .Ledger {
   // Phones: one row like on wide screens (kind · title · actions), but the side columns
@@ -936,6 +937,11 @@
           @include charts.fill($slot);
         }
       }
+
+      // A linked category (a sublog): its fill, with a box inside (sublogs/_mark.scss).
+      &--sublog {
+        @include mark.nested-frame;
+      }
     }
   }
 
@@ -947,6 +953,10 @@
     width: 0.9em;
     height: 0.9em;
     border: var(--border-hairline) solid var(--ink);
+
+    &--sublog {
+      @include mark.nested-frame;
+    }
   }
 
   &__panel {

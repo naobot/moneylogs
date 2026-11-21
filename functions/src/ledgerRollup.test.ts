@@ -48,7 +48,20 @@ describe("rollupFor", () => {
       byMember: { alice: { CAD: 42, USD: 5 } },
       byDay: { "03": { CAD: 42 }, "09": { USD: 5 } },
       countByDay: { "03": 2, "09": 1 },
+      names: {},
     });
+  });
+
+  it("keeps the counted authors' names", () => {
+    const r = rollupFor(
+      [
+        { ...e(1, "CAD", "a", "alice", "2026-11-01"), authorName: "Alice" },
+        { ...e(1, "CAD", "a", "sam", "2026-11-01"), authorName: "Sam" },
+      ],
+      ["alice"],
+      "x",
+    );
+    expect(r.names).toEqual({ alice: "Alice" });
   });
 
   it("is empty when no author is in the parent", () => {

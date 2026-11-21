@@ -23,6 +23,8 @@ import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
 import { formatTotals } from "@/utils/ledgerEntries";
 import { MAX_CATEGORY_NAME_LENGTH } from "@/utils/ledger";
 import { categoryNameError, isFixedCategory, MAX_CATEGORIES } from "@/utils/ledgerCategories";
+import { isActiveSublog } from "@/utils/sublogs";
+import { SublogMark, SublogName } from "@/features/ledger/sublogs/SublogName";
 
 type CategoryListProps = {
   active: ReadonlyArray<LedgerCategory>;
@@ -196,7 +198,13 @@ export const SelectButton = ({
         "CategoryManager__nameText--archived": category.archived,
       })}
     >
-      {category.name}
+      {isActiveSublog(category) ? (
+        <>
+          <SublogMark /> <SublogName name={category.name} />
+        </>
+      ) : (
+        category.name
+      )}
     </span>
     {children}
     <span className="CategoryManager__chevron" aria-hidden="true">

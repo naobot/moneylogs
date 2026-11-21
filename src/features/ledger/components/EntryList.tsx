@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { LedgerCategory, LedgerEntry, LedgerEntryInput } from "@/types/ledger";
+import { Link } from "react-router-dom";
+import { LedgerCategory, LedgerEntry, LedgerEntryInput, LedgerRollup } from "@/types/ledger";
 import { resolveCategory } from "@/utils/ledger";
 import { formatAmount, groupEntriesByDay } from "@/utils/ledgerEntries";
 import Totals from "./Totals";
@@ -10,10 +11,16 @@ import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import EntryForm from "./EntryForm";
 import { reportError } from "@/utils/reportError";
+import { entryCategories, SublogDayRow, SublogPaths, withSublogDays } from "@/utils/sublogs";
+import { SublogMark, SublogName } from "@/features/ledger/sublogs/SublogName";
 
 type EntryListProps = {
   entries: ReadonlyArray<LedgerEntry>;
   categories: ReadonlyArray<LedgerCategory>;
+  /** Each sublog's month here: one row per sublog per day, never its entries. */
+  rollups?: ReadonlyArray<LedgerRollup>;
+  /** Linked category id → path into its sublog (null: the viewer can't open it). */
+  sublogs?: SublogPaths;
   currentUid?: string;
   showAuthors: boolean;
   isSavingEdit: boolean;
@@ -25,6 +32,8 @@ type EntryListProps = {
 export const EntryList = ({
   entries,
   categories,
+  rollups = [],
+  sublogs,
   currentUid,
   showAuthors,
   isSavingEdit,
@@ -47,7 +56,9 @@ export const EntryList = ({
     });
   }, [editingId]);
 
-  const days = groupEntriesByDay([...entries]);
+  const days = withSublogDays(groupEntriesByDay([...entries]), rollups, categories);
+  // Linked categories are logged in their sublog, so an edit can't move an entry there.
+  const formCategories = entryCategories(categories);
 
   const confirmDelete = async () => {
     if (!deletingEntry) return;
@@ -89,7 +100,7 @@ export const EntryList = ({
                     >
                       <EntryForm
                         mode="edit"
-                        categories={categories}
+                        categories={formCategories}
                         isSaving={isSavingEdit}
                         initial={{
                           amount: String(entry.amount),
@@ -145,6 +156,13 @@ export const EntryList = ({
                 );
               })}
             </ul>
+            {day.sublogs.map((row) => (
+              <SublogRow
+                key={row.categoryId}
+                row={row}
+                to={sublogs?.get(row.categoryId) ?? undefined}
+              />
+            ))}
           </section>
         ))}
       </div>
@@ -173,6 +191,37 @@ export const EntryList = ({
         </Modal.Actions>
       </Modal>
     </>
+  );
+};
+
+/**
+ * A sublog's spending on one day: its total and how many entries made it, opening the
+ * sublog. Read-only here; the entries themselves live in the sublog.
+ */
+const SublogRow = ({ row, to }: { row: SublogDayRow; to?: string }) => {
+  const content = (
+    <>
+      <span className="SublogRow__name">
+        <SublogMark />
+        <SublogName name={row.name} />
+      </span>
+      <span className="SublogRow__count">
+        {row.count} {row.count === 1 ? "entry" : "entries"}
+      </span>
+      <span className="SublogRow__amount">
+        <Totals totals={row.amounts} />
+      </span>
+      <span className="SublogRow__open" aria-hidden="true">
+        {to ? "›" : ""}
+      </span>
+    </>
+  );
+  return to ? (
+    <Link className="SublogRow" to={to} aria-label={`${row.name}: open this sublog`}>
+      {content}
+    </Link>
+  ) : (
+    <div className="SublogRow">{content}</div>
   );
 };
 

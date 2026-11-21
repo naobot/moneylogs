@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
+import { useLedgerRollups } from "@/hooks/useLedgerRollups";
 import { Ledger } from "@/types/ledger";
 import { formatMonth } from "@/utils/ledger";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
@@ -42,7 +43,11 @@ const MonthStats = ({
   openTotal,
 }: LedgerStatsViewProps & LedgerShellContext) => {
   const { user } = useCurrentUser();
-  const { entries, isLoading, isError } = useGetLedgerEntries({ ledgerId: ledger.id, month });
+  const entriesQuery = useGetLedgerEntries({ ledgerId: ledger.id, month });
+  const rollupsQuery = useLedgerRollups({ ledger, month });
+  const { entries } = entriesQuery;
+  const isLoading = entriesQuery.isLoading || rollupsQuery.isLoading;
+  const isError = entriesQuery.isError || rollupsQuery.isError;
   const [sharing, setSharing] = useState(false);
   const hasMine = entries.some((e) => e.authorUid === user?.userId);
   if (isError) {
@@ -56,6 +61,7 @@ const MonthStats = ({
         month={month}
         today={today}
         entries={entries}
+        rollups={rollupsQuery.rollups}
         isLoading={isLoading}
         onEditBudget={openBudgets}
         onEditTotal={openTotal}

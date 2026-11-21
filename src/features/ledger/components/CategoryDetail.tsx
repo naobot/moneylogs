@@ -11,6 +11,9 @@ import {
   isFixedCategory,
 } from "@/utils/ledgerCategories";
 import CategoryBudget from "./CategoryBudget";
+import { Link } from "react-router-dom";
+import { isActiveSublog } from "@/utils/sublogs";
+import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 
 export const FIXED_HELP =
   "Fixed costs like rent and bills still count toward the budget, but the buddy won't fuss over them or judge the month's pace by them.";
@@ -65,6 +68,9 @@ export const CategoryDetail = ({
   };
 
   const fixed = isFixedCategory(category);
+  const linked = isActiveSublog(category);
+  const sublogLinks = useSublogLinks(all);
+  const sublogId = sublogLinks.get(id);
 
   return (
     <div className="CategoryDetail">
@@ -128,42 +134,60 @@ export const CategoryDetail = ({
         />
       )}
 
-      <Section
-        help={
-          lastActive ? "A log needs at least one category, so this one has to stay." : undefined
-        }
-      >
-        <div className="CategoryDetail__buttons">
-          {archived ? (
+      {linked ? (
+        <Section>
+          <p className="CategoryDetail__help">
+            Spending here comes from the{" "}
+            {sublogId ? (
+              <Link to={`/l/${sublogId}`} className="keep-case">
+                {name} ›
+              </Link>
+            ) : (
+              <strong className="keep-case">{name}</strong>
+            )}{" "}
+            log: entries by people who are in both logs. You log it there, and this line shows its
+            total. To stop counting it here, unlink it in that log&apos;s actions; past months keep
+            their totals.
+          </p>
+        </Section>
+      ) : (
+        <Section
+          help={
+            lastActive ? "A log needs at least one category, so this one has to stay." : undefined
+          }
+        >
+          <div className="CategoryDetail__buttons">
+            {archived ? (
+              <Button
+                text="Restore"
+                size="sm"
+                variant="secondary"
+                aria-label={`Restore ${name}`}
+                onClick={() => save({ type: "unarchive", id })}
+              />
+            ) : (
+              <Button
+                text="Archive"
+                size="sm"
+                variant="secondary"
+                className="CategoryDetail__archive"
+                aria-label={`Archive ${name}`}
+                disabled={lastActive}
+                onClick={onArchive}
+              />
+            )}
             <Button
-              text="Restore"
+              text="Delete"
               size="sm"
               variant="secondary"
-              aria-label={`Restore ${name}`}
-              onClick={() => save({ type: "unarchive", id })}
-            />
-          ) : (
-            <Button
-              text="Archive"
-              size="sm"
-              variant="secondary"
-              className="CategoryDetail__archive"
-              aria-label={`Archive ${name}`}
+              className="CategoryDetail__delete"
+              aria-label={`Delete ${name}`}
               disabled={lastActive}
-              onClick={onArchive}
+              onClick={onDelete}
             />
-          )}
-          <Button
-            text="Delete"
-            size="sm"
-            variant="secondary"
-            className="CategoryDetail__delete"
-            aria-label={`Delete ${name}`}
-            disabled={lastActive}
-            onClick={onDelete}
-          />
-        </div>
-      </Section>
+          </div>
+        </Section>
+      )}
     </div>
   );
 };
