@@ -61,6 +61,9 @@ export type DigestNotification = {
   categoryName?: unknown;
   /** achievement_earned: which one. */
   achievement?: unknown;
+  /** sublog_counted: where it counts, and as what. */
+  parentTitle?: unknown;
+  lineName?: unknown;
 };
 
 type PrefsSource = Parameters<typeof isEmailEnabled>[0];
@@ -177,6 +180,12 @@ export const DIGEST_LINES: Record<string, LineSpec> = {
     section: "logs",
     parts: [someone(n), " invited you to ", logName(n)],
     href: `${logHref(n)}/invite`,
+  }),
+  sublog_counted: (n) => ({
+    section: "logs",
+    parts: ["your spending in ", logName(n), " now counts in ", name(n.parentTitle, "another log")],
+    detail: `it shows there as one line${str(n.lineName) ? `, ${str(n.lineName)},` : ""} that its members can see`,
+    href: logHref(n),
   }),
   log_ending: (n) => ({
     section: "logs",

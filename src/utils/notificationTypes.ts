@@ -118,6 +118,25 @@ export const NOTIFICATION_TYPES: Specs = {
     describe: (n) => [{ keep: n.actorName }, " invited you to ", { keep: n.groupName }],
     href: (n) => (n.logKind === "ledger" ? `/l/${n.groupId}/invite` : `/g/${n.groupId}/invite`),
   },
+  sublog_counted: {
+    label: "Your spending counting in another log",
+    defaultEnabled: true,
+    email: "on",
+    icon: "social",
+    describe: (n) =>
+      n.reason === "linked" && n.actorName
+        ? [
+            { keep: n.actorName },
+            " linked ",
+            { keep: n.groupName },
+            " to ",
+            { keep: n.parentTitle },
+          ]
+        : ["your spending in ", { keep: n.groupName }, " now counts in ", { keep: n.parentTitle }],
+    detail: (n) =>
+      `it shows there as one line, ${n.lineName}, which everyone in ${n.parentTitle} can see`,
+    href: (n) => `/l/${n.groupId}`,
+  },
   log_ending: {
     label: "A log is about to end",
     defaultEnabled: true,

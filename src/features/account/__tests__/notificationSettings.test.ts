@@ -46,8 +46,8 @@ describe("notification settings", () => {
   });
 
   it("summarises the drawer", () => {
-    expect(emailedTypeCount(undefined)).toBe(5);
-    expect(notificationsSummary(undefined)).toBe("daily email · 5 types");
+    expect(emailedTypeCount(undefined)).toBe(6);
+    expect(notificationsSummary(undefined)).toBe("daily email · 6 types");
     expect(notificationsSummary({ emailPaused: true })).toBe("email paused");
     expect(
       notificationsSummary({
@@ -56,6 +56,7 @@ describe("notification settings", () => {
           log_ended: false,
           budget_exceeded: false,
           log_invite: false,
+          sublog_counted: false,
         },
       }),
     ).toBe("daily email · 1 type");
@@ -67,6 +68,7 @@ describe("notification settings", () => {
           budget_exceeded: false,
           friend_request: false,
           log_invite: false,
+          sublog_counted: false,
         },
       }),
     ).toBe("inbox only");

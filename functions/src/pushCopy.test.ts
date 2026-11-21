@@ -23,6 +23,15 @@ describe("pushCopy", () => {
     ).toEqual({ title: "Lisbon", body: "Theo reacted 🔥 to a post you follow" });
   });
 
+  it("says where a sublog's spending now counts", () => {
+    expect(
+      pushCopy({ type: "sublog_counted", groupName: "bali 2026", parentTitle: "household" }),
+    ).toEqual({
+      title: "bali 2026",
+      body: "Your spending here now also counts in household, as one line its members can see.",
+    });
+  });
+
   it("covers the log timeline", () => {
     expect(pushCopy({ type: "log_ending", groupName: "Lisbon" })?.body).toMatch(/last chance/);
     expect(pushCopy({ type: "log_ended", groupName: "Lisbon" })?.body).toBe("This log has ended.");

@@ -14,6 +14,7 @@ export const NOTIFICATION_PREF_DEFAULTS = {
   log_invite: true,
   log_ending: true,
   log_ended: true,
+  sublog_counted: true,
   budget_approaching: true,
   budget_exceeded: true,
   budget_projected: true,
@@ -52,6 +53,8 @@ export const EMAIL_PREF_DEFAULTS = {
   log_invite: true,
   log_ending: true,
   log_ended: true,
+  // Your spending showing in another log: worth hearing about even away from the app.
+  sublog_counted: true,
   budget_approaching: false,
   budget_exceeded: true,
   budget_projected: false,
