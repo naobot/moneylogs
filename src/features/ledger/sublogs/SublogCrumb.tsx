@@ -14,9 +14,10 @@ import "./sublogs.scss";
  * Nothing for a log that is neither.
  */
 export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
-  const { ledgers } = useGetMyLedgers();
   const link = ledger.parentLink;
   const sublogs = (ledger.categories ?? []).filter(isActiveSublog);
+  // Only a log that's part of a family needs the user's logs (names, who can open what).
+  const { ledgers } = useGetMyLedgers({ enabled: !!link || sublogs.length > 0 });
   if (!link && sublogs.length === 0) return null;
 
   if (link) {
