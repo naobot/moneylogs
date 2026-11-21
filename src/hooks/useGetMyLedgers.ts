@@ -7,10 +7,13 @@ import { sortLedgersNewestFirst } from "@/utils/ledger";
 import { useFirebaseCollection } from "./useFirebase";
 import { reportError } from "@/utils/reportError";
 
-/** Financial logs the signed-in user is a member of, newest first. */
-export const useGetMyLedgers = () => {
+/**
+ * Financial logs the signed-in user is a member of, newest first. Pass `enabled: false`
+ * to skip the query on pages that only sometimes need it.
+ */
+export const useGetMyLedgers = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const [firebaseUser] = useAuthState(auth);
-  const uid = firebaseUser?.uid;
+  const uid = enabled ? firebaseUser?.uid : undefined;
 
   const result = useFirebaseCollection<Ledger>({
     // `memberUids array-contains uid` is what lets security rules prove the list query.
