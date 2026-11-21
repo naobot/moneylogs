@@ -136,6 +136,14 @@
       background: var(--ink);
       color: var(--paper);
     }
+
+    // A choice that can't be picked says why in its own text.
+    &:disabled {
+      opacity: var(--opacity-disabled);
+      cursor: default;
+      background: var(--paper);
+      color: var(--ink);
+    }
   }
 
   &__actions {

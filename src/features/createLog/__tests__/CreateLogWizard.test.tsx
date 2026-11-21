@@ -17,6 +17,19 @@ vi.mock("@/contexts", () => ({
   }),
 }));
 vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast: vi.fn() }) }));
+const linkSublog = vi.hoisted(() => vi.fn(async () => ({ categoryId: "sublog-new-ledger" })));
+vi.mock("@/features/ledger/sublogs/sublogApi", () => ({
+  linkSublog,
+  sublogErrorMessage: () => ({ message: "no", expected: false }),
+}));
+vi.mock("@/hooks/useGetMyLedgers", () => ({
+  useGetMyLedgers: () => ({
+    ledgers: [
+      { id: "home", title: "household", memberUids: ["uid-1", "uid-2"], categories: [] },
+      { id: "personal-uid-1", title: "personal", memberUids: ["uid-1"], categories: [] },
+    ],
+  }),
+}));
 vi.mock("@/features/invites/logInvites", () => ({ inviteFriendsToLog }));
 // The real picker reads friendships and profiles; a stand-in that picks one friend.
 vi.mock("@/features/invites/FriendPicker", () => ({
@@ -56,6 +69,7 @@ describe("CreateLogWizard", () => {
     createLedgerMutate.mockClear();
     addNewLogGroupMutate.mockClear();
     inviteFriendsToLog.mockClear();
+    linkSublog.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -134,6 +148,9 @@ describe("CreateLogWizard", () => {
     expect(button("Next").disabled).toBe(false);
     await click("Next");
 
+    expect(question()).toMatch(/part of another log/);
+    await click("Next");
+
     expect(question()).toMatch(/currency/);
     await click("Next");
 
@@ -152,6 +169,38 @@ describe("CreateLogWizard", () => {
       }),
     );
     expect(addNewLogGroupMutate).not.toHaveBeenCalled();
+    // It stands alone unless a parent is picked.
+    expect(linkSublog).not.toHaveBeenCalled();
+    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+  });
+
+  it("makes the new log a sublog of the log picked, personal first", async () => {
+    await click("Financial");
+    typeInto("Title", "Bali 2026");
+    typeInto("Max no. of participants", "1");
+    await click("Next");
+    const choices = Array.from(container.querySelectorAll(".Wizard__choice strong")).map(
+      (el) => el.textContent,
+    );
+    expect(choices).toEqual(["no, it stands alone", "personal", "household"]);
+    await click("personal");
+    expect(container.querySelector(".Wizard__hint:last-of-type")?.textContent).toContain(
+      "personal",
+    );
+    await click("Next"); // part of
+    await click("Next"); // currency
+    expect(container.querySelector(".Wizard__review")!.textContent).toContain(
+      "personal, as Bali 2026",
+    );
+    await click("Start financial log");
+    expect(linkSublog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        childId: "new-ledger",
+        parentId: "personal-uid-1",
+        name: "Bali 2026",
+        since: expect.stringMatching(/^\d{4}-\d{2}$/),
+      }),
+    );
     expect(container.querySelector("#landed")?.textContent).toBe("ledger");
   });
 
@@ -176,6 +225,7 @@ describe("CreateLogWizard", () => {
     await click("Financial");
     typeInto("Title", "Flat");
     await click("Next");
+    await click("Next"); // part of
     await click("Next"); // currency
     expect(question()).toMatch(/Invite friends/);
     await click("pick friend-1");
@@ -191,6 +241,7 @@ describe("CreateLogWizard", () => {
     typeInto("Title", "Mine");
     typeInto("Max no. of participants", "1");
     await click("Next");
+    await click("Next"); // part of
     await click("Next"); // currency
     expect(question()).toMatch(/Ready to go/);
   });

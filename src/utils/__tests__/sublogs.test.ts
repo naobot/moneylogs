@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
+import { Ledger, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
 import { EntryDay } from "@/utils/ledgerEntries";
 import {
   activeSublogs,
@@ -9,6 +9,8 @@ import {
   hasSpending,
   memberNames,
   mergeMonth,
+  parentChoices,
+  sublogBlocker,
   withSublogDays,
 } from "../sublogs";
 
@@ -157,5 +159,49 @@ describe("withSublogDays", () => {
     const given = [day("2026-11-21")];
     withSublogDays(given, [rollup({})], categories);
     expect(given[0].subtotals).toEqual({ CAD: 10 });
+  });
+});
+
+describe("parentChoices", () => {
+  const ledger = (id: string, over: Partial<Ledger> = {}): Ledger =>
+    ({ id, title: id, memberUids: ["alice"], categories: [], ...over }) as unknown as Ledger;
+  const link = { ledgerId: "x", categoryId: "c", since: "2026-11", linkedBy: "alice" };
+
+  it("lists the other logs, personal first, marking ones that can't be parents", () => {
+    const choices = parentChoices(
+      [
+        ledger("home"),
+        ledger("trip", { parentLink: link }),
+        ledger("personal-alice"),
+        ledger("biz"),
+      ],
+      "alice",
+      ledger("biz"),
+    );
+    expect(choices.map((c) => [c.ledger.id, c.disabledReason])).toEqual([
+      ["personal-alice", undefined],
+      ["home", undefined],
+      ["trip", "already a sublog"],
+    ]);
+  });
+
+  it("works for a log that doesn't exist yet", () => {
+    expect(parentChoices([ledger("personal-alice")], "alice").map((c) => c.ledger.id)).toEqual([
+      "personal-alice",
+    ]);
+  });
+
+  it("offers no parents when the log itself can't be a sublog", () => {
+    expect(parentChoices([ledger("home")], "alice", ledger("personal-alice"))).toEqual([]);
+    expect(sublogBlocker(ledger("personal-alice"))).toBe("personal-child");
+    expect(sublogBlocker(ledger("biz", { parentLink: link }))).toBe("child-already-linked");
+    expect(
+      sublogBlocker(
+        ledger("biz", {
+          categories: [{ id: "c", name: "c", order: 0, sublog: { ledgerId: "p" } }],
+        }),
+      ),
+    ).toBe("child-is-parent");
+    expect(sublogBlocker(ledger("biz"))).toBeNull();
   });
 });

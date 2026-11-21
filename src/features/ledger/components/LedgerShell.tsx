@@ -29,6 +29,8 @@ import MonthlyTotalModal from "./MonthlyTotalModal";
 import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
+import SublogSection from "@/features/ledger/sublogs/SublogSection";
+import SublogCrumb from "@/features/ledger/sublogs/SublogCrumb";
 import LedgerSidebar from "./LedgerSidebar";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { creatorUid } from "@/utils/logOwnership";
@@ -190,6 +192,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             currentMonth={currentMonth}
           />
           <div className="Ledger__body">
+            <SublogCrumb ledger={ledger} />
             <nav className="Ledger__month" aria-label="Period">
               <div className="Ledger__month__controls">
                 {tip("month", ".Ledger__month__label")}
@@ -248,7 +251,12 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         logTitle={ledger.title}
         kind="financial"
         creatorUid={creatorUid(ledger, "financial")}
-        settings={<LedgerCurrencySection ledger={ledger} />}
+        settings={
+          <>
+            <LedgerCurrencySection ledger={ledger} />
+            {showManageModal && <SublogSection ledger={ledger} />}
+          </>
+        }
       />
       <CategoryManager
         isOpen={showCategories}

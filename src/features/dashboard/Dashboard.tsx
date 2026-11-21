@@ -33,7 +33,9 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
   const { now, upcoming, recent, pastCount } = arrangeDashboard({ groups, ledgers, user });
   const { activity } = useLogActivity({ groups, ledgers });
 
-  const currentLedgers = now.flatMap((item) => (item.kind === "financial" ? [item.ledger] : []));
+  const currentLedgers = now.flatMap((item) =>
+    item.kind === "financial" ? [item.ledger, ...item.sublogs] : [],
+  );
   const month = monthKeyOf(todayInTz(user?.timezone));
   const totals = useLedgerMonthTotals(
     currentLedgers.map((l) => l.id),
@@ -50,6 +52,30 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
     if (monthTotals === undefined) return `${formatMonth(month)}: …`;
     if (monthTotals === null) return null;
     return `${formatMonth(month)}: ${formatTotals(monthTotals) || "nothing yet"}`;
+  };
+
+  // A financial log's card: a parent's lists its sublogs, a sublog's is smaller.
+  const ledgerCard = (
+    ledger: Ledger,
+    { sublog = false, sublogCount = 0 }: { sublog?: boolean; sublogCount?: number } = {},
+  ) => {
+    const shared = (ledger.memberUids?.length ?? 0) > 1;
+    const kind = sublog ? "sublog" : "financial";
+    return (
+      <LogCard
+        key={ledger.id}
+        to={`/l/${ledger.id}`}
+        title={ledger.title}
+        size={sublog ? "small" : "large"}
+        kind={shared ? `${kind} · shared` : kind}
+        details={[
+          monthLine(ledger.id),
+          sublog ? null : memberLabel(ledger.memberUids?.length ?? 0),
+          sublogCount > 0 ? `incl. ${sublogCount} sublog${sublogCount > 1 ? "s" : ""}` : null,
+        ].filter((line): line is string => !!line)}
+        badge={badgeFor(ledger.id, "financial")}
+      />
+    );
   };
 
   return (
@@ -78,21 +104,23 @@ export const Dashboard = ({ groups, ledgers }: DashboardProps) => {
                     ]}
                     badge={badgeFor(item.id, "social")}
                   />
+                ) : item.sublogs.length > 0 ? (
+                  // A parent with its sublogs hung under it on a tree line.
+                  <div key={item.id} className="Dashboard__family">
+                    {ledgerCard(item.ledger, { sublogCount: item.sublogs.length })}
+                    <ul
+                      className="Dashboard__family__kids"
+                      aria-label={`${item.ledger.title}'s sublogs`}
+                    >
+                      {item.sublogs.map((sublog) => (
+                        <li key={sublog.id} className="Dashboard__family__kid">
+                          {ledgerCard(sublog, { sublog: true })}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : (
-                  <LogCard
-                    key={item.id}
-                    to={`/l/${item.id}`}
-                    title={item.ledger.title}
-                    size="large"
-                    kind={
-                      (item.ledger.memberUids?.length ?? 0) > 1 ? "financial · shared" : "financial"
-                    }
-                    details={[
-                      monthLine(item.id),
-                      memberLabel(item.ledger.memberUids?.length ?? 0),
-                    ].filter((line): line is string => !!line)}
-                    badge={badgeFor(item.id, "financial")}
-                  />
+                  ledgerCard(item.ledger)
                 ),
               )}
             </div>

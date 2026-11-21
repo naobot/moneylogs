@@ -1,10 +1,17 @@
 import dayjs from "@/utils/configuredDayjs";
 import { Currency } from "@/types/user";
-import { MAX_LEDGER_TITLE_LENGTH } from "@/utils/ledger";
+import { MAX_CATEGORY_NAME_LENGTH, MAX_LEDGER_TITLE_LENGTH } from "@/utils/ledger";
 
 export type LogMode = "social" | "financial";
 
-export type WizardStep = "type" | "basics" | "schedule" | "currency" | "friends" | "review";
+export type WizardStep =
+  | "type"
+  | "basics"
+  | "parent"
+  | "schedule"
+  | "currency"
+  | "friends"
+  | "review";
 
 export type WizardState = {
   mode: LogMode | null;
@@ -17,6 +24,10 @@ export type WizardState = {
   defaultCurrency: Currency;
   /** Friends (user doc ids) to invite once the log exists. */
   inviteFriendIds: string[];
+  /** Financial: the log this one is a sublog of, or null for one that stands alone. */
+  parentId: string | null;
+  /** Its line in the parent; blank means the title. */
+  sublogName: string;
 };
 
 export const MAX_TITLE_LENGTH = MAX_LEDGER_TITLE_LENGTH;
@@ -26,6 +37,7 @@ const MAX_SOCIAL_DAYS = 31;
 export const STEP_LABELS: Record<WizardStep, string> = {
   type: "Type",
   basics: "Basics",
+  parent: "Part of",
   schedule: "Dates",
   currency: "Currency",
   friends: "Friends",
@@ -39,7 +51,7 @@ export const STEP_LABELS: Record<WizardStep, string> = {
 export const stepsFor = (mode: LogMode | null, withFriends = false): WizardStep[] => {
   const friends: WizardStep[] = withFriends ? ["friends"] : [];
   if (mode === "social") return ["type", "basics", "schedule", ...friends, "review"];
-  if (mode === "financial") return ["type", "basics", "currency", ...friends, "review"];
+  if (mode === "financial") return ["type", "basics", "parent", "currency", ...friends, "review"];
   return ["type"];
 };
 
@@ -63,6 +75,16 @@ export const titleError = (title: string): string | undefined => {
     return `Title must be ${MAX_TITLE_LENGTH} characters or fewer`;
   return undefined;
 };
+
+/** The sublog's line in its parent: a category name, so the same length limit. */
+export const sublogNameError = (name: string): string | undefined =>
+  name.trim().length > MAX_CATEGORY_NAME_LENGTH
+    ? `Must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
+    : undefined;
+
+/** What the new log counts as in its parent. */
+export const sublogLineName = (s: Pick<WizardState, "sublogName" | "title">): string =>
+  (s.sublogName.trim() || s.title.trim()).slice(0, MAX_CATEGORY_NAME_LENGTH);
 
 export const participantsError = (n: number): string | undefined =>
   !Number.isInteger(n) || n < 1 || n > MAX_PARTICIPANTS
@@ -88,6 +110,8 @@ export const isStepValid = (step: WizardStep, s: WizardState): boolean => {
       return !!s.title.trim() && !titleError(s.title) && !participantsError(s.maxParticipants);
     case "schedule":
       return !!s.startTime && !!s.endTime && !scheduleError(s.startDate, s.endDate);
+    case "parent":
+      return s.parentId === null || !sublogNameError(s.sublogName);
     case "currency":
       return !!s.defaultCurrency;
     case "friends":

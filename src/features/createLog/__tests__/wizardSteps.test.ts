@@ -9,6 +9,8 @@ import {
   stepsForState,
   titleError,
   WizardState,
+  sublogLineName,
+  sublogNameError,
 } from "@/features/createLog/wizardSteps";
 
 const base: WizardState = {
@@ -21,6 +23,8 @@ const base: WizardState = {
   endTime: "23:59",
   defaultCurrency: "JPY",
   inviteFriendIds: [],
+  parentId: null,
+  sublogName: "",
 };
 
 describe("stepsFor", () => {
@@ -30,7 +34,7 @@ describe("stepsFor", () => {
 
   it("asks for dates in social mode and a currency in financial mode", () => {
     expect(stepsFor("social")).toEqual(["type", "basics", "schedule", "review"]);
-    expect(stepsFor("financial")).toEqual(["type", "basics", "currency", "review"]);
+    expect(stepsFor("financial")).toEqual(["type", "basics", "parent", "currency", "review"]);
   });
 
   it("puts the optional friends step just before review", () => {
@@ -38,6 +42,7 @@ describe("stepsFor", () => {
     expect(stepsFor("financial", true)).toEqual([
       "type",
       "basics",
+      "parent",
       "currency",
       "friends",
       "review",
@@ -123,5 +128,20 @@ describe("reachableStepIndex", () => {
     expect(reachableStepIndex(99, ready)).toBe(4);
     expect(reachableStepIndex(-4, ready)).toBe(0);
     expect(reachableStepIndex(NaN, ready)).toBe(0);
+  });
+});
+
+describe("the parent step", () => {
+  it("is optional, and checks the line's name only when there's a parent", () => {
+    expect(isStepValid("parent", { ...base, mode: "financial" })).toBe(true);
+    const long = "x".repeat(21);
+    expect(isStepValid("parent", { ...base, sublogName: long })).toBe(true);
+    expect(isStepValid("parent", { ...base, parentId: "p", sublogName: long })).toBe(false);
+    expect(sublogNameError(long)).toBeDefined();
+  });
+
+  it("names the line after the log unless given a name", () => {
+    expect(sublogLineName({ title: " Bali 2026 ", sublogName: "" })).toBe("Bali 2026");
+    expect(sublogLineName({ title: "Bali 2026", sublogName: "trip" })).toBe("trip");
   });
 });

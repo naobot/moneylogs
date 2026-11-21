@@ -46,6 +46,10 @@ export type AnalyticsEvents = {
   stats_period: { period: "month" | "quarter" | "year" };
   stats_sort: { sort: "order" | "amount" | "pace" };
   month_review: { action: "start" | "snooze" | "dismiss" | "adjust" | "keep" };
+  /** A log made a sublog of another: from the create wizard or its log actions. */
+  sublog_linked: { from: "wizard" | "log_actions"; include_past: boolean; shared_parent: boolean };
+  /** A sublog link ended, from the sublog's side or the parent's. */
+  sublog_unlinked: { from: "sublog" | "parent" };
 
   // Social / profile
   update_profile: Record<string, never>;

@@ -4,7 +4,9 @@
  *              (which never end; newest first, as useGetMyLedgers sorts them)
  *  - upcoming: groups not started yet, starting soonest first
  *  - recent:   the few most recently ended groups; the full history lives on /me
- * Logs the user archived are left out entirely.
+ * Logs the user archived are left out entirely. A sublog sits under its parent when the
+ * parent is on the dashboard too; otherwise (a parent they're not in, or archived) it's a
+ * card of its own.
  *
  * The order deliberately ignores new-activity counts: they arrive a moment after the
  * page renders, and re-sorting then would make cards jump under the user's cursor.
@@ -21,7 +23,13 @@ export const RECENT_LIMIT = 3;
 
 export type DashboardItem =
   | { kind: "social"; id: string; group: Group }
-  | { kind: "financial"; id: string; ledger: Ledger };
+  | {
+      kind: "financial";
+      id: string;
+      ledger: Ledger;
+      /** Its sublogs the user is in, shown under it (in the parent's category order). */
+      sublogs: Ledger[];
+    };
 
 export type Dashboard = {
   now: DashboardItem[];
@@ -45,16 +53,50 @@ export const arrangeDashboard = ({
   // Same split and ordering as /me's My logs, so the two pages always agree.
   const { ongoing, upcoming, past } = partitionByTime(partitionArchived(groups, user).active, now);
   const activeLedgers = partitionArchived(ledgers, user).active;
+  const { top, sublogsOf } = nestSublogs(activeLedgers);
 
   return {
     now: [
       ...ongoing.map((group) => ({ kind: "social" as const, id: group.id, group })),
-      ...activeLedgers.map((ledger) => ({ kind: "financial" as const, id: ledger.id, ledger })),
+      ...top.map((ledger) => ({
+        kind: "financial" as const,
+        id: ledger.id,
+        ledger,
+        sublogs: sublogsOf.get(ledger.id) ?? [],
+      })),
     ],
     upcoming,
     recent: past.slice(0, RECENT_LIMIT),
     pastCount: past.length,
   };
+};
+
+/**
+ * Split ledgers into the top level and each parent's sublogs. A sublog nests only when
+ * its parent is in the list; its siblings follow the parent's category order.
+ */
+export const nestSublogs = (
+  ledgers: ReadonlyArray<Ledger>,
+): { top: Ledger[]; sublogsOf: Map<string, Ledger[]> } => {
+  const ids = new Set(ledgers.map((l) => l.id));
+  const sublogsOf = new Map<string, Ledger[]>();
+  const top: Ledger[] = [];
+  for (const ledger of ledgers) {
+    const parentId = ledger.parentLink?.ledgerId;
+    if (parentId && ids.has(parentId)) {
+      sublogsOf.set(parentId, [...(sublogsOf.get(parentId) ?? []), ledger]);
+    } else {
+      top.push(ledger);
+    }
+  }
+  for (const parent of top) {
+    const kids = sublogsOf.get(parent.id);
+    if (!kids) continue;
+    const order = new Map((parent.categories ?? []).map((c) => [c.id, c.order]));
+    const rank = (l: Ledger) => order.get(l.parentLink!.categoryId) ?? Infinity;
+    kids.sort((a, b) => rank(a) - rank(b));
+  }
+  return { top, sublogsOf };
 };
 
 /**

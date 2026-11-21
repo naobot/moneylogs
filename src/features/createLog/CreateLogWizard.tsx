@@ -16,6 +16,10 @@ import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
+import { monthKeyOf, todayInTz } from "@/utils/ledger";
+import { parentChoices } from "@/utils/sublogs";
+import { linkSublog, sublogErrorMessage } from "@/features/ledger/sublogs/sublogApi";
 
 import ControlledInput from "@/components/ControlledInput";
 import Wizard from "@/components/Wizard/Wizard";
@@ -32,6 +36,8 @@ import {
   STEP_LABELS,
   stepsFor,
   stepsForState,
+  sublogLineName,
+  sublogNameError,
   titleError,
   WizardState,
 } from "./wizardSteps";
@@ -47,6 +53,8 @@ const initialState = (defaultCurrency: Currency): WizardState => ({
   endTime: "23:59",
   defaultCurrency,
   inviteFriendIds: [],
+  parentId: null,
+  sublogName: "",
 });
 
 const MODE_OPTIONS: Array<{ mode: LogMode; title: string; lines: string[] }> = [
@@ -94,6 +102,34 @@ export const CreateLogWizard = () => {
 
   const isSubmitting = addNewLogGroup.isLoading || createLedger.isLoading || isInviting;
   const submitFailed = addNewLogGroup.isError || createLedger.isError;
+
+  // Logs this one could be part of (the "parent" step), personal first.
+  const { ledgers: myLedgers } = useGetMyLedgers();
+  const parents = parentChoices(myLedgers, user?.userId ?? "");
+  const parent = parents.find((c) => c.ledger.id === state.parentId)?.ledger;
+
+  // Best effort, like invites: the log exists either way, and can be linked from its
+  // Manage menu later.
+  const linkToParent = async (ledgerId: string) => {
+    if (!parent || !user) return;
+    const sharedParent = (parent.memberUids?.length ?? 1) > 1;
+    try {
+      await linkSublog({
+        childId: ledgerId,
+        parentId: parent.id,
+        name: sublogLineName(state),
+        // A new log has no history: it counts from this month.
+        since: monthKeyOf(todayInTz(user.timezone)),
+      });
+      track("sublog_linked", { from: "wizard", include_past: false, shared_parent: sharedParent });
+    } catch (err) {
+      const { expected } = sublogErrorMessage(err);
+      if (!expected) reportError(err, { feature: "sublogs", action: "link_on_create" });
+      showToast(
+        `Your log is ready, but it doesn't count in ${parent.title} yet. Link it from its manage menu.`,
+      );
+    }
+  };
 
   const goTo = (index: number) => {
     setSearchParams(index === 0 ? {} : { step: String(index) });
@@ -161,6 +197,7 @@ export const CreateLogWizard = () => {
           log_kind: "financial",
           invited_friends: friendsToInvite(state).length,
         });
+        await linkToParent(ledgerId);
         await sendInvites(ledgerId, "ledger");
         void navigate(`/l/${ledgerId}`, { replace: true });
       }
@@ -295,6 +332,74 @@ export const CreateLogWizard = () => {
       );
       break;
 
+    case "parent": {
+      const sharedWith = (parent?.memberUids?.length ?? 1) - 1;
+      body = (
+        <>
+          <h3 className="Wizard__question">part of another log?</h3>
+          <p className="Wizard__hint">
+            Your spending in <span className="keep-case">{state.title.trim()}</span> can also count
+            as one line in a log you already keep, like a trip inside your everyday spending.
+          </p>
+          <div className="Wizard__choices" role="radiogroup" aria-label="Part of">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={state.parentId === null}
+              className={cx("Wizard__choice", {
+                "Wizard__choice--selected": state.parentId === null,
+              })}
+              onClick={() => update({ parentId: null })}
+            >
+              <strong>no, it stands alone</strong>
+            </button>
+            {parents.map(({ ledger, disabledReason }) => {
+              const others = (ledger.memberUids?.length ?? 1) - 1;
+              return (
+                <button
+                  key={ledger.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={state.parentId === ledger.id}
+                  disabled={!!disabledReason}
+                  className={cx("Wizard__choice", {
+                    "Wizard__choice--selected": state.parentId === ledger.id,
+                  })}
+                  onClick={() => update({ parentId: ledger.id })}
+                >
+                  <strong className="keep-case">{ledger.title}</strong>
+                  <span>
+                    {disabledReason ??
+                      (others > 0
+                        ? `shared with ${others} other${others > 1 ? "s" : ""}`
+                        : "just you")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {parent && (
+            <>
+              <ControlledInput
+                label="Counts as"
+                value={state.sublogName || state.title.trim()}
+                onChange={(e) => update({ sublogName: e.target.value })}
+                isError={!!sublogNameError(state.sublogName)}
+                errorMessage={sublogNameError(state.sublogName)}
+              />
+              <p className="Wizard__hint">
+                Its total shows as one line in <span className="keep-case">{parent.title}</span>,
+                from this month on. You log the details here.
+                {sharedWith > 0 &&
+                  ` Everyone in ${parent.title} will see that line; only spending by people in both logs counts there.`}
+              </p>
+            </>
+          )}
+        </>
+      );
+      break;
+    }
+
     case "currency":
       body = (
         <>
@@ -360,6 +465,17 @@ export const CreateLogWizard = () => {
               </>
             ) : (
               <>
+                <dt>Part of</dt>
+                <dd>
+                  {parent ? (
+                    <>
+                      <span className="keep-case">{parent.title}</span>, as{" "}
+                      <span className="keep-case">{sublogLineName(state)}</span>
+                    </>
+                  ) : (
+                    "nothing: it stands alone"
+                  )}
+                </dd>
                 <dt>Default currency</dt>
                 <dd>{state.defaultCurrency}</dd>
                 <dt>Categories</dt>

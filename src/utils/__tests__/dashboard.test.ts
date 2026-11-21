@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vite-plus/test";
-import { arrangeDashboard, groupTiming, memberLabel, RECENT_LIMIT } from "@/utils/dashboard";
+import {
+  arrangeDashboard,
+  groupTiming,
+  memberLabel,
+  nestSublogs,
+  RECENT_LIMIT,
+} from "@/utils/dashboard";
 import dayjs from "@/utils/configuredDayjs";
 import type { Group } from "@/types/user";
 import type { Ledger } from "@/types/ledger";
@@ -110,5 +116,41 @@ describe("memberLabel", () => {
   it("reads naturally", () => {
     expect(memberLabel(1)).toBe("just you");
     expect(memberLabel(4)).toBe("4 members");
+  });
+});
+
+describe("nestSublogs", () => {
+  const link = (parentId: string, categoryId: string) =>
+    ({ ledgerId: parentId, categoryId, since: "2026-11", linkedBy: "u" }) as Ledger["parentLink"];
+  const parent = {
+    id: "personal",
+    title: "personal",
+    categories: [
+      { id: "food", name: "food", order: 0 },
+      { id: "sublog-pip", name: "pip", order: 1 },
+      { id: "sublog-biz", name: "business", order: 2 },
+    ],
+  } as unknown as Ledger;
+  const biz = {
+    id: "biz",
+    title: "business",
+    parentLink: link("personal", "sublog-biz"),
+  } as Ledger;
+  const pip = { id: "pip", title: "pip", parentLink: link("personal", "sublog-pip") } as Ledger;
+  const orphan = { id: "bali", title: "bali", parentLink: link("alices", "c") } as Ledger;
+
+  it("puts sublogs under their parent, in its category order", () => {
+    const { top, sublogsOf } = nestSublogs([biz, parent, orphan, pip]);
+    expect(top.map((l) => l.id)).toEqual(["personal", "bali"]);
+    expect(sublogsOf.get("personal")!.map((l) => l.id)).toEqual(["pip", "biz"]);
+  });
+
+  it("keeps a sublog on its own when its parent isn't on the dashboard", () => {
+    const dashboard = arrangeDashboard({
+      groups: [],
+      ledgers: [parent, biz],
+      user: { archivedLogs: { personal: {} as never } },
+    });
+    expect(dashboard.now.map((i) => i.id)).toEqual(["biz"]);
   });
 });

@@ -4,15 +4,23 @@
  * in this log, so the parent's live month is its entries merged with those docs.
  */
 import { Currency } from "@/types/user";
-import { CurrencyAmounts, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
+import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import { formatDate } from "@/utils/dateFormat";
 import dayjs from "@/utils/configuredDayjs";
 import { EntryDay } from "@/utils/ledgerEntries";
 import { ledgerViewPath } from "@/utils/ledger";
+import { personalLedgerId } from "@/utils/personalLedger";
 import { MonthAggregate } from "@/utils/ledgerStats";
 import { aggregateMonth } from "../../functions/src/ledgerAggregate";
-import { isActiveSublog, MergedMonth, mergeRollups } from "../../functions/src/ledgerRollup";
+import {
+  isActiveSublog,
+  LinkableLedger,
+  LinkError,
+  MergedMonth,
+  mergeRollups,
+  validateLink,
+} from "../../functions/src/ledgerRollup";
 
 export { isActiveSublog };
 
@@ -145,4 +153,62 @@ export const withSublogDays = <T>(
     day.sublogs.sort((a, b) => (order.get(a.categoryId) ?? 0) - (order.get(b.categoryId) ?? 0));
   }
   return [...byDate.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+};
+
+/** Why a log can't be picked as the parent, in a few words for the picker. */
+const PARENT_REASONS: Partial<Record<LinkError, string>> = {
+  "parent-is-sublog": "already a sublog",
+  deleting: "being deleted",
+  "too-many-categories": "has the most categories it can hold",
+};
+
+export type ParentChoice = {
+  ledger: Ledger;
+  /** Set when it can't be the parent: why, in a few words. */
+  disabledReason?: string;
+};
+
+/**
+ * The logs `child` could become a sublog of, for `uid`: every other log they're in,
+ * personal first then the rest as given, each with why it can't be picked (if so). Pass
+ * no child for a log that doesn't exist yet (the create wizard). Same rules as the
+ * server (validateLink), so the picker never offers a link it would refuse.
+ */
+export const parentChoices = (
+  ledgers: ReadonlyArray<Ledger>,
+  uid: string,
+  child?: Ledger,
+): ParentChoice[] => {
+  const candidate: LinkableLedger = child
+    ? { ...child, categories: child.categories as LinkableLedger["categories"] }
+    : { id: "", memberUids: [uid], categories: [] };
+  const choices = ledgers
+    .filter((l) => l.id !== child?.id)
+    .map((ledger) => {
+      const error = validateLink({
+        parent: { ...ledger, categories: ledger.categories as LinkableLedger["categories"] },
+        child: candidate,
+        callerUid: uid,
+      });
+      const reason = error ? (PARENT_REASONS[error] ?? null) : undefined;
+      return { ledger, error, reason };
+    })
+    // Problems with the child itself (it's personal, already linked…) aren't about any
+    // one parent; the caller explains those instead of listing parents.
+    .filter((c) => !c.error || c.reason)
+    .map(({ ledger, reason }) => (reason ? { ledger, disabledReason: reason } : { ledger }));
+  const personal = personalLedgerId(uid);
+  return [
+    ...choices.filter((c) => c.ledger.id === personal),
+    ...choices.filter((c) => c.ledger.id !== personal),
+  ];
+};
+
+/** Why a log can't become a sublog at all (whatever the parent), or null if it can. */
+export const sublogBlocker = (child: Ledger): LinkError | null => {
+  // Any member's personal log (only its owner is ever in it).
+  if (child.id.startsWith("personal-")) return "personal-child";
+  if (child.parentLink) return "child-already-linked";
+  if ((child.categories ?? []).some(isActiveSublog)) return "child-is-parent";
+  return null;
 };
