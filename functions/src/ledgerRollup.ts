@@ -279,3 +279,29 @@ export const parseLinkRequest = (data: unknown): LinkRequest | null => {
     ...(typeof d.name === "string" ? { name: d.name } : {}),
   };
 };
+
+/** People whose spending in the sublog counts in the parent: members of both logs. */
+export const countedUids = (
+  childUids: ReadonlyArray<string> | undefined,
+  parentUids: ReadonlyArray<string> | undefined,
+): string[] => {
+  const parent = new Set(parentUids ?? []);
+  return [...new Set(childUids ?? [])].filter((uid) => parent.has(uid));
+};
+
+/**
+ * Who a membership change starts counting: in both logs after it, not before. They're
+ * told (a `sublog_counted` notification), since their spending now shows in a log whose
+ * other members may not be in the sublog.
+ */
+export const newlyCountedUids = (
+  before: { child?: ReadonlyArray<string>; parent?: ReadonlyArray<string> },
+  after: { child?: ReadonlyArray<string>; parent?: ReadonlyArray<string> },
+): string[] => {
+  const was = new Set(countedUids(before.child, before.parent));
+  return countedUids(after.child, after.parent).filter((uid) => !was.has(uid));
+};
+
+/** One per sublog and parent: a later link or join replaces it rather than stacking. */
+export const sublogCountedNotificationId = (childId: string, parentId: string) =>
+  `sublog_counted_${childId}_${parentId}`;

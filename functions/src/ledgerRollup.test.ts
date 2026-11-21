@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import { aggregateMonth } from "./ledgerAggregate";
 import {
   addLinkedCategory,
+  countedUids,
   hasSublogCategories,
   LinkableLedger,
   linkedCategoryName,
@@ -9,9 +10,11 @@ import {
   MAX_LEDGER_CATEGORIES,
   mergeRollups,
   monthsSince,
+  newlyCountedUids,
   parseLinkRequest,
   rollupDocId,
   rollupFor,
+  sublogCountedNotificationId,
   validateLink,
 } from "./ledgerRollup";
 
@@ -285,5 +288,43 @@ describe("helpers", () => {
     expect(parseLinkRequest({ childId: "c", parentId: "p", since: "nov" })).toBeNull();
     expect(parseLinkRequest({ childId: "c", parentId: "p", since: "2026-11", name: 3 })).toBeNull();
     expect(parseLinkRequest(null)).toBeNull();
+  });
+});
+
+describe("who counts", () => {
+  it("is the people in both logs", () => {
+    expect(countedUids(["alice", "sam", "kai", "sam"], ["alice", "sam", "jo"])).toEqual([
+      "alice",
+      "sam",
+    ]);
+    expect(countedUids(undefined, ["alice"])).toEqual([]);
+  });
+
+  it("finds who a join starts counting, on either side", () => {
+    // Jo joins the sublog; Jo was already in the parent.
+    expect(
+      newlyCountedUids(
+        { child: ["alice"], parent: ["alice", "jo"] },
+        { child: ["alice", "jo"], parent: ["alice", "jo"] },
+      ),
+    ).toEqual(["jo"]);
+    // Sam joins the parent; Sam was already in the sublog.
+    expect(
+      newlyCountedUids(
+        { child: ["alice", "sam"], parent: ["alice"] },
+        { child: ["alice", "sam"], parent: ["alice", "sam"] },
+      ),
+    ).toEqual(["sam"]);
+    // Someone who's only in one log isn't counted.
+    expect(
+      newlyCountedUids(
+        { child: ["alice"], parent: ["alice"] },
+        { child: ["alice", "kai"], parent: ["alice"] },
+      ),
+    ).toEqual([]);
+  });
+
+  it("ids the notification by sublog and parent", () => {
+    expect(sublogCountedNotificationId("bali", "home")).toBe("sublog_counted_bali_home");
   });
 });

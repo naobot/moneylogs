@@ -60,6 +60,11 @@ export const pushCopy = (data: Data): PushCopy | null => {
       return { title, body: `On track to go over ${budgetSubject(data)} this month.` };
     case "log_invite":
       return { title, body: `${actor} invited you to join` };
+    case "sublog_counted":
+      return {
+        title,
+        body: `Your spending here now also counts in ${str(data.parentTitle)}, as one line its members can see.`,
+      };
     case "friend_request":
       return { title, body: `${actor} wants to be friends` };
     case "friend_accepted":

@@ -11,6 +11,9 @@ import {
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
 import {
   addLinkedCategory,
+  countedUids,
+  newlyCountedUids,
+  sublogCountedNotificationId,
   isActiveSublog,
   LINK_ERROR_MESSAGES,
   LinkableCategory,
@@ -24,6 +27,8 @@ import {
   validateLink,
 } from "./ledgerRollup";
 import { reportError, withSentry, withSentryCall } from "./sentry";
+import { callerUserDoc, inbox } from "./friends";
+import { isNotificationEnabled } from "./notificationPrefs";
 
 /**
  * Sublogs: a ledger whose spending also counts as one category of another ledger.
@@ -180,6 +185,68 @@ export const detachSublog = async (db: Firestore, childId: string): Promise<void
   await batch.commit();
 };
 
+/**
+ * Tell people that their spending in a sublog now counts in its parent, where members
+ * who aren't in the sublog can see it: everyone in both logs on a link (bar whoever
+ * linked), and whoever a join starts counting. Best-effort: reported, never thrown, so
+ * a failed notice can't undo a link.
+ */
+const notifyCounted = async (
+  db: Firestore,
+  {
+    childId,
+    parentId,
+    uids,
+    reason,
+    actorName,
+  }: {
+    childId: string;
+    parentId: string;
+    uids: ReadonlyArray<string>;
+    reason: "linked" | "joined";
+    actorName?: string;
+  },
+): Promise<void> => {
+  if (uids.length === 0) return;
+  try {
+    const [child, parent] = await Promise.all([
+      ledgers(db).doc(childId).get(),
+      ledgers(db).doc(parentId).get(),
+    ]);
+    const link = child.get("parentLink") as ParentLink | undefined;
+    if (link?.ledgerId !== parentId) return;
+    const lineName =
+      ((parent.get("categories") as LinkableCategory[] | undefined) ?? []).find(
+        (c) => c.id === link.categoryId,
+      )?.name ?? "";
+    // Everyone being told is in the sublog, so its member refs cover them.
+    const refs = (child.get("members") as DocumentReference[] | undefined) ?? [];
+    const users = refs.length ? await db.getAll(...refs) : [];
+    const wanted = new Set(uids);
+    const batch = db.batch();
+    for (const user of users) {
+      if (!user.exists || !wanted.has(user.get("userId") as string)) continue;
+      if (!isNotificationEnabled(user.data(), "sublog_counted")) continue;
+      batch.set(inbox(db, user.id).doc(sublogCountedNotificationId(childId, parentId)), {
+        type: "sublog_counted",
+        logKind: "ledger",
+        groupId: childId,
+        groupName: (child.get("title") as string | undefined) ?? "",
+        parentId,
+        parentTitle: (parent.get("title") as string | undefined) ?? "",
+        lineName,
+        reason,
+        ...(actorName ? { actorName } : {}),
+        createdAt: FieldValue.serverTimestamp(),
+        readAt: null,
+      });
+    }
+    await batch.commit();
+  } catch (error) {
+    reportError(error, { action: "sublog_counted_notice", level: "warning" });
+  }
+};
+
 /** A parent being deleted: its sublogs stand alone again (its roll-ups go with it). */
 export const releaseSublogs = async (
   db: Firestore,
@@ -212,6 +279,7 @@ export const linkSublog = onCall(
     const childRef = ledgers(db).doc(req.childId);
     const parentRef = ledgers(db).doc(req.parentId);
 
+    let counted: string[] = [];
     const categoryId = await db.runTransaction(async (tx) => {
       const [child, parent] = await Promise.all([tx.get(childRef), tx.get(parentRef)]);
       if (!child.exists || !parent.exists) throw new HttpsError("not-found", "No such log.");
@@ -238,10 +306,20 @@ export const linkSublog = onCall(
         linkedAt: FieldValue.serverTimestamp(),
       };
       tx.update(childRef, { parentLink: link });
+      counted = countedUids(childLedger.memberUids, parentLedger.memberUids);
       return added.categoryId;
     });
 
     await rebuildLink(db, childRef, { replaceFrozen: true });
+    // Everyone else whose spending now shows in the parent hears about it.
+    const me = await callerUserDoc(db, uid).catch(() => null);
+    await notifyCounted(db, {
+      childId: req.childId,
+      parentId: req.parentId,
+      uids: counted.filter((u) => u !== uid),
+      reason: "linked",
+      actorName: (me?.get("displayName") as string | undefined) ?? undefined,
+    });
     return { categoryId };
   }),
 );
@@ -291,14 +369,40 @@ export const rebuildSublogsOnMemberChange = onDocumentUpdated(
     const db = getFirestore();
     const { ledgerId } = event.params;
 
-    if (after.parentLink) await rebuildLink(db, ledgers(db).doc(ledgerId));
+    // This log is a sublog: whoever joined (and is in the parent) starts counting there.
+    const link = after.parentLink as ParentLink | undefined;
+    if (link) {
+      await rebuildLink(db, ledgers(db).doc(ledgerId));
+      const parent = await ledgers(db).doc(link.ledgerId).get();
+      const parentUids = parent.get("memberUids") as string[] | undefined;
+      await notifyCounted(db, {
+        childId: ledgerId,
+        parentId: link.ledgerId,
+        uids: newlyCountedUids(
+          { child: before.memberUids, parent: parentUids },
+          { child: after.memberUids, parent: parentUids },
+        ),
+        reason: "joined",
+      });
+    }
 
+    // This log is a parent: whoever joined (and is in a sublog) starts counting here.
     const categories = (after.categories as LinkableCategory[] | undefined) ?? [];
     for (const c of categories.filter(isActiveSublog)) {
       const childRef = ledgers(db).doc(c.sublog!.ledgerId);
       const child = await childRef.get();
       if ((child.get("parentLink") as ParentLink | undefined)?.ledgerId === ledgerId) {
         await rebuildLink(db, childRef);
+        const childUids = child.get("memberUids") as string[] | undefined;
+        await notifyCounted(db, {
+          childId: childRef.id,
+          parentId: ledgerId,
+          uids: newlyCountedUids(
+            { child: childUids, parent: before.memberUids },
+            { child: childUids, parent: after.memberUids },
+          ),
+          reason: "joined",
+        });
       }
     }
   }),

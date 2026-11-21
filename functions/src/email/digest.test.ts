@@ -121,6 +121,17 @@ describe("digest copy", () => {
     expect(lineText(over.parts)).toBe("over the Food CAD budget in Tokyo Trip");
     expect(over.detail).toBe("CA$1,200.00 of CA$1,000.00");
     expect(over.href).toBe("/l/g1/stats?month=2026-11");
+    const counted = digestLine(
+      item({
+        type: "sublog_counted",
+        logKind: "ledger",
+        parentTitle: "household",
+        lineName: "trip",
+      }),
+    );
+    expect(lineText(counted.parts)).toBe("your spending in Tokyo Trip now counts in household");
+    expect(counted.detail).toBe("it shows there as one line, trip, that its members can see");
+    expect(counted.href).toBe("/l/g1");
     expect(lineText(digestLine(item({ type: "brand_new" })).parts)).toBe(
       "something happened in Tokyo Trip",
     );
