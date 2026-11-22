@@ -345,14 +345,25 @@ export const parseUnlinkRequest = (data: unknown): { linkId: string } | null => 
 };
 
 /**
- * What ending a link does to its roll-ups: months up to `horizon` (see
- * latestCurrentMonth) are frozen, later ones dropped. Already-frozen months are left as
- * they are. Idempotent, so an interrupted clean-up can simply run again.
+ * What ending a link does to its months: the ones up to `horizon` (see latestCurrentMonth)
+ * that have a roll-up or entries in the sublog are kept, rebuilt from those entries and
+ * frozen; roll-ups after it are dropped. Reads only what's there, so an interrupted
+ * clean-up can simply run again.
  */
-export const planLinkCleanup = (
-  rollups: ReadonlyArray<{ month: string; frozen?: boolean }>,
-  horizon: string,
-): { freeze: string[]; drop: string[] } => ({
-  freeze: rollups.filter((r) => r.month <= horizon && !r.frozen).map((r) => r.month),
-  drop: rollups.filter((r) => r.month > horizon).map((r) => r.month),
-});
+export const planLinkCleanup = ({
+  rollupMonths,
+  entryMonths,
+  since,
+  horizon,
+}: {
+  rollupMonths: ReadonlyArray<string>;
+  entryMonths: ReadonlyArray<string>;
+  since: string;
+  horizon: string;
+}): { keep: string[]; drop: string[] } => {
+  const all = [...new Set([...rollupMonths, ...entryMonths])].sort();
+  return {
+    keep: all.filter((m) => m >= since && m <= horizon),
+    drop: [...new Set(rollupMonths)].filter((m) => m > horizon).sort(),
+  };
+};

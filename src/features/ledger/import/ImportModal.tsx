@@ -6,7 +6,7 @@ import CurrencySelect from "@/components/CurrencySelect";
 import { useToastContext } from "@/hooks/useToastContext";
 import { Ledger } from "@/types/ledger";
 import { Currency } from "@/types/user";
-import { activeCategories, formatMonth } from "@/utils/ledger";
+import { entryCategories, formatMonth } from "@/utils/ledger";
 import dayjs from "@/utils/configuredDayjs";
 import { formatDate } from "@/utils/dateFormat";
 import { formatAmount, formatTotals } from "@/utils/ledgerEntries";
@@ -95,7 +95,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
   const [included, setIncluded] = useState<ReadonlySet<string>>(new Set());
 
   const categories = useMemo(() => ledger.categories ?? [], [ledger.categories]);
-  const active = activeCategories(categories);
+  const active = entryCategories(categories);
   const isImporting = progress !== undefined && !importFailed;
 
   const parsed = useMemo<Parsed | undefined>(() => {
