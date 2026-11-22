@@ -13,6 +13,7 @@ import { LedgerStatsStrip } from "./LedgerStats";
 import { sublogPaths } from "@/utils/sublogs";
 import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 import { NoSpendDay } from "@/features/ledger/noSpend/NoSpendDay";
+import SublogCrumb from "@/features/ledger/sublogs/SublogCrumb";
 import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 import { track } from "@/utils/analytics";
 
@@ -104,12 +105,17 @@ const LedgerEntries = ({
         </p>
       )}
 
-      {month === monthKeyOf(today) && !isLoading && (
-        <NoSpendDay
-          today={today}
-          loggedToday={entries.some((e) => e.authorUid === user?.userId && e.date === today)}
-        />
-      )}
+      {/* One row: where a sublog counts on the left, the no-spend button on the right.
+          Either can be absent; an empty row takes no space. */}
+      <div className="Ledger__dayBar">
+        <SublogCrumb ledger={ledger} />
+        {month === monthKeyOf(today) && !isLoading && (
+          <NoSpendDay
+            today={today}
+            loggedToday={entries.some((e) => e.authorUid === user?.userId && e.date === today)}
+          />
+        )}
+      </div>
 
       {isLoading && <p className="Ledger__empty">...</p>}
       {isError && <p className="error-message">Couldn't load entries for {formatMonth(month)}.</p>}

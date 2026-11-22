@@ -441,6 +441,13 @@ h6,
 .MainNav__log {
   flex-shrink: 0;
 
+  // A sublog, right after its parent: smaller, no icon, tucked up close to it.
+  &--sublog {
+    font-size: 0.85em;
+    padding: 0.25em 0.4em;
+    margin-left: calc(-1 * var(--space-1));
+  }
+
   @media (max-width: constants.$breakpoint-sm) {
     max-width: 11em;
 

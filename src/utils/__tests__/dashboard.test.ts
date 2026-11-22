@@ -3,6 +3,7 @@ import {
   arrangeDashboard,
   groupTiming,
   memberLabel,
+  navLedgers,
   nestSublogs,
   RECENT_LIMIT,
 } from "@/utils/dashboard";
@@ -153,5 +154,27 @@ describe("nestSublogs", () => {
       user: { archivedLogs: { personal: {} as never } },
     });
     expect(dashboard.now.map((i) => i.id)).toEqual(["biz"]);
+  });
+});
+
+describe("navLedgers", () => {
+  it("puts each sublog straight after its parent, and only financial logs", () => {
+    const ledger = (id: string) => ({ id, title: id }) as unknown as Ledger;
+    const order = navLedgers([
+      { kind: "social", id: "g", group: {} as never },
+      {
+        kind: "financial",
+        id: "personal",
+        ledger: ledger("personal"),
+        sublogs: [ledger("biz"), ledger("pip")],
+      },
+      { kind: "financial", id: "home", ledger: ledger("home"), sublogs: [] },
+    ]);
+    expect(order.map((o) => [o.ledger.id, o.sublog])).toEqual([
+      ["personal", false],
+      ["biz", true],
+      ["pip", true],
+      ["home", false],
+    ]);
   });
 });

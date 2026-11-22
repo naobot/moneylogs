@@ -125,3 +125,20 @@ export const groupTiming = (
 
 export const memberLabel = (count: number): string =>
   count <= 1 ? "just you" : `${count} members`;
+
+/**
+ * The financial logs for the top bar, in dashboard order, each sublog straight after its
+ * parent (so it always sits to the parent's right). A sublog whose parent isn't listed
+ * is an ordinary entry of its own.
+ */
+export const navLedgers = (
+  now: ReadonlyArray<DashboardItem>,
+): Array<{ ledger: Ledger; sublog: boolean }> =>
+  now.flatMap((item) =>
+    item.kind === "financial"
+      ? [
+          { ledger: item.ledger, sublog: false },
+          ...item.sublogs.map((ledger) => ({ ledger, sublog: true })),
+        ]
+      : [],
+  );

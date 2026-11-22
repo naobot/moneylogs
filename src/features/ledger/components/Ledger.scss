@@ -199,6 +199,48 @@
       font-weight: 400;
       border-width: var(--border-hairline);
     }
+
+    &--sublog {
+      font-weight: 400;
+      border-width: var(--border-hairline);
+    }
+
+    // A sublog the viewer isn't in: listed, but not a link.
+    &--closed {
+      cursor: default;
+      color: var(--ink-muted);
+      border-style: dotted;
+    }
+  }
+
+  &__heading {
+    font-size: 0.75em;
+    color: var(--ink-muted);
+
+    @media (max-width: constants.$breakpoint-md) {
+      align-self: center;
+    }
+  }
+
+  &__glyph {
+    color: var(--ink-muted);
+  }
+}
+
+// On the entries view, above the list: where a sublog counts (left) and the no-spend
+// button (right), sharing one row.
+.Ledger__dayBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+
+  &:empty {
+    display: none;
+  }
+
+  > .NoSpendDay {
+    margin-left: auto;
   }
 }
 
