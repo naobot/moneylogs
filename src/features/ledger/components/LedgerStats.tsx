@@ -3,7 +3,7 @@ import cx from "classnames";
 import { Link } from "react-router-dom";
 
 import { Currency } from "@/types/user";
-import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry } from "@/types/ledger";
+import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
 import { useLedgerMonths } from "@/hooks/useLedgerMonths";
 import { useBudgetSnapshots } from "@/hooks/useBudgetSnapshots";
 import { categoriesForMonth, totalsForMonth } from "@/utils/budgetHistory";
@@ -19,7 +19,6 @@ import Totals from "./Totals";
 import { hasAnyBudget } from "@/utils/ledgerCategories";
 import { canEditTotal } from "@/utils/monthlyBudget";
 import {
-  aggregateEntries,
   BudgetRow,
   BudgetSummary,
   budgetSummary,
@@ -29,7 +28,6 @@ import {
   categoryBarSegments,
   categoryShares,
   CategorySort,
-  currenciesByUse,
   dailySeries,
   memberShares,
   monthElapsedShare,
@@ -38,6 +36,14 @@ import {
   SortedCategoryRow,
   sortCategoryRows,
 } from "@/utils/ledgerStats";
+import {
+  currenciesInMonth,
+  hasSpending,
+  memberNames,
+  mergeMonth,
+  sublogPaths,
+  SublogPaths,
+} from "@/utils/sublogs";
 import { track } from "@/utils/analytics";
 import { storage } from "@/platform";
 
@@ -45,14 +51,19 @@ import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 import RowButton from "@/components/RowButton";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
+import { SublogMark, SublogName } from "@/features/ledger/sublogs/SublogName";
+import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 
 const TREND_MONTHS = 6;
+const NO_ROLLUPS: ReadonlyArray<LedgerRollup> = [];
 
 type LedgerStatsProps = {
   ledger: Ledger;
   month: string;
   today: string;
   entries: ReadonlyArray<LedgerEntry>;
+  /** This month of each sublog, as it counts here (useLedgerRollups). */
+  rollups?: ReadonlyArray<LedgerRollup>;
   isLoading: boolean;
   /** Opens the budgets editor. */
   onEditBudget: () => void;
@@ -61,9 +72,14 @@ type LedgerStatsProps = {
 };
 
 /** Pick the currency to show: an explicit choice if still used, else the most-used one. */
-const useStatsCurrency = (ledger: Ledger, month: string, entries: ReadonlyArray<LedgerEntry>) => {
+const useStatsCurrency = (
+  ledger: Ledger,
+  month: string,
+  entries: ReadonlyArray<LedgerEntry>,
+  rollups: ReadonlyArray<LedgerRollup>,
+) => {
   const [picked, setPicked] = useState<Currency | null>(null);
-  const currencies = useMemo(() => currenciesByUse(entries), [entries]);
+  const currencies = useMemo(() => currenciesInMonth(entries, rollups), [entries, rollups]);
   // Reset an explicit pick when changing month (the new month may not use it).
   useEffect(() => setPicked(null), [month]);
   const currency: Currency =
@@ -81,13 +97,15 @@ export const LedgerStatsStrip = ({
   month,
   today,
   entries,
+  rollups = NO_ROLLUPS,
   isLoading,
   onEditBudget,
 }: LedgerStatsProps) => {
-  const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
-  const { currency } = useStatsCurrency(ledger, month, entries);
+  const agg = useMemo(() => mergeMonth(entries, rollups), [entries, rollups]);
+  const { currency } = useStatsCurrency(ledger, month, entries, rollups);
   const catShares = categoryShares(agg, currency, ledger.categories ?? []);
-  const hasEntries = agg.entryCount > 0;
+  const sublogs = useSublogLinks(ledger.categories ?? []);
+  const hasEntries = hasSpending(agg);
   const currentMonth = monthKeyOf(today);
   const budget = budgetSummary({
     month,
@@ -116,6 +134,7 @@ export const LedgerStatsStrip = ({
             shares={catShares}
             currency={currency}
             categories={ledger.categories ?? []}
+            sublogs={sublogs}
           />
         )}
       </Link>
@@ -156,13 +175,16 @@ export const LedgerStatsPanel = ({
   month,
   today,
   entries,
+  rollups = NO_ROLLUPS,
   isLoading,
   onEditBudget,
   onEditTotal,
 }: LedgerStatsProps) => {
   const [chartMode, setChartMode] = useState<"bars" | "cumulative">("bars");
-  const agg = useMemo(() => aggregateEntries([...entries]), [entries]);
-  const { currency, currencies, setPicked } = useStatsCurrency(ledger, month, entries);
+  const agg = useMemo(() => mergeMonth(entries, rollups), [entries, rollups]);
+  const { currency, currencies, setPicked } = useStatsCurrency(ledger, month, entries, rollups);
+  const sublogLinks = useSublogLinks(ledger.categories ?? []);
+  const sublogs = sublogPaths(sublogLinks, month, monthKeyOf(today));
 
   const trend = trailingMonths(month, TREND_MONTHS);
   const { byMonth, isLoading: monthsLoading } = useLedgerMonths({
@@ -184,9 +206,7 @@ export const LedgerStatsPanel = ({
   const editTotal =
     onEditTotal && canEditTotal(month, today) ? () => onEditTotal(currency) : undefined;
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
-  const names: Record<string, string> = {};
-  for (const e of entries) names[e.authorUid] = e.authorName;
-  const people = isShared ? memberShares(agg, currency, names) : [];
+  const people = isShared ? memberShares(agg, currency, memberNames(entries, rollups)) : [];
 
   const insights = buildInsights({
     month,
@@ -200,7 +220,7 @@ export const LedgerStatsPanel = ({
   const totalsByMonth: Record<string, CurrencyAmounts | undefined> = {};
   for (const m of trend) totalsByMonth[m] = m === month ? agg.totals : byMonth[m]?.totals;
 
-  const hasEntries = agg.entryCount > 0;
+  const hasEntries = hasSpending(agg);
 
   // The trend and "vs last month" need the month summaries: before they're in, earlier
   // months would draw as nothing spent.
@@ -213,7 +233,12 @@ export const LedgerStatsPanel = ({
           {hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}
         </strong>
         {hasEntries && (
-          <CategoryBar shares={catShares} currency={currency} categories={categories} />
+          <CategoryBar
+            shares={catShares}
+            currency={currency}
+            categories={categories}
+            sublogs={sublogs}
+          />
         )}
       </div>
 
@@ -266,6 +291,7 @@ export const LedgerStatsPanel = ({
             currency={currency}
             categories={categories}
             segmentOf={categoryBarSegments(catShares, categories).segmentOf}
+            sublogs={sublogs}
             elapsedShare={monthElapsedShare(month, today)}
             note={
               budget &&
@@ -342,6 +368,7 @@ export const ShareRows = ({
   currency,
   label,
   segmentOf,
+  sublogs,
   showPace = false,
 }: {
   rows: Array<Share & Partial<Pick<SortedCategoryRow, "budget" | "over" | "pace">>>;
@@ -349,6 +376,8 @@ export const ShareRows = ({
   label: string;
   /** Category rows: each row's fill in the stacked bar, shown as a key swatch. */
   segmentOf?: ReadonlyMap<string, BarSegment>;
+  /** Linked categories: the path into each sublog, or null when it can't be opened. */
+  sublogs?: SublogPaths;
   /** Budgeted rows show their pace (1.0× = on pace) instead of the share used. */
   showPace?: boolean;
 }) => (
@@ -357,16 +386,28 @@ export const ShareRows = ({
       const budgeted = row.budget !== undefined;
       const ratio = budgeted ? row.amount / row.budget! : row.share;
       const pace = showPace && row.pace !== undefined ? row.pace : undefined;
+      const isSublog = !!sublogs?.has(row.id);
       return (
         <li key={row.id} className={cx({ "LedgerStats__shares--over": row.over })}>
           <span className="LedgerStats__shares__name">
-            {segmentOf?.has(row.id) && (
+            {segmentOf?.has(row.id) ? (
               <span
-                className={`LedgerStats__swatch LedgerStats__bar__seg--${segmentOf.get(row.id)}`}
+                className={cx(
+                  `LedgerStats__swatch LedgerStats__bar__seg--${segmentOf.get(row.id)}`,
+                  { "LedgerStats__swatch--sublog": isSublog },
+                )}
                 aria-hidden="true"
               />
+            ) : (
+              isSublog && <SublogMark />
             )}
-            <span className="LedgerStats__shares__label">{row.name}</span>
+            <span className="LedgerStats__shares__label">
+              {isSublog ? (
+                <SublogName name={row.name} to={sublogs!.get(row.id) ?? undefined} />
+              ) : (
+                row.name
+              )}
+            </span>
           </span>
           <span
             className={cx("Meter__track LedgerStats__shares__track", {
@@ -434,6 +475,7 @@ export const CategorySection = ({
   currency,
   categories,
   segmentOf,
+  sublogs,
   elapsedShare,
   note,
 }: {
@@ -441,6 +483,7 @@ export const CategorySection = ({
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
   segmentOf: ReadonlyMap<string, BarSegment>;
+  sublogs?: SublogPaths;
   /** How much of the month or period has gone by (0–1), for pace. */
   elapsedShare: number;
   note?: string | null | false;
@@ -483,6 +526,7 @@ export const CategorySection = ({
         currency={currency}
         label="Spending by category"
         segmentOf={segmentOf}
+        sublogs={sublogs}
         showPace={sort === "pace"}
       />
     </>
@@ -585,10 +629,13 @@ export const CategoryBar = ({
   shares,
   currency,
   categories,
+  sublogs,
 }: {
   shares: Share[];
   currency: Currency;
   categories: ReadonlyArray<LedgerCategory>;
+  /** Linked categories get the box-in-box mark on their segment. */
+  sublogs?: ReadonlyMap<string, unknown>;
 }) => {
   const { top, rest } = categoryBarSegments(shares, categories);
   const segments =
@@ -603,7 +650,10 @@ export const CategoryBar = ({
       {segments.map((s, i) => (
         <span
           key={s.id}
-          className={`LedgerStats__bar__seg LedgerStats__bar__seg--${s.id === "__rest" ? "rest" : i}`}
+          className={cx(
+            `LedgerStats__bar__seg LedgerStats__bar__seg--${s.id === "__rest" ? "rest" : i}`,
+            { "LedgerStats__bar__seg--sublog": sublogs?.has(s.id) },
+          )}
           style={{ width: pct(s.share) }}
           title={`${s.name} ${pct(s.share)}`}
         />

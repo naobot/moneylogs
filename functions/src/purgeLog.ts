@@ -3,6 +3,7 @@ import { DocumentData, DocumentReference, FieldValue, Firestore } from "firebase
 import { getStorage } from "firebase-admin/storage";
 import { LogKind, storagePrefixes, uniqueDocIds, userFieldsToDelete } from "./deleteLogPlan";
 import { reportError } from "./sentry";
+import { endSublogLinks } from "./sublogs";
 
 export type PurgeResult = { posts: number; participants: number };
 
@@ -34,8 +35,12 @@ export const purgeLog = async (
   let participantIds: string[];
 
   if (kind === "financial") {
-    // Stop recomputeLedgerMonth (and new entries, via rules) before removing entries.
+    // Stop recomputeLedgerMonth, new entries (via rules) and new sublog links before
+    // removing entries.
     await logRef.update({ deleting: true });
+    // Sublogs: a deleted sublog leaves its parent's past months as they were (frozen),
+    // and a deleted parent's sublogs stand alone again. See sublogs.ts.
+    await endSublogLinks(db, id);
     participantIds = uniqueDocIds(memberRefs);
   } else {
     const posts = await db.collection("log_posts").where("group", "==", logRef).get();

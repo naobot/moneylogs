@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
 import { Currency } from "@/types/user";
@@ -31,6 +32,7 @@ import RowButton from "@/components/RowButton";
 import SpendingChart from "@/features/moneylog/components/LogsSummary/SpendingChart";
 import Totals from "./Totals";
 import { CategoryBar, CategorySection } from "./LedgerStats";
+import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
 
@@ -65,6 +67,12 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
     from: months[0],
   });
 
+  // Linked categories open the sublog's stats for the same period (same ?quarter= / ?year=).
+  const sublogLinks = useSublogLinks(ledger.categories ?? []);
+  const { search } = useLocation();
+  const sublogs = new Map(
+    [...sublogLinks].map(([id, childId]) => [id, childId ? `/l/${childId}/stats${search}` : null]),
+  );
   const [picked, setPicked] = useState<Currency | null>(null);
   const currencies = periodCurrencies(months, byMonth);
   const currency: Currency =
@@ -125,7 +133,12 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
           {hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}
         </strong>
         {hasEntries && (
-          <CategoryBar shares={catShares} currency={currency} categories={categories} />
+          <CategoryBar
+            shares={catShares}
+            currency={currency}
+            categories={categories}
+            sublogs={sublogs}
+          />
         )}
       </div>
 
@@ -185,6 +198,7 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
             currency={currency}
             categories={categories}
             segmentOf={categoryBarSegments(catShares, categories).segmentOf}
+            sublogs={sublogs}
             elapsedShare={periodElapsedShare(months, today)}
             note={
               budget &&

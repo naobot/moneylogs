@@ -175,6 +175,7 @@ Linting and formatting run automatically on staged files pre-commit.
 - **Corners are square by default.** Rounding is a deliberate exception tied to a physical object, with its own token: `--radius-tab` (folder tabs), `--radius-bubble` (speech bubbles). No drop shadows or gradients.
 - **Frames and lines carry meaning:** 1px secondary, 2px container, 3px warning, 4px new activity; solid = committed, dashed = editable, dotted = past.
 - **Variation** comes from 1-bit textures (`src/texture.scss`: `texture()` mixin, `.tex-*`), striped tool-modal headers (`Modal.Header striped`), and text-mode glyphs — not from new colours.
+- **Sublog mark:** a category that is another log rolled up (a sublog) is marked by a box inside a box: an inset 1px frame on its swatch or bar segment (`sublogs/_mark.scss` `nested-frame`, `.SublogMark`), plus `↳` before the name and `›` when the name opens the sublog (`SublogName`). It's drawn with a frame, not a colour, so it holds in mono charts and every theme. Use it only for linked categories.
 - Shared primitives: `Button`, `RowButton` (small row actions), `.LineInput` (dashed inline input), `Modal`, `Drawer`, `Tabs`.
 
 ## Coding and Agent Rules

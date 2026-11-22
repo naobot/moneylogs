@@ -1,5 +1,5 @@
 import { CurrencyAmounts, LedgerCategory } from "@/types/ledger";
-import { activeCategories } from "@/utils/ledger";
+import { entryCategories } from "@/utils/ledger";
 import { sumByCurrency } from "@/utils/ledgerEntries";
 import { storage } from "@/platform";
 import { ImportRow, ImportSource } from "./types";
@@ -38,7 +38,7 @@ export const initialMapping = (
   categories: ReadonlyArray<LedgerCategory>,
   saved: CategoryMapping = {},
 ): CategoryMapping => {
-  const active = activeCategories(categories);
+  const active = entryCategories(categories);
   const activeIds = new Set(active.map((c) => c.id));
   const byName = new Map(active.map((c) => [normalise(c.name), c.id]));
   return Object.fromEntries(
