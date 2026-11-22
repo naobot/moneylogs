@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 
+import { LedgerCategory } from "@/types/ledger";
 import { LedgerView } from "@/utils/ledger";
+import { isActiveSublog } from "@/utils/sublogs";
+import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 import {
   ledgerPeriodPath,
   Period,
@@ -14,10 +17,14 @@ import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
 
 type LedgerSidebarProps = {
   ledgerId: string;
+  /** The log's categories: its live sublogs are listed under the periods. */
+  categories?: ReadonlyArray<LedgerCategory>;
   view: LedgerView;
   period: Period;
   currentMonth: string;
 };
+
+const NO_CATEGORIES: ReadonlyArray<LedgerCategory> = [];
 
 const VIEW_LABELS: Record<LedgerView, string> = { entries: "entries", stats: "stats" };
 const PERIOD_LABELS: Record<PeriodKind, string> = {
@@ -29,11 +36,20 @@ const PERIOD_LABELS: Record<PeriodKind, string> = {
 /**
  * The financial log's left column: which view (entries or stats) and, for stats, how much
  * time to look at (a month, a quarter or a year). Quarters and years are stats-only, so on
- * the entries view picking one moves to stats. Below the md breakpoint it's a strip that
+ * the entries view picking one moves to stats. A parent log then lists its sublogs, each
+ * opening the sublog when you're in it. Below the md breakpoint it's a strip that
  * scrolls sideways, like the social log's member list.
  */
-export const LedgerSidebar = ({ ledgerId, view, period, currentMonth }: LedgerSidebarProps) => {
+export const LedgerSidebar = ({
+  ledgerId,
+  categories = NO_CATEGORIES,
+  view,
+  period,
+  currentMonth,
+}: LedgerSidebarProps) => {
   const { tip } = useLedgerTour();
+  const sublogs = categories.filter(isActiveSublog);
+  const sublogIds = useSublogLinks(categories);
   // Switching period keeps your place: the quarter or year around the month you're on.
   const anchor = periodMonths(period).includes(currentMonth)
     ? currentMonth
@@ -81,6 +97,44 @@ export const LedgerSidebar = ({ ledgerId, view, period, currentMonth }: LedgerSi
           );
         })}
       </div>
+      {sublogs.length > 0 && (
+        <div
+          className="LedgerSidebar__group LedgerSidebar__group--sublogs"
+          role="group"
+          aria-label="Sublogs"
+        >
+          <span className="LedgerSidebar__heading">sublogs</span>
+          {sublogs.map((c) => {
+            const childId = sublogIds.get(c.id);
+            const label = (
+              <span className="LogsMenu__item__content LogsMenu__item__title keep-case">
+                <span className="LedgerSidebar__glyph" aria-hidden="true">
+                  ↳
+                </span>{" "}
+                {c.name}
+              </span>
+            );
+            return childId ? (
+              <Link
+                key={c.id}
+                className={item(false, " LedgerSidebar__item--sublog")}
+                to={`/l/${childId}`}
+              >
+                {label}
+              </Link>
+            ) : (
+              // A sublog you're not in: its line counts here, but there's nothing to open.
+              <span
+                key={c.id}
+                className={item(false, " LedgerSidebar__item--sublog LedgerSidebar__item--closed")}
+                title="A sublog you're not a member of"
+              >
+                {label}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </nav>
   );
 };

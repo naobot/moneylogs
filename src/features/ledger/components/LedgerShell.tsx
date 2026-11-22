@@ -30,7 +30,6 @@ import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
 import SublogSection from "@/features/ledger/sublogs/SublogSection";
-import SublogCrumb from "@/features/ledger/sublogs/SublogCrumb";
 import SublogIntro from "@/features/ledger/sublogs/SublogIntro";
 import { isActiveSublog, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
 import LedgerSidebar from "./LedgerSidebar";
@@ -105,7 +104,6 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   // met the idea yet gets the intro once, after the ledger tour if that's running.
   const inFamily = !!ledger.parentLink || (ledger.categories ?? []).some(isActiveSublog);
   const [introClosed, setIntroClosed] = useState(false);
-  const [introAsked, setIntroAsked] = useState(false);
   const introAuto = inFamily && shouldAutoOpenSublogIntro(user) && !activeTarget && !introClosed;
 
   const spots = spotsLeft(ledger);
@@ -196,12 +194,12 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         <div className="Ledger__layout">
           <LedgerSidebar
             ledgerId={ledger.id}
+            categories={ledger.categories ?? []}
             view={view}
             period={period}
             currentMonth={currentMonth}
           />
           <div className="Ledger__body">
-            <SublogCrumb ledger={ledger} onHelp={() => setIntroAsked(true)} />
             <nav className="Ledger__month" aria-label="Period">
               <div className="Ledger__month__controls">
                 {tip("month", ".Ledger__month__label")}
@@ -246,11 +244,10 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         </div>
       </div>
       <SublogIntro
-        isOpen={introAsked || introAuto}
-        from={introAsked ? "help" : "visit"}
+        isOpen={introAuto}
+        from="visit"
         onClose={() => {
           setIntroClosed(true);
-          setIntroAsked(false);
         }}
         onStart={() => navigate("/create")}
       />

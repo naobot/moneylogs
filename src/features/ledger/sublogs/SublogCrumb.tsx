@@ -1,83 +1,51 @@
-import { Fragment } from "react";
 import { Link } from "react-router-dom";
+import HelpTip from "@/components/HelpTip";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Ledger } from "@/types/ledger";
-import { isActiveSublog, parentInMyLogs, sublogsInMyLogs } from "@/utils/sublogs";
+import { parentInMyLogs } from "@/utils/sublogs";
 import "./sublogs.scss";
 
+const SUBLOG_HELP =
+  "A sublog is a log whose spending also counts as one line in another log, its parent. You log the detail here, and the parent shows the total. Only spending by people who are in both logs counts.";
+
 /**
- * One muted line at the top of a ledger saying where it belongs:
- * - a sublog, to a member of the parent: "↳ your spending here counts as bali in personal ›";
- * - a sublog, to anyone else: that it counts somewhere, without the parent's name (they
- *   can't read that log);
- * - a parent: its sublogs, linked where the viewer is a member.
- * Nothing for a log that is neither.
+ * A small muted line on a sublog's entries view, beside the no-spend button, saying
+ * where it counts:
+ * - to a member of the parent: "↳ your spending here counts as bali in personal ›";
+ * - to anyone else: that it counts somewhere, without the parent's name (they can't read
+ *   that log).
+ * A "?" explains what a sublog is. Nothing for a log that isn't a sublog (a parent lists
+ * its sublogs in the left column instead).
  */
-export const SublogCrumb = ({ ledger, onHelp }: { ledger: Ledger; onHelp?: () => void }) => {
+export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
   const link = ledger.parentLink;
-  const sublogs = (ledger.categories ?? []).filter(isActiveSublog);
-  // Only a log that's part of a family needs the user's logs (names, who can open what).
-  const { ledgers } = useGetMyLedgers({ enabled: !!link || sublogs.length > 0 });
-  if (!link && sublogs.length === 0) return null;
+  // Only a sublog needs the user's logs, to find its parent among them.
+  const { ledgers } = useGetMyLedgers({ enabled: !!link });
+  if (!link) return null;
 
-  const help = onHelp && (
-    <>
-      {" · "}
-      <button type="button" className="SublogHelp" onClick={onHelp}>
-        what&apos;s a sublog?
-      </button>
-    </>
-  );
-
-  if (link) {
-    // The sublog doesn't name its parent: find it among the viewer's own logs.
-    const found = parentInMyLogs(ledger, ledgers);
-    const parent = found?.parent;
-    const line = found?.line?.name;
-    return (
-      <p className="SublogCrumb">
-        <span className="SublogName__glyph" aria-hidden="true">
-          ↳
-        </span>{" "}
-        {parent ? (
-          <>
-            your spending here counts as{" "}
-            <Link to={`/l/${parent.id}/stats`} className="keep-case">
-              {line ?? ledger.title}
-            </Link>{" "}
-            in{" "}
-            <Link to={`/l/${parent.id}`} className="keep-case">
-              {parent.title} ›
-            </Link>
-          </>
-        ) : (
-          "a member also counts their spending here in another log."
-        )}
-        {help}
-      </p>
-    );
-  }
-
-  const childOf = sublogsInMyLogs(ledger.categories ?? [], ledgers);
+  // The sublog doesn't name its parent: find it among the viewer's own logs.
+  const found = parentInMyLogs(ledger, ledgers);
+  const parent = found?.parent;
   return (
     <p className="SublogCrumb">
-      sublogs:{" "}
-      {sublogs.map((c, i) => {
-        const childId = childOf.get(c.id);
-        return (
-          <Fragment key={c.id}>
-            {i > 0 && " · "}
-            {childId ? (
-              <Link to={`/l/${childId}`} className="keep-case">
-                {c.name}
-              </Link>
-            ) : (
-              <span className="keep-case">{c.name}</span>
-            )}
-          </Fragment>
-        );
-      })}
-      {help}
+      <span className="SublogName__glyph" aria-hidden="true">
+        ↳
+      </span>{" "}
+      {parent ? (
+        <>
+          your spending here counts as{" "}
+          <Link to={`/l/${parent.id}/stats`} className="keep-case">
+            {found?.line?.name ?? ledger.title}
+          </Link>{" "}
+          in{" "}
+          <Link to={`/l/${parent.id}`} className="keep-case">
+            {parent.title} ›
+          </Link>
+        </>
+      ) : (
+        "a member also counts their spending here in another log"
+      )}{" "}
+      <HelpTip label="What's a sublog?">{SUBLOG_HELP}</HelpTip>
     </p>
   );
 };

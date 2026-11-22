@@ -6,7 +6,7 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { useCurrentUser } from "@/contexts";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
-import { arrangeDashboard } from "@/utils/dashboard";
+import { arrangeDashboard, navLedgers } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
@@ -31,12 +31,13 @@ const MainNav = () => {
   // Same arrangement as the Home dashboard, so the nav and Home always agree: archived
   // logs left out, ongoing groups ending soonest first, then financial logs. Past groups
   // stay on Home and /me — the nav only lists what's ongoing, to keep the header short.
+  // Sublogs follow their parent, as smaller buttons.
   const { now } = arrangeDashboard({
     groups: groupsQuery.allGroups,
     ledgers: ledgersQuery.ledgers,
     user,
   });
-  const ledgers = now.flatMap((item) => (item.kind === "financial" ? [item.ledger] : []));
+  const ledgers = navLedgers(now);
   const currentGroups = now.flatMap((item) => (item.kind === "social" ? [item.group] : []));
 
   // Home is a list of logs now, so only highlight the log actually being viewed.
@@ -81,18 +82,30 @@ const MainNav = () => {
           {/* Financial logs never end, so they're always listed — independently of
               whether the social groups query has loaded. */}
           {!userLoading &&
-            ledgers.map((ledger) => (
-              <Button
-                key={ledger.id}
-                to={`/l/${ledger.id}`}
-                title={ledger.title}
-                text={ledger.title}
-                icon="dollar"
-                variant="toggle"
-                className="MainNav__log"
-                isSelected={highlightedGroupId == ledger.id}
-              />
-            ))}
+            ledgers.map(({ ledger, sublog }) =>
+              sublog ? (
+                <Button
+                  key={ledger.id}
+                  to={`/l/${ledger.id}`}
+                  title={`${ledger.title} (a sublog)`}
+                  text={`↳ ${ledger.title}`}
+                  variant="toggle"
+                  className="MainNav__log MainNav__log--sublog"
+                  isSelected={highlightedGroupId == ledger.id}
+                />
+              ) : (
+                <Button
+                  key={ledger.id}
+                  to={`/l/${ledger.id}`}
+                  title={ledger.title}
+                  text={ledger.title}
+                  icon="dollar"
+                  variant="toggle"
+                  className="MainNav__log"
+                  isSelected={highlightedGroupId == ledger.id}
+                />
+              ),
+            )}
           {isLoading && <div>...</div>}
           {isSuccess &&
             !userLoading &&
