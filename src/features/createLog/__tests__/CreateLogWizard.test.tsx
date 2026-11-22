@@ -11,11 +11,22 @@ const personal = vi.hoisted(() => ({
   ledger: { id: "personal-uid-1", title: "personal" } as { id: string; title: string } | undefined,
   queriedId: undefined as string | undefined,
 }));
+const me = vi.hoisted(() => ({
+  tutorials: { sublogIntro: { seconds: 1 } } as { sublogIntro?: unknown },
+}));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({
-    user: { id: "doc-1", userId: "uid-1", displayName: "Nao", personalLedgerId: "personal-uid-1" },
+    user: {
+      id: "doc-1",
+      userId: "uid-1",
+      displayName: "Nao",
+      personalLedgerId: "personal-uid-1",
+      tutorials: me.tutorials,
+    },
   }),
 }));
+const updateUserFields = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/hooks/useUserQuery", () => ({ updateUserFields }));
 vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast: vi.fn() }) }));
 const linkSublog = vi.hoisted(() => vi.fn(async () => ({ categoryId: "sublog-new-ledger" })));
 vi.mock("@/features/ledger/sublogs/sublogApi", () => ({
@@ -70,6 +81,8 @@ describe("CreateLogWizard", () => {
     addNewLogGroupMutate.mockClear();
     inviteFriendsToLog.mockClear();
     linkSublog.mockClear();
+    updateUserFields.mockClear();
+    me.tutorials = { sublogIntro: { seconds: 1 } };
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -253,5 +266,32 @@ describe("CreateLogWizard", () => {
     await click("Back");
     const title = Array.from(container.querySelectorAll("input")).find((i) => i.value === "Home");
     expect(title).toBeDefined();
+  });
+
+  it("opens the sublog intro the first time someone reaches the step, and records it", async () => {
+    me.tutorials = {};
+    await click("Financial");
+    typeInto("Title", "Bali 2026");
+    expect(document.querySelector(".Slides")).toBeNull();
+    await click("Next");
+    expect(question()).toMatch(/part of another log/);
+    expect(document.querySelector(".Slides")).not.toBeNull();
+    const skip = Array.from(document.querySelectorAll(".Slides button")).find(
+      (b) => b.textContent === "skip",
+    ) as HTMLButtonElement;
+    await act(async () => skip.click());
+    expect(document.querySelector(".Slides")).toBeNull();
+    expect(updateUserFields).toHaveBeenCalledWith("doc-1", {
+      "tutorials.sublogIntro": expect.anything(),
+    });
+  });
+
+  it("replays the intro from its link, but doesn't open it again by itself", async () => {
+    await click("Financial");
+    typeInto("Title", "Bali 2026");
+    await click("Next");
+    expect(document.querySelector(".Slides")).toBeNull();
+    await click("what's a sublog?");
+    expect(document.querySelector(".Slides")).not.toBeNull();
   });
 });

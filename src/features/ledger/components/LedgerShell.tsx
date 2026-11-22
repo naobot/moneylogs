@@ -31,6 +31,8 @@ import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
 import SublogSection from "@/features/ledger/sublogs/SublogSection";
 import SublogCrumb from "@/features/ledger/sublogs/SublogCrumb";
+import SublogIntro from "@/features/ledger/sublogs/SublogIntro";
+import { isActiveSublog, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
 import LedgerSidebar from "./LedgerSidebar";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { creatorUid } from "@/utils/logOwnership";
@@ -83,7 +85,7 @@ export const LedgerShell = (props: LedgerShellProps) => (
 
 const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const { user } = useCurrentUser();
-  const { tip } = useLedgerTour();
+  const { tip, activeTarget } = useLedgerTour();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   // One buddy, never two (each would ask its own questions): in the right-hand column
@@ -98,6 +100,13 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [showImport, setShowImport] = useState(false);
   const [showShareToday, setShowShareToday] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
+
+  // A log that's part of a family (a sublog, or a parent): someone arriving who hasn't
+  // met the idea yet gets the intro once, after the ledger tour if that's running.
+  const inFamily = !!ledger.parentLink || (ledger.categories ?? []).some(isActiveSublog);
+  const [introClosed, setIntroClosed] = useState(false);
+  const [introAsked, setIntroAsked] = useState(false);
+  const introAuto = inFamily && shouldAutoOpenSublogIntro(user) && !activeTarget && !introClosed;
 
   const spots = spotsLeft(ledger);
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
@@ -192,7 +201,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             currentMonth={currentMonth}
           />
           <div className="Ledger__body">
-            <SublogCrumb ledger={ledger} />
+            <SublogCrumb ledger={ledger} onHelp={() => setIntroAsked(true)} />
             <nav className="Ledger__month" aria-label="Period">
               <div className="Ledger__month__controls">
                 {tip("month", ".Ledger__month__label")}
@@ -236,6 +245,15 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
           </div>
         </div>
       </div>
+      <SublogIntro
+        isOpen={introAsked || introAuto}
+        from={introAsked ? "help" : "visit"}
+        onClose={() => {
+          setIntroClosed(true);
+          setIntroAsked(false);
+        }}
+        onStart={() => navigate("/create")}
+      />
       {showShareToday && (
         <ShareCardModal
           card="daily"

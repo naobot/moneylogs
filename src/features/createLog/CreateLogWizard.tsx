@@ -18,7 +18,8 @@ import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { monthKeyOf, todayInTz } from "@/utils/ledger";
-import { parentChoices } from "@/utils/sublogs";
+import { parentChoices, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
+import SublogIntro from "@/features/ledger/sublogs/SublogIntro";
 import { linkSublog, sublogErrorMessage } from "@/features/ledger/sublogs/sublogApi";
 
 import ControlledInput from "@/components/ControlledInput";
@@ -107,6 +108,10 @@ export const CreateLogWizard = () => {
   const { ledgers: myLedgers } = useGetMyLedgers();
   const parents = parentChoices(myLedgers, user?.userId ?? "");
   const parent = parents.find((c) => c.ledger.id === state.parentId)?.ledger;
+  // "What's a sublog?": opens by itself the first time someone reaches the step, and
+  // from its link any time.
+  const [introClosed, setIntroClosed] = useState(false);
+  const [introAsked, setIntroAsked] = useState(false);
 
   // Best effort, like invites: the log exists either way, and can be linked from its
   // Manage menu later.
@@ -339,7 +344,10 @@ export const CreateLogWizard = () => {
           <h3 className="Wizard__question">part of another log?</h3>
           <p className="Wizard__hint">
             Your spending in <span className="keep-case">{state.title.trim()}</span> can also count
-            as one line in a log you already keep, like a trip inside your everyday spending.
+            as one line in a log you already keep, like a trip inside your everyday spending.{" "}
+            <button type="button" className="SublogHelp" onClick={() => setIntroAsked(true)}>
+              what&apos;s a sublog?
+            </button>
           </p>
           <div className="Wizard__choices" role="radiogroup" aria-label="Part of">
             <button
@@ -495,22 +503,34 @@ export const CreateLogWizard = () => {
     i === 2 && !state.mode ? "Details" : STEP_LABELS[s],
   );
 
+  const introAuto = step === "parent" && shouldAutoOpenSublogIntro(user) && !introClosed;
+
   return (
-    <Wizard
-      className="CreateNewLog CreateLogWizard"
-      labels={labels}
-      stepIndex={stepIndex}
-      onBack={() => goTo(stepIndex - 1)}
-      onNext={handleNext}
-      showNext={step !== "type"}
-      nextText={
-        isLast ? (state.mode === "social" ? "Start log group" : "Start financial log") : "Next"
-      }
-      nextDisabled={!canAdvance || (isLast && !user?.userId)}
-      busy={isSubmitting}
-    >
-      {body}
-    </Wizard>
+    <>
+      <SublogIntro
+        isOpen={introAsked || introAuto}
+        from={introAsked ? "help" : "wizard"}
+        onClose={() => {
+          setIntroClosed(true);
+          setIntroAsked(false);
+        }}
+      />
+      <Wizard
+        className="CreateNewLog CreateLogWizard"
+        labels={labels}
+        stepIndex={stepIndex}
+        onBack={() => goTo(stepIndex - 1)}
+        onNext={handleNext}
+        showNext={step !== "type"}
+        nextText={
+          isLast ? (state.mode === "social" ? "Start log group" : "Start financial log") : "Next"
+        }
+        nextDisabled={!canAdvance || (isLast && !user?.userId)}
+        busy={isSubmitting}
+      >
+        {body}
+      </Wizard>
+    </>
   );
 };
 

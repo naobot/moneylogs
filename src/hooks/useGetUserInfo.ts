@@ -26,6 +26,8 @@ export type UserTutorials = {
   ledgerTour?: Timestamp;
   /** When the Home nudge pointing at the personal ledger was dismissed or followed. */
   ledgerNudge?: Timestamp;
+  /** When the "what's a sublog?" slides were first closed (read or skipped). */
+  sublogIntro?: Timestamp;
 };
 
 export type UserData = {

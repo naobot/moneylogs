@@ -50,6 +50,11 @@ export type AnalyticsEvents = {
   sublog_linked: { from: "wizard" | "log_actions"; include_past: boolean; shared_parent: boolean };
   /** A sublog link ended, from the sublog's side or the parent's. */
   sublog_unlinked: { from: "sublog" | "parent" };
+  /** The "what's a sublog?" slides closed: where they opened, and whether read to the end. */
+  sublog_intro: {
+    from: "wizard" | "link_form" | "visit" | "help";
+    result: "finished" | "skipped";
+  };
 
   // Social / profile
   update_profile: Record<string, never>;

@@ -37,6 +37,7 @@ export type UserFieldsPatch = UpdateData<{
   onboardingPending: boolean | FieldValue;
   avatar: string[] | null;
   "tutorials.ledgerNudge": FieldValue;
+  "tutorials.sublogIntro": FieldValue;
   emailPaused: boolean;
   showFriends: boolean;
   hideFromFriendLists: boolean;

@@ -212,3 +212,8 @@ export const sublogBlocker = (child: Ledger): LinkError | null => {
   if ((child.categories ?? []).some(isActiveSublog)) return "child-is-parent";
   return null;
 };
+
+/** Whether to open the intro by itself: only for someone who has never seen it. */
+export const shouldAutoOpenSublogIntro = (
+  user: { tutorials?: { sublogIntro?: unknown } } | null | undefined,
+): boolean => !!user && !user.tutorials?.sublogIntro;

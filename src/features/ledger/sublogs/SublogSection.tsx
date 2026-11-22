@@ -10,7 +10,13 @@ import { Ledger } from "@/types/ledger";
 import { track } from "@/utils/analytics";
 import { formatMonth, MAX_CATEGORY_NAME_LENGTH, monthKeyOf, todayInTz } from "@/utils/ledger";
 import { reportError } from "@/utils/reportError";
-import { isActiveSublog, parentChoices, sublogBlocker } from "@/utils/sublogs";
+import {
+  isActiveSublog,
+  parentChoices,
+  shouldAutoOpenSublogIntro,
+  sublogBlocker,
+} from "@/utils/sublogs";
+import SublogIntro from "./SublogIntro";
 import { ALL_MONTHS, linkSublog, sublogErrorMessage, unlinkSublog } from "./sublogApi";
 import { SublogName } from "./SublogName";
 
@@ -171,8 +177,12 @@ const LinkForm = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyArray<
   const [error, setError] = useState<string | null>(null);
   const parentFieldId = useId();
   const nameFieldId = useId();
+  // "What's a sublog?" opens over the Manage window the first time the form shows.
+  const [introClosed, setIntroClosed] = useState(false);
+  const [introAsked, setIntroAsked] = useState(false);
 
   if (!user || !choices.some((c) => !c.disabledReason)) return null;
+  const introAuto = shouldAutoOpenSublogIntro(user) && !introClosed;
   const chosenId = parentId || firstOpen;
   const parent = choices.find((c) => c.ledger.id === chosenId)?.ledger;
   const sharedWith = (parent?.memberUids?.length ?? 1) - 1;
@@ -207,7 +217,20 @@ const LinkForm = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyArray<
   return (
     <section className="LogActions__section SublogSection">
       <h4>part of another log</h4>
-      <p>Count the spending here as one line in another of your logs.</p>
+      <SublogIntro
+        isOpen={introAsked || introAuto}
+        from={introAsked ? "help" : "link_form"}
+        onClose={() => {
+          setIntroClosed(true);
+          setIntroAsked(false);
+        }}
+      />
+      <p>
+        Count the spending here as one line in another of your logs.{" "}
+        <button type="button" className="SublogHelp" onClick={() => setIntroAsked(true)}>
+          what&apos;s a sublog?
+        </button>
+      </p>
       <div className="SublogSection__field">
         <label htmlFor={parentFieldId}>part of</label>
         <select

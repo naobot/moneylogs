@@ -1,4 +1,12 @@
-import React, { useEffect, MouseEvent, ReactNode, createContext, useContext } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  MouseEvent,
+  ReactNode,
+  createContext,
+  useContext,
+} from "react";
 import { createPortal } from "react-dom";
 import Button from "./Button";
 
@@ -23,6 +31,9 @@ const getModalRoot = (): HTMLElement => {
   return modalRoot;
 };
 
+/** Open modals, oldest first: the last one is on top. */
+const openModals: object[] = [];
+
 // Main Modal component (container)
 interface ModalProps {
   isOpen: boolean;
@@ -45,24 +56,31 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  // escape key and body scroll management
+  // Escape and body scroll. Modals can stack (an explainer opened from inside a tool
+  // modal): only the topmost one answers Escape, and the page stays locked until the
+  // last one closes. The stack order is set when each opens, not as they re-render.
+  const [token] = useState(() => ({}));
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+  useEffect(() => {
+    if (!isOpen) return;
+    openModals.push(token);
+    document.body.style.overflow = "hidden";
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && onClose) {
-        onClose();
+      if (e.key === "Escape" && openModals[openModals.length - 1] === token) {
+        onCloseRef.current?.();
       }
     };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
+    document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
+      const at = openModals.indexOf(token);
+      if (at !== -1) openModals.splice(at, 1);
+      if (openModals.length === 0) document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, token]);
 
   if (!isOpen) return null;
 

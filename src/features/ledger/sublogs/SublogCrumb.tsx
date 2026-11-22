@@ -13,12 +13,21 @@ import "./sublogs.scss";
  * - a parent: its sublogs, linked where the viewer is a member.
  * Nothing for a log that is neither.
  */
-export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
+export const SublogCrumb = ({ ledger, onHelp }: { ledger: Ledger; onHelp?: () => void }) => {
   const link = ledger.parentLink;
   const sublogs = (ledger.categories ?? []).filter(isActiveSublog);
   // Only a log that's part of a family needs the user's logs (names, who can open what).
   const { ledgers } = useGetMyLedgers({ enabled: !!link || sublogs.length > 0 });
   if (!link && sublogs.length === 0) return null;
+
+  const help = onHelp && (
+    <>
+      {" · "}
+      <button type="button" className="SublogHelp" onClick={onHelp}>
+        what&apos;s a sublog?
+      </button>
+    </>
+  );
 
   if (link) {
     const parent = ledgers.find((l) => l.id === link.ledgerId);
@@ -42,6 +51,7 @@ export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
         ) : (
           "a member also counts their spending here in another log."
         )}
+        {help}
       </p>
     );
   }
@@ -65,6 +75,7 @@ export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
           </Fragment>
         );
       })}
+      {help}
     </p>
   );
 };
