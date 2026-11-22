@@ -340,13 +340,19 @@ const notifyCounted = async (
       ((parent.get("categories") as LinkableCategory[] | undefined) ?? []).find(
         (c) => c.id === data.categoryId,
       )?.name ?? "";
-    // Everyone being told is in the sublog, so its member refs cover them.
-    const refs = (child.get("members") as DocumentReference[] | undefined) ?? [];
-    const users = refs.length ? await db.getAll(...refs) : [];
-    const wanted = new Set(uids);
+    // Looked up by uid in users/, never through the sublog's member refs: those can point
+    // at any document, which would send the notice (and the parent's id) to its inbox.
+    const users: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    const unique = [...new Set(uids)];
+    for (let i = 0; i < unique.length; i += 30) {
+      const found = await db
+        .collection("users")
+        .where("userId", "in", unique.slice(i, i + 30))
+        .get();
+      users.push(...found.docs);
+    }
     const id = sublogCountedNotificationId(linkId);
     for (const user of users) {
-      if (!user.exists || !wanted.has(user.get("userId") as string)) continue;
       if (!isNotificationEnabled(user.data(), "sublog_counted")) continue;
       const box = inbox(db, user.id);
       const batch = db.batch();
