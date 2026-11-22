@@ -37,8 +37,9 @@ export const purgeLog = async (
   if (kind === "financial") {
     // Sublogs: a deleted sublog leaves its parent's past months as they were (frozen),
     // and a deleted parent's sublogs stand alone again. See sublogs.ts.
-    if (data.parentLink) await detachSublog(db, id);
-    await releaseSublogs(db, id, data.categories);
+    const linkId = (data.parentLink as { linkId?: string } | undefined)?.linkId;
+    if (linkId) await detachSublog(db, linkId);
+    await releaseSublogs(db, id);
     // Stop recomputeLedgerMonth (and new entries, via rules) before removing entries.
     await logRef.update({ deleting: true });
     participantIds = uniqueDocIds(memberRefs);

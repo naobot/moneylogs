@@ -3,7 +3,6 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { rewardLoggedEntry } from "./ledger";
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
-import { hasSublogCategories } from "./ledgerRollup";
 import { rollUpMonth } from "./sublogs";
 import {
   ExistingEntry,
@@ -176,7 +175,7 @@ export const importLedgerEntries = onCall(
       // What the entry trigger does per entry, done once for the batch: it skips these.
       for (const month of importMonths(rows)) {
         const aggregate = await recomputeMonth(db, ledgerRef, month, {
-          withRollups: hasSublogCategories(ledger.get("categories")),
+          withRollups: ledger.get("hasRollups") === true,
         });
         await alertBudgetsIfCurrent({
           db,
@@ -185,7 +184,8 @@ export const importLedgerEntries = onCall(
           month,
           aggregate,
         });
-        if (ledger.get("parentLink")) await rollUpMonth(db, ledgerRef, month);
+        const linkId = ledger.get("parentLink.linkId") as string | undefined;
+        if (linkId) await rollUpMonth(db, linkId, month);
       }
       // Importing counts as logging: check-in (copper coin) and the knick-knack roll.
       await rewardLoggedEntry({

@@ -4,7 +4,9 @@ import { createRoot } from "react-dom/client";
 import { LedgerCategory } from "@/types/ledger";
 
 const myLedgers = vi.hoisted(() =>
-  vi.fn((_opts?: { enabled?: boolean }) => ({ ledgers: [{ id: "biz" }] })),
+  vi.fn((_opts?: { enabled?: boolean }) => ({
+    ledgers: [{ id: "biz", parentLink: { linkId: "L-biz" } }],
+  })),
 );
 vi.mock("@/hooks/useGetMyLedgers", () => ({ useGetMyLedgers: myLedgers }));
 
@@ -34,8 +36,8 @@ describe("useSublogLinks", () => {
 
   it("links the sublogs the viewer is in, and not the others", () => {
     const links = run([
-      { id: "sublog-biz", name: "business", order: 0, sublog: { ledgerId: "biz" } },
-      { id: "sublog-bali", name: "bali", order: 1, sublog: { ledgerId: "bali" } },
+      { id: "sublog-biz", name: "business", order: 0, sublog: { linkId: "L-biz" } },
+      { id: "sublog-bali", name: "bali", order: 1, sublog: { linkId: "L-bali" } },
     ]);
     expect(myLedgers).toHaveBeenCalledWith({ enabled: true });
     expect([...links]).toEqual([

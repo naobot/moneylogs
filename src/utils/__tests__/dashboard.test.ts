@@ -120,24 +120,25 @@ describe("memberLabel", () => {
 });
 
 describe("nestSublogs", () => {
-  const link = (parentId: string, categoryId: string) =>
-    ({ ledgerId: parentId, categoryId, since: "2026-11", linkedBy: "u" }) as Ledger["parentLink"];
+  // A sublog names only its link; the parent's line carries the same link id.
+  const link = (linkId: string, categoryId: string) =>
+    ({ linkId, categoryId, since: "2026-11", linkedBy: "u" }) as Ledger["parentLink"];
   const parent = {
     id: "personal",
     title: "personal",
     categories: [
       { id: "food", name: "food", order: 0 },
-      { id: "sublog-pip", name: "pip", order: 1 },
-      { id: "sublog-biz", name: "business", order: 2 },
+      { id: "sublog-pip", name: "pip", order: 1, sublog: { linkId: "L-pip" } },
+      { id: "sublog-biz", name: "business", order: 2, sublog: { linkId: "L-biz" } },
     ],
   } as unknown as Ledger;
   const biz = {
     id: "biz",
     title: "business",
-    parentLink: link("personal", "sublog-biz"),
+    parentLink: link("L-biz", "sublog-biz"),
   } as Ledger;
-  const pip = { id: "pip", title: "pip", parentLink: link("personal", "sublog-pip") } as Ledger;
-  const orphan = { id: "bali", title: "bali", parentLink: link("alices", "c") } as Ledger;
+  const pip = { id: "pip", title: "pip", parentLink: link("L-pip", "sublog-pip") } as Ledger;
+  const orphan = { id: "bali", title: "bali", parentLink: link("L-elsewhere", "c") } as Ledger;
 
   it("puts sublogs under their parent, in its category order", () => {
     const { top, sublogsOf } = nestSublogs([biz, parent, orphan, pip]);

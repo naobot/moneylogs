@@ -153,7 +153,11 @@ export const CategoryDetail = ({
       ) : (
         <Section
           help={
-            lastActive ? "A log needs at least one category, so this one has to stay." : undefined
+            lastActive
+              ? "A log needs at least one category, so this one has to stay."
+              : category.sublog
+                ? "This line was a sublog, and its past months still hold that log's totals, so it can be archived but not deleted."
+                : undefined
           }
         >
           <div className="CategoryDetail__buttons">
@@ -182,7 +186,7 @@ export const CategoryDetail = ({
               variant="secondary"
               className="CategoryDetail__delete"
               aria-label={`Delete ${name}`}
-              disabled={lastActive}
+              disabled={lastActive || !!category.sublog}
               onClick={onDelete}
             />
           </div>
