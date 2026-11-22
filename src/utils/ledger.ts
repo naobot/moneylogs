@@ -73,6 +73,10 @@ export const sortCategories = (categories: ReadonlyArray<LedgerCategory>): Ledge
 export const activeCategories = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] =>
   sortCategories(categories.filter((c) => !c.archived));
 
+/** Categories an entry can go in: active ones, minus sublog lines (filled by roll-ups only). */
+export const entryCategories = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] =>
+  activeCategories(categories).filter((c) => !c.sublog);
+
 /** Look a category up by id; unknown ids resolve to a placeholder so old entries still render. */
 export const resolveCategory = (
   id: string,
@@ -97,7 +101,7 @@ export const validateEntry = (
   if (!isCurrency(entry.currency)) errors.push("currency");
   const category = categories.find((c) => c.id === entry.categoryId);
   // Archived categories are allowed so existing entries can still be edited.
-  if (!category) errors.push("category");
+  if (!category || category.sublog) errors.push("category");
   if (typeof entry.date !== "string" || !isValidDateKey(entry.date)) errors.push("date");
   if (entry.note !== undefined && entry.note.length > MAX_NOTE_LENGTH) errors.push("note");
   return errors;

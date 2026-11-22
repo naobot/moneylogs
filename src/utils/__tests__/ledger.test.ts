@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import {
   DEFAULT_CATEGORIES,
   activeCategories,
+  entryCategories,
   formatMonth,
   isValidDateKey,
   isValidMonthKey,
@@ -84,6 +85,12 @@ describe("categories", () => {
     expect(activeCategories(CATS).map((c) => c.id)).toEqual(["a", "b"]);
   });
 
+  it("leaves sublog lines out of entry categories", () => {
+    const cats = [...CATS, { id: "sublog-l1", name: "Trip", order: 3, sublog: { linkId: "l1" } }];
+    expect(activeCategories(cats).map((c) => c.id)).toEqual(["a", "b", "sublog-l1"]);
+    expect(entryCategories(cats).map((c) => c.id)).toEqual(["a", "b"]);
+  });
+
   it("resolves archived and unknown categories", () => {
     expect(resolveCategory("z", CATS).name).toBe("Zulu");
     expect(resolveCategory("gone", CATS)).toMatchObject({ id: "gone", name: "Uncategorised" });
@@ -99,6 +106,11 @@ describe("validateEntry", () => {
 
   it("allows archived categories so old entries stay editable", () => {
     expect(validateEntry({ ...valid, categoryId: "z" }, CATS)).toEqual([]);
+  });
+
+  it("rejects sublog lines, which only roll-ups fill", () => {
+    const cats = [...CATS, { id: "sublog-l1", name: "Trip", order: 3, sublog: { linkId: "l1" } }];
+    expect(validateEntry({ ...valid, categoryId: "sublog-l1" }, cats)).toEqual(["category"]);
   });
 
   it("rejects non-positive or non-finite amounts", () => {

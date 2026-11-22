@@ -2,7 +2,7 @@ import { useCurrentUser } from "@/contexts";
 import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
 import { useLedgerEntryQuery } from "@/hooks/useLedgerEntryQuery";
 import { Ledger as LedgerType, LedgerEntryInput } from "@/types/ledger";
-import { activeCategories, formatMonth, monthKeyOf } from "@/utils/ledger";
+import { entryCategories, formatMonth, monthKeyOf } from "@/utils/ledger";
 import { defaultEntryDate } from "@/utils/ledgerEntries";
 import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
@@ -37,7 +37,7 @@ const LedgerEntries = ({
 
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const categories = ledger.categories ?? [];
-  const firstCategory = activeCategories(categories)[0]?.id ?? "";
+  const firstCategory = entryCategories(categories)[0]?.id ?? "";
 
   const handleAdd = async (input: LedgerEntryInput) => {
     if (!user) throw new Error("Not signed in");

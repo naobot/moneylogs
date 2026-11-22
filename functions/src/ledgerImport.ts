@@ -116,9 +116,16 @@ export const importLedgerEntries = onCall(
       throw new HttpsError("permission-denied", "Not a member of this log.");
     }
 
-    const categories = (ledger.get("categories") ?? []) as Array<{ id?: unknown }>;
+    // Sublog lines are filled by roll-ups only, never by entries.
+    const categories = (ledger.get("categories") ?? []) as Array<{
+      id?: unknown;
+      sublog?: unknown;
+    }>;
     const categoryIds = new Set(
-      categories.map((c) => c.id).filter((id): id is string => typeof id === "string"),
+      categories
+        .filter((c) => !c.sublog)
+        .map((c) => c.id)
+        .filter((id): id is string => typeof id === "string"),
     );
     const rows = parseImportRows(req.rows, categoryIds);
     if (typeof rows === "string") throw new HttpsError("invalid-argument", rows);
