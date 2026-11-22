@@ -249,38 +249,115 @@ export const detachSublog = async (
 };
 
 /**
- * Finish ending a link: freeze its roll-ups up to the horizon recorded when it ended,
- * drop later ones and recompute those parent months, then clear `cleanupPending`. Each
- * step is idempotent, and the month list is read from what's still there, so a retry
- * after a failure at any point picks up where it stopped. A dropped month's summary is
- * recomputed before the flag clears; if that recompute failed, the retry recomputes all
- * months after the horizon that the parent still has.
+ * Rebuild one kept month of an ended link from the sublog's entries and freeze it. Runs
+ * only while the link's clean-up is pending, so entries saved before the unlink count even
+ * if their own roll-up hadn't run yet. Returns "deferred" when the sublog is being deleted
+ * and this isn't purgeLog: purgeLog finishes the clean-up itself, before the entries go.
  */
-const finishEndedLink = async (db: Firestore, linkId: string): Promise<void> => {
+const freezeMonth = (
+  db: Firestore,
+  linkId: string,
+  month: string,
+  purging: boolean,
+): Promise<"done" | "deferred"> =>
+  db.runTransaction(async (tx) => {
+    const linkRef = links(db).doc(linkId);
+    const data = (await tx.get(linkRef)).data() as
+      | (SublogLink & { cleanupPending?: boolean })
+      | undefined;
+    if (!data?.cleanupPending) return "done";
+    const childRef = ledgers(db).doc(data.childId);
+    const parentRef = ledgers(db).doc(data.parentId);
+    const rollupRef = parentRef.collection("rollups").doc(rollupDocId(month, linkId));
+    const [child, parent, existing] = await Promise.all([
+      tx.get(childRef),
+      tx.get(parentRef),
+      tx.get(rollupRef),
+    ]);
+    if (!parent.exists) return "done";
+    if (child.get("deleting") === true && !purging) return "deferred";
+    // A newer link between the same logs covers this month: it has taken it over
+    // (handOverFrozenMonths), so this link keeps nothing there.
+    const current = (child.get("parentLink") as ParentLink | undefined)?.linkId;
+    if (current && current !== linkId) {
+      const newer = (await tx.get(links(db).doc(current))).data() as SublogLink | undefined;
+      if (newer?.parentId === data.parentId && month >= newer.since) return "done";
+    }
+    if (!child.exists) {
+      if (existing.exists) tx.update(rollupRef, { frozen: true });
+      return "done";
+    }
+    const entries = await tx.get(childRef.collection("entries").where("month", "==", month));
+    const rollup = rollupFor(
+      entries.docs.map((d) => d.data()),
+      (parent.get("memberUids") as string[] | undefined) ?? [],
+      data.categoryId,
+    );
+    if (rollup.entryCount === 0) {
+      if (existing.exists) tx.delete(rollupRef);
+    } else {
+      tx.set(rollupRef, {
+        month,
+        linkId,
+        categoryId: data.categoryId,
+        ...rollup,
+        frozen: true,
+        computedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    return "done";
+  });
+
+/**
+ * Finish ending a link: rebuild and freeze its months up to the horizon recorded when it
+ * ended (freezeMonth), drop later roll-ups, recompute those parent months, then clear
+ * `cleanupPending`. Each step is idempotent and the months are read from what's there,
+ * so a retry after a failure at any point redoes the clean-up. `purging`: called by
+ * purgeLog on a sublog it's deleting, whose entries are still there.
+ */
+const finishEndedLink = async (
+  db: Firestore,
+  linkId: string,
+  { purging = false }: { purging?: boolean } = {},
+): Promise<void> => {
   const linkRef = links(db).doc(linkId);
   const data = (await linkRef.get()).data() as
     | (SublogLink & { cleanupPending?: boolean; endHorizon?: string })
     | undefined;
   if (!data?.cleanupPending || !data.endHorizon) return;
   const parentRef = ledgers(db).doc(data.parentId);
-  const parent = await parentRef.get();
+  const childRef = ledgers(db).doc(data.childId);
+  const [parent, child] = await Promise.all([parentRef.get(), childRef.get()]);
   if (!parent.exists) {
     await linkRef.update({ cleanupPending: FieldValue.delete() });
     return;
   }
-  const rollups = await parentRef.collection("rollups").where("linkId", "==", linkId).get();
-  const plan = planLinkCleanup(
-    rollups.docs.map((d) => ({
-      month: d.get("month") as string,
-      frozen: d.get("frozen") === true,
-    })),
-    data.endHorizon,
-  );
+  if (child.get("deleting") === true && !purging) return;
+  const [rollups, entries] = await Promise.all([
+    parentRef.collection("rollups").where("linkId", "==", linkId).get(),
+    // Months with entries, not the sublog's months/ docs: a month whose first entry is
+    // saved but not yet summarised still counts.
+    child.exists
+      ? childRef
+          .collection("entries")
+          .where("month", ">=", data.since)
+          .where("month", "<=", data.endHorizon)
+          .select("month")
+          .get()
+      : null,
+  ]);
+  const plan = planLinkCleanup({
+    rollupMonths: rollups.docs.map((d) => d.get("month") as string),
+    entryMonths: (entries?.docs ?? []).map((d) => d.get("month") as string),
+    since: data.since,
+    horizon: data.endHorizon,
+  });
+  for (const month of plan.keep) {
+    if ((await freezeMonth(db, linkId, month, purging)) === "deferred") return;
+  }
   const batch = db.batch();
   for (const doc of rollups.docs) {
-    const month = doc.get("month") as string;
-    if (plan.drop.includes(month)) batch.delete(doc.ref);
-    else if (plan.freeze.includes(month)) batch.update(doc.ref, { frozen: true });
+    if (plan.drop.includes(doc.get("month") as string)) batch.delete(doc.ref);
   }
   await batch.commit();
   // Months after the horizon: the ones just dropped, and any the parent still summarises
@@ -290,7 +367,7 @@ const finishEndedLink = async (db: Firestore, linkId: string): Promise<void> => 
     .where(FieldPath.documentId(), ">", data.endHorizon)
     .select()
     .get();
-  const months = new Set([...plan.drop, ...later.docs.map((d) => d.id)]);
+  const months = new Set([...plan.keep, ...plan.drop, ...later.docs.map((d) => d.id)]);
   for (const month of [...months].sort()) await refreshParentMonth(db, parentRef, month);
   await linkRef.update({ cleanupPending: FieldValue.delete() });
 };
@@ -387,8 +464,28 @@ const notifyCounted = async (
   }
 };
 
+/**
+ * A ledger being deleted, already flagged `deleting`: no link can be made to or from it
+ * now (validateLink), so the links read here are all it will ever have. As a sublog, its
+ * link ends and the parent keeps its past months; the clean-up of that link (and of an
+ * earlier unlink still pending) is finished here, while its entries are still there. As a
+ * parent, its sublogs stand alone again (its roll-ups go with it).
+ */
+export const endSublogLinks = async (db: Firestore, ledgerId: string): Promise<void> => {
+  const ledger = await ledgers(db).doc(ledgerId).get();
+  const linkId = (ledger.get("parentLink") as ParentLink | undefined)?.linkId;
+  if (linkId) await detachSublog(db, linkId);
+  const asChild = await links(db).where("childId", "==", ledgerId).get();
+  for (const link of asChild.docs) {
+    if (link.get("cleanupPending") === true) {
+      await finishEndedLink(db, link.id, { purging: true });
+    }
+  }
+  await releaseSublogs(db, ledgerId);
+};
+
 /** A parent being deleted: its sublogs stand alone again (its roll-ups go with it). */
-export const releaseSublogs = async (db: Firestore, parentId: string): Promise<void> => {
+const releaseSublogs = async (db: Firestore, parentId: string): Promise<void> => {
   const live = await links(db).where("parentId", "==", parentId).get();
   for (const link of live.docs) {
     const data = link.data() as SublogLink;

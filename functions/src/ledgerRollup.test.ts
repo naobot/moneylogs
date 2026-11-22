@@ -318,24 +318,25 @@ describe("who counts", () => {
 });
 
 describe("planLinkCleanup", () => {
-  it("freezes months up to the horizon and drops later ones", () => {
+  it("keeps months up to the horizon and drops later roll-ups", () => {
     expect(
-      planLinkCleanup(
-        [
-          { month: "2026-10", frozen: true },
-          { month: "2026-11" },
-          { month: "2026-12" },
-          { month: "2027-01" },
-        ],
-        "2026-11",
-      ),
-    ).toEqual({ freeze: ["2026-11"], drop: ["2026-12", "2027-01"] });
+      planLinkCleanup({
+        rollupMonths: ["2026-10", "2026-11", "2026-12", "2027-01"],
+        entryMonths: [],
+        since: "2026-01",
+        horizon: "2026-11",
+      }),
+    ).toEqual({ keep: ["2026-10", "2026-11"], drop: ["2026-12", "2027-01"] });
   });
 
-  it("has nothing left to do once it has run", () => {
-    expect(planLinkCleanup([{ month: "2026-11", frozen: true }], "2026-11")).toEqual({
-      freeze: [],
-      drop: [],
-    });
+  it("keeps a month whose first roll-up was still pending", () => {
+    expect(
+      planLinkCleanup({
+        rollupMonths: ["2026-10"],
+        entryMonths: ["2026-09", "2026-10", "2026-11", "2026-12"],
+        since: "2026-10",
+        horizon: "2026-11",
+      }),
+    ).toEqual({ keep: ["2026-10", "2026-11"], drop: [] });
   });
 });
