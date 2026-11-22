@@ -14,6 +14,7 @@ import {
   newlyCountedUids,
   parseLinkRequest,
   parseUnlinkRequest,
+  planLinkCleanup,
   rollupDocId,
   rollupFor,
   sublogCountedNotificationId,
@@ -326,5 +327,28 @@ describe("who counts", () => {
 
   it("ids the notification by link, so a new link is a new notice", () => {
     expect(sublogCountedNotificationId("L1")).toBe("sublog_counted_L1");
+  });
+});
+
+describe("planLinkCleanup", () => {
+  it("freezes months up to the horizon and drops later ones", () => {
+    expect(
+      planLinkCleanup(
+        [
+          { month: "2026-10", frozen: true },
+          { month: "2026-11" },
+          { month: "2026-12" },
+          { month: "2027-01" },
+        ],
+        "2026-11",
+      ),
+    ).toEqual({ freeze: ["2026-11"], drop: ["2026-12", "2027-01"] });
+  });
+
+  it("has nothing left to do once it has run", () => {
+    expect(planLinkCleanup([{ month: "2026-11", frozen: true }], "2026-11")).toEqual({
+      freeze: [],
+      drop: [],
+    });
   });
 });
