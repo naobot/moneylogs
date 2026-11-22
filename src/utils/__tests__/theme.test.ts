@@ -114,18 +114,22 @@ describe("chart palettes", () => {
     ]),
   );
 
+  // The colours passed to a theme's chart-palette(...) include, ignoring its other mixins.
+  const chartColours = (id: string) =>
+    blocks
+      .get(id)
+      ?.match(/chart-palette\(([^)]*)\)/)?.[1]
+      .match(/#[0-9a-f]{6}/gi);
+
   it("gives every theme six chart colours", () => {
     for (const id of Object.keys(THEMES)) {
-      const palette = blocks.get(id)?.match(/chart-palette\(([^)]*)\)/)?.[1];
-      expect(palette?.match(/#[0-9a-f]{6}/gi), id).toHaveLength(6);
+      expect(chartColours(id), id).toHaveLength(6);
     }
   });
 
   it("sets Paper's chart colours on :root too, for the page without a data-theme", () => {
-    const paper = blocks
-      .get("paper")!
-      .match(/#[0-9a-f]{6}/gi)!
-      .slice(-6);
+    const paper = chartColours("paper")!;
+    expect(paper).toHaveLength(6);
     for (const [i, hex] of paper.entries()) {
       expect(TOKENS_SCSS).toContain(`--chart-${i + 1}: ${hex};`);
     }
