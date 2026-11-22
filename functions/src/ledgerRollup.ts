@@ -343,3 +343,16 @@ export const parseUnlinkRequest = (data: unknown): { linkId: string } | null => 
   const linkId = (data as { linkId?: unknown } | null)?.linkId;
   return typeof linkId === "string" && /^[A-Za-z0-9]{1,40}$/.test(linkId) ? { linkId } : null;
 };
+
+/**
+ * What ending a link does to its roll-ups: months up to `horizon` (see
+ * latestCurrentMonth) are frozen, later ones dropped. Already-frozen months are left as
+ * they are. Idempotent, so an interrupted clean-up can simply run again.
+ */
+export const planLinkCleanup = (
+  rollups: ReadonlyArray<{ month: string; frozen?: boolean }>,
+  horizon: string,
+): { freeze: string[]; drop: string[] } => ({
+  freeze: rollups.filter((r) => r.month <= horizon && !r.frozen).map((r) => r.month),
+  drop: rollups.filter((r) => r.month > horizon).map((r) => r.month),
+});

@@ -97,8 +97,8 @@ export const recomputeLedgerMonth = onDocumentWritten(
       });
       await alertBudgetsIfCurrent({ db, ledgerRef, ledger, month, aggregate });
       // A sublog: the parent's line for this month follows (see sublogs.ts).
-      const linkId = (ledger.parentLink as { linkId?: string } | undefined)?.linkId;
-      if (linkId) await rollUpMonth(db, linkId, month);
+      // A sublog: its parent's line follows (the link is re-read inside, as it is now).
+      if (ledger.parentLink) await rollUpMonth(db, ledgerId, month);
     }
 
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
