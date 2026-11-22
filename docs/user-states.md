@@ -40,17 +40,18 @@ window for a completely clean first visit.
 A screen can look different along each of these. When a feature touches one, check the
 values in bold. Those are the ones that get missed.
 
-| Dimension     | Values                                                                                                                                             | Where it lives                                                                                                          |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                                      |
-| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                       | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                          |
-| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                             | `groups`, `personalLedgerId`, ledgers `memberUids`                                                                      |
-| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}`, `nudges` |
-| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                             |
-| Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                                      |
-| Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)                  |
-| Device        | **first visit** · returning · stored theme / drawers / dismissed tips / stats category sort / friends order (**none**: list waits for the server)  | `ML__*` keys in browser storage (e.g. `ML__stats_category_sort`, `ML__friends_order_{uid}`)                             |
-| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)** · **mono charts** (default: theme chart colours)                              | `data-theme`, `data-charts` (`ML__display.charts`), `isNative()`                                                        |
+| Dimension     | Values                                                                                                                                             | Where it lives                                                                                                                              |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                                                          |
+| How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                       | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                                              |
+| Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                             | `groups`, `personalLedgerId`, ledgers `memberUids`                                                                                          |
+| Social        | **no friends** · friends · pending requests · **no knick-knacks** · finds · **friends list hidden** (default) / shown · **left off others' lists** | `friendships`, `users/{id}/knickknacks`, `users.showFriends`, `users.hideFromFriendLists`, `friendLists/{id}`, `nudges`                     |
+| This month    | **no entries yet** · under budget · near / over budget · **no budgets set**                                                                        | ledger `months/{YYYY-MM}`, category budgets                                                                                                 |
+| Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                                                          |
+| Sublogs       | **none** · parent · sublog · **shared sublog with members outside the parent** · unlinked (past months frozen) · **intro not seen**                | ledger `parentLink`, parent category `sublog`, parent `rollups/{YYYY-MM}__{child}`, `tutorials.sublogIntro`, `sublog_counted` notifications |
+| Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)                                      |
+| Device        | **first visit** · returning · stored theme / drawers / dismissed tips / stats category sort / friends order (**none**: list waits for the server)  | `ML__*` keys in browser storage (e.g. `ML__stats_category_sort`, `ML__friends_order_{uid}`)                                                 |
+| Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)** · **mono charts** (default: theme chart colours)                              | `data-theme`, `data-charts` (`ML__display.charts`), `isNative()`                                                                            |
 
 ## Flows
 
@@ -142,6 +143,26 @@ As: two personas who are friends (the seed's Alice and one of hers), signed in i
   No inbox entry, push or email.
 - Unfriending clears anything waiting either way; unread ones expire after 14 days.
 - With no friends there's nothing to show: the list's empty state is unchanged.
+
+### F6e. Sublogs
+
+As: Alice (seeded with "business" and "bali 2026" as sublogs of her personal log; Bob is in the trip but not
+in her personal log), then Bob, then a new-user persona for the first-run case.
+
+- Personal: stats show **business** and **bali** with the box-in-box mark and "↳ name ›"; the strip, budget and
+  charts include them; last month includes business too (it was linked for all months). The entries view has a
+  "↳ business · N entries" row on each day it had spending, counted in the day's subtotal, and the add form
+  doesn't offer the linked categories (a hint links to them instead).
+- Bali: the line under the title says her spending counts as bali in personal. Only Alice's USD 420 counts,
+  not Bob's USD 380. As Bob, the same line doesn't name her personal log, and his entries stay out.
+- Home: business and bali hang under personal on a tree line; as Bob, bali is a card of its own.
+- The intro ("what's a sublog?") opens by itself once: on the wizard's "part of another log?" step, over the
+  Manage link form, or on first visit to a sublog or parent (after the ledger tour). Its link replays it.
+- Link a log from Manage (try "all its months", and a shared parent: others in both logs get a "your spending
+  now counts" notice), then unlink it: past months keep their totals and the line becomes an ordinary category.
+  Deleting a sublog keeps the parent's history the same way.
+- Empty case: a new persona's wizard step lists only "no, it stands alone" and their personal log; a log with
+  no sublogs shows none of this and makes no extra queries.
 
 ### F7. Leaving
 
