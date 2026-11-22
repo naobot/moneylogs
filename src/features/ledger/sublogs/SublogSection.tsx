@@ -13,8 +13,10 @@ import { reportError } from "@/utils/reportError";
 import {
   isActiveSublog,
   parentChoices,
+  parentInMyLogs,
   shouldAutoOpenSublogIntro,
   sublogBlocker,
+  sublogsInMyLogs,
 } from "@/utils/sublogs";
 import SublogIntro from "./SublogIntro";
 import { ALL_MONTHS, linkSublog, sublogErrorMessage, unlinkSublog } from "./sublogApi";
@@ -40,12 +42,12 @@ export const SublogSection = ({ ledger }: { ledger: Ledger }) => {
 
 /** An unlink button that asks once, in place, spelling out what happens. */
 const UnlinkButton = ({
-  childId,
+  linkId,
   lineName,
   parentTitle,
   from,
 }: {
-  childId: string;
+  linkId: string;
   lineName: string;
   parentTitle?: string;
   from: "sublog" | "parent";
@@ -59,7 +61,7 @@ const UnlinkButton = ({
     setBusy(true);
     setError(null);
     try {
-      await unlinkSublog(childId);
+      await unlinkSublog(linkId);
       track("sublog_unlinked", { from });
       showToast(
         `${lineName} no longer counts${parentTitle ? ` in ${parentTitle}` : ""}`,
@@ -92,8 +94,9 @@ const UnlinkButton = ({
             in <strong className="keep-case">{parentTitle}</strong>
           </>
         ) : null}
-        . Months up to now keep the totals they show, and the line becomes an ordinary category.
-        Both logs and all their entries stay.
+        . Months up to now keep the totals they show, and the line becomes an ordinary category. Its
+        budget stays: remove it, or archive the line, if you no longer need it. Both logs and all
+        their entries stay.
       </p>
       <div className="SublogSection__buttons">
         <Button
@@ -113,8 +116,10 @@ const UnlinkButton = ({
 /** This log is a sublog: where it counts. */
 const LinkedSection = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyArray<Ledger> }) => {
   const link = ledger.parentLink!;
-  const parent = ledgers.find((l) => l.id === link.ledgerId);
-  const line = parent?.categories?.find((c) => c.id === link.categoryId)?.name ?? ledger.title;
+  // The sublog doesn't name its parent: find it among the viewer's own logs.
+  const found = parentInMyLogs(ledger, ledgers);
+  const parent = found?.parent;
+  const line = found?.line?.name ?? ledger.title;
   return (
     <section className="LogActions__section SublogSection">
       <h4>part of another log</h4>
@@ -130,14 +135,19 @@ const LinkedSection = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyA
       ) : (
         <p>A member also counts their spending here in another log you&apos;re not in.</p>
       )}
-      <UnlinkButton childId={ledger.id} lineName={line} parentTitle={parent?.title} from="sublog" />
+      <UnlinkButton
+        linkId={link.linkId}
+        lineName={line}
+        parentTitle={parent?.title}
+        from="sublog"
+      />
     </section>
   );
 };
 
 /** This log has sublogs: each can be unlinked from here too. */
 const ParentSection = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyArray<Ledger> }) => {
-  const mine = new Set(ledgers.map((l) => l.id));
+  const childOf = sublogsInMyLogs(ledger.categories ?? [], ledgers);
   const sublogs = (ledger.categories ?? []).filter(isActiveSublog);
   return (
     <section className="LogActions__section SublogSection">
@@ -145,12 +155,12 @@ const ParentSection = ({ ledger, ledgers }: { ledger: Ledger; ledgers: ReadonlyA
       <p>These logs each count as one line here. Their entries stay in their own logs.</p>
       <ul className="SublogSection__list">
         {sublogs.map((c) => {
-          const childId = c.sublog!.ledgerId;
+          const childId = childOf.get(c.id);
           return (
             <li key={c.id}>
-              <SublogName name={c.name} to={mine.has(childId) ? `/l/${childId}` : undefined} />
+              <SublogName name={c.name} to={childId ? `/l/${childId}` : undefined} />
               <UnlinkButton
-                childId={childId}
+                linkId={c.sublog!.linkId}
                 lineName={c.name}
                 parentTitle={ledger.title}
                 from="parent"

@@ -203,6 +203,9 @@ export const newCategoryId = (name: string, categories: ReadonlyArray<LedgerCate
 /** Linked to a sublog right now (see src/utils/sublogs.ts): only unlinking ends it. */
 const isLinkedSublog = (c: LedgerCategory) => !!c.sublog && !c.sublog.unlinkedAt;
 
+/** A line that is or was a sublog: its past months hold sublog totals, so it stays. */
+const wasSublog = (c: LedgerCategory) => !!c.sublog;
+
 /** Active categories in order, then archived ones, renumbered 0..n-1. */
 export const normaliseOrder = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] => {
   const byOrder = [...categories].sort((a, b) => a.order - b.order);
@@ -273,7 +276,8 @@ export const applyCategoryOp = (
       );
     }
     case "delete": {
-      if (index === -1 || isLinkedSublog(list[index])) return list;
+      // A sublog's line (live or ended) holds past months' totals: archive it instead.
+      if (index === -1 || wasSublog(list[index])) return list;
       if (!list[index].archived && list.filter((c) => !c.archived).length <= 1) return list;
       return normaliseOrder(list.filter((c) => c.id !== op.id));
     }

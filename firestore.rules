@@ -237,6 +237,13 @@ service cloud.firestore {
         && validAmountAt(m, 'AUD') && validAmountAt(m, 'MYR');
     }
 
+    // The one record naming both ledgers of a sublog link (functions/src/sublogs.ts).
+    // Server-only: a ledger id is enough to join a ledger with room, so a link must
+    // never show one side's id to the other side's members.
+    match /sublogLinks/{linkId} {
+      allow read, write: if false;
+    }
+
     match /ledgers/{ledgerId} {
       // `get` and `list` both reference resource.data, so the
       // `memberUids array-contains uid` list query is provable.
@@ -256,8 +263,8 @@ service cloud.firestore {
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.createdAt == request.time;
 
-      // Members edit settings (title, categories, default currency, cap). `parentLink`
-      // (sublogs) is left out on purpose: only the link/unlink functions write it.
+      // Members edit settings (title, categories, default currency, cap). `parentLink` and
+      // `hasRollups` (sublogs) are left out on purpose: only the functions write them.
       allow update: if signedIn()
         && request.auth.uid in resource.data.memberUids
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -330,6 +337,7 @@ service cloud.firestore {
 
       // A sublog's month as it counts in this (parent) ledger: entries by people in both
       // logs, under the linked category. Written only by Cloud Functions (sublogs.ts).
+      // Keyed by an opaque link id, never the sublog's ledger id.
       match /rollups/{rollupId} {
         allow read: if isLedgerMember(ledgerId);
         allow write: if false;

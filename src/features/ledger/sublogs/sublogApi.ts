@@ -13,17 +13,18 @@ export type LinkSublogRequest = {
   name?: string;
 };
 
-const linkCallable = httpsCallable<LinkSublogRequest, { categoryId: string }>(
+const linkCallable = httpsCallable<LinkSublogRequest, { categoryId: string; linkId: string }>(
   functions,
   "linkSublog",
 );
-const unlinkCallable = httpsCallable<{ childId: string }, { unlinked: boolean }>(
+const unlinkCallable = httpsCallable<{ linkId: string }, { unlinked: boolean }>(
   functions,
   "unlinkSublog",
 );
 
 export const linkSublog = async (req: LinkSublogRequest) => (await linkCallable(req)).data;
-export const unlinkSublog = async (childId: string) => (await unlinkCallable({ childId })).data;
+/** End a link, by its id: the sublog's parentLink.linkId, or the parent's line's sublog.linkId. */
+export const unlinkSublog = async (linkId: string) => (await unlinkCallable({ linkId })).data;
 
 /** The month that includes everything a log has logged: "include past months". */
 export const ALL_MONTHS = "1970-01";
