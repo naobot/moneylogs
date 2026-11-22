@@ -4,7 +4,7 @@
  * in this log, so the parent's live month is its entries merged with those docs.
  */
 import { Currency } from "@/types/user";
-import { CurrencyAmounts, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
+import { CurrencyAmounts, Ledger, LedgerCategory, LedgerEntry, LedgerRollup } from "@/types/ledger";
 import { CURRENCIES } from "@/utils/currency";
 import { formatDate } from "@/utils/dateFormat";
 import dayjs from "@/utils/configuredDayjs";
@@ -16,17 +16,37 @@ import { isActiveSublog, MergedMonth, mergeRollups } from "../../functions/src/l
 
 export { isActiveSublog };
 
-/** Linked categories that are live now: category id → the sublog's ledger id. */
+/**
+ * Linked categories that are live now: category id → its link id. The line never names
+ * the sublog's ledger; see sublogsInMyLogs for finding it.
+ */
 export const activeSublogs = (categories: ReadonlyArray<LedgerCategory>): Map<string, string> =>
   new Map(
-    categories
-      .filter((c) => !c.archived && isActiveSublog(c))
-      .map((c) => [c.id, c.sublog!.ledgerId]),
+    categories.filter((c) => !c.archived && isActiveSublog(c)).map((c) => [c.id, c.sublog!.linkId]),
   );
 
+/**
+ * Each live linked category's sublog, among the viewer's own logs: category id → the
+ * sublog's id, or null when the viewer isn't in it (so it can't be opened, or named).
+ */
+export const sublogsInMyLogs = (
+  categories: ReadonlyArray<LedgerCategory>,
+  myLedgers: ReadonlyArray<Pick<Ledger, "id" | "parentLink">>,
+): Map<string, string | null> => {
+  const byLink = new Map(
+    myLedgers.flatMap((l) => (l.parentLink ? [[l.parentLink.linkId, l.id] as const] : [])),
+  );
+  return new Map(
+    [...activeSublogs(categories)].map(([categoryId, linkId]) => [
+      categoryId,
+      byLink.get(linkId) ?? null,
+    ]),
+  );
+};
+
 /** Whether this log has (or had) sublogs, so it may have roll-ups to load. */
-export const hasRollups = (categories: ReadonlyArray<LedgerCategory>): boolean =>
-  categories.some((c) => !!c.sublog);
+export const hasRollups = (ledger: Pick<Ledger, "hasRollups" | "categories">): boolean =>
+  ledger.hasRollups === true || (ledger.categories ?? []).some((c) => !!c.sublog);
 
 /** Linked category id → the path into its sublog (null: the viewer isn't a member). */
 export type SublogPaths = ReadonlyMap<string, string | null>;
@@ -90,8 +110,6 @@ export const memberNames = (
 /** One sublog's spending on one day, as the parent's entry list shows it. */
 export type SublogDayRow = {
   categoryId: string;
-  /** The sublog to open, or undefined once the link has ended. */
-  childId?: string;
   name: string;
   amounts: CurrencyAmounts;
   count: number;
@@ -129,7 +147,6 @@ export const withSublogDays = <T>(
       }
       day.sublogs.push({
         categoryId: r.categoryId,
-        childId: category && isActiveSublog(category) ? category.sublog!.ledgerId : undefined,
         name: category?.name ?? "sublog",
         amounts,
         count: r.countByDay?.[dd] ?? 0,

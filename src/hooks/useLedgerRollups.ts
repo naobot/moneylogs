@@ -14,7 +14,7 @@ const NONE: LedgerRollup[] = [];
  * other log this returns an empty list straight away.
  */
 export const useLedgerRollups = ({ ledger, month }: { ledger: Ledger; month: string }) => {
-  const enabled = hasRollups(ledger.categories ?? []);
+  const enabled = hasRollups(ledger);
   const result = useFirebaseCollection<LedgerRollup>({
     queryBuilder: () =>
       enabled
