@@ -4,8 +4,13 @@
  *
  * The child's entries stay the single source of truth. For each month, the child's
  * entries by people who are also members of the parent are aggregated into
- * ledgers/{parent}/rollups/{YYYY-MM}__{childId}, under the parent's linked category. The
+ * ledgers/{parent}/rollups/{YYYY-MM}__{linkId}, under the parent's linked category. The
  * parent's months/ summary is its own aggregate merged with that month's roll-ups.
+ *
+ * Each link has a random id, and only the server-only sublogLinks/{linkId} record names
+ * both ledgers. What either side's members can read (the child's parentLink, the parent's
+ * category marker and roll-ups) carries the link id, never the other ledger's id: a
+ * ledger id is enough to join a ledger with room, so it must not leak across a link.
  *
  * Shared by the Cloud Functions and the web app; keep it dependency-free apart from
  * ledgerAggregate.
@@ -26,17 +31,32 @@ export const MAX_CATEGORY_NAME = 20;
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 export const isMonthKey = (m: unknown): m is string => typeof m === "string" && MONTH_RE.test(m);
 
-/** ledgers/{child}.parentLink, written only by the linkSublog / unlinkSublog functions. */
+/**
+ * ledgers/{child}.parentLink, written only by the linkSublog / unlinkSublog functions.
+ * No parent id: members of the child who aren't in the parent mustn't learn it.
+ */
 export type ParentLink = {
-  ledgerId: string;
+  linkId: string;
+  /** The parent's line for it (opaque: `sublog-{linkId}`). */
   categoryId: string;
   /** "YYYY-MM": the first month that rolls up. Earlier months stay in the child only. */
   since: string;
   linkedBy: string;
 };
 
-/** A parent category's `sublog` marker. `unlinkedAt` set: past months only, now frozen. */
-export type SublogMarker = { ledgerId: string; linkedAt?: unknown; unlinkedAt?: unknown };
+/** sublogLinks/{linkId}: the one record naming both ledgers. Server-only. */
+export type SublogLink = ParentLink & {
+  childId: string;
+  parentId: string;
+  /** Set when the link ended: its roll-ups are frozen (or removed, for later months). */
+  endedAt?: unknown;
+};
+
+/**
+ * A parent category's `sublog` marker. No child id, for the same reason. `unlinkedAt`
+ * set: past months only, now frozen.
+ */
+export type SublogMarker = { linkId: string; linkedAt?: unknown; unlinkedAt?: unknown };
 
 export type LinkableCategory = {
   id: string;
@@ -66,13 +86,25 @@ export type RollupAggregate = MonthAggregate & {
 
 export type RollupDoc = RollupAggregate & {
   month: string;
-  childId: string;
+  linkId: string;
   categoryId: string;
   /** Set when the link ended: the month keeps its totals and is never rebuilt. */
   frozen?: boolean;
 };
 
-export const rollupDocId = (month: string, childId: string) => `${month}__${childId}`;
+export const rollupDocId = (month: string, linkId: string) => `${month}__${linkId}`;
+
+/** The parent's line for a link. Opaque, like the link id it's made from. */
+export const linkedCategoryId = (linkId: string) => `sublog-${linkId}`;
+
+const monthOfMs = (ms: number) => new Date(ms).toISOString().slice(0, 7);
+
+/**
+ * The latest month that is "now" somewhere on Earth (UTC+14 is the furthest ahead).
+ * Ending a link keeps (freezes) months up to this one and drops later ones: those only
+ * hold future-dated entries, which are no longer counted once the link has ended.
+ */
+export const latestCurrentMonth = (nowMs: number): string => monthOfMs(nowMs + 14 * 3600_000);
 
 /** The categories that are (or were) sublogs, i.e. whether this ledger may have roll-ups. */
 export const hasSublogCategories = (categories: unknown): boolean =>
@@ -211,45 +243,42 @@ export const linkedCategoryName = (name: unknown, childTitle: string | undefined
 };
 
 /**
- * The parent's categories with the linked one added at the end of the active list. The id
- * is derived from the child, with a suffix if an earlier (unlinked) link already used it.
+ * The parent's categories with the linked one added at the end of the active list, under
+ * an id made from the (new, random) link id.
  */
 export const addLinkedCategory = (
   categories: ReadonlyArray<LinkableCategory>,
   {
-    childId,
+    linkId,
     name,
     linkedAt,
   }: {
-    childId: string;
+    linkId: string;
     name: string;
     linkedAt: unknown;
   },
 ): { categories: LinkableCategory[]; categoryId: string } => {
-  const taken = new Set(categories.map((c) => c.id));
-  const base = `sublog-${childId}`;
-  let categoryId = base;
-  for (let n = 2; taken.has(categoryId); n++) categoryId = `${base}-${n}`;
+  const categoryId = linkedCategoryId(linkId);
   const active = categories.filter((c) => !c.archived);
   const archived = categories.filter((c) => c.archived);
   const added: LinkableCategory = {
     id: categoryId,
     name,
     order: 0,
-    sublog: { ledgerId: childId, linkedAt },
+    sublog: { linkId, linkedAt },
   };
   const next = [...active, added, ...archived].map((c, order) => ({ ...c, order }));
   return { categories: next, categoryId };
 };
 
-/** The parent's categories with the link to `childId` marked as ended. */
+/** The parent's categories with this link's line marked as ended. */
 export const markCategoryUnlinked = (
   categories: ReadonlyArray<LinkableCategory>,
-  childId: string,
+  linkId: string,
   unlinkedAt: unknown,
 ): LinkableCategory[] =>
   categories.map((c) =>
-    c.sublog?.ledgerId === childId && !c.sublog.unlinkedAt
+    c.sublog?.linkId === linkId && !c.sublog.unlinkedAt
       ? { ...c, sublog: { ...c.sublog, unlinkedAt } }
       : c,
   );
@@ -302,6 +331,15 @@ export const newlyCountedUids = (
   return countedUids(after.child, after.parent).filter((uid) => !was.has(uid));
 };
 
-/** One per sublog and parent: a later link or join replaces it rather than stacking. */
-export const sublogCountedNotificationId = (childId: string, parentId: string) =>
-  `sublog_counted_${childId}_${parentId}`;
+/**
+ * One per link. A new link gets a new notice (so it's pushed and emailed like any new
+ * one), and the writer removes the recipient's notice from an earlier link between the
+ * same two logs, so they don't stack.
+ */
+export const sublogCountedNotificationId = (linkId: string) => `sublog_counted_${linkId}`;
+
+/** A link request to end: by link id, which members of either log can see. */
+export const parseUnlinkRequest = (data: unknown): { linkId: string } | null => {
+  const linkId = (data as { linkId?: unknown } | null)?.linkId;
+  return typeof linkId === "string" && /^[A-Za-z0-9]{1,40}$/.test(linkId) ? { linkId } : null;
+};

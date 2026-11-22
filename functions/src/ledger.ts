@@ -3,7 +3,6 @@ import { getFirestore, DocumentReference, Firestore } from "firebase-admin/fires
 import { affectedMonths, aggregateFieldsChanged, AggregatableEntry } from "./ledgerAggregate";
 import { isImportCreate } from "./ledgerImportPlan";
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
-import { hasSublogCategories } from "./ledgerRollup";
 import { rollUpMonth } from "./sublogs";
 import { takeDailyChance } from "./knickknackFind";
 import { recordCheckIn } from "./checkIn";
@@ -94,11 +93,12 @@ export const recomputeLedgerMonth = onDocumentWritten(
     const ledger = ledgerSnap.data() ?? {};
     for (const month of affectedMonths(before, after)) {
       const aggregate = await recomputeMonth(db, ledgerRef, month, {
-        withRollups: hasSublogCategories(ledger.categories),
+        withRollups: ledger.hasRollups === true,
       });
       await alertBudgetsIfCurrent({ db, ledgerRef, ledger, month, aggregate });
       // A sublog: the parent's line for this month follows (see sublogs.ts).
-      if (ledger.parentLink) await rollUpMonth(db, ledgerRef, month);
+      const linkId = (ledger.parentLink as { linkId?: string } | undefined)?.linkId;
+      if (linkId) await rollUpMonth(db, linkId, month);
     }
 
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;

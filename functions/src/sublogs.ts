@@ -12,18 +12,20 @@ import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
 import {
   addLinkedCategory,
   countedUids,
-  newlyCountedUids,
-  sublogCountedNotificationId,
-  isActiveSublog,
+  latestCurrentMonth,
   LINK_ERROR_MESSAGES,
   LinkableCategory,
   LinkableLedger,
   linkedCategoryName,
   markCategoryUnlinked,
+  newlyCountedUids,
   ParentLink,
   parseLinkRequest,
+  parseUnlinkRequest,
   rollupDocId,
   rollupFor,
+  SublogLink,
+  sublogCountedNotificationId,
   validateLink,
 } from "./ledgerRollup";
 import { reportError, withSentry, withSentryCall } from "./sentry";
@@ -34,15 +36,21 @@ import { isNotificationEnabled } from "./notificationPrefs";
  * Sublogs: a ledger whose spending also counts as one category of another ledger.
  * Pure rules live in ledgerRollup.ts; this file does the Firestore work.
  *
- * - ledgers/{child}.parentLink names the parent, its linked category and the first month
- *   that counts. Only these functions write it (firestore.rules).
- * - ledgers/{parent}/rollups/{YYYY-MM}__{child} holds that month of the child, counting
+ * - sublogLinks/{linkId}: the one record naming both ledgers (child, parent, line, first
+ *   month). Server-only. Everything here goes through it, never through what clients can
+ *   edit (categories) or read across the link.
+ * - ledgers/{child}.parentLink and the parent's category marker carry only the link id:
+ *   a ledger id is enough to join a ledger with room, so neither side learns the other's.
+ * - ledgers/{parent}/rollups/{YYYY-MM}__{linkId} holds that month of the child, counting
  *   only entries by parent members. Rebuilt from the child's entries, so it's idempotent.
- * - The parent's months/ docs merge in their roll-ups (ledgerMonths.recomputeMonth).
- * - Unlinking (or deleting the child) freezes the roll-ups: past months keep their totals.
+ * - ledgers/{parent}.hasRollups (server-only) makes its months/ docs merge them in
+ *   (ledgerMonths.recomputeMonth), even after the line is renamed, archived or removed.
+ * - Ending a link (unlinking, or deleting the child) freezes the roll-ups up to now, so
+ *   past months keep their totals, and drops later (future-dated) ones.
  */
 
 const ledgers = (db: Firestore) => db.collection("ledgers");
+const links = (db: Firestore) => db.collection("sublogLinks");
 
 const asLedger = (
   id: string,
@@ -52,38 +60,43 @@ const asLedger = (
   ...(data as Omit<LinkableLedger, "id">),
 });
 
+const memberOf = (snap: FirebaseFirestore.DocumentSnapshot, uid: string) =>
+  ((snap.get("memberUids") as string[] | undefined) ?? []).includes(uid);
+
 /**
- * Rebuild one month's roll-up for a sublog. Returns the parent to refresh, or null when
- * nothing rolls up (no link, a month before it, the parent gone, or the month frozen).
+ * Rebuild one month's roll-up for a link. Returns the parent to refresh, or null when
+ * nothing rolls up (the link ended, a month before it, either ledger gone, or the
+ * month frozen).
  */
 const syncRollup = (
   db: Firestore,
-  childRef: DocumentReference,
+  linkId: string,
   month: string,
 ): Promise<DocumentReference | null> =>
   db.runTransaction(async (tx) => {
-    const child = await tx.get(childRef);
-    const link = child.get("parentLink") as ParentLink | undefined;
-    if (!child.exists || !link || month < link.since) return null;
-    const parentRef = ledgers(db).doc(link.ledgerId);
-    const parent = await tx.get(parentRef);
-    if (!parent.exists || parent.get("deleting") === true) return null;
-    const rollupRef = parentRef.collection("rollups").doc(rollupDocId(month, childRef.id));
+    const link = await tx.get(links(db).doc(linkId));
+    const data = link.data() as SublogLink | undefined;
+    if (!data || data.endedAt || month < data.since) return null;
+    const childRef = ledgers(db).doc(data.childId);
+    const parentRef = ledgers(db).doc(data.parentId);
+    const [child, parent] = await Promise.all([tx.get(childRef), tx.get(parentRef)]);
+    if (!child.exists || !parent.exists || parent.get("deleting") === true) return null;
+    const rollupRef = parentRef.collection("rollups").doc(rollupDocId(month, linkId));
     const existing = await tx.get(rollupRef);
     if (existing.get("frozen") === true) return null;
     const entries = await tx.get(childRef.collection("entries").where("month", "==", month));
     const rollup = rollupFor(
       entries.docs.map((d) => d.data()),
       (parent.get("memberUids") as string[] | undefined) ?? [],
-      link.categoryId,
+      data.categoryId,
     );
     if (rollup.entryCount === 0) {
       if (existing.exists) tx.delete(rollupRef);
     } else {
       tx.set(rollupRef, {
         month,
-        childId: childRef.id,
-        categoryId: link.categoryId,
+        linkId,
+        categoryId: data.categoryId,
         ...rollup,
         computedAt: FieldValue.serverTimestamp(),
       });
@@ -113,13 +126,9 @@ const refreshParentMonth = async (
  * thrown, so it can't hold up the sublog's own summary. The next write to that month, or
  * a member change, rebuilds it.
  */
-export const rollUpMonth = async (
-  db: Firestore,
-  childRef: DocumentReference,
-  month: string,
-): Promise<void> => {
+export const rollUpMonth = async (db: Firestore, linkId: string, month: string): Promise<void> => {
   try {
-    const parentRef = await syncRollup(db, childRef, month);
+    const parentRef = await syncRollup(db, linkId, month);
     if (parentRef) await refreshParentMonth(db, parentRef, month);
   } catch (error) {
     reportError(error, { action: "sublog_rollup", extra: { month } });
@@ -127,81 +136,118 @@ export const rollUpMonth = async (
 };
 
 /**
- * Rebuild every month a link covers: the child's months from `since` on, plus any roll-up
- * already in the parent (a month the child has since emptied). With `replaceFrozen`
- * (a new link), frozen months of an earlier link from `since` on are handed to it.
+ * Rebuild every month a link covers: the child's months from `since` on, plus any of its
+ * live roll-ups already in the parent (a month the child has since emptied).
  */
-const rebuildLink = async (
-  db: Firestore,
-  childRef: DocumentReference,
-  { replaceFrozen = false }: { replaceFrozen?: boolean } = {},
-): Promise<void> => {
-  const child = await childRef.get();
-  const link = child.get("parentLink") as ParentLink | undefined;
-  if (!link) return;
-  const parentRef = ledgers(db).doc(link.ledgerId);
+const rebuildLink = async (db: Firestore, linkId: string): Promise<void> => {
+  const data = (await links(db).doc(linkId).get()).data() as SublogLink | undefined;
+  if (!data || data.endedAt) return;
   const [childMonths, existing] = await Promise.all([
-    childRef.collection("months").where(FieldPath.documentId(), ">=", link.since).select().get(),
-    parentRef.collection("rollups").where("childId", "==", childRef.id).get(),
+    ledgers(db)
+      .doc(data.childId)
+      .collection("months")
+      .where(FieldPath.documentId(), ">=", data.since)
+      .select()
+      .get(),
+    ledgers(db).doc(data.parentId).collection("rollups").where("linkId", "==", linkId).get(),
   ]);
   const months = new Set(childMonths.docs.map((d) => d.id));
   for (const doc of existing.docs) {
     const month = doc.get("month") as string;
-    if (month < link.since) continue;
-    if (doc.get("frozen") === true) {
-      if (!replaceFrozen) continue;
-      await doc.ref.delete();
-    }
-    months.add(month);
+    if (month >= data.since && doc.get("frozen") !== true) months.add(month);
   }
-  for (const month of [...months].sort()) await rollUpMonth(db, childRef, month);
+  for (const month of [...months].sort()) await rollUpMonth(db, linkId, month);
 };
 
 /**
- * End a link: clear the child's parentLink, mark the parent's category as unlinked and
- * freeze its roll-ups, so past months keep what they showed. No-op if not linked.
+ * A new link between two logs that were linked before takes over the months it covers:
+ * the earlier links' frozen roll-ups from `since` on are removed, so nothing counts
+ * twice. Months before `since` stay with the earlier line.
  */
-export const detachSublog = async (db: Firestore, childId: string): Promise<void> => {
-  const childRef = ledgers(db).doc(childId);
+const handOverFrozenMonths = async (db: Firestore, link: SublogLink): Promise<void> => {
+  const earlier = await links(db)
+    .where("childId", "==", link.childId)
+    .where("parentId", "==", link.parentId)
+    .get();
+  const rollups = ledgers(db).doc(link.parentId).collection("rollups");
+  for (const old of earlier.docs) {
+    if (old.id === link.linkId) continue;
+    const docs = await rollups.where("linkId", "==", old.id).get();
+    for (const doc of docs.docs) {
+      if ((doc.get("month") as string) >= link.since) await doc.ref.delete();
+    }
+  }
+};
+
+/**
+ * End a link: record the end on it, clear the child's parentLink and mark the parent's
+ * line as unlinked, then freeze its roll-ups up to now (past months keep what they
+ * showed) and drop later, future-dated ones. With `callerUid`, the caller must be a
+ * member of one of the two logs, checked inside the same transaction. Returns false if
+ * the link had already ended (or never existed).
+ */
+export const detachSublog = async (
+  db: Firestore,
+  linkId: string,
+  { callerUid }: { callerUid?: string } = {},
+): Promise<boolean> => {
+  const linkRef = links(db).doc(linkId);
   const parentRef = await db.runTransaction(async (tx) => {
-    const child = await tx.get(childRef);
-    const link = child.get("parentLink") as ParentLink | undefined;
-    if (!link) return null;
-    const ref = ledgers(db).doc(link.ledgerId);
-    const parent = await tx.get(ref);
-    tx.update(childRef, { parentLink: FieldValue.delete() });
+    const link = await tx.get(linkRef);
+    const data = link.data() as SublogLink | undefined;
+    if (!data || data.endedAt) return null;
+    const childRef = ledgers(db).doc(data.childId);
+    const ref = ledgers(db).doc(data.parentId);
+    const [child, parent] = await Promise.all([tx.get(childRef), tx.get(ref)]);
+    if (callerUid !== undefined && !memberOf(child, callerUid) && !memberOf(parent, callerUid)) {
+      throw new HttpsError("permission-denied", "Only members of these logs can unlink them.");
+    }
+    tx.update(linkRef, { endedAt: FieldValue.serverTimestamp() });
+    if (child.exists && (child.get("parentLink") as ParentLink | undefined)?.linkId === linkId) {
+      tx.update(childRef, { parentLink: FieldValue.delete() });
+    }
     if (parent.exists) {
       const categories = (parent.get("categories") as LinkableCategory[] | undefined) ?? [];
-      tx.update(ref, { categories: markCategoryUnlinked(categories, childId, Timestamp.now()) });
+      tx.update(ref, { categories: markCategoryUnlinked(categories, linkId, Timestamp.now()) });
     }
-    return parent.exists ? ref : null;
+    return ref;
   });
-  if (!parentRef) return;
-  const live = await parentRef.collection("rollups").where("childId", "==", childId).get();
+  if (parentRef === null) return false;
+
+  const horizon = latestCurrentMonth(Date.now());
+  const rollups = await parentRef.collection("rollups").where("linkId", "==", linkId).get();
+  const dropped: string[] = [];
   const batch = db.batch();
-  for (const doc of live.docs) {
-    if (doc.get("frozen") !== true) batch.update(doc.ref, { frozen: true });
+  for (const doc of rollups.docs) {
+    const month = doc.get("month") as string;
+    if (month > horizon) {
+      batch.delete(doc.ref);
+      dropped.push(month);
+    } else if (doc.get("frozen") !== true) {
+      batch.update(doc.ref, { frozen: true });
+    }
   }
   await batch.commit();
+  for (const month of dropped) await refreshParentMonth(db, parentRef, month);
+  return true;
 };
 
 /**
  * Tell people that their spending in a sublog now counts in its parent, where members
  * who aren't in the sublog can see it: everyone in both logs on a link (bar whoever
- * linked), and whoever a join starts counting. Best-effort: reported, never thrown, so
- * a failed notice can't undo a link.
+ * linked), and whoever a join starts counting. A notice from an earlier link between the
+ * same two logs is replaced, not stacked. Best-effort: reported, never thrown, so a
+ * failed notice can't undo a link.
  */
 const notifyCounted = async (
   db: Firestore,
   {
-    childId,
-    parentId,
+    linkId,
     uids,
     reason,
     actorName,
   }: {
-    childId: string;
-    parentId: string;
+    linkId: string;
     uids: ReadonlyArray<string>;
     reason: "linked" | "joined";
     actorName?: string;
@@ -209,30 +255,43 @@ const notifyCounted = async (
 ): Promise<void> => {
   if (uids.length === 0) return;
   try {
+    const data = (await links(db).doc(linkId).get()).data() as SublogLink | undefined;
+    if (!data || data.endedAt) return;
     const [child, parent] = await Promise.all([
-      ledgers(db).doc(childId).get(),
-      ledgers(db).doc(parentId).get(),
+      ledgers(db).doc(data.childId).get(),
+      ledgers(db).doc(data.parentId).get(),
     ]);
-    const link = child.get("parentLink") as ParentLink | undefined;
-    if (link?.ledgerId !== parentId) return;
     const lineName =
       ((parent.get("categories") as LinkableCategory[] | undefined) ?? []).find(
-        (c) => c.id === link.categoryId,
+        (c) => c.id === data.categoryId,
       )?.name ?? "";
     // Everyone being told is in the sublog, so its member refs cover them.
     const refs = (child.get("members") as DocumentReference[] | undefined) ?? [];
     const users = refs.length ? await db.getAll(...refs) : [];
     const wanted = new Set(uids);
-    const batch = db.batch();
+    const id = sublogCountedNotificationId(linkId);
     for (const user of users) {
       if (!user.exists || !wanted.has(user.get("userId") as string)) continue;
       if (!isNotificationEnabled(user.data(), "sublog_counted")) continue;
-      batch.set(inbox(db, user.id).doc(sublogCountedNotificationId(childId, parentId)), {
+      const box = inbox(db, user.id);
+      const batch = db.batch();
+      const earlier = await box.where("groupId", "==", data.childId).get();
+      for (const doc of earlier.docs) {
+        if (
+          doc.id !== id &&
+          doc.get("type") === "sublog_counted" &&
+          doc.get("parentId") === data.parentId
+        ) {
+          batch.delete(doc.ref);
+        }
+      }
+      batch.set(box.doc(id), {
         type: "sublog_counted",
         logKind: "ledger",
-        groupId: childId,
+        groupId: data.childId,
         groupName: (child.get("title") as string | undefined) ?? "",
-        parentId,
+        // Only ever sent to people in both logs, who can open either.
+        parentId: data.parentId,
         parentTitle: (parent.get("title") as string | undefined) ?? "",
         lineName,
         reason,
@@ -240,32 +299,35 @@ const notifyCounted = async (
         createdAt: FieldValue.serverTimestamp(),
         readAt: null,
       });
+      await batch.commit();
     }
-    await batch.commit();
   } catch (error) {
     reportError(error, { action: "sublog_counted_notice", level: "warning" });
   }
 };
 
 /** A parent being deleted: its sublogs stand alone again (its roll-ups go with it). */
-export const releaseSublogs = async (
-  db: Firestore,
-  parentId: string,
-  categories: unknown,
-): Promise<void> => {
-  const list = Array.isArray(categories) ? (categories as LinkableCategory[]) : [];
-  for (const c of list.filter(isActiveSublog)) {
-    const childRef = ledgers(db).doc(c.sublog!.ledgerId);
-    const child = await childRef.get();
-    const link = child.get("parentLink") as ParentLink | undefined;
-    if (link?.ledgerId === parentId) await childRef.update({ parentLink: FieldValue.delete() });
+export const releaseSublogs = async (db: Firestore, parentId: string): Promise<void> => {
+  const live = await links(db).where("parentId", "==", parentId).get();
+  for (const link of live.docs) {
+    const data = link.data() as SublogLink;
+    if (data.endedAt) continue;
+    await db.runTransaction(async (tx) => {
+      const childRef = ledgers(db).doc(data.childId);
+      const child = await tx.get(childRef);
+      tx.update(link.ref, { endedAt: FieldValue.serverTimestamp() });
+      if (child.exists && (child.get("parentLink") as ParentLink | undefined)?.linkId === link.id) {
+        tx.update(childRef, { parentLink: FieldValue.delete() });
+      }
+    });
   }
 };
 
 /**
  * Make one of your logs count as a category of another: { childId, parentId, since,
  * name? }. `since` ("YYYY-MM") is the first month that counts; the app sends the current
- * month, or the child's first month when the person includes its history.
+ * month, or "1970-01" when the person includes the log's history. The caller is in both
+ * logs, so may name both.
  */
 export const linkSublog = onCall(
   withSentryCall("linkSublog", async (request) => {
@@ -278,9 +340,10 @@ export const linkSublog = onCall(
     const db = getFirestore();
     const childRef = ledgers(db).doc(req.childId);
     const parentRef = ledgers(db).doc(req.parentId);
+    const linkRef = links(db).doc();
+    const linkId = linkRef.id;
 
-    let counted: string[] = [];
-    const categoryId = await db.runTransaction(async (tx) => {
+    const { record, counted } = await db.runTransaction(async (tx) => {
       const [child, parent] = await Promise.all([tx.get(childRef), tx.get(parentRef)]);
       if (!child.exists || !parent.exists) throw new HttpsError("not-found", "No such log.");
       const childLedger = asLedger(child.id, child.data());
@@ -293,59 +356,54 @@ export const linkSublog = onCall(
         );
       }
       const added = addLinkedCategory(parentLedger.categories ?? [], {
-        childId: child.id,
+        linkId,
         name: linkedCategoryName(req.name, childLedger.title),
         linkedAt: Timestamp.now(),
       });
-      tx.update(parentRef, { categories: added.categories });
-      const link: ParentLink & { linkedAt: FieldValue } = {
-        ledgerId: parent.id,
+      const parentLink: ParentLink = {
+        linkId,
         categoryId: added.categoryId,
         since: req.since,
         linkedBy: uid,
-        linkedAt: FieldValue.serverTimestamp(),
       };
-      tx.update(childRef, { parentLink: link });
-      counted = countedUids(childLedger.memberUids, parentLedger.memberUids);
-      return added.categoryId;
+      const link: SublogLink = { ...parentLink, childId: child.id, parentId: parent.id };
+      tx.set(linkRef, { ...link, linkedAt: FieldValue.serverTimestamp() });
+      tx.update(parentRef, { categories: added.categories, hasRollups: true });
+      tx.update(childRef, {
+        parentLink: { ...parentLink, linkedAt: FieldValue.serverTimestamp() },
+      });
+      return {
+        record: link,
+        counted: countedUids(childLedger.memberUids, parentLedger.memberUids),
+      };
     });
 
-    await rebuildLink(db, childRef, { replaceFrozen: true });
+    await handOverFrozenMonths(db, record);
+    await rebuildLink(db, linkId);
     // Everyone else whose spending now shows in the parent hears about it.
     const me = await callerUserDoc(db, uid).catch(() => null);
     await notifyCounted(db, {
-      childId: req.childId,
-      parentId: req.parentId,
+      linkId,
       uids: counted.filter((u) => u !== uid),
       reason: "linked",
       actorName: (me?.get("displayName") as string | undefined) ?? undefined,
     });
-    return { categoryId };
+    return { categoryId: record.categoryId, linkId };
   }),
 );
 
-/** End a sublog's link: { childId }. Any member of either log may. */
+/**
+ * End a sublog's link: { linkId }. Any member of either log may: the sublog's members see
+ * the id on its parentLink, the parent's on its line.
+ */
 export const unlinkSublog = onCall(
   withSentryCall("unlinkSublog", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
-    const childId = (request.data as { childId?: unknown } | null)?.childId;
-    if (typeof childId !== "string" || !childId) {
-      throw new HttpsError("invalid-argument", "Expected { childId }.");
-    }
-    const db = getFirestore();
-    const child = await ledgers(db).doc(childId).get();
-    if (!child.exists) throw new HttpsError("not-found", "No such log.");
-    const link = child.get("parentLink") as ParentLink | undefined;
-    if (!link) return { unlinked: false };
-    const parent = await ledgers(db).doc(link.ledgerId).get();
-    const inChild = ((child.get("memberUids") as string[]) ?? []).includes(uid);
-    const inParent = ((parent.get("memberUids") as string[] | undefined) ?? []).includes(uid);
-    if (!inChild && !inParent) {
-      throw new HttpsError("permission-denied", "Only members of these logs can unlink them.");
-    }
-    await detachSublog(db, childId);
-    return { unlinked: true };
+    const req = parseUnlinkRequest(request.data);
+    if (!req) throw new HttpsError("invalid-argument", "Expected { linkId }.");
+    const unlinked = await detachSublog(getFirestore(), req.linkId, { callerUid: uid });
+    return { unlinked };
   }),
 );
 
@@ -357,7 +415,8 @@ const sameMembers = (a: unknown, b: unknown): boolean => {
 
 /**
  * Who counts in a roll-up depends on both logs' members, so a join (or a removal) on
- * either side rebuilds the link's live months. Frozen months stay as they were.
+ * either side rebuilds the link's live months, and tells whoever it starts counting.
+ * Frozen months stay as they were.
  */
 export const rebuildSublogsOnMemberChange = onDocumentUpdated(
   "ledgers/{ledgerId}",
@@ -369,41 +428,34 @@ export const rebuildSublogsOnMemberChange = onDocumentUpdated(
     const db = getFirestore();
     const { ledgerId } = event.params;
 
-    // This log is a sublog: whoever joined (and is in the parent) starts counting there.
-    const link = after.parentLink as ParentLink | undefined;
-    if (link) {
-      await rebuildLink(db, ledgers(db).doc(ledgerId));
-      const parent = await ledgers(db).doc(link.ledgerId).get();
-      const parentUids = parent.get("memberUids") as string[] | undefined;
+    const [asChild, asParent] = await Promise.all([
+      links(db).where("childId", "==", ledgerId).get(),
+      links(db).where("parentId", "==", ledgerId).get(),
+    ]);
+    for (const link of [...asChild.docs, ...asParent.docs]) {
+      const data = link.data() as SublogLink;
+      if (data.endedAt) continue;
+      await rebuildLink(db, link.id);
+      // The other log's members, as they are now.
+      const isChild = data.childId === ledgerId;
+      const other = await ledgers(db)
+        .doc(isChild ? data.parentId : data.childId)
+        .get();
+      const otherUids = other.get("memberUids") as string[] | undefined;
+      const sides = isChild
+        ? {
+            before: { child: before.memberUids, parent: otherUids },
+            after: { child: after.memberUids, parent: otherUids },
+          }
+        : {
+            before: { child: otherUids, parent: before.memberUids },
+            after: { child: otherUids, parent: after.memberUids },
+          };
       await notifyCounted(db, {
-        childId: ledgerId,
-        parentId: link.ledgerId,
-        uids: newlyCountedUids(
-          { child: before.memberUids, parent: parentUids },
-          { child: after.memberUids, parent: parentUids },
-        ),
+        linkId: link.id,
+        uids: newlyCountedUids(sides.before, sides.after),
         reason: "joined",
       });
-    }
-
-    // This log is a parent: whoever joined (and is in a sublog) starts counting here.
-    const categories = (after.categories as LinkableCategory[] | undefined) ?? [];
-    for (const c of categories.filter(isActiveSublog)) {
-      const childRef = ledgers(db).doc(c.sublog!.ledgerId);
-      const child = await childRef.get();
-      if ((child.get("parentLink") as ParentLink | undefined)?.ledgerId === ledgerId) {
-        await rebuildLink(db, childRef);
-        const childUids = child.get("memberUids") as string[] | undefined;
-        await notifyCounted(db, {
-          childId: childRef.id,
-          parentId: ledgerId,
-          uids: newlyCountedUids(
-            { child: childUids, parent: before.memberUids },
-            { child: childUids, parent: after.memberUids },
-          ),
-          reason: "joined",
-        });
-      }
     }
   }),
 );
