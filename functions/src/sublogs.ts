@@ -117,7 +117,7 @@ const refreshParentMonth = async (
   parentRef: DocumentReference,
   month: string,
 ): Promise<void> => {
-  const aggregate = await recomputeMonth(db, parentRef, month, { withRollups: true });
+  const aggregate = await recomputeMonth(db, parentRef, month);
   const parent = await parentRef.get();
   await alertBudgetsIfCurrent({
     db,

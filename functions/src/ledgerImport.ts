@@ -174,9 +174,7 @@ export const importLedgerEntries = onCall(
     if (created > 0) {
       // What the entry trigger does per entry, done once for the batch: it skips these.
       for (const month of importMonths(rows)) {
-        const aggregate = await recomputeMonth(db, ledgerRef, month, {
-          withRollups: ledger.get("hasRollups") === true,
-        });
+        const aggregate = await recomputeMonth(db, ledgerRef, month);
         await alertBudgetsIfCurrent({
           db,
           ledgerRef,

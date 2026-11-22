@@ -91,14 +91,16 @@ export const recomputeLedgerMonth = onDocumentWritten(
     if (!ledgerSnap.exists || ledgerSnap.get("deleting") === true) return;
 
     const ledger = ledgerSnap.data() ?? {};
-    for (const month of affectedMonths(before, after)) {
-      const aggregate = await recomputeMonth(db, ledgerRef, month, {
-        withRollups: ledger.hasRollups === true,
-      });
+    const months = affectedMonths(before, after);
+    for (const month of months) {
+      const aggregate = await recomputeMonth(db, ledgerRef, month);
       await alertBudgetsIfCurrent({ db, ledgerRef, ledger, month, aggregate });
-      // A sublog: the parent's line for this month follows (see sublogs.ts).
-      // A sublog: its parent's line follows (the link is re-read inside, as it is now).
-      if (ledger.parentLink) await rollUpMonth(db, ledgerId, month);
+    }
+    // A sublog: its parent's line follows (see sublogs.ts). The link is read now, after the
+    // months are saved, not from the snapshot above: a link made in between backfills only
+    // the months that were already saved.
+    if ((await ledgerRef.get()).get("parentLink")) {
+      for (const month of months) await rollUpMonth(db, ledgerId, month);
     }
 
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
