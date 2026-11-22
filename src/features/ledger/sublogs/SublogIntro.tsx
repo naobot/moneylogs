@@ -405,6 +405,33 @@ const SUBLOG_SLIDES: ReadonlyArray<Slide> = [
   },
 ];
 
+/**
+ * The announcement, first when the intro opens on Home: what's new, in a line or two,
+ * before the slides that explain it.
+ */
+const WELCOME_SLIDE: Slide = {
+  id: "welcome",
+  heading: "introducing sublogs!",
+  art: (
+    <Art>
+      <div className="IntroWelcome">
+        <span className="IntroWelcome__mark" />
+        <div className="IntroWelcome__lines">
+          <span className="IntroWelcome__new">new</span>
+          <strong>logs inside logs</strong>
+          <span className="IntroArt__caption">
+            <span className="SublogName__glyph">↳</span> business ·{" "}
+            <span className="SublogName__glyph">↳</span> childcare ·{" "}
+            <span className="SublogName__glyph">↳</span> bali 2026
+          </span>
+        </div>
+      </div>
+    </Art>
+  ),
+  text: "Some spending belongs together but deserves its own log: a side business, childcare, a pet, a trip. A sublog keeps all its detail, and counts as a single line in a log you already keep.",
+  example: "The next few slides show how it works, with a few examples.",
+};
+
 // ---- the window ----------------------------------------------------------------
 
 /**
@@ -441,7 +468,7 @@ export const SublogIntro = ({
     <Slides
       isOpen={isOpen}
       title="what's a sublog?"
-      slides={SUBLOG_SLIDES}
+      slides={from === "home" ? [WELCOME_SLIDE, ...SUBLOG_SLIDES] : SUBLOG_SLIDES}
       onClose={close}
       action={onStart ? { text: "Start a sublog", onClick: onStart } : undefined}
     />

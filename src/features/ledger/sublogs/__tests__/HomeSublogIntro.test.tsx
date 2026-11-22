@@ -45,6 +45,14 @@ describe("HomeSublogIntro", () => {
     expect(hasEntries.enabled).toBe(false);
   });
 
+  it("starts with the announcement, before the slides that explain it", () => {
+    render(["personal-u", "home"]);
+    expect(document.querySelector(".Slides__heading")?.textContent).toBe("introducing sublogs!");
+    expect(document.querySelector(".Slides__dots")?.getAttribute("aria-label")).toBe(
+      "slide 1 of 8",
+    );
+  });
+
   it("waits for a first entry when there's only the personal log", () => {
     hasEntries.value = false;
     render(["personal-u"]);
