@@ -22,9 +22,11 @@ export type LedgerCategory = {
   /**
    * This category is another ledger (a sublog) rolled up: its amounts come from
    * rollups/, never from entries here. Set and ended only by the link/unlink functions;
-   * category edits must carry it through. With `unlinkedAt`, past months only.
+   * category edits must carry it through. With `unlinkedAt`, past months only. It names
+   * the link, never the sublog's ledger: members of both logs find the sublog by
+   * matching `linkId` against their own logs' parentLink (src/utils/sublogs.ts).
    */
-  sublog?: { ledgerId: string; linkedAt?: Timestamp; unlinkedAt?: Timestamp };
+  sublog?: { linkId: string; linkedAt?: Timestamp; unlinkedAt?: Timestamp };
 };
 
 // ledgers/{ledgerId}
@@ -50,14 +52,18 @@ export type Ledger = {
   /**
    * This ledger is a sublog: from `since` ("YYYY-MM") on, entries by people who are also
    * in the parent count as the parent's `categoryId`. Written only by Cloud Functions.
+   * No parent id: members who aren't in the parent mustn't learn it (an id is enough to
+   * join a ledger with room). Members of both find it by matching `linkId`.
    */
   parentLink?: {
-    ledgerId: string;
+    linkId: string;
     categoryId: string;
     since: string;
     linkedBy: string;
     linkedAt?: Timestamp;
   };
+  /** Has (or had) sublogs, so its months take in rollups/. Written only by functions. */
+  hasRollups?: boolean;
 };
 
 // ledgers/{ledgerId}/entries/{entryId}
@@ -92,9 +98,9 @@ export type LedgerMonth = {
   computedAt: Timestamp;
 };
 
-// ledgers/{parentId}/rollups/{YYYY-MM}__{childId} — derived, backend-written
+// ledgers/{parentId}/rollups/{YYYY-MM}__{linkId} — derived, backend-written
 export type LedgerRollup = Omit<LedgerMonth, "rolledUp"> & {
-  childId: string;
+  linkId: string;
   categoryId: string;
   countByDay: Record<string, number>; // entries per day, keyed "DD"
   /** The link has ended: this month keeps its totals and is never rebuilt. */

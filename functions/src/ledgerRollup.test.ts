@@ -4,6 +4,7 @@ import {
   addLinkedCategory,
   countedUids,
   hasSublogCategories,
+  latestCurrentMonth,
   LinkableLedger,
   linkedCategoryName,
   markCategoryUnlinked,
@@ -12,6 +13,7 @@ import {
   monthsSince,
   newlyCountedUids,
   parseLinkRequest,
+  parseUnlinkRequest,
   rollupDocId,
   rollupFor,
   sublogCountedNotificationId,
@@ -147,7 +149,7 @@ describe("validateLink", () => {
   });
 
   it("keeps it to one level", () => {
-    const linked = { ledgerId: "p", categoryId: "c", since: "2026-11", linkedBy: "alice" };
+    const linked = { linkId: "L1", categoryId: "c", since: "2026-11", linkedBy: "alice" };
     expect(
       validateLink({
         parent,
@@ -157,7 +159,7 @@ describe("validateLink", () => {
     ).toBe("child-already-linked");
     const aParent = ledger({
       id: "biz",
-      categories: [{ id: "c", name: "c", order: 0, sublog: { ledgerId: "pets" } }],
+      categories: [{ id: "c", name: "c", order: 0, sublog: { linkId: "L2" } }],
     });
     expect(validateLink({ parent, child: aParent, callerUid: "alice" })).toBe("child-is-parent");
     expect(
@@ -172,7 +174,7 @@ describe("validateLink", () => {
   it("lets a log whose links have all ended become a sublog", () => {
     const former = ledger({
       id: "biz",
-      categories: [{ id: "c", name: "c", order: 0, sublog: { ledgerId: "pets", unlinkedAt: 1 } }],
+      categories: [{ id: "c", name: "c", order: 0, sublog: { linkId: "L2", unlinkedAt: 1 } }],
     });
     expect(validateLink({ parent, child: former, callerUid: "alice" })).toBeNull();
   });
@@ -201,48 +203,34 @@ describe("linked category", () => {
     expect(linkedCategoryName("a".repeat(30), "x")).toHaveLength(20);
   });
 
-  it("goes at the end of the active list, before archived ones", () => {
+  it("goes at the end of the active list, before archived ones, under the link's id", () => {
     const { categories, categoryId } = addLinkedCategory(
       [
         { id: "food", name: "food", order: 0 },
         { id: "old", name: "old", order: 1, archived: true },
         { id: "rent", name: "rent", order: 2 },
       ],
-      { childId: "biz", name: "business", linkedAt: 1 },
+      { linkId: "Lk9", name: "business", linkedAt: 1 },
     );
-    expect(categoryId).toBe("sublog-biz");
+    expect(categoryId).toBe("sublog-Lk9");
     expect(categories.map((c) => [c.id, c.order])).toEqual([
       ["food", 0],
       ["rent", 1],
-      ["sublog-biz", 2],
+      ["sublog-Lk9", 2],
       ["old", 3],
     ]);
-    expect(categories[2].sublog).toEqual({ ledgerId: "biz", linkedAt: 1 });
+    // The marker names the link, never the sublog's ledger.
+    expect(categories[2].sublog).toEqual({ linkId: "Lk9", linkedAt: 1 });
   });
 
-  it("gets a fresh id when an earlier link to the same log is still there", () => {
-    const { categoryId } = addLinkedCategory(
-      [
-        {
-          id: "sublog-biz",
-          name: "business",
-          order: 0,
-          sublog: { ledgerId: "biz", unlinkedAt: 1 },
-        },
-      ],
-      { childId: "biz", name: "business", linkedAt: 2 },
-    );
-    expect(categoryId).toBe("sublog-biz-2");
-  });
-
-  it("marks only the live link to that child as ended", () => {
+  it("marks only that link's line as ended", () => {
     const out = markCategoryUnlinked(
       [
-        { id: "a", name: "a", order: 0, sublog: { ledgerId: "biz", unlinkedAt: 1 } },
-        { id: "b", name: "b", order: 1, sublog: { ledgerId: "biz" } },
-        { id: "c", name: "c", order: 2, sublog: { ledgerId: "pets" } },
+        { id: "a", name: "a", order: 0, sublog: { linkId: "L1", unlinkedAt: 1 } },
+        { id: "b", name: "b", order: 1, sublog: { linkId: "L1" } },
+        { id: "c", name: "c", order: 2, sublog: { linkId: "L2" } },
       ],
-      "biz",
+      "L1",
       9,
     );
     expect(out.map((c) => c.sublog?.unlinkedAt)).toEqual([1, 9, undefined]);
@@ -259,8 +247,20 @@ describe("helpers", () => {
     ]);
   });
 
-  it("ids roll-ups by month then child", () => {
-    expect(rollupDocId("2026-11", "biz")).toBe("2026-11__biz");
+  it("ids roll-ups by month then link", () => {
+    expect(rollupDocId("2026-11", "L1")).toBe("2026-11__L1");
+  });
+
+  it("keeps months up to the latest 'now' on Earth, so only truly future ones drop", () => {
+    // 20:00 UTC on 30 Nov is already 1 Dec at UTC+14.
+    expect(latestCurrentMonth(Date.UTC(2026, 10, 30, 20))).toBe("2026-12");
+    expect(latestCurrentMonth(Date.UTC(2026, 10, 15, 12))).toBe("2026-11");
+  });
+
+  it("parses an unlink request by link id", () => {
+    expect(parseUnlinkRequest({ linkId: "AbC123" })).toEqual({ linkId: "AbC123" });
+    expect(parseUnlinkRequest({ linkId: "../x" })).toBeNull();
+    expect(parseUnlinkRequest({ childId: "c" })).toBeNull();
   });
 
   it("parses a link request", () => {
@@ -311,7 +311,7 @@ describe("who counts", () => {
     ).toEqual([]);
   });
 
-  it("ids the notification by sublog and parent", () => {
-    expect(sublogCountedNotificationId("bali", "home")).toBe("sublog_counted_bali_home");
+  it("ids the notification by link, so a new link is a new notice", () => {
+    expect(sublogCountedNotificationId("L1")).toBe("sublog_counted_L1");
   });
 });
