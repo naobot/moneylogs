@@ -18,6 +18,10 @@ jobs:
         with:
           # Chromatic walks git history to find each build's baseline.
           fetch-depth: 0
+          # On pull_request, GitHub checks out a throwaway merge commit (refs/pull/N/merge)
+          # that's rebuilt on every push and never in the branch's history, so baselines
+          # accepted on one push weren't found on the next. Build the branch itself.
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "24.18"
