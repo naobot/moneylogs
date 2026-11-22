@@ -47,7 +47,7 @@ amounts or free text.
 | `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                                              |
 | `sublog_linked`         | A log linked as a sublog of another      | `from` (`wizard`, `log_actions`), `include_past`, `shared_parent`                                                                      |
 | `sublog_unlinked`       | A sublog link ended                      | `from` (`sublog`, `parent`)                                                                                                            |
-| `sublog_intro`          | Sublog intro slides closed               | `from` (`wizard`, `link_form`, `visit`, `help`), `result`                                                                              |
+| `sublog_intro`          | Sublog intro slides closed               | `from` (`home`, `wizard`, `link_form`, `visit`, `help`), `result`                                                                      |
 | `update_profile`        | Profile saved on /me                     | —                                                                                                                                      |
 | `send_friend_request`   | Friend request sent                      | —                                                                                                                                      |
 | `accept_friend`         | Friend request accepted                  | —                                                                                                                                      |

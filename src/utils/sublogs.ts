@@ -217,3 +217,19 @@ export const sublogBlocker = (child: Ledger): LinkError | null => {
 export const shouldAutoOpenSublogIntro = (
   user: { tutorials?: { sublogIntro?: unknown } } | null | undefined,
 ): boolean => !!user && !user.tutorials?.sublogIntro;
+
+/**
+ * Whether Home can announce sublogs yet: once someone has logged at least once, so a
+ * brand-new user meets the basics first. Being in a financial log besides your personal
+ * one counts (you've used logs together); otherwise the personal log needs an entry.
+ * `personalHasEntries` is undefined while that's still being checked.
+ */
+export const readyForSublogIntro = ({
+  ledgerIds,
+  personalId,
+  personalHasEntries,
+}: {
+  ledgerIds: ReadonlyArray<string>;
+  personalId: string | undefined;
+  personalHasEntries: boolean | undefined;
+}): boolean => ledgerIds.some((id) => id !== personalId) || personalHasEntries === true;

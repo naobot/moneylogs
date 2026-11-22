@@ -52,7 +52,7 @@ export type AnalyticsEvents = {
   sublog_unlinked: { from: "sublog" | "parent" };
   /** The "what's a sublog?" slides closed: where they opened, and whether read to the end. */
   sublog_intro: {
-    from: "wizard" | "link_form" | "visit" | "help";
+    from: "home" | "wizard" | "link_form" | "visit" | "help";
     result: "finished" | "skipped";
   };
 
