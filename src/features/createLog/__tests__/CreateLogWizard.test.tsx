@@ -293,5 +293,9 @@ describe("CreateLogWizard", () => {
     expect(document.querySelector(".Slides")).toBeNull();
     await click("what's a sublog?");
     expect(document.querySelector(".Slides")).not.toBeNull();
+    // Mid-way through making one: straight to how it works, no announcement.
+    expect(document.querySelector(".Slides__heading")?.textContent).toBe(
+      "one log can feed another",
+    );
   });
 });
