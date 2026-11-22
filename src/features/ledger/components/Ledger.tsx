@@ -4,13 +4,13 @@ import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
 import { useLedgerRollups } from "@/hooks/useLedgerRollups";
 import { useLedgerEntryQuery } from "@/hooks/useLedgerEntryQuery";
 import { Ledger as LedgerType, LedgerEntryInput } from "@/types/ledger";
-import { activeCategories, formatMonth, monthKeyOf } from "@/utils/ledger";
+import { entryCategories, formatMonth, monthKeyOf } from "@/utils/ledger";
 import { defaultEntryDate } from "@/utils/ledgerEntries";
 import EntryForm from "./EntryForm";
 import EntryList from "./EntryList";
 import LedgerShell, { LedgerShellContext } from "./LedgerShell";
 import { LedgerStatsStrip } from "./LedgerStats";
-import { entryCategories, sublogPaths } from "@/utils/sublogs";
+import { sublogPaths } from "@/utils/sublogs";
 import { useSublogLinks } from "@/features/ledger/sublogs/useSublogLinks";
 import { NoSpendDay } from "@/features/ledger/noSpend/NoSpendDay";
 import { useLedgerTour } from "@/features/ledger/tour/LedgerTour";
@@ -46,9 +46,7 @@ const LedgerEntries = ({
 
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
   const categories = ledger.categories ?? [];
-  // Linked categories are logged in their sublog, never here.
-  const formCategories = entryCategories(categories);
-  const firstCategory = activeCategories(formCategories)[0]?.id ?? "";
+  const firstCategory = entryCategories(categories)[0]?.id ?? "";
   const sublogLinks = useSublogLinks(categories);
   const sublogs = sublogPaths(sublogLinks, month, monthKeyOf(today));
   const openableSublogs = categories.filter((c) => sublogs.get(c.id));
@@ -81,7 +79,7 @@ const LedgerEntries = ({
 
       <EntryForm
         mode="add"
-        categories={formCategories}
+        categories={categories}
         isSaving={addEntry.isLoading}
         initial={{
           amount: "",

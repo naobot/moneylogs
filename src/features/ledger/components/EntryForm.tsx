@@ -5,7 +5,7 @@ import { Currency } from "@/types/user";
 import { LedgerCategory, LedgerEntryInput } from "@/types/ledger";
 import type { EntryFormValues } from "@/utils/ledgerEntries";
 import { CURRENCIES } from "@/utils/currency";
-import { activeCategories, MAX_NOTE_LENGTH, resolveCategory, validateEntry } from "@/utils/ledger";
+import { entryCategories, MAX_NOTE_LENGTH, resolveCategory, validateEntry } from "@/utils/ledger";
 import { toEntryInput } from "@/utils/ledgerEntries";
 
 import Button from "@/components/Button";
@@ -59,7 +59,7 @@ export const EntryForm = ({
   // active one (the ledger's categories update live).
   useEffect(() => {
     if (mode !== "add") return;
-    const active = activeCategories(categories);
+    const active = entryCategories(categories);
     if (active.length > 0 && !active.some((c) => c.id === values.categoryId)) {
       setValues((v) => ({ ...v, categoryId: active[0].id }));
     }
@@ -78,7 +78,7 @@ export const EntryForm = ({
   const amountTouched = values.amount.trim() !== "";
 
   // Editing an entry in an archived category keeps it selectable for that entry.
-  const options = activeCategories(categories);
+  const options = entryCategories(categories);
   if (values.categoryId && !options.some((c) => c.id === values.categoryId)) {
     options.push(resolveCategory(values.categoryId, categories));
   }

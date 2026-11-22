@@ -11,7 +11,7 @@ import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import EntryForm from "./EntryForm";
 import { reportError } from "@/utils/reportError";
-import { entryCategories, SublogDayRow, SublogPaths, withSublogDays } from "@/utils/sublogs";
+import { SublogDayRow, SublogPaths, withSublogDays } from "@/utils/sublogs";
 import { SublogMark, SublogName } from "@/features/ledger/sublogs/SublogName";
 
 type EntryListProps = {
@@ -57,8 +57,6 @@ export const EntryList = ({
   }, [editingId]);
 
   const days = withSublogDays(groupEntriesByDay([...entries]), rollups, categories);
-  // Linked categories are logged in their sublog, so an edit can't move an entry there.
-  const formCategories = entryCategories(categories);
 
   const confirmDelete = async () => {
     if (!deletingEntry) return;
@@ -100,7 +98,7 @@ export const EntryList = ({
                     >
                       <EntryForm
                         mode="edit"
-                        categories={formCategories}
+                        categories={categories}
                         isSaving={isSavingEdit}
                         initial={{
                           amount: String(entry.amount),
