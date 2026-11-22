@@ -17,6 +17,7 @@ export type Feature =
   | "budget_buddy"
   | "ledger"
   | "ledger_import"
+  | "sublogs"
   | "notifications"
   | "reactions"
   | "dashboard"

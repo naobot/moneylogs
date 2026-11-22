@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import {
   DEFAULT_CATEGORIES,
   activeCategories,
+  entryCategories,
   formatMonth,
   isValidDateKey,
   isValidMonthKey,
@@ -84,6 +85,16 @@ describe("categories", () => {
     expect(activeCategories(CATS).map((c) => c.id)).toEqual(["a", "b"]);
   });
 
+  it("leaves linked lines out of entry categories, but not ended ones", () => {
+    const cats = [
+      ...CATS,
+      { id: "sublog-l1", name: "Trip", order: 3, sublog: { linkId: "l1" } },
+      { id: "sublog-l0", name: "Old", order: 4, sublog: { linkId: "l0", unlinkedAt: {} as never } },
+    ];
+    expect(activeCategories(cats).map((c) => c.id)).toEqual(["a", "b", "sublog-l1", "sublog-l0"]);
+    expect(entryCategories(cats).map((c) => c.id)).toEqual(["a", "b", "sublog-l0"]);
+  });
+
   it("resolves archived and unknown categories", () => {
     expect(resolveCategory("z", CATS).name).toBe("Zulu");
     expect(resolveCategory("gone", CATS)).toMatchObject({ id: "gone", name: "Uncategorised" });
@@ -99,6 +110,16 @@ describe("validateEntry", () => {
 
   it("allows archived categories so old entries stay editable", () => {
     expect(validateEntry({ ...valid, categoryId: "z" }, CATS)).toEqual([]);
+  });
+
+  it("rejects linked lines, which only roll-ups fill, but not ended ones", () => {
+    const cats = [
+      ...CATS,
+      { id: "sublog-l1", name: "Trip", order: 3, sublog: { linkId: "l1" } },
+      { id: "sublog-l0", name: "Old", order: 4, sublog: { linkId: "l0", unlinkedAt: {} as never } },
+    ];
+    expect(validateEntry({ ...valid, categoryId: "sublog-l1" }, cats)).toEqual(["category"]);
+    expect(validateEntry({ ...valid, categoryId: "sublog-l0" }, cats)).toEqual([]);
   });
 
   it("rejects non-positive or non-finite amounts", () => {

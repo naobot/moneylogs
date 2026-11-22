@@ -1,7 +1,10 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
-import { alertBudgetsIfCurrent, recomputeMonth, rewardLoggedEntry } from "./ledger";
+import { rewardLoggedEntry } from "./ledger";
+import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
+import { isActiveSublog, LinkableCategory } from "./ledgerRollup";
+import { rollUpMonth } from "./sublogs";
 import {
   ExistingEntry,
   findPossibleDuplicates,
@@ -114,9 +117,15 @@ export const importLedgerEntries = onCall(
       throw new HttpsError("permission-denied", "Not a member of this log.");
     }
 
-    const categories = (ledger.get("categories") ?? []) as Array<{ id?: unknown }>;
+    // Linked lines are filled by roll-ups only, never by entries.
+    const categories = (ledger.get("categories") ?? []) as Array<
+      Pick<LinkableCategory, "sublog"> & { id?: unknown }
+    >;
     const categoryIds = new Set(
-      categories.map((c) => c.id).filter((id): id is string => typeof id === "string"),
+      categories
+        .filter((c) => !isActiveSublog(c))
+        .map((c) => c.id)
+        .filter((id): id is string => typeof id === "string"),
     );
     const rows = parseImportRows(req.rows, categoryIds);
     if (typeof rows === "string") throw new HttpsError("invalid-argument", rows);
@@ -180,6 +189,9 @@ export const importLedgerEntries = onCall(
           month,
           aggregate,
         });
+        // A sublog: its parent's line follows. Read the link now, not from the snapshot
+        // taken before the rows were written: it may have been replaced since.
+        if ((await ledgerRef.get()).get("parentLink")) await rollUpMonth(db, ledgerRef.id, month);
       }
       // Importing counts as logging: check-in (copper coin) and the knick-knack roll.
       await rewardLoggedEntry({

@@ -17,6 +17,7 @@ export type NotificationType =
   | "log_invite"
   | "log_ending"
   | "log_ended"
+  | "sublog_counted"
   | "budget_approaching"
   | "budget_exceeded"
   | "budget_projected"
@@ -74,6 +75,21 @@ export type LogInviteNotification = Base & {
   /** The inviter's user doc id. */
   actorId: string;
   actorName: string;
+};
+
+/**
+ * Your spending in a sublog (groupId) now also counts in another log (parentTitle), whose
+ * members may not be in the sublog: on a link, or when you joined either log.
+ */
+export type SublogCountedNotification = Base & {
+  type: "sublog_counted";
+  parentId: string;
+  parentTitle: string;
+  /** The sublog's line in the parent. */
+  lineName: string;
+  /** "linked": someone made the link (actorName); "joined": a join made you count. */
+  reason: "linked" | "joined";
+  actorName?: string;
 };
 
 export type LogTimelineNotification = Base & {
@@ -153,6 +169,7 @@ export type AppNotification =
   | LogMembershipNotification
   | LogInviteNotification
   | LogTimelineNotification
+  | SublogCountedNotification
   | BudgetNotification;
 
 /** The notification shape for one type, even where a variant covers several types. */

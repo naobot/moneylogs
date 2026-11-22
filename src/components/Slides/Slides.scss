@@ -1,0 +1,76 @@
+// A feature introduction, one slide at a time (Slides.tsx). Two inks; the pictures
+// inside bring their own fills.
+.Slides {
+  width: min(32em, 94vw);
+
+  &__body {
+    text-align: left;
+  }
+
+  &__slide {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    // Every slide takes the height of the tallest, near enough, so the buttons don't jump.
+    min-height: 26em;
+  }
+
+  &__heading {
+    margin: 0;
+    font-size: 1.1em;
+  }
+
+  &__text,
+  &__example {
+    margin: 0;
+    font-size: 0.9em;
+  }
+
+  &__example {
+    padding-top: var(--space-3);
+    border-top: var(--border-hairline) dashed var(--ink);
+
+    b {
+      font-weight: 700;
+    }
+  }
+
+  &__foot {
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  &__dots {
+    display: flex;
+    gap: 0.4em;
+    margin-right: auto;
+  }
+
+  &__dot {
+    width: 0.6em;
+    height: 0.6em;
+    border: var(--border-hairline) solid var(--ink);
+
+    &--on {
+      background: var(--ink);
+    }
+  }
+
+  &__skip {
+    font: inherit;
+    font-size: 0.8em;
+    color: var(--ink-muted);
+    background: none;
+    border: none;
+    padding: var(--space-1);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--ink);
+    }
+  }
+}

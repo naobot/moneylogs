@@ -23,6 +23,7 @@ import {
   Timestamp,
   DocumentReference,
 } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import { timelineNotificationsFor } from "../functions/src/logTimeline";
 import { PRESET_AVATARS } from "../src/features/account/avatar/presets";
 import {
@@ -30,6 +31,7 @@ import {
   PASSWORD,
   auth,
   db,
+  functions,
   functionsEmulatorIsUp,
   ownerWrite,
   type Value,
@@ -506,8 +508,12 @@ const CATEGORY_NAMES = [
   "Other",
 ];
 
-const categoriesWithBudgets = (currency: string, budgets: Record<string, number> = {}) =>
-  CATEGORY_NAMES.map((name, order) => {
+const categoriesWithBudgets = (
+  currency: string,
+  budgets: Record<string, number> = {},
+  names: ReadonlyArray<string> = CATEGORY_NAMES,
+) =>
+  names.map((name, order) => {
     const id = name.toLowerCase();
     return {
       id,
@@ -526,6 +532,10 @@ type LedgerSeed = {
   maxParticipants: number;
   joiners: UserKey[];
   budgets?: Record<string, number>;
+  /** Its own category names, instead of the app's ten defaults. */
+  categories?: string[];
+  /** Its default currency, if not the owner's. */
+  currency?: string;
 };
 
 const testLedgers: LedgerSeed[] = [
@@ -550,6 +560,26 @@ const testLedgers: LedgerSeed[] = [
     joiners: ["bob"],
     // Housing nearly spent, so the month's total is "approaching" (80%+).
     budgets: { housing: 1900, utilities: 150, groceries: 300 },
+  },
+  // Sublogs (linkSublogs below): Alice's side business counts as one line in her
+  // personal log, all its months; the trip she shares with Bob counts there from this
+  // month, and only her share, since Bob isn't in her personal log.
+  {
+    key: "business",
+    owner: "alice",
+    title: "business",
+    maxParticipants: 1,
+    joiners: [],
+    categories: ["Software", "Travel", "Supplies"],
+    budgets: { software: 300, travel: 200 },
+  },
+  {
+    key: "bali",
+    owner: "alice",
+    title: "bali 2026",
+    maxParticipants: 4,
+    joiners: ["bob"],
+    currency: "USD",
   },
 ];
 
@@ -709,6 +739,63 @@ const sampleEntries: EntrySeed[] = [
     currency: "JPY",
     categoryId: "groceries",
   },
+  // Alice's business (a sublog of her personal log, all months)
+  {
+    ledger: "business",
+    author: "alice",
+    day: 3,
+    amount: 42,
+    currency: "CAD",
+    categoryId: "software",
+    note: "Domain renewal",
+  },
+  {
+    ledger: "business",
+    author: "alice",
+    day: 9,
+    amount: 150,
+    currency: "CAD",
+    categoryId: "travel",
+  },
+  {
+    ledger: "business",
+    author: "alice",
+    day: 12,
+    amount: 70,
+    currency: "CAD",
+    categoryId: "supplies",
+  },
+  {
+    ledger: "business",
+    author: "alice",
+    day: 14,
+    lastMonth: true,
+    amount: 168,
+    currency: "CAD",
+    categoryId: "software",
+    note: "Design tool, yearly",
+  },
+  // bali 2026, Alice + Bob (a sublog of Alice's personal log: only her entries count)
+  { ledger: "bali", author: "alice", day: 2, amount: 120, currency: "USD", categoryId: "food" },
+  {
+    ledger: "bali",
+    author: "alice",
+    day: 2,
+    amount: 300,
+    currency: "USD",
+    categoryId: "travel",
+    note: "Villa, her half",
+  },
+  {
+    ledger: "bali",
+    author: "bob",
+    day: 2,
+    amount: 300,
+    currency: "USD",
+    categoryId: "travel",
+    note: "Villa, his half",
+  },
+  { ledger: "bali", author: "bob", day: 5, amount: 80, currency: "USD", categoryId: "food" },
   // Shared home ledger
   {
     ledger: "home",
@@ -901,11 +988,15 @@ async function createLedgers() {
     const data = {
       title: ledger.title,
       max_participants: ledger.maxParticipants,
-      defaultCurrency: owner.currency,
+      defaultCurrency: ledger.currency ?? owner.currency,
       members: [userRef(ledger.owner)],
       memberUids: [owner.uid],
       createdBy: owner.uid,
-      categories: categoriesWithBudgets(owner.currency, ledger.budgets),
+      categories: categoriesWithBudgets(
+        ledger.currency ?? owner.currency,
+        ledger.budgets,
+        ledger.categories,
+      ),
       createdAt: serverTimestamp(),
     };
     let ref: DocumentReference;
@@ -926,7 +1017,9 @@ async function createLedgers() {
     }
     ids[ledger.key] = ref.id;
   }
-  console.log(`✅ ${testLedgers.length} financial logs (one personal log each, plus a shared one)`);
+  console.log(
+    `✅ ${testLedgers.length} financial logs (one personal log each, a shared one, two sublogs)`,
+  );
 
   for (const entry of sampleEntries) {
     const author = users[entry.author];
@@ -953,6 +1046,26 @@ async function createLedgers() {
   }
   console.log(`✅ ${sampleEntries.length} financial entries`);
   return ids;
+}
+
+/**
+ * Make Alice's business and trip logs sublogs of her personal log, through the real
+ * linkSublog function, which builds the roll-ups. Needs the Functions emulator.
+ */
+async function linkSublogs(ledgerIds: Record<string, string>) {
+  if (!(await functionsEmulatorIsUp())) {
+    console.warn("⚠️  Functions emulator down: sublogs left unlinked");
+    return;
+  }
+  const link = httpsCallable(functions, "linkSublog");
+  const alice = users.alice;
+  const thisMonth = dateKeyIn(alice.timezone, NOW).slice(0, 7);
+  await signInAs("alice");
+  const personal = ledgerIds["personal:alice"];
+  // Every month of business, so last month's personal stats include it too.
+  await link({ childId: ledgerIds.business, parentId: personal, since: "1970-01" });
+  await link({ childId: ledgerIds.bali, parentId: personal, name: "bali", since: thisMonth });
+  console.log("🔗 business and bali 2026 count in Alice's personal log");
 }
 
 /** Alice's own view: last visits (for "new" badges), a pin, an archived log, prefs. */
@@ -1077,6 +1190,7 @@ async function seedEmulator() {
 
     console.log("\n💰 Financial logs");
     const ledgerIds = await createLedgers();
+    await linkSublogs(ledgerIds);
 
     console.log("\n👤 Personal touches");
     await personaliseAlice(groupIds, postIds, ledgerIds);
@@ -1097,6 +1211,9 @@ async function seedEmulator() {
     console.log("   - /me: a 4th past log and an archived one");
     console.log("   - /notifications: joins, a log that just ended, comments, reactions, budgets");
     console.log("   - financial: a personal log over budget in places, a shared one near budget");
+    console.log(
+      "   - sublogs: business and bali 2026 (shared with Bob) as lines in her personal log",
+    );
     console.log("   Charlie (charlie.london@test.com) sees a log that's ending soon.");
     console.log("   Erik (erik.tokyo@test.com) is good for trying account deletion: one solo");
     console.log('   log to purge, one shared log where his posts become a "deleted user".');

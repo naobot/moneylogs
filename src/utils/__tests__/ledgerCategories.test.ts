@@ -314,3 +314,43 @@ describe("fixed categories", () => {
     expect(added.find((c) => c.id === "utilities")).not.toHaveProperty("fixed");
   });
 });
+
+describe("applyCategoryOp on a linked category (sublog)", () => {
+  const linked = (): LedgerCategory[] => [
+    { id: "food", name: "food", order: 0 },
+    { id: "sublog-biz", name: "business", order: 1, sublog: { linkId: "L1" } },
+  ];
+
+  it("won't archive or delete it: only unlinking ends a link", () => {
+    expect(
+      applyCategoryOp(linked(), { type: "archive", id: "sublog-biz" })[1].archived,
+    ).toBeUndefined();
+    expect(applyCategoryOp(linked(), { type: "delete", id: "sublog-biz" })).toHaveLength(2);
+  });
+
+  it("keeps the link through other edits", () => {
+    const renamed = applyCategoryOp(linked(), { type: "rename", id: "sublog-biz", name: "work" });
+    expect(renamed[1]).toMatchObject({ name: "work", sublog: { linkId: "L1" } });
+    const budgeted = applyCategoryOp(renamed, {
+      type: "setBudget",
+      id: "sublog-biz",
+      currency: "CAD",
+      amount: 500,
+    });
+    expect(budgeted[1].sublog).toEqual({ linkId: "L1" });
+    const moved = applyCategoryOp(budgeted, { type: "move", id: "sublog-biz", toIndex: 0 });
+    expect(moved[0]).toMatchObject({ id: "sublog-biz", sublog: { linkId: "L1" } });
+  });
+
+  it("archives it like any other once unlinked", () => {
+    const ended = linked();
+    ended[1].sublog = { linkId: "L1", unlinkedAt: {} as never };
+    expect(applyCategoryOp(ended, { type: "archive", id: "sublog-biz" })[1].archived).toBe(true);
+  });
+
+  it("never deletes a line that was a sublog: its past months hold the sublog's totals", () => {
+    const ended = linked();
+    ended[1].sublog = { linkId: "L1", unlinkedAt: {} as never };
+    expect(applyCategoryOp(ended, { type: "delete", id: "sublog-biz" })).toHaveLength(2);
+  });
+});
