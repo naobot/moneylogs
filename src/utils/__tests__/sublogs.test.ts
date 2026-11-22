@@ -10,6 +10,7 @@ import {
   memberNames,
   mergeMonth,
   parentChoices,
+  readyForSublogIntro,
   sublogBlocker,
   withSublogDays,
 } from "../sublogs";
@@ -203,5 +204,30 @@ describe("parentChoices", () => {
       ),
     ).toBe("child-is-parent");
     expect(sublogBlocker(ledger("biz"))).toBeNull();
+  });
+});
+
+describe("readyForSublogIntro", () => {
+  it("waits for a first entry when there's only the personal log", () => {
+    const only = { ledgerIds: ["personal-u"], personalId: "personal-u" };
+    expect(readyForSublogIntro({ ...only, personalHasEntries: undefined })).toBe(false);
+    expect(readyForSublogIntro({ ...only, personalHasEntries: false })).toBe(false);
+    expect(readyForSublogIntro({ ...only, personalHasEntries: true })).toBe(true);
+  });
+
+  it("is ready for someone in another financial log", () => {
+    expect(
+      readyForSublogIntro({
+        ledgerIds: ["personal-u", "home"],
+        personalId: "personal-u",
+        personalHasEntries: undefined,
+      }),
+    ).toBe(true);
+  });
+
+  it("isn't ready with no logs at all", () => {
+    expect(
+      readyForSublogIntro({ ledgerIds: [], personalId: undefined, personalHasEntries: undefined }),
+    ).toBe(false);
   });
 });

@@ -16,7 +16,7 @@ import "./sublogs.scss";
  */
 
 /** Where the intro was opened from, for analytics. */
-export type SublogIntroFrom = "wizard" | "link_form" | "visit" | "help";
+export type SublogIntroFrom = "home" | "wizard" | "link_form" | "visit" | "help";
 
 // ---- picture parts -------------------------------------------------------------
 

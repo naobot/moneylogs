@@ -6,6 +6,7 @@ import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { KnickKnackDrawer } from "@/features/dashboard/KnickKnackDrawer";
 import { PersonalLogNudge } from "@/features/ledger/tour/PersonalLogNudge";
+import { HomeSublogIntro } from "@/features/ledger/sublogs/HomeSublogIntro";
 import { partitionArchived } from "@/utils/archivedLogs";
 
 // Home is a dashboard of what's current. The full history (every past and archived log)
@@ -69,6 +70,7 @@ export const Home = () => {
   return (
     <div className="Content__body Home">
       {nudge}
+      <HomeSublogIntro ledgerIds={ledgerParts.active.map((l) => l.id)} />
       <Dashboard groups={allGroups} ledgers={ledgers} />
       {archivedNote}
     </div>
