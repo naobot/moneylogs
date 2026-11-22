@@ -10,20 +10,22 @@ import {
   memberNames,
   mergeMonth,
   parentChoices,
+  parentInMyLogs,
   sublogBlocker,
+  sublogsInMyLogs,
   withSublogDays,
 } from "../sublogs";
 
 const categories: LedgerCategory[] = [
   { id: "food", name: "food", order: 0 },
-  { id: "sublog-biz", name: "business", order: 1, sublog: { ledgerId: "biz" } },
+  { id: "sublog-biz", name: "business", order: 1, sublog: { linkId: "L-biz" } },
   {
     id: "sublog-old",
     name: "old trip",
     order: 2,
-    sublog: { ledgerId: "trip", unlinkedAt: {} as never },
+    sublog: { linkId: "L-trip", unlinkedAt: {} as never },
   },
-  { id: "sublog-pip", name: "pip", order: 3, sublog: { ledgerId: "pip" } },
+  { id: "sublog-pip", name: "pip", order: 3, sublog: { linkId: "L-pip" } },
 ];
 
 const entry = (over: Partial<LedgerEntry>): LedgerEntry =>
@@ -42,7 +44,7 @@ const entry = (over: Partial<LedgerEntry>): LedgerEntry =>
 const rollup = (over: Partial<LedgerRollup>): LedgerRollup =>
   ({
     month: "2026-11",
-    childId: "biz",
+    linkId: "L-biz",
     categoryId: "sublog-biz",
     entryCount: 3,
     totals: { CAD: 42 },
@@ -55,10 +57,21 @@ const rollup = (over: Partial<LedgerRollup>): LedgerRollup =>
   }) as LedgerRollup;
 
 describe("linked categories", () => {
-  it("maps live links to their sublog, leaving ended ones out", () => {
+  it("maps live lines to their link, leaving ended ones out", () => {
     expect([...activeSublogs(categories)]).toEqual([
+      ["sublog-biz", "L-biz"],
+      ["sublog-pip", "L-pip"],
+    ]);
+  });
+
+  it("finds each line's sublog among the viewer's own logs, by link id", () => {
+    const mine = [
+      { id: "biz", parentLink: { linkId: "L-biz" } },
+      { id: "home" },
+    ] as unknown as Ledger[];
+    expect([...sublogsInMyLogs(categories, mine)]).toEqual([
       ["sublog-biz", "biz"],
-      ["sublog-pip", "pip"],
+      ["sublog-pip", null],
     ]);
   });
 
@@ -67,8 +80,10 @@ describe("linked categories", () => {
   });
 
   it("knows a log with any sublog, past or present, may have roll-ups", () => {
-    expect(hasRollups(categories)).toBe(true);
-    expect(hasRollups([categories[0]])).toBe(false);
+    expect(hasRollups({ categories })).toBe(true);
+    expect(hasRollups({ categories: [categories[0]] })).toBe(false);
+    // The server's flag holds even once the lines are gone.
+    expect(hasRollups({ categories: [categories[0]], hasRollups: true })).toBe(true);
   });
 });
 
@@ -119,7 +134,6 @@ describe("withSublogDays", () => {
     expect(days[0].sublogs).toEqual([
       {
         categoryId: "sublog-biz",
-        childId: "biz",
         name: "business",
         amounts: { CAD: 30 },
         count: 2,
@@ -130,29 +144,26 @@ describe("withSublogDays", () => {
     expect(days[1].subtotals).toEqual({ CAD: 12 });
   });
 
-  it("orders a day's sublogs by category order and drops the link once unlinked", () => {
+  it("orders a day's sublogs by category order, ended links too", () => {
     const days = withSublogDays(
       [],
       [
         rollup({
           categoryId: "sublog-pip",
-          childId: "pip",
+          linkId: "L-pip",
           byDay: { "01": { CAD: 1 } },
           countByDay: { "01": 1 },
         }),
         rollup({
           categoryId: "sublog-old",
-          childId: "trip",
+          linkId: "L-trip",
           byDay: { "01": { CAD: 2 } },
           countByDay: { "01": 1 },
         }),
       ],
       categories,
     );
-    expect(days[0].sublogs.map((s) => [s.name, s.childId])).toEqual([
-      ["old trip", undefined],
-      ["pip", "pip"],
-    ]);
+    expect(days[0].sublogs.map((s) => s.name)).toEqual(["old trip", "pip"]);
   });
 
   it("doesn't change the days it was given", () => {
@@ -165,7 +176,7 @@ describe("withSublogDays", () => {
 describe("parentChoices", () => {
   const ledger = (id: string, over: Partial<Ledger> = {}): Ledger =>
     ({ id, title: id, memberUids: ["alice"], categories: [], ...over }) as unknown as Ledger;
-  const link = { ledgerId: "x", categoryId: "c", since: "2026-11", linkedBy: "alice" };
+  const link = { linkId: "Lx", categoryId: "c", since: "2026-11", linkedBy: "alice" };
 
   it("lists the other logs, personal first, marking ones that can't be parents", () => {
     const choices = parentChoices(
@@ -198,10 +209,33 @@ describe("parentChoices", () => {
     expect(
       sublogBlocker(
         ledger("biz", {
-          categories: [{ id: "c", name: "c", order: 0, sublog: { ledgerId: "p" } }],
+          categories: [{ id: "c", name: "c", order: 0, sublog: { linkId: "Lp" } }],
         }),
       ),
     ).toBe("child-is-parent");
     expect(sublogBlocker(ledger("biz"))).toBeNull();
+  });
+});
+
+describe("parentInMyLogs", () => {
+  it("finds a sublog's parent and line among the viewer's logs, by link id", () => {
+    const child = {
+      parentLink: { linkId: "L-biz", categoryId: "sublog-biz", since: "2026-11", linkedBy: "u" },
+    };
+    const found = parentInMyLogs(child, [
+      { id: "home", title: "home", categories: [] },
+      { id: "personal-u", title: "personal", categories },
+    ] as unknown as Ledger[]);
+    expect(found?.parent.id).toBe("personal-u");
+    expect(found?.line?.name).toBe("business");
+  });
+
+  it("finds nothing when the viewer isn't in the parent", () => {
+    const child = {
+      parentLink: { linkId: "L-biz", categoryId: "x", since: "2026-11", linkedBy: "u" },
+    };
+    expect(
+      parentInMyLogs(child, [{ id: "home", title: "home", categories: [] }] as unknown as Ledger[]),
+    ).toBeUndefined();
   });
 });

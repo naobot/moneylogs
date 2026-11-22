@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Ledger } from "@/types/ledger";
-import { isActiveSublog } from "@/utils/sublogs";
+import { isActiveSublog, parentInMyLogs, sublogsInMyLogs } from "@/utils/sublogs";
 import "./sublogs.scss";
 
 /**
@@ -21,8 +21,10 @@ export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
   if (!link && sublogs.length === 0) return null;
 
   if (link) {
-    const parent = ledgers.find((l) => l.id === link.ledgerId);
-    const line = parent?.categories?.find((c) => c.id === link.categoryId)?.name;
+    // The sublog doesn't name its parent: find it among the viewer's own logs.
+    const found = parentInMyLogs(ledger, ledgers);
+    const parent = found?.parent;
+    const line = found?.line?.name;
     return (
       <p className="SublogCrumb">
         <span className="SublogName__glyph" aria-hidden="true">
@@ -46,16 +48,16 @@ export const SublogCrumb = ({ ledger }: { ledger: Ledger }) => {
     );
   }
 
-  const mine = new Set(ledgers.map((l) => l.id));
+  const childOf = sublogsInMyLogs(ledger.categories ?? [], ledgers);
   return (
     <p className="SublogCrumb">
       sublogs:{" "}
       {sublogs.map((c, i) => {
-        const childId = c.sublog!.ledgerId;
+        const childId = childOf.get(c.id);
         return (
           <Fragment key={c.id}>
             {i > 0 && " · "}
-            {mine.has(childId) ? (
+            {childId ? (
               <Link to={`/l/${childId}`} className="keep-case">
                 {c.name}
               </Link>

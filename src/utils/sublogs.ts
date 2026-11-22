@@ -24,17 +24,37 @@ import {
 
 export { isActiveSublog };
 
-/** Linked categories that are live now: category id → the sublog's ledger id. */
+/**
+ * Linked categories that are live now: category id → its link id. The line never names
+ * the sublog's ledger; see sublogsInMyLogs for finding it.
+ */
 export const activeSublogs = (categories: ReadonlyArray<LedgerCategory>): Map<string, string> =>
   new Map(
-    categories
-      .filter((c) => !c.archived && isActiveSublog(c))
-      .map((c) => [c.id, c.sublog!.ledgerId]),
+    categories.filter((c) => !c.archived && isActiveSublog(c)).map((c) => [c.id, c.sublog!.linkId]),
   );
 
+/**
+ * Each live linked category's sublog, among the viewer's own logs: category id → the
+ * sublog's id, or null when the viewer isn't in it (so it can't be opened, or named).
+ */
+export const sublogsInMyLogs = (
+  categories: ReadonlyArray<LedgerCategory>,
+  myLedgers: ReadonlyArray<Pick<Ledger, "id" | "parentLink">>,
+): Map<string, string | null> => {
+  const byLink = new Map(
+    myLedgers.flatMap((l) => (l.parentLink ? [[l.parentLink.linkId, l.id] as const] : [])),
+  );
+  return new Map(
+    [...activeSublogs(categories)].map(([categoryId, linkId]) => [
+      categoryId,
+      byLink.get(linkId) ?? null,
+    ]),
+  );
+};
+
 /** Whether this log has (or had) sublogs, so it may have roll-ups to load. */
-export const hasRollups = (categories: ReadonlyArray<LedgerCategory>): boolean =>
-  categories.some((c) => !!c.sublog);
+export const hasRollups = (ledger: Pick<Ledger, "hasRollups" | "categories">): boolean =>
+  ledger.hasRollups === true || (ledger.categories ?? []).some((c) => !!c.sublog);
 
 /** Linked category id → the path into its sublog (null: the viewer isn't a member). */
 export type SublogPaths = ReadonlyMap<string, string | null>;
@@ -98,8 +118,6 @@ export const memberNames = (
 /** One sublog's spending on one day, as the parent's entry list shows it. */
 export type SublogDayRow = {
   categoryId: string;
-  /** The sublog to open, or undefined once the link has ended. */
-  childId?: string;
   name: string;
   amounts: CurrencyAmounts;
   count: number;
@@ -137,7 +155,6 @@ export const withSublogDays = <T>(
       }
       day.sublogs.push({
         categoryId: r.categoryId,
-        childId: category && isActiveSublog(category) ? category.sublog!.ledgerId : undefined,
         name: category?.name ?? "sublog",
         amounts,
         count: r.countByDay?.[dd] ?? 0,
@@ -211,4 +228,22 @@ export const sublogBlocker = (child: Ledger): LinkError | null => {
   if (child.parentLink) return "child-already-linked";
   if ((child.categories ?? []).some(isActiveSublog)) return "child-is-parent";
   return null;
+};
+
+/**
+ * A sublog's parent among the viewer's own logs, with the sublog's line in it: found by
+ * the link id, since the sublog never names its parent. Undefined when the viewer isn't
+ * in the parent (or it isn't a sublog).
+ */
+export const parentInMyLogs = (
+  child: Pick<Ledger, "parentLink">,
+  myLedgers: ReadonlyArray<Pick<Ledger, "id" | "title" | "categories">>,
+): { parent: Pick<Ledger, "id" | "title" | "categories">; line?: LedgerCategory } | undefined => {
+  const linkId = child.parentLink?.linkId;
+  if (!linkId) return undefined;
+  for (const parent of myLedgers) {
+    const line = (parent.categories ?? []).find((c) => c.sublog?.linkId === linkId);
+    if (line) return { parent, line };
+  }
+  return undefined;
 };

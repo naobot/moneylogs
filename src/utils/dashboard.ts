@@ -78,12 +78,18 @@ export const arrangeDashboard = ({
 export const nestSublogs = (
   ledgers: ReadonlyArray<Ledger>,
 ): { top: Ledger[]; sublogsOf: Map<string, Ledger[]> } => {
-  const ids = new Set(ledgers.map((l) => l.id));
+  // A sublog names only its link; its parent is the listed log whose line has that link.
+  const parentOfLink = new Map<string, string>();
+  for (const ledger of ledgers) {
+    for (const c of ledger.categories ?? []) {
+      if (c.sublog && !c.sublog.unlinkedAt) parentOfLink.set(c.sublog.linkId, ledger.id);
+    }
+  }
   const sublogsOf = new Map<string, Ledger[]>();
   const top: Ledger[] = [];
   for (const ledger of ledgers) {
-    const parentId = ledger.parentLink?.ledgerId;
-    if (parentId && ids.has(parentId)) {
+    const parentId = ledger.parentLink && parentOfLink.get(ledger.parentLink.linkId);
+    if (parentId) {
       sublogsOf.set(parentId, [...(sublogsOf.get(parentId) ?? []), ledger]);
     } else {
       top.push(ledger);
