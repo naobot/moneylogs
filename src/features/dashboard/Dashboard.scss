@@ -82,6 +82,55 @@
       grid-template-columns: minmax(0, 1fr);
     }
   }
+
+  // A financial log with its sublogs: the parent's card across the row, the sublogs
+  // hung under it on a text-mode tree line (a 1px rule down, a tick into each card).
+  &__family {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+
+    &__kids {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5em;
+      margin: 0;
+      padding: 0.5em 0 0 1.2em;
+      list-style: none;
+
+      // The trunk: from the parent's card down to the last row of sublogs.
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0.5em;
+        top: 0;
+        bottom: 1.6em;
+        border-left: var(--border-hairline) solid var(--ink);
+      }
+    }
+
+    &__kid {
+      position: relative;
+      display: flex;
+      flex: 1 1 160px;
+      max-width: 260px;
+
+      > .LogCard {
+        flex: 1;
+      }
+
+      // The branch into each card.
+      &::before {
+        content: "";
+        position: absolute;
+        left: -0.7em;
+        top: 1.6em;
+        width: 0.7em;
+        border-top: var(--border-hairline) solid var(--ink);
+      }
+    }
+  }
 }
 
 .LogCard {

@@ -130,3 +130,512 @@
     }
   }
 }
+
+// "part of another log" in a ledger's Manage modal: labels left, inputs right.
+.SublogSection {
+  width: 100%;
+
+  &__field {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75em;
+    width: 100%;
+    font-size: 0.9em;
+
+    label {
+      flex: 0 0 6.5em;
+    }
+
+    select,
+    input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+    }
+
+    select {
+      color: var(--ink);
+      background: var(--sheet);
+      border: var(--border-hairline) solid var(--ink);
+      border-radius: var(--radius-none);
+      padding: 0.15em 0.3em;
+    }
+  }
+
+  &__months {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25em 1em;
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 0.9em;
+
+    legend {
+      float: left;
+      width: 6.5em;
+      padding: 0;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35em;
+    }
+
+    input {
+      accent-color: var(--ink);
+    }
+  }
+
+  &__note {
+    color: var(--ink-muted);
+  }
+
+  &__list {
+    list-style: none;
+    width: 100%;
+    padding: 0 !important;
+
+    li {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1em;
+      padding: 0.35em 0;
+      border-bottom: var(--border-hairline) dashed var(--ink);
+    }
+  }
+
+  &__confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    border: var(--border-heavy) solid var(--ink);
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+}
+
+// Where a ledger belongs, under its header (SublogCrumb).
+.SublogCrumb {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--ink-muted);
+
+  a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+}
+
+// Pictures in the sublog intro (SublogIntro.tsx): miniature logs, rows, meters and
+// people, drawn with the same frames and fills as the real screens.
+.IntroArt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.75em;
+  border: var(--border-hairline) solid var(--ink);
+  background: var(--paper);
+  font-size: 0.75em;
+  line-height: 1.35;
+
+  &__row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.6em;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      flex-direction: column;
+    }
+  }
+
+  &__caption {
+    font-size: 0.92em;
+    color: var(--ink-muted);
+  }
+
+  &__flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    font-size: 0.92em;
+    color: var(--ink-muted);
+    text-align: center;
+
+    &--across {
+      flex-direction: column;
+      min-width: 4.5em;
+
+      @media (max-width: constants.$breakpoint-sm) {
+        flex-direction: row;
+      }
+    }
+  }
+
+  &__arrow {
+    font-weight: 700;
+    color: var(--ink);
+  }
+}
+
+.MiniLog {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  border: var(--border-rule) solid var(--ink);
+  background: var(--sheet);
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5em;
+    padding: 0.2em 0.5em;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-weight: 700;
+
+    small {
+      font-weight: 400;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    padding: 0.15em 0.5em 0.3em;
+
+    &--flush {
+      padding: 0;
+    }
+  }
+}
+
+.MiniRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.15em 0;
+  border-bottom: var(--border-hairline) dashed var(--ink);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--total {
+    border-top: var(--border-hairline) solid var(--ink);
+  }
+
+  // The line the slide is about.
+  &--hot {
+    outline: var(--border-rule) solid var(--ink);
+    outline-offset: 1px;
+  }
+
+  &__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    min-width: 0;
+    font-weight: 700;
+
+    small {
+      font-weight: 400;
+      color: var(--ink-muted);
+    }
+  }
+
+  &__amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.MiniSwatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.75em;
+  height: 0.75em;
+  border: var(--border-hairline) solid var(--ink);
+
+  &--sublog {
+    @include mark.nested-frame(1px);
+  }
+}
+
+.MiniMeter {
+  display: grid;
+  grid-template-columns: 1fr 5em auto;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.15em 0;
+
+  &__track {
+    height: 0.65em;
+    border: var(--border-hairline) dashed var(--ink);
+
+    &--open {
+      border-style: solid;
+    }
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    background: var(--ink);
+  }
+}
+
+.MiniEntry {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.35em 0.5em;
+  border: var(--border-rule) solid var(--ink);
+  background: var(--sheet);
+
+  &__button {
+    margin-left: auto;
+    padding: 0 0.4em;
+    border: var(--border-hairline) solid var(--ink);
+    font-weight: 700;
+    font-size: 0.85em;
+    text-transform: uppercase;
+  }
+}
+
+.MiniDay {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.05em 0.5em;
+  background: var(--inverse-surface);
+  color: var(--inverse-ink);
+}
+
+.MiniSublogRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.25em;
+  padding: 0.2em 0.5em;
+  border: var(--border-hairline) solid var(--ink);
+  background: var(--sheet);
+
+  small {
+    color: var(--ink-muted);
+  }
+}
+
+.MiniPerson {
+  display: grid;
+  grid-template-columns: 1.5em 1fr auto auto;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.2em 0.5em;
+  border-bottom: var(--border-hairline) dashed var(--ink);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__face {
+    display: grid;
+    place-items: center;
+    width: 1.5em;
+    height: 1.5em;
+    border: var(--border-hairline) solid var(--ink);
+    font-weight: 700;
+  }
+
+  &__amount {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__tag {
+    padding: 0 0.35em;
+    border: var(--border-hairline) solid var(--ink);
+    white-space: nowrap;
+
+    &--counts {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  // Not counted in the parent: struck through, still readable.
+  &--stays &__amount {
+    text-decoration: line-through;
+    color: var(--ink-muted);
+  }
+}
+
+.MiniNotice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  padding: 0.3em 0.5em;
+  border: var(--border-hairline) solid var(--ink);
+  background: var(--sheet);
+
+  &::before {
+    content: "";
+    flex-shrink: 0;
+    align-self: center;
+    width: 0.55em;
+    height: 0.55em;
+    background: var(--ink);
+  }
+}
+
+.MiniTree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+
+  &__parent {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5em;
+    padding: 0.3em 0.5em;
+    border: var(--border-rule) solid var(--ink);
+    background: var(--sheet);
+    font-weight: 700;
+
+    small {
+      font-weight: 400;
+      color: var(--ink-muted);
+    }
+  }
+
+  &__kids {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    padding-left: 1.2em;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0.4em;
+      top: -0.4em;
+      bottom: 0.8em;
+      border-left: var(--border-hairline) solid var(--ink);
+    }
+  }
+
+  &__kid {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 0.5em;
+    padding: 0.2em 0.5em;
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: -0.8em;
+      top: 0.75em;
+      width: 0.8em;
+      border-top: var(--border-hairline) solid var(--ink);
+    }
+
+    span {
+      color: var(--ink-muted);
+    }
+  }
+}
+
+.MiniChoice {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding: 0.3em 0.5em;
+  border: var(--border-rule) solid var(--ink);
+  background: var(--paper);
+
+  &--on {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+  }
+}
+
+// "what's a sublog?": an inline link-style button that replays the intro.
+.SublogHelp {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline dashed;
+  text-underline-offset: 0.2em;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+  }
+}
+
+// The Home announcement's picture: the sublog mark, large, beside what's new.
+.IntroWelcome {
+  display: flex;
+  align-items: center;
+  gap: 1.25em;
+  padding: 0.75em 0.5em;
+
+  &__mark {
+    @include mark.nested-frame(0.6em);
+    flex-shrink: 0;
+    width: 4.5em;
+    height: 4.5em;
+    border: var(--border-rule) solid var(--ink);
+    background: var(--sheet);
+
+    &::after {
+      border-width: var(--border-rule);
+    }
+  }
+
+  &__lines {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3em;
+    min-width: 0;
+
+    strong {
+      font-size: 1.4em;
+    }
+  }
+
+  &__new {
+    padding: 0 0.4em;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    font-weight: 700;
+  }
+}

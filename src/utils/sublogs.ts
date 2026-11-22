@@ -10,9 +10,17 @@ import { formatDate } from "@/utils/dateFormat";
 import dayjs from "@/utils/configuredDayjs";
 import { EntryDay } from "@/utils/ledgerEntries";
 import { ledgerViewPath } from "@/utils/ledger";
+import { personalLedgerId } from "@/utils/personalLedger";
 import { MonthAggregate } from "@/utils/ledgerStats";
 import { aggregateMonth } from "../../functions/src/ledgerAggregate";
-import { isActiveSublog, MergedMonth, mergeRollups } from "../../functions/src/ledgerRollup";
+import {
+  isActiveSublog,
+  LinkableLedger,
+  LinkError,
+  MergedMonth,
+  mergeRollups,
+  validateLink,
+} from "../../functions/src/ledgerRollup";
 
 export { isActiveSublog };
 
@@ -158,4 +166,101 @@ export const withSublogDays = <T>(
     day.sublogs.sort((a, b) => (order.get(a.categoryId) ?? 0) - (order.get(b.categoryId) ?? 0));
   }
   return [...byDate.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+};
+
+/** Why a log can't be picked as the parent, in a few words for the picker. */
+const PARENT_REASONS: Partial<Record<LinkError, string>> = {
+  "parent-is-sublog": "already a sublog",
+  deleting: "being deleted",
+  "too-many-categories": "has the most categories it can hold",
+};
+
+export type ParentChoice = {
+  ledger: Ledger;
+  /** Set when it can't be the parent: why, in a few words. */
+  disabledReason?: string;
+};
+
+/**
+ * The logs `child` could become a sublog of, for `uid`: every other log they're in,
+ * personal first then the rest as given, each with why it can't be picked (if so). Pass
+ * no child for a log that doesn't exist yet (the create wizard). Same rules as the
+ * server (validateLink), so the picker never offers a link it would refuse.
+ */
+export const parentChoices = (
+  ledgers: ReadonlyArray<Ledger>,
+  uid: string,
+  child?: Ledger,
+): ParentChoice[] => {
+  const candidate: LinkableLedger = child
+    ? { ...child, categories: child.categories as LinkableLedger["categories"] }
+    : { id: "", memberUids: [uid], categories: [] };
+  const choices = ledgers
+    .filter((l) => l.id !== child?.id)
+    .map((ledger) => {
+      const error = validateLink({
+        parent: { ...ledger, categories: ledger.categories as LinkableLedger["categories"] },
+        child: candidate,
+        callerUid: uid,
+      });
+      const reason = error ? (PARENT_REASONS[error] ?? null) : undefined;
+      return { ledger, error, reason };
+    })
+    // Problems with the child itself (it's personal, already linked…) aren't about any
+    // one parent; the caller explains those instead of listing parents.
+    .filter((c) => !c.error || c.reason)
+    .map(({ ledger, reason }) => (reason ? { ledger, disabledReason: reason } : { ledger }));
+  const personal = personalLedgerId(uid);
+  return [
+    ...choices.filter((c) => c.ledger.id === personal),
+    ...choices.filter((c) => c.ledger.id !== personal),
+  ];
+};
+
+/** Why a log can't become a sublog at all (whatever the parent), or null if it can. */
+export const sublogBlocker = (child: Ledger): LinkError | null => {
+  // Any member's personal log (only its owner is ever in it).
+  if (child.id.startsWith("personal-")) return "personal-child";
+  if (child.parentLink) return "child-already-linked";
+  if ((child.categories ?? []).some(isActiveSublog)) return "child-is-parent";
+  return null;
+};
+
+/** Whether to open the intro by itself: only for someone who has never seen it. */
+export const shouldAutoOpenSublogIntro = (
+  user: { tutorials?: { sublogIntro?: unknown } } | null | undefined,
+): boolean => !!user && !user.tutorials?.sublogIntro;
+
+/**
+ * Whether Home can announce sublogs yet: once someone has logged at least once, so a
+ * brand-new user meets the basics first. Being in a financial log besides your personal
+ * one counts (you've used logs together); otherwise the personal log needs an entry.
+ * `personalHasEntries` is undefined while that's still being checked.
+ */
+export const readyForSublogIntro = ({
+  ledgerIds,
+  personalId,
+  personalHasEntries,
+}: {
+  ledgerIds: ReadonlyArray<string>;
+  personalId: string | undefined;
+  personalHasEntries: boolean | undefined;
+}): boolean => ledgerIds.some((id) => id !== personalId) || personalHasEntries === true;
+
+/**
+ * A sublog's parent among the viewer's own logs, with the sublog's line in it: found by
+ * the link id, since the sublog never names its parent. Undefined when the viewer isn't
+ * in the parent (or it isn't a sublog).
+ */
+export const parentInMyLogs = (
+  child: Pick<Ledger, "parentLink">,
+  myLedgers: ReadonlyArray<Pick<Ledger, "id" | "title" | "categories">>,
+): { parent: Pick<Ledger, "id" | "title" | "categories">; line?: LedgerCategory } | undefined => {
+  const linkId = child.parentLink?.linkId;
+  if (!linkId) return undefined;
+  for (const parent of myLedgers) {
+    const line = (parent.categories ?? []).find((c) => c.sublog?.linkId === linkId);
+    if (line) return { parent, line };
+  }
+  return undefined;
 };

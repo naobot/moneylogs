@@ -8,6 +8,10 @@ import {
   hasSpending,
   memberNames,
   mergeMonth,
+  parentChoices,
+  readyForSublogIntro,
+  parentInMyLogs,
+  sublogBlocker,
   sublogsInMyLogs,
   withSublogDays,
 } from "../sublogs";
@@ -162,5 +166,97 @@ describe("withSublogDays", () => {
     const given = [day("2026-11-21")];
     withSublogDays(given, [rollup({})], categories);
     expect(given[0].subtotals).toEqual({ CAD: 10 });
+  });
+});
+
+describe("parentChoices", () => {
+  const ledger = (id: string, over: Partial<Ledger> = {}): Ledger =>
+    ({ id, title: id, memberUids: ["alice"], categories: [], ...over }) as unknown as Ledger;
+  const link = { linkId: "Lx", categoryId: "c", since: "2026-11", linkedBy: "alice" };
+
+  it("lists the other logs, personal first, marking ones that can't be parents", () => {
+    const choices = parentChoices(
+      [
+        ledger("home"),
+        ledger("trip", { parentLink: link }),
+        ledger("personal-alice"),
+        ledger("biz"),
+      ],
+      "alice",
+      ledger("biz"),
+    );
+    expect(choices.map((c) => [c.ledger.id, c.disabledReason])).toEqual([
+      ["personal-alice", undefined],
+      ["home", undefined],
+      ["trip", "already a sublog"],
+    ]);
+  });
+
+  it("works for a log that doesn't exist yet", () => {
+    expect(parentChoices([ledger("personal-alice")], "alice").map((c) => c.ledger.id)).toEqual([
+      "personal-alice",
+    ]);
+  });
+
+  it("offers no parents when the log itself can't be a sublog", () => {
+    expect(parentChoices([ledger("home")], "alice", ledger("personal-alice"))).toEqual([]);
+    expect(sublogBlocker(ledger("personal-alice"))).toBe("personal-child");
+    expect(sublogBlocker(ledger("biz", { parentLink: link }))).toBe("child-already-linked");
+    expect(
+      sublogBlocker(
+        ledger("biz", {
+          categories: [{ id: "c", name: "c", order: 0, sublog: { linkId: "Lp" } }],
+        }),
+      ),
+    ).toBe("child-is-parent");
+    expect(sublogBlocker(ledger("biz"))).toBeNull();
+  });
+});
+
+describe("readyForSublogIntro", () => {
+  it("waits for a first entry when there's only the personal log", () => {
+    const only = { ledgerIds: ["personal-u"], personalId: "personal-u" };
+    expect(readyForSublogIntro({ ...only, personalHasEntries: undefined })).toBe(false);
+    expect(readyForSublogIntro({ ...only, personalHasEntries: false })).toBe(false);
+    expect(readyForSublogIntro({ ...only, personalHasEntries: true })).toBe(true);
+  });
+
+  it("is ready for someone in another financial log", () => {
+    expect(
+      readyForSublogIntro({
+        ledgerIds: ["personal-u", "home"],
+        personalId: "personal-u",
+        personalHasEntries: undefined,
+      }),
+    ).toBe(true);
+  });
+
+  it("isn't ready with no logs at all", () => {
+    expect(
+      readyForSublogIntro({ ledgerIds: [], personalId: undefined, personalHasEntries: undefined }),
+    ).toBe(false);
+  });
+});
+
+describe("parentInMyLogs", () => {
+  it("finds a sublog's parent and line among the viewer's logs, by link id", () => {
+    const child = {
+      parentLink: { linkId: "L-biz", categoryId: "sublog-biz", since: "2026-11", linkedBy: "u" },
+    };
+    const found = parentInMyLogs(child, [
+      { id: "home", title: "home", categories: [] },
+      { id: "personal-u", title: "personal", categories },
+    ] as unknown as Ledger[]);
+    expect(found?.parent.id).toBe("personal-u");
+    expect(found?.line?.name).toBe("business");
+  });
+
+  it("finds nothing when the viewer isn't in the parent", () => {
+    const child = {
+      parentLink: { linkId: "L-biz", categoryId: "x", since: "2026-11", linkedBy: "u" },
+    };
+    expect(
+      parentInMyLogs(child, [{ id: "home", title: "home", categories: [] }] as unknown as Ledger[]),
+    ).toBeUndefined();
   });
 });
