@@ -57,7 +57,7 @@ amounts or free text.
 | `share`                 | Invite / profile link copied             | `method`, `content_type`                                                                                                               |
 | `share_card`            | Share card shared or saved               | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`), `photos` (0–3), `amounts` |
 | `chart_colours`         | Charts switched in /me Display           | `charts` (`colour`, `mono`)                                                                                                            |
-| `open_drawer`           | A /me drawer opened                      | `drawer`                                                                                                                               |
+| `open_me_section`       | A /me section picked from its nav        | `section`                                                                                                                              |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.
 
