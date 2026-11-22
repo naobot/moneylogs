@@ -3,6 +3,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { rewardLoggedEntry } from "./ledger";
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
+import { isActiveSublog, LinkableCategory } from "./ledgerRollup";
 import { rollUpMonth } from "./sublogs";
 import {
   ExistingEntry,
@@ -116,9 +117,15 @@ export const importLedgerEntries = onCall(
       throw new HttpsError("permission-denied", "Not a member of this log.");
     }
 
-    const categories = (ledger.get("categories") ?? []) as Array<{ id?: unknown }>;
+    // Linked lines are filled by roll-ups only, never by entries.
+    const categories = (ledger.get("categories") ?? []) as Array<
+      Pick<LinkableCategory, "sublog"> & { id?: unknown }
+    >;
     const categoryIds = new Set(
-      categories.map((c) => c.id).filter((id): id is string => typeof id === "string"),
+      categories
+        .filter((c) => !isActiveSublog(c))
+        .map((c) => c.id)
+        .filter((id): id is string => typeof id === "string"),
     );
     const rows = parseImportRows(req.rows, categoryIds);
     if (typeof rows === "string") throw new HttpsError("invalid-argument", rows);
@@ -174,9 +181,7 @@ export const importLedgerEntries = onCall(
     if (created > 0) {
       // What the entry trigger does per entry, done once for the batch: it skips these.
       for (const month of importMonths(rows)) {
-        const aggregate = await recomputeMonth(db, ledgerRef, month, {
-          withRollups: ledger.get("hasRollups") === true,
-        });
+        const aggregate = await recomputeMonth(db, ledgerRef, month);
         await alertBudgetsIfCurrent({
           db,
           ledgerRef,

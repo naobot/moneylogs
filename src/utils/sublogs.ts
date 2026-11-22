@@ -72,10 +72,6 @@ export const sublogPaths = (
     ]),
   );
 
-/** Categories an entry can be filed under here: linked ones are logged in their sublog. */
-export const entryCategories = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] =>
-  categories.filter((c) => !isActiveSublog(c));
-
 /** The viewed month exactly as the backend builds it: entries plus roll-ups. */
 export const mergeMonth = (
   entries: ReadonlyArray<LedgerEntry>,

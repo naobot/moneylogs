@@ -4,7 +4,6 @@ import { EntryDay } from "@/utils/ledgerEntries";
 import {
   activeSublogs,
   currenciesInMonth,
-  entryCategories,
   hasRollups,
   hasSpending,
   memberNames,
@@ -74,10 +73,6 @@ describe("linked categories", () => {
       ["sublog-biz", "biz"],
       ["sublog-pip", null],
     ]);
-  });
-
-  it("keeps live links out of the entry form, but not ended ones", () => {
-    expect(entryCategories(categories).map((c) => c.id)).toEqual(["food", "sublog-old"]);
   });
 
   it("knows a log with any sublog, past or present, may have roll-ups", () => {

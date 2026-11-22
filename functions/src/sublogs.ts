@@ -46,8 +46,9 @@ import { isNotificationEnabled } from "./notificationPrefs";
  *   only entries by parent members. Rebuilt from the child's entries, so it's idempotent.
  * - ledgers/{parent}.hasRollups (server-only) makes its months/ docs merge them in
  *   (ledgerMonths.recomputeMonth), even after the line is renamed, archived or removed.
- * - Ending a link (unlinking, or deleting the child) freezes the roll-ups up to now, so
- *   past months keep their totals, and drops later (future-dated) ones.
+ * - Ending a link (unlinking, or deleting the child) freezes the roll-ups up to now from
+ *   the child's entries at that moment, so past months keep their totals, and drops later
+ *   (future-dated) ones.
  */
 
 const ledgers = (db: Firestore) => db.collection("ledgers");
@@ -117,7 +118,7 @@ const refreshParentMonth = async (
   parentRef: DocumentReference,
   month: string,
 ): Promise<void> => {
-  const aggregate = await recomputeMonth(db, parentRef, month, { withRollups: true });
+  const aggregate = await recomputeMonth(db, parentRef, month);
   const parent = await parentRef.get();
   await alertBudgetsIfCurrent({
     db,
@@ -204,14 +205,15 @@ const handOverFrozenMonths = async (db: Firestore, link: SublogLink): Promise<st
 };
 
 /**
- * End a link: record the end (and the months it leaves to clean up) on it, clear the
- * child's parentLink and mark the parent's line as unlinked, all in one transaction.
- * With `callerUid`, the caller must be a member of one of the two logs, checked in the
- * same transaction. The clean-up itself (freezing months up to now, dropping later,
- * future-dated ones and recomputing those parent months) is done by
- * finishEndedSublogLinks, which retries until it's through: an interrupted clean-up
- * can't leave spending behind. Returns false if the link had already ended (or never
- * existed).
+ * End a link, all in one transaction: freeze its roll-ups up to now from the child's
+ * entries as they are at that moment (including edits whose own roll-up hadn't run, and
+ * months that had none yet), drop later (future-dated) ones, clear the child's parentLink
+ * and mark the parent's line as unlinked. Earlier links between the same logs lose their
+ * frozen months from `since` on, as on linking. Nothing done to the sublog afterwards can
+ * change what the parent keeps. With `callerUid`, the caller must be a member of one of
+ * the two logs, checked in the same transaction. The months it touched are recorded on
+ * the link, and finishEndedSublogLinks recomputes those parent months, retrying until
+ * it's through. Returns false if the link had already ended (or never existed).
  */
 export const detachSublog = async (
   db: Firestore,
@@ -229,11 +231,86 @@ export const detachSublog = async (
     if (callerUid !== undefined && !memberOf(child, callerUid) && !memberOf(parent, callerUid)) {
       throw new HttpsError("permission-denied", "Only members of these logs can unlink them.");
     }
+    const horizon = latestCurrentMonth(Date.now());
+    const [rollups, entries] = parent.exists
+      ? await Promise.all([
+          tx.get(parentRef.collection("rollups").where("linkId", "==", linkId)),
+          child.exists
+            ? tx.get(
+                childRef
+                  .collection("entries")
+                  .where("month", ">=", data.since)
+                  .where("month", "<=", horizon),
+              )
+            : null,
+        ])
+      : [null, null];
+    // Earlier links between the same logs keep nothing from `since` on: this link's frozen
+    // months replace theirs. Done here too, not only on linking (handOverFrozenMonths), so
+    // a handover that never ran can't leave both counted.
+    const earlier = parent.exists
+      ? (
+          await tx.get(
+            links(db).where("childId", "==", data.childId).where("parentId", "==", data.parentId),
+          )
+        ).docs
+          .filter((d) => d.id !== linkId && d.get("endedAt"))
+          .map((d) => d.id)
+      : [];
+    const handedOver: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    for (let i = 0; i < earlier.length; i += 30) {
+      const found = await tx.get(
+        parentRef.collection("rollups").where("linkId", "in", earlier.slice(i, i + 30)),
+      );
+      handedOver.push(...found.docs.filter((d) => (d.get("month") as string) >= data.since));
+    }
+    const plan = planLinkCleanup({
+      rollupMonths: (rollups?.docs ?? []).map((d) => d.get("month") as string),
+      entryMonths: (entries?.docs ?? []).map((d) => d.get("month") as string),
+      since: data.since,
+      horizon,
+    });
+    const rollupRef = (month: string) =>
+      parentRef.collection("rollups").doc(rollupDocId(month, linkId));
+    const existing = new Set((rollups?.docs ?? []).map((d) => d.get("month") as string));
+    const memberUids = (parent.get("memberUids") as string[] | undefined) ?? [];
+    for (const month of plan.keep) {
+      if (!entries) {
+        // The sublog is gone: keep what was rolled up.
+        if (existing.has(month)) tx.update(rollupRef(month), { frozen: true });
+        continue;
+      }
+      const rollup = rollupFor(
+        entries.docs.filter((d) => d.get("month") === month).map((d) => d.data()),
+        memberUids,
+        data.categoryId,
+      );
+      if (rollup.entryCount > 0) {
+        tx.set(rollupRef(month), {
+          month,
+          linkId,
+          categoryId: data.categoryId,
+          ...rollup,
+          frozen: true,
+          computedAt: FieldValue.serverTimestamp(),
+        });
+      } else if (existing.has(month)) {
+        tx.delete(rollupRef(month));
+      }
+    }
+    for (const month of plan.drop) tx.delete(rollupRef(month));
+    for (const doc of handedOver) tx.delete(doc.ref);
     tx.update(linkRef, {
       endedAt: FieldValue.serverTimestamp(),
-      // Fixed now, so a retried clean-up draws the same line between kept and dropped.
-      endHorizon: latestCurrentMonth(Date.now()),
+      endHorizon: horizon,
       cleanupPending: true,
+      cleanupMonths: [
+        ...new Set([
+          ...plan.keep,
+          ...plan.drop,
+          ...handedOver.map((d) => d.get("month") as string),
+        ]),
+      ].sort(),
     });
     if (child.exists && (child.get("parentLink") as ParentLink | undefined)?.linkId === linkId) {
       tx.update(childRef, { parentLink: FieldValue.delete() });
@@ -249,49 +326,20 @@ export const detachSublog = async (
 };
 
 /**
- * Finish ending a link: freeze its roll-ups up to the horizon recorded when it ended,
- * drop later ones and recompute those parent months, then clear `cleanupPending`. Each
- * step is idempotent, and the month list is read from what's still there, so a retry
- * after a failure at any point picks up where it stopped. A dropped month's summary is
- * recomputed before the flag clears; if that recompute failed, the retry recomputes all
- * months after the horizon that the parent still has.
+ * Finish ending a link: recompute the parent months its roll-ups were frozen or dropped
+ * in (detachSublog), then clear `cleanupPending`. Idempotent, so a retry after a failure
+ * redoes it.
  */
 const finishEndedLink = async (db: Firestore, linkId: string): Promise<void> => {
   const linkRef = links(db).doc(linkId);
   const data = (await linkRef.get()).data() as
-    | (SublogLink & { cleanupPending?: boolean; endHorizon?: string })
+    | (SublogLink & { cleanupPending?: boolean; cleanupMonths?: string[] })
     | undefined;
-  if (!data?.cleanupPending || !data.endHorizon) return;
+  if (!data?.cleanupPending) return;
   const parentRef = ledgers(db).doc(data.parentId);
-  const parent = await parentRef.get();
-  if (!parent.exists) {
-    await linkRef.update({ cleanupPending: FieldValue.delete() });
-    return;
+  if ((await parentRef.get()).exists) {
+    for (const month of data.cleanupMonths ?? []) await refreshParentMonth(db, parentRef, month);
   }
-  const rollups = await parentRef.collection("rollups").where("linkId", "==", linkId).get();
-  const plan = planLinkCleanup(
-    rollups.docs.map((d) => ({
-      month: d.get("month") as string,
-      frozen: d.get("frozen") === true,
-    })),
-    data.endHorizon,
-  );
-  const batch = db.batch();
-  for (const doc of rollups.docs) {
-    const month = doc.get("month") as string;
-    if (plan.drop.includes(month)) batch.delete(doc.ref);
-    else if (plan.freeze.includes(month)) batch.update(doc.ref, { frozen: true });
-  }
-  await batch.commit();
-  // Months after the horizon: the ones just dropped, and any the parent still summarises
-  // from an earlier attempt whose roll-up is already gone.
-  const later = await parentRef
-    .collection("months")
-    .where(FieldPath.documentId(), ">", data.endHorizon)
-    .select()
-    .get();
-  const months = new Set([...plan.drop, ...later.docs.map((d) => d.id)]);
-  for (const month of [...months].sort()) await refreshParentMonth(db, parentRef, month);
   await linkRef.update({ cleanupPending: FieldValue.delete() });
 };
 
@@ -340,13 +388,19 @@ const notifyCounted = async (
       ((parent.get("categories") as LinkableCategory[] | undefined) ?? []).find(
         (c) => c.id === data.categoryId,
       )?.name ?? "";
-    // Everyone being told is in the sublog, so its member refs cover them.
-    const refs = (child.get("members") as DocumentReference[] | undefined) ?? [];
-    const users = refs.length ? await db.getAll(...refs) : [];
-    const wanted = new Set(uids);
+    // Looked up by uid in users/, never through the sublog's member refs: those can point
+    // at any document, which would send the notice (and the parent's id) to its inbox.
+    const users: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    const unique = [...new Set(uids)];
+    for (let i = 0; i < unique.length; i += 30) {
+      const found = await db
+        .collection("users")
+        .where("userId", "in", unique.slice(i, i + 30))
+        .get();
+      users.push(...found.docs);
+    }
     const id = sublogCountedNotificationId(linkId);
     for (const user of users) {
-      if (!user.exists || !wanted.has(user.get("userId") as string)) continue;
       if (!isNotificationEnabled(user.data(), "sublog_counted")) continue;
       const box = inbox(db, user.id);
       const batch = db.batch();
@@ -381,8 +435,21 @@ const notifyCounted = async (
   }
 };
 
+/**
+ * A ledger being deleted, already flagged `deleting`: no link can be made to or from it
+ * now (validateLink), so the links read here are all it will ever have. As a sublog, its
+ * link ends and the parent keeps its past months, frozen before its entries go. As a
+ * parent, its sublogs stand alone again (its roll-ups go with it).
+ */
+export const endSublogLinks = async (db: Firestore, ledgerId: string): Promise<void> => {
+  const ledger = await ledgers(db).doc(ledgerId).get();
+  const linkId = (ledger.get("parentLink") as ParentLink | undefined)?.linkId;
+  if (linkId) await detachSublog(db, linkId);
+  await releaseSublogs(db, ledgerId);
+};
+
 /** A parent being deleted: its sublogs stand alone again (its roll-ups go with it). */
-export const releaseSublogs = async (db: Firestore, parentId: string): Promise<void> => {
+const releaseSublogs = async (db: Firestore, parentId: string): Promise<void> => {
   const live = await links(db).where("parentId", "==", parentId).get();
   for (const link of live.docs) {
     const data = link.data() as SublogLink;
