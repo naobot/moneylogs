@@ -184,8 +184,9 @@ export const importLedgerEntries = onCall(
           month,
           aggregate,
         });
-        const linkId = ledger.get("parentLink.linkId") as string | undefined;
-        if (linkId) await rollUpMonth(db, linkId, month);
+        // A sublog: its parent's line follows. Read the link now, not from the snapshot
+        // taken before the rows were written: it may have been replaced since.
+        if ((await ledgerRef.get()).get("parentLink")) await rollUpMonth(db, ledgerRef.id, month);
       }
       // Importing counts as logging: check-in (copper coin) and the knick-knack roll.
       await rewardLoggedEntry({
