@@ -156,8 +156,11 @@ in her personal log), then Bob, then a new-user persona for the first-run case.
 - Bali: the line under the title says her spending counts as bali in personal. Only Alice's USD 420 counts,
   not Bob's USD 380. As Bob, the same line doesn't name her personal log, and his entries stay out.
 - Home: business and bali hang under personal on a tree line; as Bob, bali is a card of its own.
-- The intro ("what's a sublog?") opens by itself once: on the wizard's "part of another log?" step, over the
-  Manage link form, or on first visit to a sublog or parent (after the ledger tour). Its link replays it.
+- The intro ("what's a sublog?") opens by itself once, on Home, for anyone who has logged before (in a log
+  besides their personal one, or an entry in it). As `empty@test.com` it waits until after their first entry.
+  If they reach sublogs another way first, it opens instead on the wizard's "part of another log?" step,
+  over the Manage link form, or on first visit to a sublog or parent (after the ledger tour). Its link
+  replays it.
 - Link a log from Manage (try "all its months", and a shared parent: others in both logs get a "your spending
   now counts" notice), then unlink it: past months keep their totals and the line becomes an ordinary category.
   Deleting a sublog keeps the parent's history the same way.
