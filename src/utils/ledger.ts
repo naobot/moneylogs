@@ -2,6 +2,7 @@ import dayjs from "@/utils/configuredDayjs";
 import { isCurrency } from "@/utils/currency";
 import { formatMonth as formatMonthLabel } from "@/utils/dateFormat";
 import { Ledger, LedgerCategory, LedgerEntryInput } from "@/types/ledger";
+import { isActiveSublog } from "../../functions/src/ledgerRollup";
 
 export const MAX_CATEGORY_NAME_LENGTH = 20;
 export const MAX_NOTE_LENGTH = 140;
@@ -73,9 +74,9 @@ export const sortCategories = (categories: ReadonlyArray<LedgerCategory>): Ledge
 export const activeCategories = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] =>
   sortCategories(categories.filter((c) => !c.archived));
 
-/** Categories an entry can go in: active ones, minus sublog lines (filled by roll-ups only). */
+/** Categories an entry can go in: active ones, minus linked lines (filled by roll-ups only). */
 export const entryCategories = (categories: ReadonlyArray<LedgerCategory>): LedgerCategory[] =>
-  activeCategories(categories).filter((c) => !c.sublog);
+  activeCategories(categories).filter((c) => !isActiveSublog(c));
 
 /** Look a category up by id; unknown ids resolve to a placeholder so old entries still render. */
 export const resolveCategory = (
@@ -101,7 +102,7 @@ export const validateEntry = (
   if (!isCurrency(entry.currency)) errors.push("currency");
   const category = categories.find((c) => c.id === entry.categoryId);
   // Archived categories are allowed so existing entries can still be edited.
-  if (!category || category.sublog) errors.push("category");
+  if (!category || isActiveSublog(category)) errors.push("category");
   if (typeof entry.date !== "string" || !isValidDateKey(entry.date)) errors.push("date");
   if (entry.note !== undefined && entry.note.length > MAX_NOTE_LENGTH) errors.push("note");
   return errors;

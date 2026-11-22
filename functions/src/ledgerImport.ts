@@ -3,6 +3,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "node:crypto";
 import { rewardLoggedEntry } from "./ledger";
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
+import { isActiveSublog, LinkableCategory } from "./ledgerRollup";
 import { rollUpMonth } from "./sublogs";
 import {
   ExistingEntry,
@@ -116,14 +117,13 @@ export const importLedgerEntries = onCall(
       throw new HttpsError("permission-denied", "Not a member of this log.");
     }
 
-    // Sublog lines are filled by roll-ups only, never by entries.
-    const categories = (ledger.get("categories") ?? []) as Array<{
-      id?: unknown;
-      sublog?: unknown;
-    }>;
+    // Linked lines are filled by roll-ups only, never by entries.
+    const categories = (ledger.get("categories") ?? []) as Array<
+      Pick<LinkableCategory, "sublog"> & { id?: unknown }
+    >;
     const categoryIds = new Set(
       categories
-        .filter((c) => !c.sublog)
+        .filter((c) => !isActiveSublog(c))
         .map((c) => c.id)
         .filter((id): id is string => typeof id === "string"),
     );
