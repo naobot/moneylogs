@@ -5,7 +5,8 @@ import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { useGetAchievements, sortAchievementsByGroupEnd } from "@/hooks/useAchievements";
 
-import Drawer from "@/components/Drawer";
+import { SettingsLayout, SettingsSection } from "./SettingsLayout";
+import { MeSectionId } from "./sections";
 import { ProfileSection } from "@/features/account/ProfileSection";
 import { AccountSection } from "@/features/account/AccountSection";
 import { AchievementsSection } from "@/features/account/AchievementsSection";
@@ -29,8 +30,8 @@ import { pushAvailable } from "@/features/push/devicePush";
 import { useIsAdmin } from "@/features/admin/useIsAdmin";
 import { Link } from "react-router-dom";
 
-// Personal settings plus everything tied to the account, in drawers. "logs" is linked
-// to from Home as /me#logs, which opens that drawer.
+// Personal settings plus everything tied to the account, one section at a time beside a
+// section nav. Sections are linked to by hash, e.g. /me#logs from Home.
 export const UserSettings = () => {
   const { user, isLoading: userLoading } = useCurrentUser();
   const theme = useTheme();
@@ -39,7 +40,7 @@ export const UserSettings = () => {
   const { ledgers: allLedgers, isLoading: ledgersLoading } = useGetMyLedgers();
   const { achievements, isLoading: achievementsLoading } = useGetAchievements(user?.id);
   const { friends, incoming, isLoading: friendsLoading } = useFriendships();
-  // Until these are in, the drawers say "…" rather than "0" or "none yet". Logs wait for
+  // Until these are in, the sections say "…" rather than "0" or "none yet". Logs wait for
   // the user too: which are archived is on the user doc.
   const logsLoading = groupsLoading || ledgersLoading || userLoading;
   const loadingNote = <p className="GroupArchive__empty">…</p>;
@@ -68,87 +69,88 @@ export const UserSettings = () => {
         )}
       </div>
 
-      <div className="UserSettings__drawers">
-        <Drawer
-          id="profile"
-          title="Profile"
-          summary={
-            user?.timezone
-              ? `${user.displayName ?? ""} · ${user.timezonePlace || user.timezone}`
-              : "set your timezone"
-          }
-          defaultOpen
-        >
-          <ProfileSection />
-        </Drawer>
-
-        <Drawer
-          id="friends"
-          title="friends"
-          summary={
-            friendsLoading
-              ? "…"
-              : friendsHint({ friends: friends.length, incoming: incoming.length })
-          }
-        >
-          <FriendsSection />
-        </Drawer>
-
-        <Drawer id="display" title="Display" summary={displaySummary(theme, displayPrefs)}>
-          <DisplaySection />
-        </Drawer>
-
-        <Drawer id="notifications" title="notifications" summary={notificationsSummary(user)}>
-          {/* Push is a setting of this phone, so it shows only in the native app. */}
-          {pushAvailable() && <PushSection />}
-          <NotificationsSection />
-        </Drawer>
-
-        <Drawer id="account" title="Account" summary={user?.email}>
-          <AccountSection />
-        </Drawer>
-
-        <Drawer
-          id="achievements"
-          title="Achievements"
-          summary={achievementsLoading ? "…" : `${orderedAchievements.length} unlocked`}
-        >
-          {achievementsLoading || !user ? (
-            loadingNote
-          ) : (
-            <AchievementsSection achievements={orderedAchievements} />
-          )}
-        </Drawer>
-
-        <Drawer
-          id="logs"
-          title="my logs"
-          summary={
-            logsLoading
-              ? "…"
-              : myLogsHint({
-                  financial: ledgers.length,
-                  ongoing: ongoing.length,
-                  upcoming: upcoming.length,
-                  past: past.length,
-                  archived: archivedCount,
-                })
-          }
-        >
-          {logsLoading ? (
-            loadingNote
-          ) : (
-            <MyLogsSection
-              ledgers={ledgers}
-              ongoing={ongoing}
-              upcoming={upcoming}
-              past={past}
-              archivedGroups={archivedGroups}
-              archivedLedgers={archivedLedgers}
-            />
-          )}
-        </Drawer>
-      </div>
+      <SettingsLayout
+        sections={
+          [
+            {
+              id: "profile",
+              title: "profile",
+              summary: user?.timezone
+                ? `${user.displayName ?? ""} · ${user.timezonePlace || user.timezone}`
+                : "set your timezone",
+              content: <ProfileSection />,
+            },
+            {
+              id: "friends",
+              title: "friends",
+              summary: friendsLoading
+                ? "…"
+                : friendsHint({ friends: friends.length, incoming: incoming.length }),
+              content: <FriendsSection />,
+            },
+            {
+              id: "display",
+              title: "display",
+              summary: displaySummary(theme, displayPrefs),
+              content: <DisplaySection />,
+            },
+            {
+              id: "notifications",
+              title: "notifications",
+              summary: notificationsSummary(user),
+              content: (
+                <>
+                  {/* Push is a setting of this phone, so it shows only in the native app. */}
+                  {pushAvailable() && <PushSection />}
+                  <NotificationsSection />
+                </>
+              ),
+            },
+            {
+              id: "account",
+              title: "account",
+              summary: user?.email,
+              content: <AccountSection />,
+            },
+            {
+              id: "achievements",
+              title: "achievements",
+              summary: achievementsLoading ? "…" : `${orderedAchievements.length} unlocked`,
+              content:
+                achievementsLoading || !user ? (
+                  loadingNote
+                ) : (
+                  <AchievementsSection achievements={orderedAchievements} />
+                ),
+            },
+            {
+              id: "logs",
+              title: "my logs",
+              summary: logsLoading
+                ? "…"
+                : myLogsHint({
+                    financial: ledgers.length,
+                    ongoing: ongoing.length,
+                    upcoming: upcoming.length,
+                    past: past.length,
+                    archived: archivedCount,
+                  }),
+              content: logsLoading ? (
+                loadingNote
+              ) : (
+                <MyLogsSection
+                  ledgers={ledgers}
+                  ongoing={ongoing}
+                  upcoming={upcoming}
+                  past={past}
+                  archivedGroups={archivedGroups}
+                  archivedLedgers={archivedLedgers}
+                />
+              ),
+            },
+          ] satisfies (SettingsSection & { id: MeSectionId })[]
+        }
+      />
 
       {isAdmin && (
         <p className="UserSettings__admin">

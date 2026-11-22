@@ -1,8 +1,122 @@
 @use "/src/constants.scss";
 
-.UserSettings__drawers {
-  display: flex;
-  flex-direction: column;
+// Section nav on the left, the chosen section on the right. Phones get one column: the
+// list at /me, or a single section (with a way back) at /me#section.
+.SettingsLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: constants.$breakpoint-md) {
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  &__nav {
+    ul {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-bottom: var(--border-rule) solid var(--ink);
+    }
+
+    li {
+      border-top: var(--border-rule) solid var(--ink);
+    }
+
+    // Stays in view while a long section scrolls.
+    @media (min-width: constants.$breakpoint-md) {
+      position: sticky;
+      top: 0;
+      align-self: start;
+    }
+  }
+
+  // Ruled bars, like the old drawer bars: title over a muted one-line hint.
+  &__navItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0.6em 0.5em;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible,
+    &--active {
+      background-color: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
+    }
+
+    // On phones the list is the page, so nothing reads as already chosen.
+    @media (max-width: calc(constants.$breakpoint-md - 1px)) {
+      &--active:not(:hover, :focus-visible) {
+        background-color: transparent;
+        color: inherit;
+      }
+    }
+  }
+
+  &__navTitle {
+    font-weight: 700;
+  }
+
+  &__navHint {
+    min-width: 0;
+    font-size: 0.85em;
+    opacity: 0.7; // muted text floor (5.5:1)
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__paneHead {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--border-rule) solid var(--ink);
+    // scrollIntoView lands the heading a little below the scroller's edge.
+    scroll-margin-top: var(--space-5);
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__back {
+    align-self: flex-start;
+
+    @media (min-width: constants.$breakpoint-md) {
+      display: none;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 1em 0 1.5em;
+
+    &[hidden] {
+      display: none;
+    }
+
+    h3,
+    h4 {
+      margin: 0;
+    }
+  }
+
+  // Phones: either the list or one section.
+  @media (max-width: calc(constants.$breakpoint-md - 1px)) {
+    &:not(&--section) &__pane,
+    &--section &__nav {
+      display: none;
+    }
+  }
 }
 
 // Avatar and its edit button, above the profile fields.

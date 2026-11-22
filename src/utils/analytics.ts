@@ -77,7 +77,7 @@ export type AnalyticsEvents = {
   chart_colours: { charts: "colour" | "mono" };
 
   // Navigation
-  open_drawer: { drawer: string };
+  open_me_section: { section: string };
 };
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

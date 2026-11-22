@@ -30,7 +30,7 @@ behind as "deleted user", just as it would in production.
 - social log: `/g/<roommates id>/invite` (Alice's ongoing log)
 - financial log: `/l/<home id>/invite` (Alice + Bob's shared log)
 
-**Device state.** Tips, drawers, theme and drafts live in the browser (`ML__*` keys), so a
+**Device state.** Tips, theme and drafts live in the browser (`ML__*` keys), so a
 browser you've used before hides first-visit behaviour. Open any page with
 `?fresh-device` (dev only) to forget them while staying signed in, or use a private
 window for a completely clean first visit.
@@ -50,7 +50,7 @@ values in bold. Those are the ones that get missed.
 | Past budgets  | **never edited** (past months use today's budgets) · edited (months up to the edit keep their own)                                                 | ledger `budgetSnapshots/{YYYY-MM}`                                                                                                                                                                             |
 | Sublogs       | **none** · parent · sublog · **shared sublog with members outside the parent** · unlinked (past months frozen) · **intro not seen**                | `sublogLinks/{linkId}` (server-only), ledger `parentLink` and category `sublog` (link id only), parent `hasRollups` and `rollups/{YYYY-MM}__{linkId}`, `tutorials.sublogIntro`, `sublog_counted` notifications |
 | Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)                                                                                                         |
-| Device        | **first visit** · returning · stored theme / drawers / dismissed tips / stats category sort / friends order (**none**: list waits for the server)  | `ML__*` keys in browser storage (e.g. `ML__stats_category_sort`, `ML__friends_order_{uid}`)                                                                                                                    |
+| Device        | **first visit** · returning · stored theme / dismissed tips / stats category sort / friends order (**none**: list waits for the server)            | `ML__*` keys in browser storage (e.g. `ML__stats_category_sort`, `ML__friends_order_{uid}`)                                                                                                                    |
 | Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)** · **mono charts** (default: theme chart colours)                              | `data-theme`, `data-charts` (`ML__display.charts`), `isNative()`                                                                                                                                               |
 
 ## Flows
