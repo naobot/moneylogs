@@ -52,3 +52,39 @@ describe("stacked modals", () => {
     expect(document.body.style.overflow).toBe("unset");
   });
 });
+
+describe("a modal opened inside another", () => {
+  let root: Root;
+  afterEach(() => act(() => root.unmount()));
+
+  it("is the top one even when both open in the same render", () => {
+    root = createRoot(document.createElement("div"));
+    const outer = vi.fn();
+    const inner = vi.fn();
+    act(() =>
+      root.render(
+        <Modal isOpen onClose={outer}>
+          <p>manage</p>
+          <Modal isOpen onClose={inner}>
+            <p>intro</p>
+          </Modal>
+        </Modal>,
+      ),
+    );
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    // And it's drawn above the other.
+    const backdrops = Array.from(document.querySelectorAll<HTMLElement>(".Modal__backdrop"));
+    const inside = backdrops.find((b) => b.textContent === "intro")!;
+    const outside = backdrops.find((b) => b.textContent?.startsWith("manage"))!;
+    const z = (el: HTMLElement) => Number(el.style.zIndex || 0);
+    const above =
+      z(inside) > z(outside) ||
+      (z(inside) === z(outside) &&
+        !!(outside.compareDocumentPosition(inside) & Node.DOCUMENT_POSITION_FOLLOWING));
+    expect(above).toBe(true);
+  });
+});

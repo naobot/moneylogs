@@ -1,12 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  MouseEvent,
-  ReactNode,
-  createContext,
-  useContext,
-} from "react";
+import React, { useEffect, useRef, MouseEvent, ReactNode, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import Button from "./Button";
 
@@ -14,6 +6,8 @@ import Button from "./Button";
 interface ModalContextValue {
   onClose?: () => void;
   disabled?: boolean;
+  /** How deep this modal is nested inside others (0 for one rendered on the page). */
+  depth?: number;
 }
 
 const ModalContext = createContext<ModalContextValue>({});
@@ -31,8 +25,20 @@ const getModalRoot = (): HTMLElement => {
   return modalRoot;
 };
 
-/** Open modals, oldest first: the last one is on top. */
-const openModals: object[] = [];
+/**
+ * Open modals. The top one is the most deeply nested (a modal rendered inside another's
+ * content is above it, even when both open in the same render, where React runs the
+ * inner one's effects first), then the most recently opened.
+ */
+type OpenModal = { depth: number; seq: number };
+const openModals: OpenModal[] = [];
+let openSeq = 0;
+const topModal = () =>
+  openModals.reduce<OpenModal | undefined>(
+    (top, m) =>
+      !top || m.depth > top.depth || (m.depth === top.depth && m.seq > top.seq) ? m : top,
+    undefined,
+  );
 
 // Main Modal component (container)
 interface ModalProps {
@@ -59,34 +65,40 @@ const Modal: React.FC<ModalProps> = ({
   // Escape and body scroll. Modals can stack (an explainer opened from inside a tool
   // modal): only the topmost one answers Escape, and the page stays locked until the
   // last one closes. The stack order is set when each opens, not as they re-render.
-  const [token] = useState(() => ({}));
+  const depth = (useContext(ModalContext).depth ?? -1) + 1;
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
   useEffect(() => {
     if (!isOpen) return;
-    openModals.push(token);
+    const entry: OpenModal = { depth, seq: ++openSeq };
+    openModals.push(entry);
     document.body.style.overflow = "hidden";
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && openModals[openModals.length - 1] === token) {
+      if (e.key === "Escape" && topModal() === entry) {
         onCloseRef.current?.();
       }
     };
     document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      const at = openModals.indexOf(token);
+      const at = openModals.indexOf(entry);
       if (at !== -1) openModals.splice(at, 1);
       if (openModals.length === 0) document.body.style.overflow = "unset";
     };
-  }, [isOpen, token]);
+  }, [isOpen, depth]);
 
   if (!isOpen) return null;
 
   const modalContent = (
-    <ModalContext.Provider value={{ onClose, disabled }}>
-      <div className="Modal__backdrop" onClick={handleBackdropClick}>
+    <ModalContext.Provider value={{ onClose, disabled, depth }}>
+      <div
+        className="Modal__backdrop"
+        onClick={handleBackdropClick}
+        // A nested modal draws above the one it was opened from.
+        style={depth > 0 ? { zIndex: 50 + depth } : undefined}
+      >
         <div className={`Modal__content ${className}`} onClick={(e) => e.stopPropagation()}>
           {children}
         </div>
