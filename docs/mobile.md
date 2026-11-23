@@ -7,7 +7,7 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 - `npm run cap:ios` / `npm run cap:android`: development build (local emulators) → sync → run on a simulator, emulator or USB device. Pass a device with `npm run cap:android -- --target <id>` (`adb devices` lists ids).
 - `npm run cap:sync`: production build → sync. Both set `CAPACITOR_BUILD=1`, so React is bundled rather than loaded from the CDN.
 - Native dev builds reach the Firebase emulators at `localhost`. The iOS simulator shares the Mac's network. On Android, `cap:android` forwards the emulator ports with `adb reverse` after launching (it has to come after: `cap run` restarts adb, which drops forwards). After replugging a phone, run `npm run android:forward`. `VITE_EMULATOR_HOST` overrides the host, but on Android anything other than `localhost` is blocked as mixed content, because the app itself is served from `https://localhost`.
-- Android builds need JDK 17–24 (CI uses 21). Recent Android Studio bundles a newer JDK that this project's Gradle 8.14 can't run on, so point `JAVA_HOME` at one, e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. `cap:android` checks this first.
+- Android builds need JDK 17–24 (CI uses 21), and JDK 21 must be installed even if `JAVA_HOME` points elsewhere: `@capacitor/filesystem` asks Gradle for a Java 21 toolchain (`brew install --cask temurin@21`). Gradle finds the SDK through `android/local.properties` (`sdk.dir=…/Library/Android/sdk`, git-ignored) or `ANDROID_HOME`. Recent Android Studio bundles a newer JDK that this project's Gradle 8.14 can't run on, so point `JAVA_HOME` at one, e.g. `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. `cap:android` checks this first.
 - Capacitor recreates the iOS Swift Package symlinks (`ios/App/CapApp-SPM/symlinks/`) with absolute paths on every sync. The `capacitor:update:after` script (`scripts/relative-spm-symlinks.mjs`) rewrites them as relative paths straight afterwards, so they work in any checkout and syncing doesn't dirty the tree.
 - Native-only code sits behind `isNative()` in `@/platform`. Use `@/platform` for storage, the clipboard, links and sharing.
 - Share cards (`shareImage`) write the PNG to the app's cache with `@capacitor/filesystem`, then hand the file URI to `@capacitor/share`. Android serves it through the Capacitor template's FileProvider (`res/xml/file_paths.xml` must keep its `cache-path` entry). After pulling this plugin in, run `npm run cap:sync` so the native projects pick it up.
@@ -25,10 +25,12 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
 
 ## Checklist (outside the code)
 
+Done: 1, 2, the Team ID in 3, and the fingerprints in 4. The first internal-test build (5.18.0) is uploaded.
+
 1. Install Android Studio, and set up an emulator with a Google Play image.
 2. Register the iOS and Android apps (`app.moneylogs`) in the Firebase console. Add `GoogleService-Info.plist` to `ios/App/App/` and `google-services.json` to `android/app/`. Both get committed.
 3. Apple Developer account:
-   - Put the Team ID in `public/.well-known/apple-app-site-association` and set it as the Xcode signing team.
+   - Put the Team ID (`N95N7S65JJ`) in `public/.well-known/apple-app-site-association` and set it as the Xcode signing team.
    - Upload an APNs key to Firebase.
    - Switch `aps-environment` to `production` for store builds.
 4. Google Play Console:
