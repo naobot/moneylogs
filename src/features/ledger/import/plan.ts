@@ -115,12 +115,6 @@ export const previewByMonth = (rows: ReadonlyArray<MappedRow>): MonthPreview[] =
     .map(([month, list]) => ({ month, count: list.length, totals: sumByCurrency(list) }));
 };
 
-export const chunk = <T>(items: ReadonlyArray<T>, size: number): T[][] => {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
-};
-
 const mappingKey = (ledgerId: string, source: ImportSource) =>
   `ML__importMapping_${ledgerId}_${source}`;
 

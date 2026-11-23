@@ -4,7 +4,7 @@ import { db } from "@/config/firebase-config";
 import { Ledger, LedgerEntry } from "@/types/ledger";
 import { sortEntries } from "@/utils/ledgerEntries";
 import { PullGroup, pulledIdsIn, toPullGroup } from "@/utils/pullLines";
-import { chunk } from "@/features/ledger/import/plan";
+import { chunk } from "@/utils/chunk";
 import { reportError } from "@/utils/reportError";
 
 /**
