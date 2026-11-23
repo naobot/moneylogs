@@ -28,8 +28,8 @@ export const Snackbar = ({ toasts, onRemove }: SnackbarProps) => {
         })}
       >
         <span className="Snackbar__message">{toast.message}</span>
-        <button className="Snackbar__close" onClick={() => onRemove(toast.id)} aria-label="dismiss">
-          ✕
+        <button type="button" className="Snackbar__close" onClick={() => onRemove(toast.id)}>
+          ok
         </button>
       </div>
     </div>
