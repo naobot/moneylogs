@@ -99,6 +99,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
               <select
                 id={friendSelectId}
                 value={chosenFriend}
+                disabled={pending}
                 onChange={(e) => setFriend(e.target.value)}
               >
                 {friends.map((id) => (

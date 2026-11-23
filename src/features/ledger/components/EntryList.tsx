@@ -164,7 +164,7 @@ export const EntryList = ({
           </section>
         ))}
       </div>
-      <Modal isOpen={!!deletingEntry} onClose={() => setDeletingEntry(null)}>
+      <Modal isOpen={!!deletingEntry} onClose={() => setDeletingEntry(null)} disabled={isDeleting}>
         <Modal.Header title={"Delete entry"}>Delete entry</Modal.Header>
         <Modal.Body>
           {deletingEntry && (

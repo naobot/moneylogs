@@ -201,7 +201,7 @@ export const LogActionsModal = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={pending ? undefined : onClose} className="LogActions">
+    <Modal isOpen={isOpen} onClose={onClose} disabled={pending} className="LogActions">
       <Modal.Header
         striped
         title={

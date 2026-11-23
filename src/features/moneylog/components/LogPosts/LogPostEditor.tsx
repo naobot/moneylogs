@@ -124,6 +124,7 @@ const LogPostEditor = forwardRef(
     const { activeEditorTip, dismissTip, completeTutorial } = useTutorial();
 
     const { addNewLogPost, editLogPost } = useLogPostQuery();
+    const isSaving = type === "new" ? addNewLogPost.isLoading : editLogPost.isLoading;
 
     const imageUploadCommand = useMemo(
       () => ({
@@ -456,6 +457,7 @@ const LogPostEditor = forwardRef(
               text={"×"}
               aria-label="Close"
               title="Close"
+              disabled={isSaving}
               onClick={
                 type === "new"
                   ? () => isCreateNewEntrySet(false)
@@ -553,7 +555,9 @@ const LogPostEditor = forwardRef(
             variant="primary"
             size="sm"
             text="Submit"
-            disabled={!newEntryContent || addNewLogPost?.isLoading}
+            // An image still uploading lands in the text when it's done: wait for it.
+            disabled={!newEntryContent || isUploading}
+            loading={isSaving}
             onClick={type === "new" ? handleNewLogPost : handleEditPost}
           />
         </div>

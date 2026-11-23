@@ -50,11 +50,13 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       await updateProfile(auth.currentUser!, { displayName });
       const loggedInUser = await signInWithEmailAndPassword(auth, email, password);
 
-      setRegistrationPending(false);
-
+      // Stays pending through the full-page redirect: a second click would try to
+      // register the same email again.
       if (loggedInUser.user) {
         // The welcome wizard sets up the profile, then carries on to where they were headed.
         window.location.href = welcomePath(redirectTo);
+      } else {
+        setRegistrationPending(false);
       }
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };

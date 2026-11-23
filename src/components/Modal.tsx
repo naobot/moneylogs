@@ -46,6 +46,10 @@ interface ModalProps {
   onClose?: () => void;
   children: ReactNode;
   className?: string;
+  /**
+   * Something is in flight (a save, a delete): the modal can't be dismissed (backdrop,
+   * Escape, its close × and Confirm / Cancel buttons) until it settles.
+   */
   disabled?: boolean;
 }
 
@@ -57,7 +61,7 @@ const Modal: React.FC<ModalProps> = ({
   disabled = false,
 }) => {
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget && onClose) {
+    if (e.target === e.currentTarget && onClose && !disabled) {
       onClose();
     }
   };
@@ -67,8 +71,10 @@ const Modal: React.FC<ModalProps> = ({
   // last one closes. The stack order is set when each opens, not as they re-render.
   const depth = (useContext(ModalContext).depth ?? -1) + 1;
   const onCloseRef = useRef(onClose);
+  const disabledRef = useRef(disabled);
   useEffect(() => {
     onCloseRef.current = onClose;
+    disabledRef.current = disabled;
   });
   useEffect(() => {
     if (!isOpen) return;
@@ -76,7 +82,7 @@ const Modal: React.FC<ModalProps> = ({
     openModals.push(entry);
     document.body.style.overflow = "hidden";
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && topModal() === entry) {
+      if (e.key === "Escape" && topModal() === entry && !disabledRef.current) {
         onCloseRef.current?.();
       }
     };
