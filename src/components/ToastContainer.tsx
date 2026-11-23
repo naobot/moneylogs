@@ -22,13 +22,14 @@ export const Snackbar = ({ toasts, onRemove }: SnackbarProps) => {
     <div className="Snackbar">
       <div
         key={toast.id}
+        role={toast.variant === "error" ? "alert" : "status"}
         className={cx("Snackbar__item", {
           "Snackbar__item--success": toast.variant === "success",
         })}
       >
         <span className="Snackbar__message">{toast.message}</span>
-        <button className="Snackbar__close" onClick={() => onRemove(toast.id)} aria-label="Dismiss">
-          ✕
+        <button type="button" className="Snackbar__close" onClick={() => onRemove(toast.id)}>
+          ok
         </button>
       </div>
     </div>
