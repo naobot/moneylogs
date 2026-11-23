@@ -56,7 +56,8 @@ export const postAmounts = <C extends string>(post: PostAmountFields<C>): Amount
     return map;
   }
   delete map[primary];
-  map[post.currency] = round2((map[post.currency] ?? 0) + legacy);
+  const secondary = map[post.currency];
+  map[post.currency] = secondary === undefined ? legacy : round2(secondary + legacy);
   return map;
 };
 
