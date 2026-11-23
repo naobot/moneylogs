@@ -29,6 +29,18 @@
       border-top: var(--border-hairline) dashed var(--ink);
     }
   }
+
+  &__rename {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    width: 100%;
+
+    .LineInput {
+      flex: 1;
+      min-width: 0;
+    }
+  }
 }
 
 .ArchivedLogs {

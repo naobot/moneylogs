@@ -14,6 +14,8 @@ import { useMutation } from "@/hooks/useFirebase";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 
+import LogTitleSection from "./LogTitleSection";
+
 import "./LogActions.scss";
 import { reportError } from "@/utils/reportError";
 import { logKindParam, track } from "@/utils/analytics";
@@ -211,6 +213,8 @@ export const LogActionsModal = ({
         }
       />
       <Modal.Body>
+        {isCreator && <LogTitleSection logId={logId} logTitle={logTitle} kind={kind} />}
+
         <section className="LogActions__section">
           <h4>{archived ? "Archived" : "Archive"}</h4>
           <p>
