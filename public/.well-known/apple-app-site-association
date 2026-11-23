@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["TEAM_ID.app.moneylogs"],
+        "appIDs": ["N95N7S65JJ.app.moneylogs"],
         "components": [
           { "/": "/g/*", "comment": "log groups and their invites" },
           { "/": "/l/*", "comment": "financial logs and their invites" },

@@ -5,7 +5,7 @@
       "namespace": "android_app",
       "package_name": "app.moneylogs",
       "sha256_cert_fingerprints": [
-        "SHA256_UPLOAD_KEY_FINGERPRINT",
+        "1E:C8:7A:FE:5C:21:F4:96:BD:DD:4C:52:31:C7:18:DC:D2:16:9B:D4:9B:E7:54:44:10:B3:0D:B8:4F:EC:62:B6",
         "SHA256_PLAY_APP_SIGNING_FINGERPRINT"
       ]
     }
