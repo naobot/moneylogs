@@ -58,6 +58,8 @@ describe("sumAmountsIn", () => {
     expect(sumAmountsIn("$5 AND $3", "CAD")).toBe(8);
     expect(sumAmountsIn("lunch $10 CAD; ferry $30 HKD", "CAD")).toBe(10);
     expect(sumAmountsIn("ferry $30 HKD", "CAD")).toBeUndefined();
+    expect(sumAmountsIn("coffee $4\nlunch $12\nALL DONE for today", "CAD")).toBe(16);
+    expect(sumAmountsIn("tea 300\nJPY", "JPY")).toBeUndefined();
   });
 
   it("returns undefined when nothing matches", () => {

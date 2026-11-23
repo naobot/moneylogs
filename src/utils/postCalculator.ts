@@ -30,7 +30,11 @@ const SYMBOL_PATTERNS: Partial<Record<Currency, { symbol: string; re: RegExp }>>
 // The number may start at its decimal point (".50 CAD") and end in a k or 万 multiplier.
 const SIGNED_NUMBER = "(-?)[¥￥$₩€£]?(-?)(\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+)(k|万)?";
 
-const codePattern = (currency: Currency) => new RegExp(`${SIGNED_NUMBER}\\s?${currency}\\b`, "g");
+// The gap before a code stays on one line, so a note starting "ALL DONE" (ALL is the
+// Albanian lek) can't claim the amount at the end of the line above.
+const GAP = "[ \\t\\u00a0]?";
+
+const codePattern = (currency: Currency) => new RegExp(`${SIGNED_NUMBER}${GAP}${currency}\\b`, "g");
 
 // Common codes outside the picker, for runtimes without Intl.supportedValuesOf
 // (older Android WebViews).
@@ -98,7 +102,7 @@ export const sumAmountsIn = (
   }
   rest = rest.replace(codePattern(currency), " ");
   // Drop every other currency's code-form amounts too, so "$5 CAD" isn't read as USD.
-  rest = rest.replace(new RegExp(`${SIGNED_NUMBER}\\s?${ANY_CODE}\\b`, "g"), " ");
+  rest = rest.replace(new RegExp(`${SIGNED_NUMBER}${GAP}${ANY_CODE}\\b`, "g"), " ");
 
   const symbol = SYMBOL_PATTERNS[currency];
   if (symbol && !symbolIsAmbiguous(currency, rowCurrencies)) {
