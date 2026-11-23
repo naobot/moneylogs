@@ -38,7 +38,10 @@ service cloud.firestore {
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
         && request.resource.data.max_participants is int
+        // MAX_PARTICIPANTS (src/features/createLog/wizardSteps.ts). The join rule keeps
+        // members within it, which is what bounds the reaction keys checked below.
         && request.resource.data.max_participants >= 1
+        && request.resource.data.max_participants <= 30
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.members is list
@@ -109,9 +112,10 @@ service cloud.firestore {
       allow delete: if ownsUserRef(resource.data.author);
 
       // Rules can't take an element out of a Set, so the one changed key is found by
-      // position in the reactions map's key list (a List, which can be indexed). Logs cap
-      // at 30 members (MAX_PARTICIPANTS), so 40 positions cover every reactor; the
-      // position checks short-circuit, so only the match costs a get().
+      // position in the reactions map's key list (a List, which can be indexed). Only
+      // members react, the create and join rules hold members to 30 (MAX_PARTICIPANTS),
+      // and account deletion removes a person's keys, so 40 positions cover every reactor.
+      // The position checks short-circuit, so only the match costs a get().
       function reactionChangeIsOwn(changed) {
         let keys = request.resource.data.reactions.keys();
         return changed.size() == 1

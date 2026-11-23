@@ -18,6 +18,7 @@
     "preview": "vp preview",
     "seed-emulator": "npx tsx scripts/seed-emulator.ts",
     "reset-persona": "npx tsx scripts/reset-persona.ts",
+    "check-rules": "npx tsx scripts/check-rules.ts",
     "center-icons": "node scripts/center-icons.mjs",
     "prepare": "vp config",
     "test": "vitest run",

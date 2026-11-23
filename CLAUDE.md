@@ -155,6 +155,7 @@ Emulator data is wiped each session. Local `.env` values are not committed.
 | `vp test`                         | Vitest (run once)                                                   |
 | `npm run seed-emulator`           | Seed local Firestore                                                |
 | `npm run e2e`                     | Playwright walkthroughs of docs/user-states.md flows (emulators up) |
+| `npm run check-rules`             | Allow/deny cases for the social-log Firestore rules (emulators up)  |
 | `npm run reset-persona -- <name>` | Reset a new-user test persona (`fresh`, `empty`, `lapsed`, `all`)   |
 | `npm run cap:ios` / `cap:android` | Dev build → sync → run in a simulator/emulator/USB device           |
 | `npm run android:forward`         | Re-forward emulator ports to a replugged Android device             |
