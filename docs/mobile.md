@@ -35,7 +35,7 @@ Done: 1, 2, the Team ID in 3, and the fingerprints in 4. The first internal-test
    - Switch `aps-environment` to `production` for store builds.
 4. Google Play Console:
    - New personal accounts need a closed test with 12+ testers for 14 days before production, so start early.
-   - Put the upload-key and Play app-signing SHA-256 fingerprints (Play Console → App integrity) in `public/.well-known/assetlinks.json`, then deploy hosting. Until then, moneylogs.app links won't open the app.
+   - Put the upload-key and Play app-signing SHA-256 fingerprints (Play Console → App integrity) in `public/.well-known/assetlinks.json`, then deploy hosting. Play signs with two app-signing keys, a classical and a post-quantum one, and newer phones check the post-quantum one, so list both. `adb shell pm get-app-links app.moneylogs` shows the fingerprint a phone checks and whether `moneylogs.app` verified. Until then, moneylogs.app links won't open the app.
    - Store listing: 512 icon is `assets/icon-512.png`; still needed are a 1024×500 feature graphic and 2+ phone screenshots.
    - Forms: Data safety (Firebase, Sentry; account deletion link https://moneylogs.app/privacy), Financial features (personal budgeting only; no money moves), content rating, target audience, no ads, and App access (the demo account below).
    - The app calls Firebase from `https://localhost`. If the Firebase API key is restricted to moneylogs.app in Google Cloud, sign-in fails in the app: check on the first internal-test build.
