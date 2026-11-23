@@ -1,6 +1,7 @@
 import cx from "classnames";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import MDEditor from "@uiw/react-md-editor";
+import Markdown from "@/components/Markdown";
 
 import { useCurrentUser } from "@/contexts";
 import { Comment } from "@/types/user";
@@ -159,7 +160,7 @@ const LogPostComments = ({
                       comment?.authorId?.id === currentLogAuthorId,
                     )}
                   >
-                    <MDEditor.Markdown source={comment.content} />
+                    <Markdown source={comment.content} />
                   </div>
                   <div className="LogPostComments__item__footer">
                     <div className="LogPostComments__item__footer__right">

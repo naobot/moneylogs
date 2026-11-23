@@ -1,4 +1,4 @@
-import MDEditor from "@uiw/react-md-editor";
+import Markdown from "@/components/Markdown";
 
 import Button from "@/components/Button";
 import dayjs from "@/utils/configuredDayjs";
@@ -226,7 +226,7 @@ export const DisplaySection = () => {
       <div className="DisplaySample" aria-label="Preview">
         <div className="DisplaySample__meta">{formatDate(now)}</div>
         <div data-color-mode={markdownColorMode(theme)}>
-          <MDEditor.Markdown source={SAMPLE_ENTRY} />
+          <Markdown source={SAMPLE_ENTRY} />
         </div>
         <div className="DisplaySample__chart">
           <span className="DisplaySample__bar" role="img" aria-label="Sample chart">
