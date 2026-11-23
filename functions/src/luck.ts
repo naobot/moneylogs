@@ -28,7 +28,7 @@ export const STREAK_SEED_DAYS = 20;
 export const NO_SPEND_GAIN = MOMENTUM_ENTRY_GAIN;
 /** How far back noSpendShare looks for other confirmed no-spend days. */
 export const NO_SPEND_WINDOW_DAYS = 30;
-/** Other confirmed no-spend days in the window that halve a day's bonus. */
+/** Each this many other confirmed no-spend days in the window halve a day's bonus. */
 export const NO_SPEND_HALF_AT = 6;
 /** The smallest share of the bonus a no-spend day ever gets. */
 export const NO_SPEND_MIN_SHARE = 0.25;
@@ -117,12 +117,13 @@ export const nextLuckState = ({
 
 /**
  * The share of NO_SPEND_GAIN a no-spend day earns, from how many other days the person
- * confirmed in the NO_SPEND_WINDOW_DAYS before it: all of it when they're rare, half at
- * NO_SPEND_HALF_AT, and never under NO_SPEND_MIN_SHARE. Someone who often has nothing to
- * spend still gets a little each time; an unusual quiet day counts for more.
+ * confirmed in the NO_SPEND_WINDOW_DAYS before it: all of it when they're rare, halving
+ * every NO_SPEND_HALF_AT days (half at 6, a quarter at 12), and never under
+ * NO_SPEND_MIN_SHARE. Someone who often has nothing to spend still gets a little each
+ * time; an unusual quiet day counts for more.
  */
 export const noSpendShare = (recentDays: number): number =>
-  Math.max(NO_SPEND_MIN_SHARE, 1 / (1 + Math.max(0, recentDays) / NO_SPEND_HALF_AT));
+  Math.max(NO_SPEND_MIN_SHARE, 0.5 ** (Math.max(0, recentDays) / NO_SPEND_HALF_AT));
 
 /**
  * Momentum after confirming `today` as a no-spend day. It takes the place of a logged day's

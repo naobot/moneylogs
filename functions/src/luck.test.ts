@@ -138,7 +138,9 @@ describe("noSpendShare", () => {
     shares.slice(1).forEach((s, i) => expect(s).toBeLessThan(shares[i]));
   });
 
-  it("never drops under the floor, nor goes over full", () => {
+  it("reaches the floor at twice the halving count, and never drops under it", () => {
+    expect(noSpendShare(2 * NO_SPEND_HALF_AT)).toBeCloseTo(NO_SPEND_MIN_SHARE);
+    expect(noSpendShare(2 * NO_SPEND_HALF_AT - 1)).toBeGreaterThan(NO_SPEND_MIN_SHARE);
     expect(noSpendShare(30)).toBe(NO_SPEND_MIN_SHARE);
     expect(noSpendShare(-2)).toBe(1);
   });
