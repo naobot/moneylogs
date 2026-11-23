@@ -54,8 +54,10 @@ describe("sumAmountsIn", () => {
     expect(sumAmountsIn("gum .50 CAD", "CAD")).toBe(0.5);
   });
 
-  it("doesn't take an uppercase word for a currency code", () => {
+  it("only treats real currency codes as labels", () => {
     expect(sumAmountsIn("$5 AND $3", "CAD")).toBe(8);
+    expect(sumAmountsIn("lunch $10 CAD; ferry $30 HKD", "CAD")).toBe(10);
+    expect(sumAmountsIn("ferry $30 HKD", "CAD")).toBeUndefined();
   });
 
   it("returns undefined when nothing matches", () => {

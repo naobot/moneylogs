@@ -32,8 +32,37 @@ const SIGNED_NUMBER = "(-?)[¥￥$₩€£]?(-?)(\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+)
 
 const codePattern = (currency: Currency) => new RegExp(`${SIGNED_NUMBER}\\s?${currency}\\b`, "g");
 
-// Only real currency codes, so an uppercase word ("$5 AND $3") isn't taken for one.
-const ANY_CODE = `(?:${CURRENCIES.join("|")})`;
+// Common codes outside the picker, for runtimes without Intl.supportedValuesOf
+// (older Android WebViews).
+const FALLBACK_CODES = [
+  "HKD",
+  "TWD",
+  "NZD",
+  "CHF",
+  "THB",
+  "VND",
+  "PHP",
+  "IDR",
+  "INR",
+  "MXN",
+  "BRL",
+  "SEK",
+  "NOK",
+  "DKK",
+  "MOP",
+];
+
+/** Every ISO 4217 code the runtime knows, plus the picker's own (NTD isn't ISO). */
+const knownCodes = (): string[] => {
+  const intl = Intl as { supportedValuesOf?: (key: "currency") => string[] };
+  const iso =
+    typeof intl.supportedValuesOf === "function" ? intl.supportedValuesOf("currency") : [];
+  return [...new Set([...CURRENCIES, ...iso, ...FALLBACK_CODES])];
+};
+
+// Only real currency codes, so an uppercase word ("$5 AND $3") isn't taken for one, but
+// every real one, so "$30 HKD" isn't read as a CAD "$30".
+const ANY_CODE = `(?:${knownCodes().join("|")})`;
 
 const MULTIPLIERS: Record<string, number> = { k: 1000, 万: 10000 };
 
