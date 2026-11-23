@@ -47,6 +47,17 @@ describe("postAmounts", () => {
     ).toEqual({ CAD: 12, USD: 20 });
   });
 
+  it("keeps the exact amount when switching to a currency not on the post", () => {
+    expect(
+      postAmounts<string>({
+        amount: 12.345,
+        currency: "CAD",
+        amountsPrimary: "JPY",
+        amounts: { JPY: 1000, USD: 10 },
+      }),
+    ).toEqual({ CAD: 12.345, USD: 10 });
+  });
+
   it("adds to a secondary when an old client switches to its currency", () => {
     const post = { currency: "CAD", amountsPrimary: "JPY", amounts: { CAD: 12, JPY: 1200 } };
     expect(postAmounts<string>({ ...post, amount: 20 })).toEqual({ CAD: 32 });

@@ -45,6 +45,19 @@ describe("sumAmountsIn", () => {
     expect(sumAmountsIn("refund -$5 CAD", "USD", ["USD"])).toBeUndefined();
   });
 
+  it("multiplies decimal k and 万 shorthand", () => {
+    expect(sumAmountsIn("dinner 2.5k KRW", "KRW")).toBe(2500);
+    expect(sumAmountsIn("rent 2.5万 JPY", "JPY")).toBe(25000);
+  });
+
+  it("reads an amount that starts at its decimal point", () => {
+    expect(sumAmountsIn("gum .50 CAD", "CAD")).toBe(0.5);
+  });
+
+  it("doesn't take an uppercase word for a currency code", () => {
+    expect(sumAmountsIn("$5 AND $3", "CAD")).toBe(8);
+  });
+
   it("returns undefined when nothing matches", () => {
     expect(sumAmountsIn("a quiet day", "JPY")).toBeUndefined();
   });

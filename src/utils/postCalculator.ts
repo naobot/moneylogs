@@ -1,4 +1,5 @@
 import { Currency } from "@/types/user";
+import { CURRENCIES } from "@/utils/currency";
 
 /**
  * The post editor's calculator: sums the amounts written in a post's text for one
@@ -26,17 +27,22 @@ const SYMBOL_PATTERNS: Partial<Record<Currency, { symbol: string; re: RegExp }>>
 };
 
 // A minus may sit before or after an optional symbol: "-$5 CAD", "$-5 CAD", "-5 CAD".
-const SIGNED_NUMBER = "(-?)[¥￥$₩€£]?(-?)(\\d[\\d,]*(?:\\.\\d+)?)(k|万)?";
+// The number may start at its decimal point (".50 CAD") and end in a k or 万 multiplier.
+const SIGNED_NUMBER = "(-?)[¥￥$₩€£]?(-?)(\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+)(k|万)?";
 
 const codePattern = (currency: Currency) => new RegExp(`${SIGNED_NUMBER}\\s?${currency}\\b`, "g");
 
-const parseAmount = (raw: string): number =>
-  Number(
-    raw
-      .replaceAll(/[¥￥$₩€£,\s]/g, "")
-      .replaceAll("k", "000")
-      .replaceAll("万", "0000"),
-  );
+// Only real currency codes, so an uppercase word ("$5 AND $3") isn't taken for one.
+const ANY_CODE = `(?:${CURRENCIES.join("|")})`;
+
+const MULTIPLIERS: Record<string, number> = { k: 1000, 万: 10000 };
+
+/** "1,200" → 1200, "2.5k" → 2500, "-¥5万" → -50000. */
+const parseAmount = (raw: string): number => {
+  const bare = raw.replaceAll(/[¥￥$₩€£,\s]/g, "");
+  const multiplier = MULTIPLIERS[bare.slice(-1)];
+  return multiplier ? Number(bare.slice(0, -1)) * multiplier : Number(bare);
+};
 
 /** Whether `currency`'s symbol is shared with another currency on the post. */
 const symbolIsAmbiguous = (currency: Currency, rowCurrencies: ReadonlyArray<Currency>) => {
@@ -63,7 +69,7 @@ export const sumAmountsIn = (
   }
   rest = rest.replace(codePattern(currency), " ");
   // Drop every other currency's code-form amounts too, so "$5 CAD" isn't read as USD.
-  rest = rest.replace(new RegExp(`${SIGNED_NUMBER}\\s?[A-Z]{3}\\b`, "g"), " ");
+  rest = rest.replace(new RegExp(`${SIGNED_NUMBER}\\s?${ANY_CODE}\\b`, "g"), " ");
 
   const symbol = SYMBOL_PATTERNS[currency];
   if (symbol && !symbolIsAmbiguous(currency, rowCurrencies)) {
