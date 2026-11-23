@@ -62,6 +62,19 @@ describe("sumAmountsIn", () => {
     expect(sumAmountsIn("tea 300\nJPY", "JPY")).toBeUndefined();
   });
 
+  it("counts only the amount at the end of a pulled line", () => {
+    const pulled = "**personal**\n- paid $5 cash · food — 5 CAD\n- 2 coffees · cafe — 8.50 CAD";
+    expect(sumAmountsIn(pulled, "CAD")).toBe(13.5);
+    expect(sumAmountsIn(`${pulled}\nlater: taxi $20`, "CAD")).toBe(33.5);
+    expect(sumAmountsIn("- note 300 JPY · food — 1,200 JPY", "JPY")).toBe(1200);
+  });
+
+  it("counts every amount on a handwritten line", () => {
+    expect(sumAmountsIn("coffee 5 CAD · 12 CAD", "CAD")).toBe(17);
+    expect(sumAmountsIn("- coffee 5 CAD · 12 CAD", "CAD")).toBe(17);
+    expect(sumAmountsIn("dinner 5 CAD — 12 CAD", "CAD")).toBe(17);
+  });
+
   it("returns undefined when nothing matches", () => {
     expect(sumAmountsIn("a quiet day", "JPY")).toBeUndefined();
   });

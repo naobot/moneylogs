@@ -1,0 +1,78 @@
+.PullSpendingModal {
+  &__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+    font-weight: 700;
+  }
+
+  &__hint {
+    margin: 0 0 var(--space-4);
+    font-size: 0.8em;
+    color: var(--ink-muted);
+  }
+
+  &__empty {
+    margin: var(--space-5) 0;
+    text-align: center;
+    color: var(--ink-muted);
+  }
+
+  &__log {
+    margin: 0 0 var(--space-5);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--space-6);
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-2) 0;
+    border-bottom: var(--border-hairline) dashed var(--ink);
+
+    // Already copied into one of your posts: the past, so dotted.
+    &--pulled {
+      border-bottom-style: dotted;
+      color: var(--ink-muted);
+    }
+  }
+
+  &__toggle {
+    min-width: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+
+    &:focus-visible {
+      outline: var(--border-hairline) dashed var(--ink);
+    }
+  }
+
+  &__logToggle {
+    margin: 0 0 var(--space-2);
+    font-weight: 700;
+  }
+
+  &__amount {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  &__total {
+    margin: var(--space-4) 0 0;
+    font-weight: 700;
+  }
+}

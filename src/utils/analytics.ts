@@ -32,6 +32,8 @@ export type AnalyticsEvents = {
 
   // Social logs
   add_post: { travelling: boolean };
+  /** Financial-log entries pulled into a social post: how many logs and entries. */
+  pull_ledger_spending: { ledgers: number; entries: number };
   open_comments: { has_comments: boolean };
   add_comment: Record<string, never>;
   add_reaction: Record<string, never>;

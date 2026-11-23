@@ -33,10 +33,12 @@ import RowButton from "@/components/RowButton";
 import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
 import { AmountRow, amountRows, normaliseAmounts, sameRows } from "@/utils/postAmounts";
 import { sumAmountsIn } from "@/utils/postCalculator";
+import { appendPulled, mergeIntoRows } from "@/utils/pullLines";
+import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
+import PullSpendingModal, { PulledSpending } from "./PullSpendingModal";
+import { clearPostDraft, readPostDraft, writePostDraft } from "@/utils/postDraft";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import { storage } from "@/platform";
-
-const DRAFT_KEY = "ML__logPostDraft";
 
 const LogPostEditor = forwardRef(
   (
@@ -54,6 +56,8 @@ const LogPostEditor = forwardRef(
       timezone = null,
       timezonePlace = null,
       date = Date.now(),
+      pulledEntryIds = [],
+      alreadyPulled,
     }: {
       type: "edit" | "new";
       postId?: string | null;
@@ -70,26 +74,40 @@ const LogPostEditor = forwardRef(
       isPinned?: boolean;
       timezone?: string | null;
       timezonePlace?: string | null;
+      /** Entries this post already pulled in. */
+      pulledEntryIds?: string[];
+      /** Entries pulled into any of the author's posts in this log. */
+      alreadyPulled?: ReadonlySet<string>;
     },
     ref: React.ForwardedRef<HTMLDivElement>,
   ) => {
     const { user } = useCurrentUser();
+    // The signed-in author, not `userId`: that's whichever member's tab is showing, and
+    // can change for a render while this editor is still open.
+    const authUid = user?.userId;
 
     const theme = useTheme();
-    const [newEntryContent, newEntryContentSet] = useState<string | null>(() => {
-      if (type === "new") {
-        const savedDraft = storage.get(DRAFT_KEY);
-        return savedDraft || "";
-      }
-      return content;
-    });
+    // A new post picks up where an unsent one was left: text, amounts and pulls together.
+    const [draft] = useState(() => (type === "new" && authUid ? readPostDraft(authUid) : null));
+    const [newEntryContent, newEntryContentSet] = useState<string | null>(() =>
+      type === "new" ? (draft?.content ?? "") : content,
+    );
     // What the post was opened with, to tell whether the amounts were touched.
     const [initialRows] = useState(() => amountRows(amounts, savedPrimary));
     const [rows, setRows] = useState<AmountRow<Currency>[]>(() => {
+      if (draft?.rows) return draft.rows;
       const initial = initialRows;
       return initial.length > 0 ? initial : [{ currency: "JPY", amount: 0 }];
     });
     const [newEntryDate, newEntryDateSet] = useState<number>(date);
+    const [pulledIds, setPulledIds] = useState<string[]>(draft?.pulledIds ?? pulledEntryIds);
+    const [isPulling, setIsPulling] = useState(false);
+    const { ledgers } = useGetMyLedgers();
+    const hasLedgers = (ledgers?.length ?? 0) > 0;
+    const pulledAnywhere = useMemo(
+      () => new Set([...(alreadyPulled ?? []), ...pulledIds]),
+      [alreadyPulled, pulledIds],
+    );
     const [newTimezone, setNewTimezone] = useState<string | null>(
       timezone ?? user?.timezone ?? null,
     );
@@ -158,6 +176,13 @@ const LogPostEditor = forwardRef(
     const handleRemoveRow = (index: number) =>
       setRows((prev) => prev.filter((_, i) => i !== index));
 
+    const handlePulled = ({ markdown, totals, entryIds, ledgerCount }: PulledSpending) => {
+      newEntryContentSet((prev) => appendPulled(prev ?? "", markdown));
+      setRows((prev) => mergeIntoRows(prev, totals));
+      setPulledIds((prev) => [...new Set([...prev, ...entryIds])]);
+      track("pull_ledger_spending", { ledgers: ledgerCount, entries: entryIds.length });
+    };
+
     const resetRows = () => setRows([{ currency: postStartCurrency(user), amount: 0 }]);
 
     const handleNewLogPost = async () => {
@@ -174,6 +199,7 @@ const LogPostEditor = forwardRef(
             currency: primaryCurrency,
             content: newEntryContent,
             postDate: newEntryDate,
+            pulledEntryIds: pulledIds,
             timezone: newTimezone ?? undefined,
             timezonePlace: newTimezone ? newTimezonePlace : null,
           },
@@ -181,12 +207,13 @@ const LogPostEditor = forwardRef(
 
         track("add_post", { travelling: !!newTimezone });
 
-        storage.remove(DRAFT_KEY);
+        clearPostDraft();
         completeTutorial();
 
         isCreateNewEntrySet(false);
         newEntryContentSet(null);
         resetRows();
+        setPulledIds([]);
       } catch (err) {
         reportError(err, { feature: "log_post", action: "create_post" });
       }
@@ -207,6 +234,7 @@ const LogPostEditor = forwardRef(
             currency: primaryCurrency,
             content: newEntryContent,
             postDate: newEntryDate,
+            pulledEntryIds: pulledIds,
             // null clears a travelling zone back to the profile's.
             timezone: newTimezone,
             timezonePlace: newTimezone ? newTimezonePlace : null,
@@ -221,6 +249,11 @@ const LogPostEditor = forwardRef(
         reportError(err, { feature: "log_post", action: "edit_post" });
       }
     };
+
+    // The post's day where it's filed: its own zone, else the profile's, else this device's.
+    const pickerDay = dayjs(newEntryDate)
+      .tz(newTimezone ?? user?.timezone ?? dayjs.tz.guess())
+      .format("YYYY-MM-DD");
 
     const handleClickCalculator = (index: number) => {
       if (!newEntryContent) return;
@@ -270,21 +303,22 @@ const LogPostEditor = forwardRef(
         }
       }
 
-      // New posts start on this device's last-used currency, else the user's default.
-      if (type == "new") {
-        resetRows();
+      // New posts start on this device's last-used currency, else the user's default,
+      // unless they're a restored draft's.
+      if (type == "new" && !draft?.rows) {
+        setRows([{ currency: postStartCurrency(user), amount: 0 }]);
       }
     }, []);
 
     useEffect(() => {
-      if (type === "new" && newEntryContent !== null) {
+      if (type === "new" && newEntryContent !== null && authUid) {
         if (newEntryContent.trim() === "") {
-          storage.remove(DRAFT_KEY);
+          clearPostDraft();
         } else {
-          storage.set(DRAFT_KEY, newEntryContent);
+          writePostDraft(authUid, { content: newEntryContent, rows, pulledIds });
         }
       }
-    }, [newEntryContent, type]);
+    }, [newEntryContent, rows, pulledIds, type, authUid]);
 
     return (
       <div
@@ -301,6 +335,18 @@ const LogPostEditor = forwardRef(
           className="LogPostEditor__file-input"
           onChange={handleInlineImageSelected}
         />
+        {isPulling && ledgers && authUid && (
+          <PullSpendingModal
+            ledgers={ledgers}
+            uid={authUid}
+            authorDocId={user?.id}
+            groupId={groupId}
+            day={pickerDay}
+            alreadyPulled={pulledAnywhere}
+            onClose={() => setIsPulling(false)}
+            onAdd={handlePulled}
+          />
+        )}
         <div className="LogPosts__posts__item__header">
           <div className="LogPosts__posts__item__header__left">
             <div style={{ position: "relative" }}>
@@ -390,7 +436,17 @@ const LogPostEditor = forwardRef(
                   )}
                 </div>
               ))}
-              {unusedCurrency && <RowButton onClick={handleAddRow}>+ currency</RowButton>}
+              <div className="LogPostEditor__amountActions">
+                {unusedCurrency && <RowButton onClick={handleAddRow}>+ currency</RowButton>}
+                {hasLedgers && (
+                  <RowButton
+                    onClick={() => setIsPulling(true)}
+                    title="copy your spending from your financial logs into this post"
+                  >
+                    pull from logs
+                  </RowButton>
+                )}
+              </div>
             </div>
           </div>
           <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">

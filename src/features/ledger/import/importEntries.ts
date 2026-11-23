@@ -1,6 +1,7 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
-import { IMPORT_CHUNK_SIZE, ImportCheck, MappedRow, PossibleDuplicate, chunk } from "./plan";
+import { IMPORT_CHUNK_SIZE, ImportCheck, MappedRow, PossibleDuplicate } from "./plan";
+import { chunk } from "@/utils/chunk";
 import { ImportRow, ImportSource } from "./types";
 
 type ImportRequest = { ledgerId: string; source: ImportSource; rows: MappedRow[] };

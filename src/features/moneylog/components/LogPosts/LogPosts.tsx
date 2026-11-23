@@ -29,6 +29,7 @@ import { reportError } from "@/utils/reportError";
 import { postZoneLabel, tzAbbrev } from "@/utils/timezone";
 import { postAmounts } from "@/utils/postAmounts";
 import { formatTotals } from "@/utils/ledgerEntries";
+import { pulledIdsIn } from "@/utils/pullLines";
 
 type LogPostsProps = {
   user: UserData;
@@ -418,6 +419,12 @@ const LogPosts = memo(
     const { user: loggedInUser } = useCurrentUser();
     const { prefs, formatDate } = useDateFormat();
 
+    // Financial-log entries already pulled into your own posts here, marked in the picker.
+    const alreadyPulled = useMemo(
+      () => pulledIdsIn(logs ?? [], loggedInUser?.id),
+      [logs, loggedInUser?.id],
+    );
+
     const calendarMarkedPosts = useMemo(() => {
       // console.log('calendarMarkedPosts updating')
       // console.log(user.pinnedPosts?.[groupId]?.pinnedPost)
@@ -685,12 +692,13 @@ const LogPosts = memo(
             </div>
           </>}*/}
 
-            {isCreateNewEntry && !isSpectator && (
+            {isCreateNewEntry && !isSpectator && isMyLog && (
               <LogPostEditor
                 ref={postEditorRef}
                 type="new"
                 groupId={groupId}
                 userId={userId}
+                alreadyPulled={alreadyPulled}
                 isCreateNewEntrySet={isCreateNewEntrySet}
                 setCurrentlyEditingPostId={setCurrentlyEditingPostId}
               />
@@ -736,6 +744,8 @@ const LogPosts = memo(
                         setCurrentlyEditingPostId={setCurrentlyEditingPostId}
                         content={(item as LogPost).content}
                         amounts={postAmounts(item as LogPost)}
+                        pulledEntryIds={(item as LogPost).pulledEntryIds}
+                        alreadyPulled={alreadyPulled}
                         primaryCurrency={(item as LogPost).currency}
                         date={(item as LogPost).postDate?.seconds * 1000}
                         isPinned={

@@ -17,6 +17,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { reportError } from "@/utils/reportError";
 import { turnPushOff } from "@/features/push/devicePush";
+import { clearPostDraft } from "@/utils/postDraft";
 
 const deleteAccountCallable = httpsCallable<void, { deleted: boolean }>(functions, "deleteAccount");
 
@@ -69,6 +70,7 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
     await signOut(auth).catch((err) =>
       reportError(err, { feature: "account", action: "sign_out_after_delete", level: "warning" }),
     );
+    clearPostDraft();
     showToast("Your account has been deleted.", "success");
     void navigate("/login", { replace: true });
   };

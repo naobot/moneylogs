@@ -10,6 +10,9 @@ import { CURRENCIES } from "@/utils/currency";
  *   and is the form lines pulled in from financial logs use;
  * - the currency's symbol ("¥1,200", "$4.50"), but only when no other row on the post
  *   shares that symbol: "$" could be USD, CAD, NTD, AUD or SGD.
+ *
+ * On a line pulled in from a financial log ("- ramen · food — 1,200 JPY"), only the
+ * amount after the em dash counts.
  */
 
 const SYMBOL_PATTERNS: Partial<Record<Currency, { symbol: string; re: RegExp }>> = {
@@ -68,6 +71,11 @@ const knownCodes = (): string[] => {
 // every real one, so "$30 HKD" isn't read as a CAD "$30".
 const ANY_CODE = `(?:${knownCodes().join("|")})`;
 
+// A line pulled in from a financial log ("- paid $5 · food — 5 CAD") is a list item
+// ending in an em dash and its amount. Only that amount counts: the note and category
+// before it are labels. Handwritten lines ("coffee 5 CAD · 12 CAD") count in full.
+const PULLED_LINE = new RegExp(`^[ \\t]*- .* — (${SIGNED_NUMBER}${GAP}${ANY_CODE})[ \\t]*$`, "gm");
+
 const MULTIPLIERS: Record<string, number> = { k: 1000, 万: 10000 };
 
 /** "1,200" → 1200, "2.5k" → 2500, "-¥5万" → -50000. */
@@ -93,10 +101,11 @@ export const sumAmountsIn = (
   rowCurrencies: ReadonlyArray<Currency> = [currency],
 ): number | undefined => {
   const found: number[] = [];
+  const scanned = text.replace(PULLED_LINE, "$1");
 
   // Code form first, then blank those matches out so "¥1,200 JPY" isn't counted twice.
-  let rest = text;
-  for (const [, signA, signB, digits, suffix] of text.matchAll(codePattern(currency))) {
+  let rest = scanned;
+  for (const [, signA, signB, digits, suffix] of scanned.matchAll(codePattern(currency))) {
     const sign = signA || signB ? -1 : 1;
     found.push(sign * parseAmount(`${digits}${suffix ?? ""}`));
   }

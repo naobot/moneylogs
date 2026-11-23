@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from "vite-plus/test";
 import { LedgerCategory } from "@/types/ledger";
 import {
   SKIP,
-  chunk,
   initialMapping,
   mapRows,
   previewByMonth,
@@ -108,13 +107,6 @@ describe("previewByMonth", () => {
       { month: "2024-11", count: 2, totals: { JPY: 350 } },
       { month: "2024-12", count: 2, totals: { CAD: 5, JPY: 300 } },
     ]);
-  });
-});
-
-describe("chunk", () => {
-  it("splits into fixed-size parts", () => {
-    expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
-    expect(chunk([], 2)).toEqual([]);
   });
 });
 

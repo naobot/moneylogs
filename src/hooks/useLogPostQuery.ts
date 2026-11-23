@@ -34,6 +34,8 @@ export type LogData = {
   currency: Currency;
   content: string;
   postDate: number;
+  /** Pull keys (`pullKey`) of financial-log entries pulled into the post (no ledger ids). */
+  pulledEntryIds?: string[];
   /** A travelling post's own zone. On edit, null clears it back to the author's. */
   timezone?: string | null;
   /** The city picked for that zone ("Kyoto"); null or empty clears it. */
@@ -97,6 +99,7 @@ export const useLogPostQuery = () => {
       group: groupDocRef,
       groupName,
       commentSubscribers: [userDocRef],
+      ...(logData.pulledEntryIds?.length ? { pulledEntryIds: logData.pulledEntryIds } : {}),
       ...postData,
     });
 
@@ -119,6 +122,7 @@ export const useLogPostQuery = () => {
       amount: number;
       currency: string;
       amounts: CurrencyAmounts;
+      pulledEntryIds: string[];
       amountsPrimary: string;
       timezone: string | FieldValue;
       timezonePlace: string | FieldValue;
@@ -135,6 +139,7 @@ export const useLogPostQuery = () => {
       updateData.amount = primary.amount;
       updateData.currency = primary.currency;
     }
+    if (logData.pulledEntryIds !== undefined) updateData.pulledEntryIds = logData.pulledEntryIds;
     if (logData.timezone !== undefined) {
       updateData.timezone = logData.timezone || deleteField();
       updateData.timezonePlace = (logData.timezone && logData.timezonePlace) || deleteField();
