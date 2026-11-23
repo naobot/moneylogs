@@ -78,6 +78,16 @@ describe("buildSpendingSeries — currencies", () => {
     expect(at("CAD", 16, series).amount).toBe(100);
   });
 
+  it("counts a multi-currency post in each of its currencies", () => {
+    const mixed = { ...makePost(100, 16, "CAD", "p-mixed"), amounts: { CAD: 100, JPY: 3000 } };
+    const series = buildSpendingSeries([mixed, makePost(20, 17, "CAD")], shortGroup);
+    expect(series.totals.get("CAD")).toBe(120);
+    expect(series.totals.get("JPY")).toBe(3000);
+    expect(series.counts.get("JPY")).toBe(1);
+    expect(at("JPY", 16, series).posts.map((p) => p.id)).toEqual(["p-mixed"]);
+    expect(at("CAD", 16, series).posts.map((p) => p.id)).toEqual(["p-mixed"]);
+  });
+
   it("falls back to total descending when post counts tie", () => {
     const series = buildSpendingSeries(
       [makePost(10, 16, "CAD"), makePost(500, 16, "USD")],

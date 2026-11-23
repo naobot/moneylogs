@@ -27,6 +27,8 @@ import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { useDateFormat } from "@/utils/dateFormat";
 import { reportError } from "@/utils/reportError";
 import { postZoneLabel, tzAbbrev } from "@/utils/timezone";
+import { postAmounts } from "@/utils/postAmounts";
+import { formatTotals } from "@/utils/ledgerEntries";
 
 type LogPostsProps = {
   user: UserData;
@@ -232,7 +234,7 @@ const LogPostItemComponent = ({
                 <IconText type="clock" text={postTime} />
               </div>
               <div className="LogPosts__posts__item__header__center LogPosts__posts__item__amount">
-                {post.amount?.toLocaleString()} {post.currency}
+                {formatTotals(postAmounts(post))}
               </div>
               <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
                 <PostReactions
@@ -436,10 +438,10 @@ const LogPosts = memo(
           );
           const postWeekStart = logPostDate.startOf("week"); // Gets Monday of that week
 
-          if (!(post.currency in runningTotals)) {
-            runningTotals[post.currency] = 0;
+          const amounts = Object.entries(postAmounts(post));
+          for (const [currency, amount] of amounts) {
+            runningTotals[currency] = (runningTotals[currency] ?? 0) + amount;
           }
-          runningTotals[post.currency] += Number(post.amount);
 
           // Check if we've moved to a new week
           if (!currentWeekStart || !postWeekStart.isSame(currentWeekStart)) {
@@ -469,10 +471,9 @@ const LogPosts = memo(
           }
 
           // Accumulate weekly totals
-          if (!(post.currency in weeklyTotals)) {
-            weeklyTotals[post.currency] = 0;
+          for (const [currency, amount] of amounts) {
+            weeklyTotals[currency] = (weeklyTotals[currency] ?? 0) + amount;
           }
-          weeklyTotals[post.currency] += Number(post.amount);
 
           // Check if we've moved to a new day within the week
           if (logPostDate.day() !== currentDay) {
@@ -490,10 +491,9 @@ const LogPosts = memo(
           }
 
           // Accumulate daily totals
-          if (!(post.currency in dailyTotals)) {
-            dailyTotals[post.currency] = 0;
+          for (const [currency, amount] of amounts) {
+            dailyTotals[currency] = (dailyTotals[currency] ?? 0) + amount;
           }
-          dailyTotals[post.currency] += Number(post.amount);
         }
 
         displayRows.push(post);
@@ -735,8 +735,8 @@ const LogPosts = memo(
                         isCreateNewEntrySet={isCreateNewEntrySet}
                         setCurrentlyEditingPostId={setCurrentlyEditingPostId}
                         content={(item as LogPost).content}
-                        amount={(item as LogPost).amount}
-                        currency={(item as LogPost).currency}
+                        amounts={postAmounts(item as LogPost)}
+                        primaryCurrency={(item as LogPost).currency}
                         date={(item as LogPost).postDate?.seconds * 1000}
                         isPinned={
                           currentlyEditingPostId ===

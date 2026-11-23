@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import SpendingInsights from "./SpendingInsights";
 import SpendingChart from "./SpendingChart";
 import PostPreview from "./PostPreview";
+import { postAmountIn } from "@/utils/postAmounts";
 import { autoGranularity, buildSpendingSeries } from "./spendingSeries";
 
 type Scope = "mine" | "group" | "other";
@@ -146,7 +147,7 @@ const SpendingPanel = ({
               </p>
               <div className="LogsSummary__ScrollList">
                 {[...selectedPoint.posts]
-                  .sort((a, b) => b.amount - a.amount)
+                  .sort((a, b) => postAmountIn(b, activeCurrency) - postAmountIn(a, activeCurrency))
                   .slice(0, 10)
                   .map((post) => (
                     <PostPreview key={`sel-${post.id}`} post={post} showAuthor={scope !== "mine"} />

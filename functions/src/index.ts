@@ -17,6 +17,7 @@ import { isNotificationEnabled } from "./notificationPrefs";
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
 import { reportError, withSentry, withSentryCall } from "./sentry";
+import { postAmounts } from "./postAmounts";
 
 initializeApp();
 const db = getFirestore();
@@ -27,6 +28,9 @@ type RawLogPost = {
   author: { id: string };
   currency: string;
   amount: number;
+  /** Multi-currency posts; read through postAmounts(), never amount/currency alone. */
+  amounts?: Record<string, number>;
+  amountsPrimary?: string;
   postDate: FirestoreTimestamp;
   timezone?: string;
   authorName?: string;
@@ -350,24 +354,25 @@ function calculateRawAnalytics(logPosts: RawLogPost[], groupEnd: FirestoreTimest
   const hourlyActivity = new Map<number, number>(); // hour (0-23) -> post count
 
   legitimatePosts.forEach((post) => {
-    const currency = post.currency;
-    const amount = Number(post.amount);
     const authorId = post.author.id;
-
-    // 1. Total spending by currency
-    totalSpentByCurrency.set(currency, (totalSpentByCurrency.get(currency) || 0) + amount);
-
-    // 2. Member spending tracking
     if (!memberSpending.has(authorId)) {
       memberSpending.set(authorId, new Map());
     }
     const userCurrencyMap = memberSpending.get(authorId)!;
-    userCurrencyMap.set(currency, (userCurrencyMap.get(currency) || 0) + amount);
+
+    // 1 + 2. Total and member spending by currency; a multi-currency post counts
+    // towards each of its currencies.
+    for (const [currency, amount] of Object.entries(postAmounts(post))) {
+      const value = amount ?? 0;
+      totalSpentByCurrency.set(currency, (totalSpentByCurrency.get(currency) || 0) + value);
+      userCurrencyMap.set(currency, (userCurrencyMap.get(currency) || 0) + value);
+    }
 
     // 3. Hot posts scoring (amount + comment weight)
     // We'll need comment count - for now use a placeholder
     const commentCount = 0; // TODO: We'll fetch this from subcollection
-    const expenseScore = amount / 100; // Normalize expense impact
+    // The primary (legacy) amount, so scores match those of older posts.
+    const expenseScore = (Number(post.amount) || 0) / 100; // Normalize expense impact
     const commentScore = commentCount * 2; // Comments worth 2 points each
     postScores.set(post.id, expenseScore + commentScore);
 

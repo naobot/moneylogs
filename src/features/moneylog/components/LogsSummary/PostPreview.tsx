@@ -2,6 +2,8 @@ import MDEditor from "@uiw/react-md-editor";
 import { LogPost } from "@/types/user";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { markdownColorMode, useTheme } from "@/utils/theme";
+import { postAmounts } from "@/utils/postAmounts";
+import { formatTotals } from "@/utils/ledgerEntries";
 
 interface PostPreviewProps {
   post: LogPost;
@@ -15,13 +17,7 @@ const PostPreview = ({ post, showAuthor = false }: PostPreviewProps) => {
   return (
     <div className="PostPreview" data-color-mode={markdownColorMode(theme)}>
       <div className="PostPreview__header">
-        <strong>
-          {post.amount.toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
-          })}{" "}
-          {post.currency}
-        </strong>
+        <strong>{formatTotals(postAmounts(post))}</strong>
       </div>
       <MDEditor.Markdown source={post.content} />
       {showAuthor && post.authorName && (

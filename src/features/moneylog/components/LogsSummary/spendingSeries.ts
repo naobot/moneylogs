@@ -2,6 +2,7 @@ import dayjs from "@/utils/configuredDayjs";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { formatShortDate } from "@/utils/dateFormat";
+import { postAmounts } from "@/utils/postAmounts";
 
 export type Granularity = "day" | "week";
 
@@ -94,18 +95,19 @@ export const buildSpendingSeries = (
       ? dayjs(log.postDate.seconds * 1000).tz(tz)
       : dayjs(log.postDate.seconds * 1000);
     const key = keyOf(postDate, granularity);
-    const currency = log.currency;
-    const amount = Number(log.amount) || 0;
 
-    if (!perCurrency.has(currency)) perCurrency.set(currency, new Map());
-    const buckets = perCurrency.get(currency)!;
-    if (!buckets.has(key)) buckets.set(key, { date: dayjs(key), amount: 0, posts: [] });
-    const bucket = buckets.get(key)!;
-    bucket.amount += amount;
-    bucket.posts.push(log);
+    // A multi-currency post counts towards each of its currencies.
+    for (const [currency, amount] of Object.entries(postAmounts(log)) as [Currency, number][]) {
+      if (!perCurrency.has(currency)) perCurrency.set(currency, new Map());
+      const buckets = perCurrency.get(currency)!;
+      if (!buckets.has(key)) buckets.set(key, { date: dayjs(key), amount: 0, posts: [] });
+      const bucket = buckets.get(key)!;
+      bucket.amount += amount;
+      bucket.posts.push(log);
 
-    totals.set(currency, (totals.get(currency) ?? 0) + amount);
-    counts.set(currency, (counts.get(currency) ?? 0) + 1);
+      totals.set(currency, (totals.get(currency) ?? 0) + amount);
+      counts.set(currency, (counts.get(currency) ?? 0) + 1);
+    }
   });
 
   // Most-logged currency first, so the graph opens on the currency with the richest

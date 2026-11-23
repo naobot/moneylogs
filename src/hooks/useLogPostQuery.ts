@@ -15,6 +15,8 @@ import {
 import { db } from "@/config/firebase-config";
 import { getGroupDocRef, getUserDocRef, useMutation } from "./useFirebase";
 import { Currency } from "@/types/user";
+import { CurrencyAmounts } from "@/types/ledger";
+import { primaryOf } from "@/utils/postAmounts";
 
 type AddNewLogPostArgs = {
   groupId: string;
@@ -23,9 +25,14 @@ type AddNewLogPostArgs = {
 };
 
 export type LogData = {
-  amount: number;
-  content: string;
+  /**
+   * Spending per currency. Required for a new post; on edit, leave it out when the
+   * amounts didn't change, so they're written back untouched.
+   */
+  amounts?: CurrencyAmounts;
+  /** The primary currency: the editor's first row, written to the legacy fields. */
   currency: Currency;
+  content: string;
   postDate: number;
   /** A travelling post's own zone. On edit, null clears it back to the author's. */
   timezone?: string | null;
@@ -76,9 +83,13 @@ export const useLogPostQuery = () => {
 
     const batch = writeBatch(db);
     const postRef = doc(collection(db, "log_posts"));
+    const amounts = logData.amounts ?? { [logData.currency]: 0 };
+    const primary = primaryOf(amounts, logData.currency, logData.currency);
     batch.set(postRef, {
-      amount: logData?.amount,
-      currency: logData?.currency,
+      amount: primary.amount,
+      currency: primary.currency,
+      amounts,
+      amountsPrimary: primary.currency,
       content: logData?.content,
       author: userDocRef,
       authorName: userName,
@@ -107,6 +118,8 @@ export const useLogPostQuery = () => {
       postDate: Timestamp;
       amount: number;
       currency: string;
+      amounts: CurrencyAmounts;
+      amountsPrimary: string;
       timezone: string | FieldValue;
       timezonePlace: string | FieldValue;
     }> = {};
@@ -114,8 +127,14 @@ export const useLogPostQuery = () => {
     if (logData.content !== undefined) updateData.content = logData.content;
     if (logData.postDate !== undefined)
       updateData.postDate = Timestamp.fromMillis(logData.postDate);
-    if (logData.amount !== undefined) updateData.amount = logData.amount;
-    if (logData.currency !== undefined) updateData.currency = logData.currency;
+    if (logData.amounts !== undefined) {
+      // The whole map is replaced, so a removed currency row disappears.
+      const primary = primaryOf(logData.amounts, logData.currency, logData.currency);
+      updateData.amounts = logData.amounts;
+      updateData.amountsPrimary = primary.currency;
+      updateData.amount = primary.amount;
+      updateData.currency = primary.currency;
+    }
     if (logData.timezone !== undefined) {
       updateData.timezone = logData.timezone || deleteField();
       updateData.timezonePlace = (logData.timezone && logData.timezonePlace) || deleteField();
