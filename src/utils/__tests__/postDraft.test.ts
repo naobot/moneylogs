@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { storage } from "@/platform";
 import {
   clearPostDraft,
   DRAFT_KEY,
@@ -10,6 +11,14 @@ import {
 
 describe("post draft", () => {
   beforeEach(() => localStorage.clear());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("keeps the old draft when the new one can't be stored", () => {
+    localStorage.setItem(LEGACY_DRAFT_KEY, "old text");
+    vi.spyOn(storage, "setJSON").mockReturnValue(false);
+    writePostDraft("u1", { content: "old text", rows: [{ currency: "JPY", amount: 0 }] });
+    expect(readPostDraft("u1")).toEqual({ content: "old text" });
+  });
 
   it("restores text, rows and pulls together for the same account", () => {
     writePostDraft("u1", {

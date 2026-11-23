@@ -61,8 +61,10 @@ export const readPostDraft = (uid: string): PostDraft | null => {
 };
 
 export const writePostDraft = (uid: string, draft: PostDraft): void => {
-  storage.setJSON(DRAFT_KEY, { uid, ...draft } satisfies Stored);
-  storage.remove(LEGACY_DRAFT_KEY);
+  // Only drop the old copy once the new one is stored (a full quota can refuse it).
+  if (storage.setJSON(DRAFT_KEY, { uid, ...draft } satisfies Stored)) {
+    storage.remove(LEGACY_DRAFT_KEY);
+  }
 };
 
 export const clearPostDraft = (): void => {
