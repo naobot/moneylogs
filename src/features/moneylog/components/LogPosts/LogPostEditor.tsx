@@ -332,6 +332,8 @@ const LogPostEditor = forwardRef(
           <PullSpendingModal
             ledgers={ledgers}
             uid={userId}
+            authorDocId={user?.id}
+            groupId={groupId}
             day={dayjs(newEntryDate).format("YYYY-MM-DD")}
             alreadyPulled={pulledAnywhere}
             onClose={() => setIsPulling(false)}

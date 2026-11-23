@@ -37,6 +37,8 @@ const BOX: Record<LogSelection, string> = { all: "[■]", some: "[-]", none: "[ 
 const PullSpendingModal = ({
   ledgers,
   uid,
+  authorDocId,
+  groupId,
   day: initialDay,
   alreadyPulled,
   onClose,
@@ -45,6 +47,9 @@ const PullSpendingModal = ({
   ledgers: ReadonlyArray<Ledger>;
   /** The author's auth uid. */
   uid: string;
+  /** The author's users-collection doc id. */
+  authorDocId: string | undefined;
+  groupId: string;
   /** The post's day, YYYY-MM-DD. */
   day: string;
   alreadyPulled: ReadonlySet<string>;
@@ -56,19 +61,23 @@ const PullSpendingModal = ({
   // The logs as they were when the picker opened: a later snapshot of the same logs
   // shouldn't refetch and reset what's ticked.
   const [ledgersAtOpen] = useState(ledgers);
-  const { groups, isLoading, isError } = useMyEntriesOnDay({
+  const { groups, pulled, isLoading, isError } = useMyEntriesOnDay({
     ledgers: ledgersAtOpen,
     uid,
     day,
+    groupId,
+    authorDocId,
     enabled: true,
   });
+  // Saved posts the hook found (loaded on the page or not), plus this draft's own pulls.
+  const marked = useMemo(() => new Set([...alreadyPulled, ...pulled]), [alreadyPulled, pulled]);
 
   // Each newly loaded day starts with everything ticked except what's already pulled.
   const [selectionFor, setSelectionFor] = useState(groups);
-  const [selected, setSelected] = useState(() => initialSelection(groups, alreadyPulled));
+  const [selected, setSelected] = useState(() => initialSelection(groups, marked));
   if (selectionFor !== groups) {
     setSelectionFor(groups);
-    setSelected(initialSelection(groups, alreadyPulled));
+    setSelected(initialSelection(groups, marked));
   }
 
   const totals = useMemo(() => selectedTotals(groups, selected), [groups, selected]);
@@ -138,7 +147,7 @@ const PullSpendingModal = ({
                 <ul className="PullSpendingModal__list">
                   {group.entries.map((entry) => {
                     const on = selected.has(entry.id);
-                    const pulled = alreadyPulled.has(entry.id);
+                    const isPulled = marked.has(entry.id);
                     const name = entry.note
                       ? `${entry.note} · ${entry.categoryName}`
                       : entry.categoryName;
@@ -146,7 +155,7 @@ const PullSpendingModal = ({
                       <li
                         key={entry.id}
                         className={cx("PullSpendingModal__row", {
-                          "PullSpendingModal__row--pulled": pulled,
+                          "PullSpendingModal__row--pulled": isPulled,
                         })}
                       >
                         <button
@@ -157,7 +166,7 @@ const PullSpendingModal = ({
                           onClick={() => setSelected((s) => toggleEntry(entry.id, s))}
                         >
                           <span aria-hidden="true">{on ? "[■]" : "[ ]"}</span> {name}
-                          {pulled && <small> · already in a post</small>}
+                          {isPulled && <small> · already in a post</small>}
                         </button>
                         <span className="PullSpendingModal__amount">
                           {formatAmount(entry.amount, entry.currency)}

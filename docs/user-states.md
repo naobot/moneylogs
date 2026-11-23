@@ -177,7 +177,8 @@ then `empty@test.com`.
 - Untick one log, add the rest: a bold line per log and a list line per entry are appended to the post, and
   the totals are added to the amount rows (a new row per new currency; a lone untouched 0 row is replaced).
   The post then shows each currency ("1,700 JPY · 12.5 CAD") and so do the day and week banners.
-- Reopen the picker: entries already in one of her posts in this log are unticked and marked "already in a post".
+- Reopen the picker: entries already in one of her posts in this log are unticked and marked "already in a post",
+  including posts far enough back that the page hasn't loaded them.
 - Edit the pulled lines and the amount rows freely; nothing links back to the ledger. The row calculator reads
   the pulled "1,200 JPY" form.
 - Empty case: a fresh persona has a personal log, so the button shows, and the picker says "nothing logged in
