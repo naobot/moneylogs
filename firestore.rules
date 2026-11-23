@@ -263,12 +263,20 @@ service cloud.firestore {
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.createdAt == request.time;
 
-      // Members edit settings (title, categories, default currency, cap). `parentLink` and
+      // Members edit settings (categories, default currency, cap). `parentLink` and
       // `hasRollups` (sublogs) are left out on purpose: only the functions write them.
       allow update: if signedIn()
         && request.auth.uid in resource.data.memberUids
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['title', 'categories', 'monthlyBudget', 'defaultCurrency', 'max_participants'])
+             .hasOnly(['categories', 'monthlyBudget', 'defaultCurrency', 'max_participants'])
+        && validLedgerFields(request.resource.data);
+
+      // Only the creator renames the log. Mirrors creatorUid() in src/utils/logOwnership.ts:
+      // `createdBy`, else the first member (rules make the creator the only member at
+      // creation, and joins append).
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.get('createdBy', resource.data.memberUids[0])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title'])
         && validLedgerFields(request.resource.data);
 
       // A signed-in non-member joins via the invite link: they may only add

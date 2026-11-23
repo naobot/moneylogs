@@ -28,6 +28,7 @@ export type AnalyticsEvents = {
   join_log: { log_kind: LogKindParam };
   archive_log: { log_kind: LogKindParam; archived: boolean };
   delete_log: { log_kind: LogKindParam };
+  rename_log: { log_kind: LogKindParam };
   invite_friends_to_log: { log_kind: LogKindParam; invited_friends: number };
 
   // Social logs

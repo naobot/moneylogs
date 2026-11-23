@@ -26,6 +26,19 @@ vi.mock("@/hooks/useUserQuery", () => ({
   }),
 }));
 
+const renameLedger = vi.fn<(args: { ledgerId: string; title: string }) => Promise<boolean>>(
+  async () => true,
+);
+const renameGroup = vi.fn<(args: { groupId: string; title: string }) => Promise<boolean>>(
+  async () => true,
+);
+vi.mock("@/hooks/useLedgerQuery", () => ({
+  useLedgerQuery: () => ({ updateLedgerTitle: { mutate: renameLedger, isLoading: false } }),
+}));
+vi.mock("@/hooks/useLogGroupQuery", () => ({
+  useLogGroupQuery: () => ({ updateLogGroupTitle: { mutate: renameGroup, isLoading: false } }),
+}));
+
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -116,6 +129,84 @@ describe("LogActionsModal", () => {
     await act(async () => button("Archive for me")!.click());
     expect(document.body.textContent).toContain("Couldn't update that");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  describe("rename", () => {
+    const nameInput = () =>
+      document.querySelector("input[aria-label='log name']") as HTMLInputElement | null;
+    const type = (value: string) => {
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!;
+      act(() => {
+        descriptor.set?.call(nameInput(), value);
+        nameInput()!.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    };
+
+    beforeEach(() => {
+      archivedLogs = {};
+      renameLedger.mockClear();
+      renameGroup.mockClear();
+      showToast.mockClear();
+    });
+
+    it("is offered only to the log's creator", () => {
+      render("someone-else");
+      expect(nameInput()).toBeNull();
+      act(() => root.unmount());
+      root = createRoot(container);
+      render(undefined);
+      expect(nameInput()).toBeNull();
+    });
+
+    it("starts with the current name and saves only a changed, valid one", () => {
+      render("uid-1");
+      expect(nameInput()!.value).toBe("Tokyo");
+      expect(button("Save")!.disabled).toBe(true);
+      type("   ");
+      expect(button("Save")!.disabled).toBe(true);
+      expect(document.body.textContent).toContain("A log needs a name.");
+      type("Tokyo ");
+      expect(button("Save")!.disabled).toBe(true);
+      type("Kyoto");
+      expect(button("Save")!.disabled).toBe(false);
+    });
+
+    it("renames a social log through the group mutation, trimmed", async () => {
+      render("uid-1");
+      type("  Kyoto ");
+      await act(async () => button("Save")!.click());
+      expect(renameGroup).toHaveBeenCalledWith({ groupId: "g1", title: "Kyoto" });
+      expect(renameLedger).not.toHaveBeenCalled();
+      expect(showToast).toHaveBeenCalledWith("Renamed to Kyoto", "success");
+    });
+
+    it("renames a financial log through the ledger mutation", async () => {
+      act(() =>
+        root.render(
+          <LogActionsModal
+            isOpen
+            onClose={onClose}
+            logId="l1"
+            logTitle="Trip"
+            kind="financial"
+            creatorUid="uid-1"
+          />,
+        ),
+      );
+      type("Groceries");
+      await act(async () => button("Save")!.click());
+      expect(renameLedger).toHaveBeenCalledWith({ ledgerId: "l1", title: "Groceries" });
+      expect(renameGroup).not.toHaveBeenCalled();
+    });
+
+    it("keeps the typed name with an error if the write fails", async () => {
+      renameGroup.mockRejectedValueOnce(new Error("offline"));
+      render("uid-1");
+      type("Kyoto");
+      await act(async () => button("Save")!.click());
+      expect(document.body.textContent).toContain("Couldn't rename the log");
+      expect(nameInput()!.value).toBe("Kyoto");
+    });
   });
 
   describe("delete", () => {

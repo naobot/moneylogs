@@ -31,6 +31,7 @@ amounts or free text.
 | `join_log`              | Joined from an invite page               | `log_kind`                                                                                                                             |
 | `archive_log`           | Archived / unarchived                    | `log_kind`, `archived`                                                                                                                 |
 | `delete_log`            | Deleted                                  | `log_kind`                                                                                                                             |
+| `rename_log`            | Renamed by its creator                   | `log_kind`                                                                                                                             |
 | `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                                                                                                          |
 | `add_post`              | New post in a social log                 | `travelling`                                                                                                                           |
 | `pull_ledger_spending`  | Financial-log entries pulled into a post | `ledgers`, `entries` (counts)                                                                                                          |

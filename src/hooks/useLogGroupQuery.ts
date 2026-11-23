@@ -4,6 +4,7 @@ import {
   doc,
   serverTimestamp,
   runTransaction,
+  updateDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/config/firebase-config";
@@ -121,6 +122,18 @@ export const useLogGroupQuery = () => {
     return true;
   };
 
+  // Only the creator is offered this (LogTitleSection); log_groups rules are still open.
+  const updateLogGroupTitleFn = async ({
+    groupId,
+    title,
+  }: {
+    groupId: string;
+    title: string;
+  }): Promise<boolean> => {
+    await updateDoc(doc(db, "log_groups", groupId), { title: title.trim() });
+    return true;
+  };
+
   const addNewLogGroupMutation = useMutation(addNewLogGroupFn);
   const addMemberToGroupMutation = useMutation(addMemberToGroupFn);
   const addGroupToMemberMutation = useMutation(addGroupToMemberFn);
@@ -129,6 +142,7 @@ export const useLogGroupQuery = () => {
     addNewLogGroup: addNewLogGroupMutation,
     addMemberToGroup: addMemberToGroupMutation,
     addGroupToMember: addGroupToMemberMutation,
+    updateLogGroupTitle: useMutation(updateLogGroupTitleFn),
     addNewLogGroupFn,
     addMemberToGroupFn,
     addGroupToMemberFn,
