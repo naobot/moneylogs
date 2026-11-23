@@ -33,6 +33,7 @@ amounts or free text.
 | `delete_log`            | Deleted                                  | `log_kind`                                                                                                                             |
 | `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                                                                                                          |
 | `add_post`              | New post in a social log                 | `travelling`                                                                                                                           |
+| `pull_ledger_spending`  | Financial-log entries pulled into a post | `ledgers`, `entries` (counts)                                                                                                          |
 | `open_comments`         | A post's comments opened                 | `has_comments`                                                                                                                         |
 | `add_comment`           | Comment added                            | —                                                                                                                                      |
 | `add_reaction`          | Reaction added                           | —                                                                                                                                      |

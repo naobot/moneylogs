@@ -115,6 +115,11 @@ export type LogPost = {
   /** Spending per currency for multi-currency posts; absent on older posts. */
   amounts?: Partial<Record<Currency, number>>;
   /**
+   * Financial-log entry ids the author pulled into this post, only to mark them as
+   * already pulled. Never ledger ids: posts are public.
+   */
+  pulledEntryIds?: string[];
+  /**
    * The primary currency of `amounts` (what amount/currency held when last written by a
    * multi-currency client). Firestore sorts map keys, so the map can't say on its own.
    */

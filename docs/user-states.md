@@ -167,6 +167,22 @@ in her personal log), then Bob, then a new-user persona for the first-run case.
 - Empty case: a new persona's wizard step lists only "no, it stands alone" and their personal log; a log with
   no sublogs shows none of this and makes no extra queries.
 
+### F6f. Pulling spending into a post
+
+As: Alice (in a group log, with entries today in more than one of her financial logs and in two currencies),
+then `empty@test.com`.
+
+- In the post editor, "pull from logs" lists only Alice's own entries on the post's day, grouped by log, all
+  ticked. Other members' entries in a shared log never show. ‹ › steps the day.
+- Untick one log, add the rest: a bold line per log and a list line per entry are appended to the post, and
+  the totals are added to the amount rows (a new row per new currency; a lone untouched 0 row is replaced).
+  The post then shows each currency ("1,700 JPY · 12.5 CAD") and so do the day and week banners.
+- Reopen the picker: entries already in one of her posts in this log are unticked and marked "already in a post".
+- Edit the pulled lines and the amount rows freely; nothing links back to the ledger. The row calculator reads
+  the pulled "1,200 JPY" form.
+- Empty case: a fresh persona has a personal log, so the button shows, and the picker says "nothing logged in
+  your logs on this day". Someone with no financial logs at all sees no button.
+
 ### F7. Leaving
 
 As: any persona (then reset it).

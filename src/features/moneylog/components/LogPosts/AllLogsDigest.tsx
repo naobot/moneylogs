@@ -10,6 +10,7 @@ import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { useGetComments } from "@/hooks/useGetLogPostComments";
 import LogPostEditor from "./LogPostEditor";
 import { postAmounts } from "@/utils/postAmounts";
+import { pulledIdsIn } from "@/utils/pullLines";
 import { LogPostItem } from "./LogPosts";
 import LogPostComments from "./LogPostComments";
 import dayjs from "@/utils/configuredDayjs";
@@ -41,6 +42,11 @@ const AllLogsDigest = ({
 }) => {
   const { markCommentsAsViewedFn } = useUserQuery();
   const { user: loggedInUser } = useCurrentUser();
+  // Financial-log entries already pulled into your own posts here, marked in the picker.
+  const alreadyPulled = useMemo(
+    () => pulledIdsIn(logs ?? [], loggedInUser?.id),
+    [logs, loggedInUser?.id],
+  );
 
   const memberMap = useMemo(() => {
     const result = new Map<string, FullUserData>();
@@ -233,6 +239,8 @@ const AllLogsDigest = ({
                   setCurrentlyEditingPostId={setCurrentlyEditingPostId}
                   content={(item as LogPost).content}
                   amounts={postAmounts(item as LogPost)}
+                  pulledEntryIds={(item as LogPost).pulledEntryIds}
+                  alreadyPulled={alreadyPulled}
                   primaryCurrency={(item as LogPost).currency}
                   date={(item as LogPost).postDate?.seconds * 1000}
                   timezone={(item as LogPost).timezone ?? undefined}

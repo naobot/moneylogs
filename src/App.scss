@@ -1470,6 +1470,12 @@ h6,
     gap: var(--space-2);
   }
 
+  &__amountActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
   // The inline city search that sets a travelling post's timezone.
   &__place {
     align-items: center;
