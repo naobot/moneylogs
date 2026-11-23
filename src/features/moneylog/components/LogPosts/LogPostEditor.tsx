@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import dayjs from "dayjs";
 import MDEditor, { commands, type ExecuteState, TextAreaTextApi } from "@uiw/react-md-editor";
+import Markdown from "@/components/Markdown";
 
 import { useCurrentUser } from "@/contexts";
 import { Currency } from "@/types/user";
@@ -538,7 +539,7 @@ const LogPostEditor = forwardRef(
                   commands.help,
                 ]}
               />
-              <MDEditor.Markdown source={newEntryContent ?? ""} />
+              <Markdown source={newEntryContent ?? ""} />
             </div>
           </div>
         </div>

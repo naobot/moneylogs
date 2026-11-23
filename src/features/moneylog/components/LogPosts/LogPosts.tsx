@@ -2,7 +2,7 @@ import cx from "classnames";
 import { Dispatch, Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dayjs from "dayjs";
 
-import MDEditor from "@uiw/react-md-editor";
+import Markdown from "@/components/Markdown";
 
 import { LogPost } from "@/types/user";
 import { useCurrentUser } from "@/contexts";
@@ -278,7 +278,7 @@ const LogPostItemComponent = ({
             className="LogPosts__posts__item__content"
             data-color-mode={markdownColorMode(theme, isPinned && !isDigestMode)}
           >
-            <MDEditor.Markdown source={post.content} />
+            <Markdown source={post.content} />
           </div>
           {post.imagesProcessing && (
             <div className="LogPost__images LogPost__images--processing">
@@ -387,7 +387,7 @@ const LogPostItemComponent = ({
   );
 };
 
-// Each item renders a markdown body via MDEditor, which is comparatively expensive to
+// Each item renders a markdown body via Markdown (MDEditor), which is comparatively expensive to
 // re-parse. Without memoization, any list-level state change (selecting a post, opening
 // comments, editing) re-renders every item. The comparator below skips a re-render when
 // nothing this item displays has changed — crucially, it collapses the shared

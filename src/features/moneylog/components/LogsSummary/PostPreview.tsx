@@ -1,4 +1,4 @@
-import MDEditor from "@uiw/react-md-editor";
+import Markdown from "@/components/Markdown";
 import { LogPost } from "@/types/user";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { markdownColorMode, useTheme } from "@/utils/theme";
@@ -19,7 +19,7 @@ const PostPreview = ({ post, showAuthor = false }: PostPreviewProps) => {
       <div className="PostPreview__header">
         <strong>{formatTotals(postAmounts(post))}</strong>
       </div>
-      <MDEditor.Markdown source={post.content} />
+      <Markdown source={post.content} />
       {showAuthor && post.authorName && (
         <div className="PostPreview__footer">
           <MemberAvatarLink userDocId={post.author?.id} name={post.authorName} withName />
