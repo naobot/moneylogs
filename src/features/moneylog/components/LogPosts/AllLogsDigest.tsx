@@ -9,6 +9,7 @@ import { useUserQuery } from "@/hooks/useUserQuery";
 import { useDisableScroll } from "@/hooks/useDisableScroll";
 import { useGetComments } from "@/hooks/useGetLogPostComments";
 import LogPostEditor from "./LogPostEditor";
+import { postAmounts } from "@/utils/postAmounts";
 import { LogPostItem } from "./LogPosts";
 import LogPostComments from "./LogPostComments";
 import dayjs from "@/utils/configuredDayjs";
@@ -231,8 +232,7 @@ const AllLogsDigest = ({
                   isCreateNewEntrySet={isCreateNewEntrySet}
                   setCurrentlyEditingPostId={setCurrentlyEditingPostId}
                   content={(item as LogPost).content}
-                  amount={(item as LogPost).amount}
-                  currency={(item as LogPost).currency}
+                  amounts={postAmounts(item as LogPost)}
                   date={(item as LogPost).postDate?.seconds * 1000}
                   timezone={(item as LogPost).timezone ?? undefined}
                   timezonePlace={(item as LogPost).timezonePlace ?? null}

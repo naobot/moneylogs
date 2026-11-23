@@ -1451,6 +1451,21 @@ h6,
     cursor: pointer;
   }
 
+  // One row per currency: amount, currency, calculator, remove. The first row is the
+  // post's primary currency and has no remove button.
+  &__amounts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  &__amountRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
   // The inline city search that sets a travelling post's timezone.
   &__place {
     align-items: center;

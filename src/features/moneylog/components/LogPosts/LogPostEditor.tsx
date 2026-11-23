@@ -14,6 +14,7 @@ import MDEditor, { commands, type ExecuteState, TextAreaTextApi } from "@uiw/rea
 
 import { useCurrentUser } from "@/contexts";
 import { Currency } from "@/types/user";
+import { CurrencyAmounts } from "@/types/ledger";
 import { useLogPostQuery } from "@/hooks/useLogPostQuery";
 import { track } from "@/utils/analytics";
 import { ImageValidationError, useImageUpload } from "@/hooks/useImageUpload";
@@ -30,6 +31,8 @@ import PlacePicker from "@/components/PlacePicker";
 import RowButton from "@/components/RowButton";
 
 import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
+import { AmountRow, amountRows, normaliseAmounts } from "@/utils/postAmounts";
+import { sumAmountsIn } from "@/utils/postCalculator";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import { storage } from "@/platform";
 
@@ -46,10 +49,9 @@ const LogPostEditor = forwardRef(
       isCreateNewEntrySet,
       setCurrentlyEditingPostId,
       content = "",
-      amount = 0,
+      amounts = { JPY: 0 },
       timezone = null,
       timezonePlace = null,
-      currency = "JPY" as Currency,
       date = Date.now(),
     }: {
       type: "edit" | "new";
@@ -59,8 +61,8 @@ const LogPostEditor = forwardRef(
       isCreateNewEntrySet: Dispatch<SetStateAction<boolean>>;
       setCurrentlyEditingPostId: Dispatch<SetStateAction<string | null>>;
       content?: string | null;
-      amount?: number;
-      currency?: Currency;
+      /** Spending per currency, in row order (the first is the primary). */
+      amounts?: CurrencyAmounts;
       date?: number;
       isPinned?: boolean;
       timezone?: string | null;
@@ -78,9 +80,11 @@ const LogPostEditor = forwardRef(
       }
       return content;
     });
-    const [newEntryAmount, newEntryAmountSet] = useState<number>(amount);
+    const [rows, setRows] = useState<AmountRow<Currency>[]>(() => {
+      const initial = amountRows(amounts);
+      return initial.length > 0 ? initial : [{ currency: "JPY", amount: 0 }];
+    });
     const [newEntryDate, newEntryDateSet] = useState<number>(date);
-    const [selectedCurrency, selectedCurrencySet] = useState<Currency>(currency);
     const [newTimezone, setNewTimezone] = useState<string | null>(
       timezone ?? user?.timezone ?? null,
     );
@@ -95,30 +99,6 @@ const LogPostEditor = forwardRef(
     const { uploadInlineImage, isUploading } = useImageUpload();
     const { showToast } = useToastContext();
     const { activeEditorTip, dismissTip, completeTutorial } = useTutorial();
-
-    const regexMatcher = useMemo(() => {
-      switch (selectedCurrency) {
-        case "JPY":
-        case "CNY":
-          return /-?([¥￥])-?(\d+,)*\d+万?/g;
-        case "USD":
-        case "CAD":
-        case "NTD":
-        case "AUD":
-        case "SGD":
-          return /-?(\$)-?(\d+,)*\d+(\.\d\d)?/g;
-        case "KRW":
-          return /-?(₩)-?(\d+,)*\d+k?/g;
-        case "EUR":
-          return /-?(€)-?(\d+,)*\d+(\.\d\d)?/g;
-        case "GBP":
-          return /-?(£)-?(\d+,)*\d+(\.\d\d)?/g;
-        case "MYR":
-          return /-?(\d+,)*\d+(?=\w?RM)/g;
-        default:
-          return;
-      }
-    }, [selectedCurrency]);
 
     const { addNewLogPost, editLogPost } = useLogPostQuery();
 
@@ -152,13 +132,31 @@ const LogPostEditor = forwardRef(
       }
     };
 
-    const handleSelectCurrency = (e: ChangeEvent<HTMLSelectElement>) => {
-      storage.set(LAST_CURRENCY_KEY, e.target.value);
-      selectedCurrencySet(e.target.value as Currency);
+    const rowCurrencies = rows.map((r) => r.currency);
+    const primaryCurrency = rows[0].currency;
+
+    const updateRow = (index: number, patch: Partial<AmountRow<Currency>>) =>
+      setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+
+    const handleSelectCurrency = (index: number) => (e: ChangeEvent<HTMLSelectElement>) => {
+      // The first row is the one new posts start on next time.
+      if (index === 0) storage.set(LAST_CURRENCY_KEY, e.target.value);
+      updateRow(index, { currency: e.target.value as Currency });
     };
 
+    const unusedCurrency = CURRENCIES.find((c) => !rowCurrencies.includes(c));
+
+    const handleAddRow = () => {
+      if (unusedCurrency) setRows((prev) => [...prev, { currency: unusedCurrency, amount: 0 }]);
+    };
+
+    const handleRemoveRow = (index: number) =>
+      setRows((prev) => prev.filter((_, i) => i !== index));
+
+    const resetRows = () => setRows([{ currency: postStartCurrency(user), amount: 0 }]);
+
     const handleNewLogPost = async () => {
-      if (!selectedCurrency || !newEntryContent) {
+      if (!newEntryContent) {
         return;
       }
 
@@ -167,8 +165,8 @@ const LogPostEditor = forwardRef(
           groupId,
           userId,
           logData: {
-            amount: newEntryAmount,
-            currency: selectedCurrency,
+            amounts: normaliseAmounts(rows),
+            currency: primaryCurrency,
             content: newEntryContent,
             postDate: newEntryDate,
             timezone: newTimezone ?? undefined,
@@ -183,14 +181,14 @@ const LogPostEditor = forwardRef(
 
         isCreateNewEntrySet(false);
         newEntryContentSet(null);
-        newEntryAmountSet(0);
+        resetRows();
       } catch (err) {
         reportError(err, { feature: "log_post", action: "create_post" });
       }
     };
 
     const handleEditPost = async () => {
-      if (!postId || !selectedCurrency || !newEntryContent) {
+      if (!postId || !newEntryContent) {
         return;
       }
 
@@ -198,8 +196,8 @@ const LogPostEditor = forwardRef(
         await editLogPost.mutate({
           postId,
           logData: {
-            amount: newEntryAmount,
-            currency: selectedCurrency,
+            amounts: normaliseAmounts(rows),
+            currency: primaryCurrency,
             content: newEntryContent,
             postDate: newEntryDate,
             // null clears a travelling zone back to the profile's.
@@ -211,32 +209,16 @@ const LogPostEditor = forwardRef(
         isCreateNewEntrySet(false);
         setCurrentlyEditingPostId(null);
         newEntryContentSet(null);
-        newEntryAmountSet(0);
+        resetRows();
       } catch (err) {
         reportError(err, { feature: "log_post", action: "edit_post" });
       }
     };
 
-    const handleClickCalculator = () => {
-      if (newEntryContent && selectedCurrency && regexMatcher) {
-        const foundAmounts = newEntryContent.match(regexMatcher);
-
-        const foundTotal = foundAmounts
-          ?.map((x) =>
-            Number(
-              x
-                .replaceAll(/[¥￥$₩€£,]/g, "")
-                .replaceAll("k", "000")
-                .replaceAll("万", "0000"),
-            ),
-          )
-          .reduce((a, b) => a + b)
-          .toFixed(2);
-
-        if (foundTotal) {
-          newEntryAmountSet(Number(foundTotal));
-        }
-      }
+    const handleClickCalculator = (index: number) => {
+      if (!newEntryContent) return;
+      const total = sumAmountsIn(newEntryContent, rows[index].currency, rowCurrencies);
+      if (total !== undefined) updateRow(index, { amount: total });
     };
 
     const handleEditorChange = (value?: string) => {
@@ -283,7 +265,7 @@ const LogPostEditor = forwardRef(
 
       // New posts start on this device's last-used currency, else the user's default.
       if (type == "new") {
-        selectedCurrencySet(postStartCurrency(user));
+        resetRows();
       }
     }, []);
 
@@ -358,30 +340,51 @@ const LogPostEditor = forwardRef(
           >
             {activeEditorTip === "currency" && (
               <TutorialTooltip
-                text="Enter your total amount spent in this entry here. You can adjust the currency. Hint: If you've consistently formatted expense amounts in your entry, the calculator icon may sum it up for you automatically!"
+                text="Enter your total amount spent in this entry here. You can adjust the currency, and add a row for each other currency you spent in. Hint: If you've consistently formatted expense amounts in your entry (like ¥1,200 or 1,200 JPY), the calculator icon may sum it up for you automatically!"
                 onDismiss={dismissTip}
                 position="bottom"
               />
             )}
-            <input
-              type="number"
-              onChange={(e) => newEntryAmountSet(Number(e?.target?.value))}
-              value={newEntryAmount}
-              className="LogPostsCurrency__input"
-            />
-            <select
-              name="currency"
-              id="newEntry-currency"
-              onChange={handleSelectCurrency}
-              value={selectedCurrency}
-            >
-              {CURRENCIES.map((x) => (
-                <option key={x} value={x}>
-                  {x}
-                </option>
+            <div className="LogPostEditor__amounts">
+              {rows.map((row, i) => (
+                <div className="LogPostEditor__amountRow" key={i}>
+                  <input
+                    type="number"
+                    aria-label={`amount in ${row.currency}`}
+                    onChange={(e) => updateRow(i, { amount: Number(e?.target?.value) })}
+                    value={row.amount}
+                    className="LogPostsCurrency__input"
+                  />
+                  <select
+                    name="currency"
+                    id={i === 0 ? "newEntry-currency" : undefined}
+                    aria-label="currency"
+                    onChange={handleSelectCurrency(i)}
+                    value={row.currency}
+                  >
+                    {CURRENCIES.filter((c) => c === row.currency || !rowCurrencies.includes(c)).map(
+                      (x) => (
+                        <option key={x} value={x}>
+                          {x}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                  <Icon type={"calculator"} onClick={() => handleClickCalculator(i)} />
+                  {i > 0 && (
+                    <RowButton
+                      glyph
+                      aria-label={`remove ${row.currency}`}
+                      title={`remove ${row.currency}`}
+                      onClick={() => handleRemoveRow(i)}
+                    >
+                      ×
+                    </RowButton>
+                  )}
+                </div>
               ))}
-            </select>
-            <Icon type={"calculator"} onClick={handleClickCalculator} />
+              {unusedCurrency && <RowButton onClick={handleAddRow}>+ currency</RowButton>}
+            </div>
           </div>
           <div className="LogPosts__posts__item__header__right LogPosts__posts__item__comments">
             <Button
@@ -487,7 +490,7 @@ const LogPostEditor = forwardRef(
             variant="primary"
             size="sm"
             text="Submit"
-            disabled={!selectedCurrency || !newEntryContent || addNewLogPost?.isLoading}
+            disabled={!newEntryContent || addNewLogPost?.isLoading}
             onClick={type === "new" ? handleNewLogPost : handleEditPost}
           />
         </div>

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import dayjs from "dayjs";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
+import { postAmounts } from "@/utils/postAmounts";
 
 // Types for group analytics
 interface UserSpendingProfile {
@@ -61,30 +62,22 @@ const calculateUserProfile = (
 
   // Process each post
   userPosts.forEach((post) => {
-    const currency = post.currency;
     const postDate = dayjs(post.postDate.seconds * 1000);
-
-    // Add to total
-    totalSpent.set(currency, (totalSpent.get(currency) || 0) + post.amount);
-
-    // Daily aggregation
     const dayKey = postDate.format("YYYY-MM-DD");
-    if (!dailyTotals.has(dayKey)) {
-      dailyTotals.set(dayKey, new Map<Currency, number>());
-    }
-    const dailyMap = dailyTotals.get(dayKey)!;
-    dailyMap.set(currency, (dailyMap.get(currency) || 0) + post.amount);
-
     // Weekly aggregation (Monday-based weeks)
     const dayOfWeek = postDate.day() === 0 ? 6 : postDate.day() - 1;
-    const mondayOfWeek = postDate.subtract(dayOfWeek, "day");
-    const weekKey = mondayOfWeek.format("YYYY-MM-DD");
+    const weekKey = postDate.subtract(dayOfWeek, "day").format("YYYY-MM-DD");
 
-    if (!weeklyTotals.has(weekKey)) {
-      weeklyTotals.set(weekKey, new Map<Currency, number>());
-    }
+    if (!dailyTotals.has(dayKey)) dailyTotals.set(dayKey, new Map<Currency, number>());
+    if (!weeklyTotals.has(weekKey)) weeklyTotals.set(weekKey, new Map<Currency, number>());
+    const dailyMap = dailyTotals.get(dayKey)!;
     const weeklyMap = weeklyTotals.get(weekKey)!;
-    weeklyMap.set(currency, (weeklyMap.get(currency) || 0) + post.amount);
+
+    for (const [currency, amount] of Object.entries(postAmounts(post)) as [Currency, number][]) {
+      totalSpent.set(currency, (totalSpent.get(currency) || 0) + amount);
+      dailyMap.set(currency, (dailyMap.get(currency) || 0) + amount);
+      weeklyMap.set(currency, (weeklyMap.get(currency) || 0) + amount);
+    }
   });
 
   // Calculate averages

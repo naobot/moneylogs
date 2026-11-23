@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import PostPreview from "./PostPreview";
+import { postAmountIn, postAmounts } from "@/utils/postAmounts";
 import { formatDate } from "@/utils/dateFormat";
 
 interface SpendingData {
@@ -96,11 +97,7 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
       }
 
       const logPost = log;
-      const currency = logPost.currency;
-
-      // Calculate total spent
-      const prevTotal = totalSpent.get(currency) || 0;
-      totalSpent.set(currency, prevTotal + Number(logPost.amount));
+      const amounts = Object.entries(postAmounts(logPost)) as [Currency, number][];
 
       // Generate keys for grouping - Monday as day 0
       const dayOfWeek = postDate.day() === 0 ? 6 : postDate.day() - 1; // Convert Sunday=0 to Sunday=6, others shift down by 1
@@ -108,20 +105,12 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
       const weekKey = mondayOfWeek.format("YYYY-MM-DD"); // Use Monday's date as week key
       const dayKey = postDate.format("YYYY-MM-DD");
 
-      // Track weekly totals
       if (!weeklyTotals.has(weekKey)) {
         weeklyTotals.set(weekKey, {
           currencyMap: new Map<Currency, number>(),
           date: mondayOfWeek,
         });
       }
-      const weekData = weeklyTotals.get(weekKey)!;
-      weekData.currencyMap.set(
-        currency,
-        (weekData.currencyMap.get(currency) || 0) + Number(log.amount),
-      );
-
-      // Track daily totals
       if (!dailyTotals.has(dayKey)) {
         dailyTotals.set(dayKey, {
           currencyMap: new Map<Currency, number>(),
@@ -129,30 +118,15 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
           posts: [],
         });
       }
+      const weekData = weeklyTotals.get(weekKey)!;
       const dayData = dailyTotals.get(dayKey)!;
-      dayData.currencyMap.set(
-        currency,
-        (dayData.currencyMap.get(currency) || 0) + Number(log.amount),
-      );
       dayData.posts = [...dayData.posts, logPost];
 
-      // New: Weekend vs weekday tracking
-      const isWeekend = postDate.day() === 0 || postDate.day() === 6; // Sunday or Saturday
-      const targetMap = isWeekend ? weekendTotals : weekdayTotals;
-
-      if (!targetMap.has(currency)) {
-        targetMap.set(currency, { totalAmount: 0, dayCount: 0 });
-      }
-
-      // Only count each day once per currency (aggregate daily totals first)
-      // const existingDayTotal = dailyTotals.get(dayKey)?.currencyMap.get(currency) || 0
-      // We need to check if this is the first transaction for this day/currency combo
-      const isFirstTransactionOfDay =
-        (dailyTotals.get(dayKey)?.currencyMap.get(currency) || 0) === log.amount;
-
-      if (isFirstTransactionOfDay) {
-        const currencyData = targetMap.get(currency)!;
-        currencyData.dayCount += 1;
+      // A multi-currency post counts towards each of its currencies.
+      for (const [currency, amount] of amounts) {
+        totalSpent.set(currency, (totalSpent.get(currency) || 0) + amount);
+        weekData.currencyMap.set(currency, (weekData.currencyMap.get(currency) || 0) + amount);
+        dayData.currencyMap.set(currency, (dayData.currencyMap.get(currency) || 0) + amount);
       }
     });
 
@@ -167,6 +141,8 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
         }
         const currencyData = targetMap.get(currency)!;
         currencyData.totalAmount += dayAmount;
+        // Each day counts once per currency, however many posts it holds.
+        currencyData.dayCount += 1;
       }
     }
 
@@ -434,7 +410,8 @@ const DayText = ({
               const topPostsPerCurrency: LogPost[] = [];
               const postsPerCurrency = Math.max(1, Math.floor(10 / postsByCurrency.size)); // Distribute the 10 slots
 
-              postsByCurrency.forEach((currencyPosts) => {
+              // Grouped by each post's primary currency, ranked by its amount in it.
+              postsByCurrency.forEach((currencyPosts, groupCurrency) => {
                 // Remove duplicates within this currency
                 const uniqueCurrencyPosts = currencyPosts.filter(
                   (post, index, array) => array.findIndex((p) => p.id === post.id) === index,
@@ -442,7 +419,7 @@ const DayText = ({
 
                 // Sort by amount within currency and take top N for this currency
                 const topForCurrency = uniqueCurrencyPosts
-                  .sort((a, b) => b.amount - a.amount)
+                  .sort((a, b) => postAmountIn(b, groupCurrency) - postAmountIn(a, groupCurrency))
                   .slice(0, postsPerCurrency);
 
                 topPostsPerCurrency.push(...topForCurrency);
@@ -461,7 +438,9 @@ const DayText = ({
                   const currencyPosts = postsByCurrency.get(post.currency) || [];
                   const sortedCurrencyPosts = currencyPosts
                     .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
-                    .sort((a, b) => b.amount - a.amount);
+                    .sort(
+                      (a, b) => postAmountIn(b, post.currency) - postAmountIn(a, post.currency),
+                    );
                   const rank = sortedCurrencyPosts.findIndex((p) => p.id === post.id);
                   return { post, rank, percentile: rank / sortedCurrencyPosts.length };
                 });

@@ -91,6 +91,24 @@ describe("awardGroupAchievements — top spender", () => {
   });
 });
 
+describe("awardGroupAchievements — multi-currency posts", () => {
+  it("counts each currency on a post towards that currency's totals", async () => {
+    // user1's one post holds CAD and JPY; CAD alone would make user1 lowest, but its
+    // 400 CAD makes them top, and JPY has only one poster so earns nothing.
+    const mixed = {
+      ...makePost("user1", 1000, "JPY"),
+      id: "post-user1-mixed",
+      amounts: { JPY: 1000, CAD: 400 },
+    } as LogPost;
+    const result = await awardGroupAchievements({
+      ...baseArgs,
+      userId: "user1",
+      logPosts: [mixed, makePost("user2", 200), makePost("user3", 100)],
+    });
+    expect(result.map((a) => [a.type, a.currency])).toEqual([["top_spender", "CAD"]]);
+  });
+});
+
 describe("awardGroupAchievements — lowest spender", () => {
   it("awards lowest_spender to the user with the lowest total", async () => {
     const result = await awardGroupAchievements({

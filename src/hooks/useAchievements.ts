@@ -13,6 +13,7 @@ import {
   EngagementAchievementType,
   isEngagementAchievementType,
 } from "@/utils/engagementAchievements";
+import { postAmounts } from "@/utils/postAmounts";
 
 export type AchievementType = "top_spender" | "lowest_spender" | "time_traveller";
 
@@ -199,11 +200,16 @@ export const awardGroupAchievements = async ({
       totalsByUserCurrency.set(authorId, new Map());
     }
     const curr = totalsByUserCurrency.get(authorId)!;
-    curr.set(post.currency, (curr.get(post.currency) ?? 0) + post.amount);
+    // A multi-currency post counts towards each of its currencies.
+    for (const [currency, amount] of Object.entries(postAmounts(post)) as [Currency, number][]) {
+      curr.set(currency, (curr.get(currency) ?? 0) + amount);
+    }
   });
 
   // Find currencies where 3+ distinct users have posted
-  const allCurrencies = new Set<Currency>(logPosts.map((p) => p.currency));
+  const allCurrencies = new Set<Currency>(
+    [...totalsByUserCurrency.values()].flatMap((m) => [...m.keys()]),
+  );
   const eligibleCurrencies = [...allCurrencies].filter((currency) => {
     const participantCount = [...totalsByUserCurrency.values()].filter((m) =>
       m.has(currency),
