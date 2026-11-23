@@ -3,6 +3,9 @@ import {
   applyNoSpend,
   daysBetween,
   NO_SPEND_GAIN,
+  NO_SPEND_HALF_AT,
+  NO_SPEND_MIN_SHARE,
+  noSpendShare,
   NO_SPEND_RECENT_ENTRY_DAYS,
   undoNoSpend,
   luckOf,
@@ -90,12 +93,16 @@ describe("applyNoSpend", () => {
     expect(rewarded).toBe(true);
     expect(next?.momentum).toBeCloseTo(0.5 + NO_SPEND_GAIN);
     expect(next?.noSpendDay).toBe(today);
-    expect(applyNoSpend({ state: next, today })).toEqual({ next: null, rewarded: false });
+    expect(applyNoSpend({ state: next, today })).toEqual({ next: null, rewarded: false, gain: 0 });
   });
 
   it("gives nothing without an entry in the last week", () => {
     const stale = { ...logger, entryDay: "2026-11-01" };
-    expect(applyNoSpend({ state: stale, today })).toEqual({ next: null, rewarded: false });
+    expect(applyNoSpend({ state: stale, today })).toEqual({
+      next: null,
+      rewarded: false,
+      gain: 0,
+    });
     expect(applyNoSpend({ state: { ...logger, entryDay: "" }, today }).rewarded).toBe(false);
     const edge = { ...logger, entryDay: "2026-11-11" };
     expect(NO_SPEND_RECENT_ENTRY_DAYS).toBe(7);
@@ -113,6 +120,30 @@ describe("applyNoSpend", () => {
   it("stays within 0..1", () => {
     expect(applyNoSpend({ state: { ...logger, momentum: 0.99 }, today }).next?.momentum).toBe(1);
   });
+
+  it("gives less when no-spend days are common lately", () => {
+    const rare = applyNoSpend({ state: logger, today, recentDays: 0 });
+    const common = applyNoSpend({ state: logger, today, recentDays: NO_SPEND_HALF_AT });
+    expect(rare.gain).toBeCloseTo(NO_SPEND_GAIN);
+    expect(common.gain).toBeCloseTo(NO_SPEND_GAIN / 2);
+    expect(common.next?.momentum).toBeCloseTo(0.5 + NO_SPEND_GAIN / 2);
+  });
+});
+
+describe("noSpendShare", () => {
+  it("is full for a rare day and falls as they get common", () => {
+    expect(noSpendShare(0)).toBe(1);
+    expect(noSpendShare(NO_SPEND_HALF_AT)).toBeCloseTo(0.5);
+    const shares = [0, 1, 3, 6, 10].map(noSpendShare);
+    shares.slice(1).forEach((s, i) => expect(s).toBeLessThan(shares[i]));
+  });
+
+  it("reaches the floor at twice the halving count, and never drops under it", () => {
+    expect(noSpendShare(2 * NO_SPEND_HALF_AT)).toBeCloseTo(NO_SPEND_MIN_SHARE);
+    expect(noSpendShare(2 * NO_SPEND_HALF_AT - 1)).toBeGreaterThan(NO_SPEND_MIN_SHARE);
+    expect(noSpendShare(30)).toBe(NO_SPEND_MIN_SHARE);
+    expect(noSpendShare(-2)).toBe(1);
+  });
 });
 
 describe("undoNoSpend", () => {
@@ -121,6 +152,11 @@ describe("undoNoSpend", () => {
     const next = undoNoSpend({ state, day: "2026-11-18" });
     expect(next?.momentum).toBeCloseTo(0.54 - NO_SPEND_GAIN);
     expect(next?.noSpendDay).toBe("");
+  });
+
+  it("takes back what the day gave", () => {
+    const state = { momentum: 0.52, noSpendDay: "2026-11-18" };
+    expect(undoNoSpend({ state, day: "2026-11-18", gain: 0.02 })?.momentum).toBeCloseTo(0.5);
   });
 
   it("leaves other days alone", () => {
