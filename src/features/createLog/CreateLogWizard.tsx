@@ -159,6 +159,7 @@ export const CreateLogWizard = () => {
         showToast(
           "Your log is ready. Confirm your email, then invite friends from its invite button.",
         );
+        showConfirmEmail();
         return;
       }
       reportError(err, { feature: "log_invites", action: "invite_on_create", tags: { logKind } });
@@ -455,6 +456,11 @@ export const CreateLogWizard = () => {
                 created. You can also share a link from inside the log.
               </p>
             </>
+          ) : !user ? (
+            <p>
+              Sign in to invite friends. You can still create the log now and invite them later from
+              its invite button.
+            </p>
           ) : (
             <>
               <p>

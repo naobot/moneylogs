@@ -8,6 +8,7 @@ import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
 import { invitePath } from "@/utils/invites";
 import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
+import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
 import { getInviteCode } from "./invites";
 
 /**
@@ -17,9 +18,13 @@ import { getInviteCode } from "./invites";
  */
 export const InviteLink = () => {
   const { showToast } = useToastContext();
-  const { confirmed, showConfirmEmail } = useConfirmEmail();
+  const { confirmed, ensureConfirmed } = useConfirmEmail();
   const [code, setCode] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // The server said "confirm first" though the app thought they had (e.g. a stale
+  // account): ask, and try again once they have.
+  const [serverUnconfirmed, setServerUnconfirmed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
@@ -28,13 +33,23 @@ export const InviteLink = () => {
     getInviteCode()
       .then((c) => live && setCode(c))
       .catch((error) => {
+        if (isEmailUnconfirmedError(error)) {
+          if (live) setServerUnconfirmed(true);
+          return;
+        }
         reportError(error, { feature: "friends", action: "get_invite_code" });
         if (live) setFailed(true);
       });
     return () => {
       live = false;
     };
-  }, [confirmed]);
+  }, [confirmed, attempt]);
+
+  const confirmThenRetry = async () => {
+    if (!(await ensureConfirmed())) return;
+    setServerUnconfirmed(false);
+    setAttempt((n) => n + 1);
+  };
 
   const reset = async () => {
     if (!window.confirm("Reset your invite link? The old one will stop working.")) return;
@@ -43,6 +58,10 @@ export const InviteLink = () => {
       setCode(await getInviteCode(true));
       showToast("New invite link ready", "success");
     } catch (error) {
+      if (isEmailUnconfirmedError(error)) {
+        setServerUnconfirmed(true);
+        return;
+      }
       reportError(error, { feature: "friends", action: "reset_invite_code" });
       showToast("That didn't work. Please try again.");
     } finally {
@@ -54,11 +73,11 @@ export const InviteLink = () => {
     <div className="InviteLink">
       <h4>invite a friend</h4>
       <p>Send this link to someone you'd like to invite. When they open it, you'll be friends.</p>
-      {!confirmed ? (
+      {!confirmed || serverUnconfirmed ? (
         <>
           <p>Confirm your email address to get your invite link.</p>
           <div className="InviteLink__actions">
-            <RowButton onClick={showConfirmEmail}>confirm email</RowButton>
+            <RowButton onClick={() => void confirmThenRetry()}>confirm email</RowButton>
           </div>
         </>
       ) : failed ? (

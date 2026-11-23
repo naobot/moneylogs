@@ -13,16 +13,19 @@ const personal = vi.hoisted(() => ({
 }));
 const me = vi.hoisted(() => ({
   tutorials: { sublogIntro: { seconds: 1 } } as { sublogIntro?: unknown },
+  signedIn: true,
 }));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({
-    user: {
-      id: "doc-1",
-      userId: "uid-1",
-      displayName: "Nao",
-      personalLedgerId: "personal-uid-1",
-      tutorials: me.tutorials,
-    },
+    user: me.signedIn
+      ? {
+          id: "doc-1",
+          userId: "uid-1",
+          displayName: "Nao",
+          personalLedgerId: "personal-uid-1",
+          tutorials: me.tutorials,
+        }
+      : undefined,
   }),
 }));
 const updateUserFields = vi.hoisted(() => vi.fn(async () => {}));
@@ -93,6 +96,7 @@ describe("CreateLogWizard", () => {
     linkSublog.mockClear();
     updateUserFields.mockClear();
     me.tutorials = { sublogIntro: { seconds: 1 } };
+    me.signedIn = true;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -274,6 +278,36 @@ describe("CreateLogWizard", () => {
     expect(container.querySelector(".Wizard__review")!.textContent).not.toContain("Inviting");
     await click("Start financial log");
     expect(inviteFriendsToLog).not.toHaveBeenCalled();
+    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+  });
+
+  it("asks signed-out visitors to sign in, not to confirm an email", async () => {
+    me.signedIn = false;
+    confirm.confirmed = false;
+    await click("Social");
+    typeInto("Title", "Tokyo trip");
+    await click("Next");
+    await click("Next"); // dates
+    expect(question()).toMatch(/Invite friends/);
+    expect(container.textContent).toContain("Sign in to invite friends");
+    expect(button("confirm email")).toBeUndefined();
+    expect(button("pick friend-1")).toBeUndefined();
+  });
+
+  it("opens the confirm prompt when the server turns the invites away", async () => {
+    inviteFriendsToLog.mockRejectedValueOnce({
+      code: "functions/failed-precondition",
+      details: { reason: "email_unconfirmed" },
+    });
+    await click("Financial");
+    typeInto("Title", "Flat");
+    await click("Next");
+    await click("Next"); // part of
+    await click("Next"); // currency
+    await click("pick friend-1");
+    await click("Next");
+    await click("Start financial log");
+    expect(confirm.showConfirmEmail).toHaveBeenCalled();
     expect(container.querySelector("#landed")?.textContent).toBe("ledger");
   });
 

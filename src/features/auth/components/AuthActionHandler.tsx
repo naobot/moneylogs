@@ -206,8 +206,10 @@ export const EmailAction = ({
           restoredEmail = info.data.email ?? undefined;
         }
         await applyActionCode(auth, oobCode);
-        // Picks up emailVerified / the new address for a session on this device.
+        // Picks up emailVerified / the new address for a session on this device. A fresh
+        // token too: callables see it, and the app notices (onIdTokenChanged).
         await auth.currentUser?.reload().catch(() => {});
+        await auth.currentUser?.getIdToken(true).catch(() => "");
         setState({ step: "done", restoredEmail });
       } catch (err) {
         reportUnexpected(err, `apply_${mode}`);

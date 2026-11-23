@@ -14,7 +14,13 @@ const mocks = vi.hoisted(() => ({
   sendPasswordResetEmail: vi.fn(),
   signOut: vi.fn(),
   reportError: vi.fn(),
-  auth: { currentUser: null as null | { email: string; reload: () => Promise<void> } },
+  auth: {
+    currentUser: null as null | {
+      email: string;
+      reload: () => Promise<void>;
+      getIdToken?: (force?: boolean) => Promise<string>;
+    },
+  },
 }));
 
 vi.mock("firebase/auth", () => ({
@@ -176,12 +182,15 @@ describe("AuthActionHandler", () => {
   describe("email links", () => {
     it("verifies an email once, even under StrictMode", async () => {
       const reload = vi.fn().mockResolvedValue(undefined);
-      mocks.auth.currentUser = { email: "a@b.co", reload };
+      const getIdToken = vi.fn().mockResolvedValue("token");
+      mocks.auth.currentUser = { email: "a@b.co", reload, getIdToken };
       mocks.applyActionCode.mockResolvedValue(undefined);
       await render(action({ mode: "verifyEmail", continuePath: null }));
 
       expect(mocks.applyActionCode).toHaveBeenCalledTimes(1);
       expect(reload).toHaveBeenCalled();
+      // A fresh token, so the app and callables see the confirmation.
+      expect(getIdToken).toHaveBeenCalledWith(true);
       expect(container.textContent).toContain("Your email is verified");
       expect(button("Continue")!.getAttribute("href")).toBe("/");
     });

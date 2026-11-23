@@ -1,6 +1,6 @@
-import { PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { sendEmailVerification, type User } from "firebase/auth";
+import { onIdTokenChanged, sendEmailVerification, type User } from "firebase/auth";
 
 import { auth } from "@/config/firebase-config";
 import Button from "@/components/Button";
@@ -44,7 +44,27 @@ export const ConfirmEmailProvider = ({ children }: PropsWithChildren) => {
   const [resending, setResending] = useState(false);
   const [notYet, setNotYet] = useState(false);
 
+  // The link is usually opened in another tab (or on the phone): check again when this
+  // tab comes back, and whenever the token changes (the action page refreshes it).
+  useEffect(() => {
+    const recheck = () => {
+      const current = auth.currentUser;
+      if (!current || confirmed(current) || document.visibilityState !== "visible") return;
+      refreshed(current)
+        .then((ok) => ok && setChecks((n) => n + 1))
+        .catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", recheck);
+    const stop = onIdTokenChanged(auth, () => setChecks((n) => n + 1));
+    return () => {
+      document.removeEventListener("visibilitychange", recheck);
+      stop();
+    };
+  }, []);
+
   const showConfirmEmail = useCallback(() => {
+    // Signed out, there's no email to confirm: callers offer sign-in instead.
+    if (!auth.currentUser) return;
     setNotYet(false);
     setOpen(true);
     track("confirm_email", { action: "prompt" });
