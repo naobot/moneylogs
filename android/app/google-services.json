@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "272073869426",
+    "project_id": "moneylogs-89ebf",
+    "storage_bucket": "moneylogs-89ebf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272073869426:android:2e5dd9646fe61ba341daeb",
+        "android_client_info": {
+          "package_name": "app.moneylogs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuWiloeVNK7cS7B1wqfM9z4GQ6Rf6vkXg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
