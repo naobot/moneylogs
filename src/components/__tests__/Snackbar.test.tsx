@@ -38,6 +38,17 @@ describe("Snackbar", () => {
     expect(onRemove).toHaveBeenCalledWith("1");
   });
 
+  it("dismisses the toast from the dimmed layer, not from the card", () => {
+    const onRemove = vi.fn();
+    act(() => root.render(<Snackbar toasts={[toast("error")]} onRemove={onRemove} />));
+
+    act(() => (container.querySelector(".Snackbar__message") as HTMLElement).click());
+    expect(onRemove).not.toHaveBeenCalled();
+
+    act(() => (container.querySelector(".Snackbar") as HTMLElement).click());
+    expect(onRemove).toHaveBeenCalledWith("1");
+  });
+
   it("announces errors as alerts and successes as status", () => {
     act(() => root.render(<Snackbar toasts={[toast("error")]} onRemove={() => {}} />));
     expect(container.querySelector("[role=alert]")).not.toBeNull();

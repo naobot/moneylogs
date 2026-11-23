@@ -19,9 +19,11 @@ export const Snackbar = ({ toasts, onRemove }: SnackbarProps) => {
   const toast = toasts[toasts.length - 1];
 
   return (
-    <div className="Snackbar">
+    // The dimmed layer behind the card dismisses it, like a modal's backdrop.
+    <div className="Snackbar" onClick={() => onRemove(toast.id)}>
       <div
         key={toast.id}
+        onClick={(e) => e.stopPropagation()}
         role={toast.variant === "error" ? "alert" : "status"}
         className={cx("Snackbar__item", {
           "Snackbar__item--success": toast.variant === "success",
