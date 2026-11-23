@@ -19,6 +19,8 @@ import { reportError } from "@/utils/reportError";
 import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
 import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
 import RowButton from "@/components/RowButton";
+import { auth } from "@/config/firebase-config";
+import { isGuest } from "@/features/auth/guest";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { monthKeyOf, todayInTz } from "@/utils/ledger";
 import { parentChoices, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
@@ -464,10 +466,14 @@ export const CreateLogWizard = () => {
           ) : (
             <>
               <p>
-                Confirm your email address to invite friends. You can still create the log now and
-                invite them later from its invite button.
+                {isGuest(auth.currentUser)
+                  ? "Save your account to invite friends."
+                  : "Confirm your email address to invite friends."}{" "}
+                You can still create the log now and invite them later from its invite button.
               </p>
-              <RowButton onClick={showConfirmEmail}>confirm email</RowButton>
+              <RowButton onClick={showConfirmEmail}>
+                {isGuest(auth.currentUser) ? "save account" : "confirm email"}
+              </RowButton>
             </>
           )}
         </>
