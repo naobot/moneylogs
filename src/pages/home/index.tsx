@@ -7,6 +7,7 @@ import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { KnickKnackDrawer } from "@/features/dashboard/KnickKnackDrawer";
 import { PersonalLogNudge } from "@/features/ledger/tour/PersonalLogNudge";
+import { GuestBanner } from "@/features/dashboard/GuestBanner";
 import { HomeSublogIntro } from "@/features/ledger/sublogs/HomeSublogIntro";
 import { partitionArchived } from "@/utils/archivedLogs";
 
@@ -40,7 +41,12 @@ export const Home = () => {
   const activeCount = groupParts.active.length + ledgerParts.active.length;
   const archivedCount = groupParts.archived.length + ledgerParts.archived.length;
 
-  const nudge = <PersonalLogNudge ledgerIds={ledgerParts.active.map((l) => l.id)} />;
+  const nudge = (
+    <>
+      <GuestBanner />
+      <PersonalLogNudge ledgerIds={ledgerParts.active.map((l) => l.id)} />
+    </>
+  );
 
   const archivedNote =
     archivedCount > 0 ? (

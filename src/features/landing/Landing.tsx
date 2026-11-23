@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 import Button from "@/components/Button";
+import TryAsGuest from "@/features/auth/components/TryAsGuest";
 import { EXTERNAL_LINKS } from "@/config/links";
 import { IconText } from "@/components/Icon";
 import { LogCard } from "@/features/dashboard/LogCard";
@@ -151,6 +152,8 @@ export const Landing = ({ invite }: { invite?: InviteKind }) => {
         <div className="Landing__actions">
           <Button to="/login" state={register} text="Create an account" />
           <Button to="/login" state={login} text="Sign in" variant="secondary" />
+          {/* Invites need a real account, so invited visitors aren't offered this. */}
+          {!invite && <TryAsGuest />}
         </div>
       </header>
 

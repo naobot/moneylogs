@@ -11,14 +11,15 @@ page is also their spec.
 Run `firebase emulators:start` (with the functions built), then `npm run seed-emulator`.
 Every account's password is `test123`.
 
-| Account                    | Stage                                                                                                       | Reset                                |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `fresh@test.com`           | Just signed up; `onboardingPending`, so every page sends them to `/welcome`; email unconfirmed              | `npm run reset-persona -- fresh`     |
-| `empty@test.com`           | Finished the wizard (Toronto, CAD); empty personal log; tour and Home nudge not seen yet; email unconfirmed | `npm run reset-persona -- empty`     |
-| `lapsed@test.com`          | Joined ~6 months ago (Sydney, AUD), logged three months, quiet since; this month is empty                   | `npm run reset-persona -- lapsed`    |
-| `alice.vancouver@test.com` | Long-time user with something in every state                                                                | restart the emulators and seed again |
-| any new email              | Not an account yet: sign up through one of the invite links below                                           | (restart the emulators)              |
-| signed out                 | Spectator on a public log, landing pages                                                                    | sign out, or use a private window    |
+| Account                    | Stage                                                                                                       | Reset                                                  |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `fresh@test.com`           | Just signed up; `onboardingPending`, so every page sends them to `/welcome`; email unconfirmed              | `npm run reset-persona -- fresh`                       |
+| `empty@test.com`           | Finished the wizard (Toronto, CAD); empty personal log; tour and Home nudge not seen yet; email unconfirmed | `npm run reset-persona -- empty`                       |
+| `lapsed@test.com`          | Joined ~6 months ago (Sydney, AUD), logged three months, quiet since; this month is empty                   | `npm run reset-persona -- lapsed`                      |
+| `alice.vancouver@test.com` | Long-time user with something in every state                                                                | restart the emulators and seed again                   |
+| any new email              | Not an account yet: sign up through one of the invite links below                                           | (restart the emulators)                                |
+| signed out                 | Spectator on a public log, landing pages                                                                    | sign out, or use a private window                      |
+| guest                      | "Try without an account" on the landing page or `/login`, in a private window                               | sign out (confirms first), or close the private window |
 
 `npm run reset-persona -- all` resets all three. Resetting deletes the account through the
 real `deleteAccount` function, so whatever a persona did in someone else's log stays
@@ -42,7 +43,7 @@ values in bold. Those are the ones that get missed.
 
 | Dimension     | Values                                                                                                                                                                          | Where it lives                                                                                                                                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Account stage | signed out · **onboarding pending** · **just onboarded** · established · **lapsed**                                                                                             | `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                                                                                                                             |
+| Account stage | signed out · **guest** (anonymous sign-in, no email yet) · **onboarding pending** · **just onboarded** · established · **lapsed**                                               | `isAnonymous` (Firebase Auth), `onboardingPending`, `tutorials.*`, `createdAt`, `logLastViewedAt`                                                                                                              |
 | Email         | confirmed (all seeded users, `lapsed@`) · **unconfirmed** (`fresh@`, `empty@`): no friend requests, invite link, gifts or log invites · grandfathered (made before 23 Nov 2026) | Firebase Auth `emailVerified` + `metadata.creationTime` (`src/utils/confirmedEmail.ts`)                                                                                                                        |
 | How they came | **direct sign-up** · **friend invite** · **log invite** · **ledger invite** · spectator link                                                                                    | `/invite/:code`, `/g/:id/invite`, `/l/:id/invite`, `?next=` through the wizard                                                                                                                                 |
 | Content       | **nothing at all** · **personal log only** · one group log · many logs · archived logs                                                                                          | `groups`, `personalLedgerId`, ledgers `memberUids`                                                                                                                                                             |
@@ -70,6 +71,21 @@ As: a new email from `/login`, then `fresh@test.com` (opening any page should la
 - After the last step they land on Home, not on `/welcome` again, and no "set your default currency" prompt appears.
 - The personal log exists, in the currency they picked.
 - Nothing on Home assumes they have logs, friends or finds: look at every empty drawer and section.
+
+### F1b. Trying it as a guest, then saving the account
+
+As: a private window, signed out.
+
+- "Try without an account" (landing hero, and below the forms on `/login`) goes to `/welcome`; the wizard and
+  personal log work as for a new account. Invited visitors (an invite landing, or `/login` on the way to an
+  invite) aren't offered it.
+- Home shows the guest banner above everything; `/me#account` shows the save form and sign out, no email,
+  password or delete actions.
+- Add friend, the invite link, gifts and inviting friends into a log open "save your account" with the form.
+- Opening an invite link (friend, social log, financial log) shows "save your account to accept" instead.
+- Signing out asks first, saying everything they've logged will be lost.
+- Saving with an email that already has an account says so and keeps them a guest. Saving with a new one
+  reloads as a normal, unconfirmed account (the banner's gone, same logs), and the confirmation email arrives.
 
 ### F2. First visit to the personal log (tour)
 

@@ -99,7 +99,10 @@ export const AdminPage = () => {
             <h3 className="keep-case">{user.displayName ?? "(no name)"}</h3>
             <dl>
               <dt>email</dt>
-              <dd className="keep-case">{user.email ?? "—"}</dd>
+              <dd className="keep-case">
+                {user.guest ? "— (guest)" : (user.email ?? "—")}
+                {user.email && !user.emailVerified && " (unconfirmed)"}
+              </dd>
               <dt>uid</dt>
               <dd className="keep-case">
                 {user.uid}

@@ -5,7 +5,8 @@ import { db } from "@/config/firebase-config";
 type AddNewUserArgs = {
   userId: string;
   displayName: string;
-  email: string;
+  /** null for a guest (src/features/auth/guest.ts) until they save their account. */
+  email: string | null;
 };
 
 export const useRegisterNewUser = () => {

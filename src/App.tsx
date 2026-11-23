@@ -43,6 +43,8 @@ import { Welcome } from "@/pages/welcome";
 import { UserProfilePage } from "@/pages/user";
 import { InviteFriendPage } from "@/pages/invite";
 import { OnboardingGate } from "@/features/onboarding/OnboardingGate";
+import { isGuest } from "@/features/auth/guest";
+import GuestInvite from "@/features/auth/components/GuestInvite";
 
 import "./App.scss";
 
@@ -53,12 +55,15 @@ export const CheckAuth = ({
   children,
   auth: requireAuth = true,
   fallback,
+  guests,
   ...props
 }: PropsWithChildren<
   Partial<NavigateProps> & {
     auth?: boolean;
     /** Shown to logged-out visitors instead of redirecting them to /login. */
     fallback?: ReactNode;
+    /** Shown to guests instead (features/auth/guest.ts), where a real account is needed. */
+    guests?: ReactNode;
   }
 >) => {
   const [user, loading] = useAuthState(auth);
@@ -84,6 +89,8 @@ export const CheckAuth = ({
       />
     );
   }
+
+  if (guests && isGuest(user)) return <>{guests}</>;
 
   return <>{children}</>;
 };
@@ -166,7 +173,7 @@ const App = () => {
               <Route
                 path="/invite/:code"
                 element={
-                  <CheckAuth fallback={<Landing invite="friend" />}>
+                  <CheckAuth fallback={<Landing invite="friend" />} guests={<GuestInvite />}>
                     <InviteFriendPage />
                   </CheckAuth>
                 }
@@ -207,7 +214,7 @@ const App = () => {
               <Route
                 path="/g/:groupId/invite"
                 element={
-                  <CheckAuth fallback={<Landing invite="log" />}>
+                  <CheckAuth fallback={<Landing invite="log" />} guests={<GuestInvite />}>
                     <KeyByParam param="groupId">
                       <InvitePage />
                     </KeyByParam>
@@ -237,7 +244,7 @@ const App = () => {
               <Route
                 path="/l/:ledgerId/invite"
                 element={
-                  <CheckAuth fallback={<Landing invite="ledger" />}>
+                  <CheckAuth fallback={<Landing invite="ledger" />} guests={<GuestInvite />}>
                     <KeyByParam param="ledgerId">
                       <LedgerInvitePage />
                     </KeyByParam>

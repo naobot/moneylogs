@@ -22,3 +22,14 @@ export const requireConfirmedEmail = async (auth: CallableRequest["auth"]): Prom
     reason: EMAIL_UNCONFIRMED,
   });
 };
+
+/**
+ * Throws for a guest (an anonymous sign-in, src/features/auth/guest.ts): what they'd
+ * accept or join would outlive them, so saving the account comes first.
+ */
+export const rejectGuests = (auth: CallableRequest["auth"]): void => {
+  if (!auth?.uid) throw new HttpsError("unauthenticated", "Sign in first.");
+  if (auth.token.firebase?.sign_in_provider === "anonymous") {
+    throw new HttpsError("failed-precondition", "Save your account first.", { reason: "guest" });
+  }
+};

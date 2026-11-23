@@ -13,6 +13,8 @@ import { useDateFormat } from "@/utils/dateFormat";
 
 import Button from "@/components/Button";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { isGuest } from "@/features/auth/guest";
+import SaveGuestAccount from "@/features/auth/components/SaveGuestAccount";
 import { DeleteAccountModal } from "./DeleteAccountModal";
 
 import "./AccountSection.scss";
@@ -50,6 +52,27 @@ export const AccountSection = () => {
       setResetPending(false);
     }
   };
+
+  if (isGuest(firebaseUser)) {
+    return (
+      <>
+        <p className="AccountSection__guest">
+          You're trying moneylogs as a guest. Save your account with an email and password to keep
+          what you've logged, use it on other devices, and add friends. Everything stays as it is.
+        </p>
+        <SaveGuestAccount />
+        <div className="AccountSection__actions">
+          <Button
+            text="Sign out"
+            size="sm"
+            variant="secondary"
+            loading={signOutPending}
+            onClick={signOut}
+          />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

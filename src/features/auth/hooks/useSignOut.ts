@@ -7,14 +7,23 @@ import { reportError } from "@/utils/reportError";
 import { useCurrentUser } from "@/contexts";
 import { turnPushOff } from "@/features/push/devicePush";
 import { clearPostDraft } from "@/utils/postDraft";
+import { isGuest } from "@/features/auth/guest";
 
-/** Signs out and returns to /login. Shared by the nav and the /me Account drawer. */
+/** What a guest is asked before signing out: nothing of theirs can be found again. */
+export const GUEST_SIGN_OUT_WARNING =
+  "You're a guest, so signing out loses everything you've logged. Save your account first to keep it. Sign out anyway?";
+
+/**
+ * Signs out and returns to /login. Shared by the nav and the /me Account drawer. A guest
+ * is asked first; their account is cleaned up on the server later.
+ */
 export const useSignOut = () => {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const [isPending, setIsPending] = useState(false);
 
   const handleSignOut = () => {
+    if (isGuest(auth.currentUser) && !window.confirm(GUEST_SIGN_OUT_WARNING)) return;
     setIsPending(true);
     // Stop this device's pushes while still signed in (the rules need the owner).
     void turnPushOff(user?.id)

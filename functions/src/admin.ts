@@ -180,6 +180,9 @@ export const adminLookupUser = onCall(
     return {
       uid,
       email: authUser?.email ?? null,
+      // An anonymous sign-in that hasn't saved its account (src/features/auth/guest.ts).
+      guest: !!authUser && authUser.providerData.length === 0,
+      emailVerified: !!authUser?.emailVerified,
       authExists: !!authUser,
       displayName:
         (typeof first?.displayName === "string" && first.displayName) ||

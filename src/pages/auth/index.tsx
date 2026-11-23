@@ -4,6 +4,7 @@ import LoginHandler from "@/features/auth/components/LoginHandler";
 import RegistrationHandler from "@/features/auth/components/RegistrationHandler";
 import ForgotPasswordHandler from "@/features/auth/components/ForgotPasswordHandler";
 import Button from "@/components/Button";
+import TryAsGuest from "@/features/auth/components/TryAsGuest";
 import { AuthLocationState, initialAuthView, sanitizeRedirect } from "@/features/auth/authRedirect";
 
 export const Auth = () => {
@@ -51,6 +52,13 @@ export const Auth = () => {
         <ForgotPasswordHandler initialEmail={resetEmail} onBack={() => setCurrentView("login")} />
       )}
       {currentView === "register" && <RegistrationHandler redirectTo={redirectTo} />}
+      {/* Not on the way to an invite: accepting one needs a real account. */}
+      {!redirectTo?.includes("/invite") && (
+        <div className="LoginPage__guest">
+          <p>Just looking? Try it first, and save your account later if you like it.</p>
+          <TryAsGuest size="sm" />
+        </div>
+      )}
     </div>
   );
 };

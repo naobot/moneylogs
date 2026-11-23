@@ -21,6 +21,9 @@ export type AdminLogRef = { kind: AdminLogKind; id: string; title: string };
 export type AdminUser = {
   uid: string;
   email: string | null;
+  /** Trying the app without an account: no email or password yet. */
+  guest: boolean;
+  emailVerified: boolean;
   authExists: boolean;
   displayName: string | null;
   createdAt: string | null;

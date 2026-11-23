@@ -385,6 +385,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // A guest tries the app with an anonymous sign-in (src/features/auth/guest.ts) and
+    // can't join other people's logs until they save their account.
+    function isGuest() {
+      return request.auth.token.firebase.sign_in_provider == "anonymous";
+    }
+
     function ledgerData(ledgerId) {
       return get(/databases/$(database)/documents/ledgers/$(ledgerId)).data;
     }
@@ -466,8 +472,9 @@ service cloud.firestore {
         && validLedgerFields(request.resource.data);
 
       // A signed-in non-member joins via the invite link: they may only add
-      // themselves (via arrayUnion), and only while there's room.
+      // themselves (via arrayUnion), and only while there's room. Not as a guest.
       allow update: if signedIn()
+        && !isGuest()
         && !(request.auth.uid in resource.data.memberUids)
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['members', 'memberUids'])

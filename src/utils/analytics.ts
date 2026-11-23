@@ -19,7 +19,10 @@ import type { LogKind } from "@/types/notification";
  */
 export type AnalyticsEvents = {
   // Accounts (GA recommended event names)
-  sign_up: { method: "email" };
+  /** `guest`: a guest saved their account (src/features/auth/guest.ts). */
+  sign_up: { method: "email" | "guest" };
+  /** Started as a guest, without an account. */
+  try_as_guest: Record<string, never>;
   login: { method: "email" };
   tutorial_complete: { tutorial: "welcome" | "ledger_tour" | "first_post" };
   /** The "confirm your email" modal: shown before reaching out, link resent, confirmed. */
