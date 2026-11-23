@@ -21,8 +21,17 @@ export const MOMENTUM_DECAY = 0.08;
 export const MOMENTUM_START = 0.3;
 /** A check-in streak this long seeds full momentum (for people from before luck). */
 export const STREAK_SEED_DAYS = 20;
-/** Extra momentum for a confirmed no-spend day: the same as a logged day's, never more. */
+/**
+ * Extra momentum for a rare confirmed no-spend day: the same as a logged day's, never more.
+ * Days get less the more of them someone confirms (noSpendShare).
+ */
 export const NO_SPEND_GAIN = MOMENTUM_ENTRY_GAIN;
+/** How far back noSpendShare looks for other confirmed no-spend days. */
+export const NO_SPEND_WINDOW_DAYS = 30;
+/** Other confirmed no-spend days in the window that halve a day's bonus. */
+export const NO_SPEND_HALF_AT = 6;
+/** The smallest share of the bonus a no-spend day ever gets. */
+export const NO_SPEND_MIN_SHARE = 0.25;
 /** A no-spend day only lifts luck for someone who logged an entry within this many days. */
 export const NO_SPEND_RECENT_ENTRY_DAYS = 7;
 /** Days with spending, out of the last 14, that make a log count towards luck. */
@@ -107,30 +116,42 @@ export const nextLuckState = ({
 };
 
 /**
+ * The share of NO_SPEND_GAIN a no-spend day earns, from how many other days the person
+ * confirmed in the NO_SPEND_WINDOW_DAYS before it: all of it when they're rare, half at
+ * NO_SPEND_HALF_AT, and never under NO_SPEND_MIN_SHARE. Someone who often has nothing to
+ * spend still gets a little each time; an unusual quiet day counts for more.
+ */
+export const noSpendShare = (recentDays: number): number =>
+  Math.max(NO_SPEND_MIN_SHARE, 1 / (1 + Math.max(0, recentDays) / NO_SPEND_HALF_AT));
+
+/**
  * Momentum after confirming `today` as a no-spend day. It takes the place of a logged day's
  * bonus, so it's given once a day, never on a day that already had the entry bonus, and
  * only to someone who's logged an entry in the last week: confirming every day without ever
- * logging earns nothing. `rewarded` says whether the bonus was given; `next` is null when
- * nothing changes.
+ * logging earns nothing. The bonus is scaled by noSpendShare(recentDays). `rewarded` says
+ * whether it was given and `gain` how much (to take back the same amount); `next` is null
+ * when nothing changes.
  */
 export const applyNoSpend = ({
   state,
   today,
+  recentDays = 0,
 }: {
   state?: LuckState | null;
   today: string;
-}): { next: LuckState | null; rewarded: boolean } => {
-  if (!state || typeof state.momentum !== "number") return { next: null, rewarded: false };
-  if (state.noSpendDay === today || state.entryDay === today) {
-    return { next: null, rewarded: false };
-  }
+  /** Other confirmed no-spend days in the NO_SPEND_WINDOW_DAYS before today. */
+  recentDays?: number;
+}): { next: LuckState | null; rewarded: boolean; gain: number } => {
+  const none = { next: null, rewarded: false, gain: 0 };
+  if (!state || typeof state.momentum !== "number") return none;
+  if (state.noSpendDay === today || state.entryDay === today) return none;
   const sinceEntry = state.entryDay ? daysBetween(state.entryDay, today) : Infinity;
-  if (sinceEntry < 0 || sinceEntry > NO_SPEND_RECENT_ENTRY_DAYS) {
-    return { next: null, rewarded: false };
-  }
+  if (sinceEntry < 0 || sinceEntry > NO_SPEND_RECENT_ENTRY_DAYS) return none;
+  const gain = NO_SPEND_GAIN * noSpendShare(recentDays);
   return {
-    next: { ...state, momentum: clamp01(state.momentum + NO_SPEND_GAIN), noSpendDay: today },
+    next: { ...state, momentum: clamp01(state.momentum + gain), noSpendDay: today },
     rewarded: true,
+    gain,
   };
 };
 
@@ -141,12 +162,15 @@ export const applyNoSpend = ({
 export const undoNoSpend = ({
   state,
   day,
+  gain = NO_SPEND_GAIN,
 }: {
   state?: LuckState | null;
   day: string;
+  /** What the day gave (its doc's `gain`); days from before weighting gave the full bonus. */
+  gain?: number;
 }): LuckState | null => {
   if (!state || state.noSpendDay !== day || typeof state.momentum !== "number") return null;
-  return { ...state, momentum: clamp01(state.momentum - NO_SPEND_GAIN), noSpendDay: "" };
+  return { ...state, momentum: clamp01(state.momentum - gain), noSpendDay: "" };
 };
 
 /**
