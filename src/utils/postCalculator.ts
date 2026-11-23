@@ -11,8 +11,8 @@ import { CURRENCIES } from "@/utils/currency";
  * - the currency's symbol ("¥1,200", "$4.50"), but only when no other row on the post
  *   shares that symbol: "$" could be USD, CAD, NTD, AUD or SGD.
  *
- * On a line pulled in from a financial log ("- ramen · food · 1,200 JPY"), only the
- * amount after the last " · " counts.
+ * On a line pulled in from a financial log ("- ramen · food — 1,200 JPY"), only the
+ * amount after the em dash counts.
  */
 
 const SYMBOL_PATTERNS: Partial<Record<Currency, { symbol: string; re: RegExp }>> = {
@@ -71,9 +71,10 @@ const knownCodes = (): string[] => {
 // every real one, so "$30 HKD" isn't read as a CAD "$30".
 const ANY_CODE = `(?:${knownCodes().join("|")})`;
 
-// A line pulled in from a financial log ("- paid $5 · food · 5 CAD") ends in " · " and
-// its amount. Only that amount counts: the note and category before it are labels.
-const PULLED_LINE = new RegExp(`^.* · (${SIGNED_NUMBER}${GAP}${ANY_CODE})[ \\t]*$`, "gm");
+// A line pulled in from a financial log ("- paid $5 · food — 5 CAD") is a list item
+// ending in an em dash and its amount. Only that amount counts: the note and category
+// before it are labels. Handwritten lines ("coffee 5 CAD · 12 CAD") count in full.
+const PULLED_LINE = new RegExp(`^[ \\t]*- .* — (${SIGNED_NUMBER}${GAP}${ANY_CODE})[ \\t]*$`, "gm");
 
 const MULTIPLIERS: Record<string, number> = { k: 1000, 万: 10000 };
 

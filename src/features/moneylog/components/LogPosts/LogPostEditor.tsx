@@ -82,10 +82,13 @@ const LogPostEditor = forwardRef(
     ref: React.ForwardedRef<HTMLDivElement>,
   ) => {
     const { user } = useCurrentUser();
+    // The signed-in author, not `userId`: that's whichever member's tab is showing, and
+    // can change for a render while this editor is still open.
+    const authUid = user?.userId;
 
     const theme = useTheme();
     // A new post picks up where an unsent one was left: text, amounts and pulls together.
-    const [draft] = useState(() => (type === "new" ? readPostDraft(userId) : null));
+    const [draft] = useState(() => (type === "new" && authUid ? readPostDraft(authUid) : null));
     const [newEntryContent, newEntryContentSet] = useState<string | null>(() =>
       type === "new" ? (draft?.content ?? "") : content,
     );
@@ -308,14 +311,14 @@ const LogPostEditor = forwardRef(
     }, []);
 
     useEffect(() => {
-      if (type === "new" && newEntryContent !== null) {
+      if (type === "new" && newEntryContent !== null && authUid) {
         if (newEntryContent.trim() === "") {
           clearPostDraft();
         } else {
-          writePostDraft(userId, { content: newEntryContent, rows, pulledIds });
+          writePostDraft(authUid, { content: newEntryContent, rows, pulledIds });
         }
       }
-    }, [newEntryContent, rows, pulledIds, type, userId]);
+    }, [newEntryContent, rows, pulledIds, type, authUid]);
 
     return (
       <div
@@ -332,10 +335,10 @@ const LogPostEditor = forwardRef(
           className="LogPostEditor__file-input"
           onChange={handleInlineImageSelected}
         />
-        {isPulling && ledgers && (
+        {isPulling && ledgers && authUid && (
           <PullSpendingModal
             ledgers={ledgers}
-            uid={userId}
+            uid={authUid}
             authorDocId={user?.id}
             groupId={groupId}
             day={pickerDay}

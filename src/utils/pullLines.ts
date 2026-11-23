@@ -123,15 +123,15 @@ export const selectedIds = (
 ): string[] => chosen(groups, selected).flatMap((g) => g.entries.map((e) => e.id));
 
 /**
- * "- ramen · food · 1,200 JPY", or "- food · 1,200 JPY" when there's no note. The
- * calculator counts only the amount after the last " · ", so a note like "paid $5"
- * isn't counted again.
+ * "- ramen · food — 1,200 JPY", or "- food — 1,200 JPY" when there's no note. The em
+ * dash marks the line as pulled: the calculator counts only the amount after it, so a
+ * note like "paid $5" isn't counted again.
  */
 export const entryLine = ({ note, categoryName, amount, currency }: PullEntry): string =>
   `- ${[note, categoryName]
     .filter(Boolean)
     .map((t) => escapeMarkdown(t!))
-    .join(" · ")} · ${formatAmount(amount, currency)}`;
+    .join(" · ")} — ${formatAmount(amount, currency)}`;
 
 /**
  * The markdown inserted into the post: a bold line per log, then a list line per

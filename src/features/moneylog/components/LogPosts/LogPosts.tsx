@@ -692,7 +692,7 @@ const LogPosts = memo(
             </div>
           </>}*/}
 
-            {isCreateNewEntry && !isSpectator && (
+            {isCreateNewEntry && !isSpectator && isMyLog && (
               <LogPostEditor
                 ref={postEditorRef}
                 type="new"

@@ -10,7 +10,10 @@ import type { AmountRow } from "../../functions/src/postAmounts";
  *
  * Tagged with the author's uid and ignored for anyone else; signing out clears it.
  */
-export const DRAFT_KEY = "ML__logPostDraft";
+export const DRAFT_KEY = "ML__postDraft";
+
+/** Before drafts were tagged: the post's text, stored as-is (even if it looks like JSON). */
+export const LEGACY_DRAFT_KEY = "ML__logPostDraft";
 
 export type PostDraft = {
   content: string;
@@ -26,16 +29,16 @@ const isRow = (r: unknown): r is AmountRow<Currency> =>
   isCurrency((r as AmountRow<Currency>).currency) &&
   Number.isFinite((r as AmountRow<Currency>).amount);
 
-/** Parse what's stored, for `uid`. Drafts from before tagging were text only. */
+/** Parse a stored draft record for `uid`; anything else (or anyone else's) is null. */
 export const parseDraft = (raw: string | null, uid: string): PostDraft | null => {
   if (!raw) return null;
   let value: unknown;
   try {
     value = JSON.parse(raw);
   } catch {
-    return { content: raw };
+    return null;
   }
-  if (typeof value !== "object" || value === null) return { content: raw };
+  if (typeof value !== "object" || value === null) return null;
   const stored = value as Partial<Stored>;
   if (stored.uid !== uid || typeof stored.content !== "string") return null;
   const rows = Array.isArray(stored.rows) ? stored.rows.filter(isRow) : [];
@@ -49,11 +52,20 @@ export const parseDraft = (raw: string | null, uid: string): PostDraft | null =>
   };
 };
 
-export const readPostDraft = (uid: string): PostDraft | null =>
-  parseDraft(storage.get(DRAFT_KEY), uid);
+/** This account's draft, else an untagged one from before (text only). */
+export const readPostDraft = (uid: string): PostDraft | null => {
+  const draft = parseDraft(storage.get(DRAFT_KEY), uid);
+  if (draft) return draft;
+  const legacy = storage.get(LEGACY_DRAFT_KEY);
+  return legacy ? { content: legacy } : null;
+};
 
 export const writePostDraft = (uid: string, draft: PostDraft): void => {
   storage.setJSON(DRAFT_KEY, { uid, ...draft } satisfies Stored);
+  storage.remove(LEGACY_DRAFT_KEY);
 };
 
-export const clearPostDraft = (): void => storage.remove(DRAFT_KEY);
+export const clearPostDraft = (): void => {
+  storage.remove(DRAFT_KEY);
+  storage.remove(LEGACY_DRAFT_KEY);
+};

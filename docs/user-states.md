@@ -180,7 +180,7 @@ then `empty@test.com`.
 - Reopen the picker: entries already in one of her posts in this log are unticked and marked "already in a post",
   including posts far enough back that the page hasn't loaded them.
 - Edit the pulled lines and the amount rows freely; nothing links back to the ledger. The row calculator reads
-  the pulled "- ramen · food · 1,200 JPY" form, counting only the amount after the last " · ".
+  the pulled "- ramen · food — 1,200 JPY" form, counting only the amount after the em dash.
 - Close the editor before posting and reopen it: the text, amount rows and pulled marks come back together.
   Sign out, or sign in as someone else on the same browser: the unsent draft is gone.
 - Empty case: a fresh persona has a personal log, so the button shows, and the picker says "nothing logged in

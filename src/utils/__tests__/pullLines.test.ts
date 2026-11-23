@@ -103,8 +103,8 @@ describe("selection", () => {
 
 describe("markdown", () => {
   it("writes note · category, or just the category", () => {
-    expect(entryLine(trip.entries[0])).toBe("- ramen · food · 1,200 JPY");
-    expect(entryLine(trip.entries[1])).toBe("- transit · 300 JPY");
+    expect(entryLine(trip.entries[0])).toBe("- ramen · food — 1,200 JPY");
+    expect(entryLine(trip.entries[1])).toBe("- transit — 300 JPY");
   });
 
   it("writes ledger text as text, not markdown", () => {
@@ -112,18 +112,18 @@ describe("markdown", () => {
     expect(escapeMarkdown("<img src=x>")).toBe("\\<img src=x\\>");
     expect(escapeMarkdown("two\nlines")).toBe("two lines");
     const line = entryLine({ id: "x", amount: 5, currency: "CAD", categoryName: "![a](b)" });
-    expect(line).toBe("- \\!\\[a\\]\\(b\\) · 5 CAD");
+    expect(line).toBe("- \\!\\[a\\]\\(b\\) — 5 CAD");
   });
 
   it("groups lines under each log with ticked entries only", () => {
     expect(buildPulledMarkdown(groups, new Set(["a", "c"]))).toBe(
-      "**kyoto trip**\n- ramen · food · 1,200 JPY\n\n**personal**\n- phone · bills · 12.5 CAD",
+      "**kyoto trip**\n- ramen · food — 1,200 JPY\n\n**personal**\n- phone · bills — 12.5 CAD",
     );
   });
 
   it("leaves out logs with nothing ticked", () => {
     expect(buildPulledMarkdown(groups, new Set(["c"]))).toBe(
-      "**personal**\n- phone · bills · 12.5 CAD",
+      "**personal**\n- phone · bills — 12.5 CAD",
     );
   });
 

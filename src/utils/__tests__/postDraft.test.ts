@@ -1,17 +1,24 @@
 import { beforeEach, describe, expect, it } from "vite-plus/test";
-import { clearPostDraft, DRAFT_KEY, parseDraft, readPostDraft, writePostDraft } from "../postDraft";
+import {
+  clearPostDraft,
+  DRAFT_KEY,
+  LEGACY_DRAFT_KEY,
+  parseDraft,
+  readPostDraft,
+  writePostDraft,
+} from "../postDraft";
 
 describe("post draft", () => {
   beforeEach(() => localStorage.clear());
 
   it("restores text, rows and pulls together for the same account", () => {
     writePostDraft("u1", {
-      content: "- ramen · food · 1,200 JPY",
+      content: "- ramen · food — 1,200 JPY",
       rows: [{ currency: "JPY", amount: 1200 }],
       pulledIds: ["pabc"],
     });
     expect(readPostDraft("u1")).toEqual({
-      content: "- ramen · food · 1,200 JPY",
+      content: "- ramen · food — 1,200 JPY",
       rows: [{ currency: "JPY", amount: 1200 }],
       pulledIds: ["pabc"],
     });
@@ -29,9 +36,28 @@ describe("post draft", () => {
     expect(readPostDraft("u1")).toBeNull();
   });
 
-  it("reads an old text-only draft as its text", () => {
-    expect(parseDraft("a good day", "u1")).toEqual({ content: "a good day" });
-    expect(parseDraft("42", "u1")).toEqual({ content: "42" });
+  it("reads an old text-only draft as its text, even text that looks like JSON", () => {
+    for (const text of ["a good day", "42", '{"lunch":"12 CAD"}', '["a","b"]']) {
+      localStorage.clear();
+      localStorage.setItem(LEGACY_DRAFT_KEY, text);
+      expect(readPostDraft("u1")).toEqual({ content: text });
+    }
+  });
+
+  it("replaces the old draft once saved, and clears both", () => {
+    localStorage.setItem(LEGACY_DRAFT_KEY, "old");
+    writePostDraft("u1", { content: "old, edited" });
+    expect(localStorage.getItem(LEGACY_DRAFT_KEY)).toBeNull();
+    expect(readPostDraft("u1")).toEqual({ content: "old, edited" });
+    localStorage.setItem(LEGACY_DRAFT_KEY, "old");
+    clearPostDraft();
+    expect(readPostDraft("u1")).toBeNull();
+  });
+
+  it("keeps the author's draft when another member's tab is showing", () => {
+    writePostDraft("alice", { content: "- lunch — 1,200 JPY", pulledIds: ["p1"] });
+    expect(readPostDraft("bob")).toBeNull();
+    expect(readPostDraft("alice")).toEqual({ content: "- lunch — 1,200 JPY", pulledIds: ["p1"] });
   });
 
   it("drops malformed rows and ids", () => {
