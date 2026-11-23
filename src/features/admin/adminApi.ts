@@ -59,6 +59,28 @@ export const adminDeleteAccount = httpsCallable<
   { deleted: boolean; logsDeleted: number; logsLeft: number }
 >(functions, "adminDeleteAccount");
 
+export type CleanupCandidate = {
+  uid: string;
+  reason: "idle_guest" | "idle_unconfirmed";
+  email: string | null;
+  createdAt: string | null;
+  lastActiveAt: string | null;
+};
+
+export type CleanupPreview = {
+  /** Whether the daily run deletes (ACCOUNT_CLEANUP_DELETE), or only logs. */
+  deleteEnabled: boolean;
+  inactiveDays: number;
+  maxPerRun: number;
+  candidates: CleanupCandidate[];
+};
+
+/** What the daily account cleanup would remove now (functions/src/accountCleanup.ts). */
+export const adminCleanupPreview = httpsCallable<void, CleanupPreview>(
+  functions,
+  "adminCleanupPreview",
+);
+
 /** The server's own message for an HttpsError, else a generic one. */
 export const adminErrorMessage = (err: unknown): string =>
   err instanceof FirebaseError && err.message && !err.code.endsWith("/internal")

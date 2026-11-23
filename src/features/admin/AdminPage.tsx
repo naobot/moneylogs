@@ -12,6 +12,7 @@ import { useIsAdmin } from "./useIsAdmin";
 import { GiftSection } from "./GiftSection";
 import { LogsSection } from "./LogsSection";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { CleanupSection } from "./CleanupSection";
 
 import "./AdminPage.scss";
 
@@ -144,6 +145,14 @@ export const AdminPage = () => {
           />
         </>
       )}
+
+      <CleanupSection
+        onLookUp={(uid) => {
+          setQuery(uid);
+          void runLookup(uid);
+          window.scrollTo({ top: 0 });
+        }}
+      />
     </div>
   );
 };

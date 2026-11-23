@@ -24,6 +24,8 @@ import { KNICK_KNACK_FINDS } from "./knickknacks";
 import { grantKept, sendSpiritGift } from "./knickknackGrants";
 import { purgeLog } from "./purgeLog";
 import { withSentryCall } from "./sentry";
+import { ACCOUNT_CLEANUP_DELETE, findCleanupCandidates } from "./accountCleanup";
+import { INACTIVE_DAYS, MAX_DELETIONS_PER_RUN } from "./accountCleanupPlan";
 
 /**
  * Admin-only callables behind the /admin page. Admins carry the `admin` custom claim
@@ -297,5 +299,23 @@ export const adminDeleteAccount = onCall(
       `adminDeleteAccount: ${req.uid} by ${adminUid}; ${result.logsDeleted} logs deleted, ${result.logsLeft} left`,
     );
     return { deleted: true, ...result };
+  }),
+);
+
+/**
+ * What the daily account cleanup (accountCleanup.ts) would remove right now, and whether
+ * it's allowed to. Read-only: check this before switching ACCOUNT_CLEANUP_DELETE on.
+ */
+export const adminCleanupPreview = onCall(
+  { timeoutSeconds: 300, memory: "512MiB" },
+  withSentryCall("adminCleanupPreview", async (request) => {
+    requireAdmin(request);
+    const candidates = await findCleanupCandidates(getFirestore());
+    return {
+      deleteEnabled: ACCOUNT_CLEANUP_DELETE.value(),
+      inactiveDays: INACTIVE_DAYS,
+      maxPerRun: MAX_DELETIONS_PER_RUN,
+      candidates,
+    };
   }),
 );

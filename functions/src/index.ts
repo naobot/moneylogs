@@ -562,7 +562,14 @@ export {
 } from "./sublogs";
 export { deleteLog } from "./deleteLog";
 export { deleteAccount } from "./deleteAccount";
-export { adminLookupUser, adminGift, adminDeleteLog, adminDeleteAccount } from "./admin";
+export {
+  adminLookupUser,
+  adminGift,
+  adminDeleteLog,
+  adminDeleteAccount,
+  adminCleanupPreview,
+} from "./admin";
+export { cleanupAccounts } from "./accountCleanup";
 export { rollQuietDay } from "./rollQuietDay";
 export { checkInLedger, dailyCheckIn } from "./checkIn";
 export { confirmNoSpendDay } from "./noSpend";
