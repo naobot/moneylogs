@@ -3,7 +3,7 @@ import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { onCall } from "firebase-functions/https";
+import { HttpsError, onCall } from "firebase-functions/https";
 import sharp from "sharp";
 import {
   buildCommentNotification,
@@ -254,6 +254,10 @@ export const processGroupAnalytics = onCall(
   withSentryCall("processGroupAnalytics", async (request) => {
     const { groupId, groupEnd } = request.data;
 
+    // LogsSummary only calls this for a signed-in viewer; don't run it for anyone else.
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in first.");
+    }
     if (!groupId) {
       throw new Error("Group ID is required");
     }

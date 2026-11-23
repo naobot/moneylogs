@@ -33,6 +33,7 @@ import {
   db,
   functions,
   functionsEmulatorIsUp,
+  docPath,
   ownerWrite,
   type Value,
 } from "./emulator";
@@ -135,6 +136,7 @@ type SeededUser = (typeof testUsers)[number] & { uid: string; docId: string };
 
 const users = {} as Record<UserKey, SeededUser>;
 const userRef = (key: UserKey) => doc(db, "users", users[key].docId);
+const userPath = (key: UserKey) => docPath(`users/${users[key].docId}`);
 
 const signInAs = (key: UserKey) => signInWithEmailAndPassword(auth, users[key].email, PASSWORD);
 
@@ -902,29 +904,30 @@ async function createGroups() {
   // Oldest first, so each user's `groups` ends up newest-first, as the app keeps it.
   const byStart = [...testGroups].sort((a, b) => a.startMs - b.startMs);
   for (const group of byStart) {
-    const members = group.members.map(userRef);
-    const creatorRef = group.creator ? userRef(group.creator) : undefined;
+    const members = group.members.map(userPath);
+    const creator = group.creator ? userPath(group.creator) : undefined;
     const startWallClock = wallClock(group.startMs);
     const endWallClock = wallClock(group.endMs);
-    const ref = await addDoc(collection(db, "log_groups"), {
+    // Owner write: the rules only let a client create a log with themselves in it, at
+    // the current time. Seeded logs start full and backdated.
+    const id = doc(collection(db, "log_groups")).id;
+    await ownerWrite(`log_groups/${id}`, {
       title: group.title,
       // The app prepends joiners, so the creator ends up last; mirror that.
-      members: creatorRef
-        ? [...members.filter((m) => m.id !== creatorRef.id), creatorRef]
-        : members,
-      ...(group.creator ? { createdBy: users[group.creator].uid } : {}),
+      members: creator ? [...members.filter((m) => m.path !== creator.path), creator] : members,
+      createdBy: group.creator ? users[group.creator].uid : undefined,
       max_participants: 10,
       startWallClock,
       endWallClock,
       // As the app stores them: the wall clock read in the creating machine's zone.
-      start: Timestamp.fromDate(new Date(startWallClock)),
-      end: Timestamp.fromDate(new Date(endWallClock)),
-      createdAt: Timestamp.fromMillis(createdAtMs(group)),
+      start: new Date(startWallClock),
+      end: new Date(endWallClock),
+      createdAt: new Date(createdAtMs(group)),
     });
-    ids[group.key] = ref.id;
+    ids[group.key] = id;
     for (const member of group.members) {
       const existing = groupsOf.get(member) ?? [];
-      groupsOf.set(member, [ref.id, ...existing]);
+      groupsOf.set(member, [id, ...existing]);
     }
     console.log(`✅ ${group.title}`);
   }
@@ -937,45 +940,45 @@ async function createGroups() {
 }
 
 async function createPosts(groupIds: Record<string, string>) {
-  const ids: Record<string, string> = {};
+  // Owner writes, like the logs: posts are backdated, and each one is written whole with
+  // the comment subscribers and reactions the comments and reactions below add up to.
+  const ids = Object.fromEntries(
+    samplePosts.map((post) => [post.key, doc(collection(db, "log_posts")).id]),
+  );
   for (const post of samplePosts) {
     const author = users[post.author];
     const group = testGroups.find((g) => g.key === post.group)!;
-    const ref = await addDoc(collection(db, "log_posts"), {
+    const comments = sampleComments.filter((c) => c.post === post.key);
+    const subscribers = [...new Set([post.author, ...comments.map((c) => c.author)])];
+    const reactions = sampleReactions.filter((r) => r.post === post.key);
+    await ownerWrite(`log_posts/${ids[post.key]}`, {
       content: post.content,
       amount: post.amount,
       currency: post.currency,
-      author: userRef(post.author),
+      author: userPath(post.author),
       authorName: author.displayName,
-      group: doc(db, "log_groups", groupIds[post.group]),
+      group: docPath(`log_groups/${groupIds[post.group]}`),
       groupName: group.title,
-      postDate: Timestamp.fromDate(daysAgo(post.daysAgo)),
-      createdAt: Timestamp.fromDate(daysAgo(post.daysAgo)),
-      commentSubscribers: [userRef(post.author)],
+      postDate: daysAgo(post.daysAgo),
+      createdAt: daysAgo(post.daysAgo),
+      commentSubscribers: subscribers.map(userPath),
+      commentCount: comments.length || undefined,
+      reactions: reactions.length
+        ? Object.fromEntries(reactions.map((r) => [users[r.by].docId, r.emoji]))
+        : undefined,
     });
-    ids[post.key] = ref.id;
   }
   console.log(`✅ ${samplePosts.length} posts`);
 
   for (const comment of sampleComments) {
-    await addDoc(collection(db, "log_posts", ids[comment.post], "comments"), {
+    await ownerWrite(`log_posts/${ids[comment.post]}/comments/${doc(collection(db, "x")).id}`, {
       content: comment.content,
-      authorId: userRef(comment.author),
+      authorId: userPath(comment.author),
       authorName: users[comment.author].displayName,
-      createdAt: Timestamp.now(),
-    });
-    // Commenting subscribes you to the post's comments.
-    await updateDoc(doc(db, "log_posts", ids[comment.post]), {
-      commentSubscribers: arrayUnion(userRef(comment.author)),
+      createdAt: new Date(),
     });
   }
   console.log(`💬 ${sampleComments.length} comments`);
-
-  for (const reaction of sampleReactions) {
-    await updateDoc(doc(db, "log_posts", ids[reaction.post]), {
-      [`reactions.${users[reaction.by].docId}`]: reaction.emoji,
-    });
-  }
   console.log(`🔥 ${sampleReactions.length} reactions`);
   return ids;
 }

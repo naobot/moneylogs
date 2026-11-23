@@ -3,21 +3,170 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------------------------------------------------------------------
-    // Social mode — unchanged behaviour (fully open), now scoped explicitly
-    // so the financial-mode rules below can actually restrict access.
-    // (Rules are OR'd: a catch-all `allow if true` would override them.)
-    // ---------------------------------------------------------------------
-    match /log_groups/{path=**} {
-      allow read, write: if true;
-    }
-    match /log_posts/{path=**} {
-      allow read, write: if true;
-    }
     // The signed-in person owns this user doc (doc ids aren't auth uids).
     function ownsUserDoc(userDocId) {
       return request.auth != null
         && get(/databases/$(database)/documents/users/$(userDocId)).data.userId == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // Social mode (log_groups, log_posts). Everything is publicly readable, since
+    // spectators view /g/:groupId signed out. Writes follow src/hooks/useLogGroupQuery.ts
+    // and useLogPostQuery.ts. Members and authors are users/ doc *references*, so each
+    // check proves the caller owns the reference they act through. Server fields
+    // (analytics, images, createdAt on posts, latestCommentAt) are Admin SDK only.
+    // ---------------------------------------------------------------------
+    function userPath(userDocId) {
+      return /databases/$(database)/documents/users/$(userDocId);
+    }
+    // `ref` is a users/{id} reference the caller owns.
+    function ownsUserRef(ref) {
+      return ref is path && ref[3] == 'users' && ownsUserDoc(ref[4]);
+    }
+    function groupMembers(groupRef) {
+      return get(groupRef).data.members;
+    }
+
+    match /log_groups/{groupId} {
+      allow read: if true;
+
+      // A new log has its creator as the only member (addNewLogGroupFn).
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(
+             ['title', 'max_participants', 'startWallClock', 'endWallClock', 'start', 'end',
+              'createdAt', 'createdBy', 'members'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
+        && request.resource.data.max_participants is int
+        && request.resource.data.max_participants >= 1
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 1
+        && ownsUserRef(request.resource.data.members[0]);
+
+      // Rename: the creator only (LogTitleSection). Logs from before `createdBy` was
+      // stamped can't be renamed until it's backfilled (src/utils/logOwnership.ts).
+      allow update: if request.auth != null
+        && resource.data.get('createdBy', null) == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100;
+
+      // Join through the invite page (addMemberToGroupFn): prepend yourself, keep everyone
+      // else, and only while there's room.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        && request.resource.data.members.size() == resource.data.members.size() + 1
+        && request.resource.data.members.size() <= resource.data.get('max_participants', 0)
+        && request.resource.data.members.hasAll(resource.data.members)
+        && !(request.resource.data.members[0] in resource.data.members)
+        && ownsUserRef(request.resource.data.members[0]);
+
+      // Deleting a log is the deleteLog function's job (it cascades).
+      allow delete: if false;
+    }
+
+    match /log_posts/{postId} {
+      allow read: if true;
+
+      // A member posts as themselves into one of their logs (addNewLogPostFn).
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(
+             ['amount', 'currency', 'amounts', 'amountsPrimary', 'content', 'author',
+              'authorName', 'postDate', 'group', 'groupName', 'commentSubscribers',
+              'pulledEntryIds', 'timezone', 'timezonePlace'])
+        && ownsUserRef(request.resource.data.author)
+        && request.resource.data.group is path
+        && request.resource.data.group[3] == 'log_groups'
+        && request.resource.data.author in groupMembers(request.resource.data.group)
+        && request.resource.data.commentSubscribers == [request.resource.data.author];
+
+      // The author edits their own entry (editLogPostFn).
+      allow update: if ownsUserRef(resource.data.author)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+             ['content', 'postDate', 'amount', 'currency', 'amounts', 'amountsPrimary',
+              'pulledEntryIds', 'timezone', 'timezonePlace']);
+
+      // A member reacts (toggleReactionFn): only their own reactions.{userDocId} changes.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+        && reactionChangeIsOwn(
+             request.resource.data.reactions.diff(resource.data.get('reactions', {}))
+               .affectedKeys());
+
+      // Commenting bumps the count and subscribes the commenter (addCommentFn); deleting
+      // a comment lowers it (deleteCommentFn). Each is checked against the comment written
+      // in the same batch.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['commentCount', 'commentSubscribers'])
+        && commentCountStep(request.resource.data.get('commentCount', 0)
+             - resource.data.get('commentCount', 0))
+        && subscribesOnlySelf(request.resource.data.get('commentSubscribers', []),
+             resource.data.get('commentSubscribers', []));
+
+      allow delete: if ownsUserRef(resource.data.author);
+
+      // Rules can't take an element out of a Set, so the one changed key is found by
+      // position in the reactions map's key list (a List, which can be indexed). Logs cap
+      // at 30 members (MAX_PARTICIPANTS), so 40 positions cover every reactor; the
+      // position checks short-circuit, so only the match costs a get().
+      function reactionChangeIsOwn(changed) {
+        let keys = request.resource.data.reactions.keys();
+        return changed.size() == 1
+          && (ownKeyIn10(keys, changed, 0) || ownKeyIn10(keys, changed, 10)
+            || ownKeyIn10(keys, changed, 20) || ownKeyIn10(keys, changed, 30));
+      }
+      function ownKeyIn10(keys, changed, i) {
+        return ownKeyAt(keys, changed, i) || ownKeyAt(keys, changed, i + 1)
+          || ownKeyAt(keys, changed, i + 2) || ownKeyAt(keys, changed, i + 3)
+          || ownKeyAt(keys, changed, i + 4) || ownKeyAt(keys, changed, i + 5)
+          || ownKeyAt(keys, changed, i + 6) || ownKeyAt(keys, changed, i + 7)
+          || ownKeyAt(keys, changed, i + 8) || ownKeyAt(keys, changed, i + 9);
+      }
+      // The caller's own reactions.{userDocId}, a short list, and they're in the log.
+      function ownKeyAt(keys, changed, i) {
+        return keys.size() > i
+          && changed.hasOnly([keys[i]])
+          && request.resource.data.reactions[keys[i]] is list
+          && request.resource.data.reactions[keys[i]].size() <= 20
+          && ownsUserDoc(keys[i])
+          && userPath(keys[i]) in groupMembers(resource.data.group);
+      }
+
+      // The count moves by one per write. (The post rule can't see which comment went with
+      // it; the comment rules check the pairing from their side.)
+      function commentCountStep(step) {
+        return step == 1 || step == -1;
+      }
+
+      // Nobody is dropped, and the only one added (if any) is the caller.
+      function subscribesOnlySelf(after, before) {
+        return after.hasAll(before)
+          && (after.size() == before.size()
+            || (after.size() == before.size() + 1 && ownsUserRef(after.removeAll(before)[0])));
+      }
+
+      match /comments/{commentId} {
+        allow read: if true;
+
+        // A member comments as themselves (addCommentFn), in the same batch as the post's
+        // count going up by one.
+        allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'content', 'createdAt'])
+          && ownsUserRef(request.resource.data.authorId)
+          && request.resource.data.authorId in groupMembers(get(/databases/$(database)/documents/log_posts/$(postId)).data.group)
+          && request.resource.data.content is string
+          && request.resource.data.content.size() > 0
+          && request.resource.data.content.size() <= 2000
+          && request.resource.data.createdAt == request.time
+          && getAfter(/databases/$(database)/documents/log_posts/$(postId)).data.get('commentCount', 0)
+             == get(/databases/$(database)/documents/log_posts/$(postId)).data.get('commentCount', 0) + 1;
+
+        allow update: if false;
+        allow delete: if ownsUserRef(resource.data.authorId);
+      }
     }
 
     // User docs are private to their owner (email, view tracking, prefs). Everyone else
@@ -183,8 +332,11 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenAt"])
         && request.resource.data.seenAt is timestamp;
     }
-    match /processing/{path=**} {
-      allow read, write: if true;
+    // Analytics progress for a social log (processGroupAnalytics writes it; LogsSummary
+    // listens). Public like the log itself; only the server writes.
+    match /processing/{groupId} {
+      allow read: if true;
+      allow write: if false;
     }
     // App-wide settings: config/app holds the minimum supported native version and the
     // store links. Anyone may read (the check runs before sign-in); only the console writes.

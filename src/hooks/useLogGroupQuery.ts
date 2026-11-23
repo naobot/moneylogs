@@ -122,7 +122,7 @@ export const useLogGroupQuery = () => {
     return true;
   };
 
-  // Only the creator is offered this (LogTitleSection); log_groups rules are still open.
+  // Only the creator is offered this (LogTitleSection), and the rules allow only them.
   const updateLogGroupTitleFn = async ({
     groupId,
     title,
