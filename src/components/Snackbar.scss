@@ -1,6 +1,6 @@
 // A toast is a small framed card that pops up in the middle of the screen, so it
-// lands where the eye already is. The layer never blocks the page: only the card
-// takes clicks.
+// lands where the eye already is. The page behind dims with the modal scrim; a click
+// on the dimmed layer dismisses the toast.
 
 @keyframes snackbar-enter {
   from {
@@ -13,19 +13,30 @@
   }
 }
 
+@keyframes snackbar-dim {
+  from {
+    opacity: 0;
+  }
+}
+
 .Snackbar {
   position: fixed;
   inset: 0;
   z-index: var(--z-snackbar);
-  pointer-events: none;
+  background-color: var(--scrim);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   // Clear the notch / home indicator and keep a phone-width gutter.
   padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
 
+  @media (prefers-reduced-motion: no-preference) {
+    animation: snackbar-dim 0.18s ease-out;
+  }
+
   &__item {
-    pointer-events: auto;
+    cursor: default;
     display: flex;
     flex-direction: column;
     align-items: center;
