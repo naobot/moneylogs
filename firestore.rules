@@ -19,9 +19,14 @@ service cloud.firestore {
     function userPath(userDocId) {
       return /databases/$(database)/documents/users/$(userDocId);
     }
-    // `ref` is a users/{id} reference the caller owns.
+    // `ref` is exactly a users/{id} reference (not something nested under one, whose last
+    // id the functions would take as the user) and the caller owns it.
     function ownsUserRef(ref) {
-      return ref is path && ref[3] == 'users' && ownsUserDoc(ref[4]);
+      return ref is path && ref == userPath(ref[4]) && ownsUserDoc(ref[4]);
+    }
+    // `ref` is exactly a log_groups/{id} reference.
+    function isLogRef(ref) {
+      return ref is path && ref == /databases/$(database)/documents/log_groups/$(ref[4]);
     }
     function groupMembers(groupRef) {
       return get(groupRef).data.members;
@@ -79,9 +84,9 @@ service cloud.firestore {
              ['amount', 'currency', 'amounts', 'amountsPrimary', 'content', 'author',
               'authorName', 'postDate', 'group', 'groupName', 'commentSubscribers',
               'pulledEntryIds', 'timezone', 'timezonePlace'])
+        && validPost(request.resource.data)
         && ownsUserRef(request.resource.data.author)
-        && request.resource.data.group is path
-        && request.resource.data.group[3] == 'log_groups'
+        && isLogRef(request.resource.data.group)
         && request.resource.data.author in groupMembers(request.resource.data.group)
         && request.resource.data.commentSubscribers == [request.resource.data.author];
 
@@ -89,7 +94,17 @@ service cloud.firestore {
       allow update: if ownsUserRef(resource.data.author)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
              ['content', 'postDate', 'amount', 'currency', 'amounts', 'amountsPrimary',
-              'pulledEntryIds', 'timezone', 'timezonePlace']);
+              'pulledEntryIds', 'timezone', 'timezonePlace'])
+        && validPost(request.resource.data);
+
+      // The fields the app and processGroupAnalytics rely on, with their types.
+      function validPost(d) {
+        return d.postDate is timestamp
+          && (d.amount is int || d.amount is float)
+          && d.currency is string
+          && d.content is string
+          && (!('amounts' in d) || d.amounts is map);
+      }
 
       // A member reacts (toggleReactionFn): only their own reactions.{userDocId} changes.
       allow update: if request.auth != null
@@ -145,11 +160,13 @@ service cloud.firestore {
         return step == 1 || step == -1;
       }
 
-      // Nobody is dropped, and the only one added (if any) is the caller.
+      // Nobody is dropped, and the only one added (if any) is the caller, as a member.
       function subscribesOnlySelf(after, before) {
         return after.hasAll(before)
           && (after.size() == before.size()
-            || (after.size() == before.size() + 1 && ownsUserRef(after.removeAll(before)[0])));
+            || (after.size() == before.size() + 1
+              && ownsUserRef(after.removeAll(before)[0])
+              && after.removeAll(before)[0] in groupMembers(resource.data.group)));
       }
 
       match /comments/{commentId} {

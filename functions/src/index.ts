@@ -1,7 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/https";
 import sharp from "sharp";
@@ -252,15 +252,26 @@ export const processUploadedImage = onObjectFinalized(
 
 export const processGroupAnalytics = onCall(
   withSentryCall("processGroupAnalytics", async (request) => {
-    const { groupId, groupEnd } = request.data;
+    // Older clients also send `groupEnd`; it's ignored. The log's own end date is used, so
+    // a caller can't choose which entries count.
+    const { groupId } = request.data;
 
     // LogsSummary only calls this for a signed-in viewer; don't run it for anyone else.
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in first.");
     }
-    if (!groupId) {
-      throw new Error("Group ID is required");
+    if (typeof groupId !== "string" || !groupId) {
+      throw new HttpsError("invalid-argument", "Group ID is required");
     }
+
+    // Analytics are worked out once, after the log ends; nobody can redo or overwrite them.
+    const group = await db.collection("log_groups").doc(groupId).get();
+    if (!group.exists) throw new HttpsError("not-found", "No such log.");
+    const groupEnd = group.get("end") as Timestamp | undefined;
+    if (!groupEnd || groupEnd.toMillis() > Date.now()) {
+      throw new HttpsError("failed-precondition", "This log hasn't ended yet.");
+    }
+    if (group.get("analytics.isCalculated")) return { success: true };
 
     try {
       // Set up progress tracking
@@ -341,6 +352,8 @@ async function fetchGroupLogPosts(groupId: string): Promise<RawLogPost[]> {
 function calculateRawAnalytics(logPosts: RawLogPost[], groupEnd: FirestoreTimestamp) {
   const groupEndDate = new Date(groupEnd.seconds * 1000);
   const legitimatePosts = logPosts.filter((post) => {
+    // Skip malformed entries rather than failing the whole log's analytics.
+    if (typeof post.postDate?.seconds !== "number" || !post.author?.id) return false;
     const postDate = new Date(post.postDate.seconds * 1000);
     return postDate <= groupEndDate;
   });

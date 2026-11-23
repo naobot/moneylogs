@@ -16,6 +16,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  deleteField,
   getDoc,
   increment,
   runTransaction,
@@ -142,6 +143,14 @@ async function main() {
 
   await signInAs(carol);
   await denied("joining a full log", () => join(logRef, carol));
+  // A reference nested under your own user doc ends in someone else's id.
+  const nested = (owner: User, victim: User) =>
+    doc(db, "users", owner.id, "achievements", victim.id);
+  const roomyLog = doc(collection(db, "log_groups"));
+  await setDoc(roomyLog, logData(carol, { max_participants: 5 }));
+  await denied("joining with a reference nested under your own user doc", () =>
+    updateDoc(roomyLog, { members: [nested(carol, alice), carol.ref] }),
+  );
 
   await signOut(auth);
   await allowed("reading a log signed out (spectators)", () => getDoc(logRef));
@@ -180,10 +189,32 @@ async function main() {
   await denied("a post whose group isn't a log", () =>
     addDoc(collection(db, "log_posts"), postData(bob, { group: bob.ref })),
   );
+  await denied("a post whose group is nested under a log", () =>
+    addDoc(
+      collection(db, "log_posts"),
+      postData(bob, { group: doc(db, "log_groups", logRef.id, "x", "y") }),
+    ),
+  );
+  await denied("a post by a reference nested under your own user doc", () =>
+    addDoc(
+      collection(db, "log_posts"),
+      postData(bob, { author: nested(bob, alice), commentSubscribers: [nested(bob, alice)] }),
+    ),
+  );
+  await denied("a post without a postDate", () => {
+    const { postDate: _postDate, ...rest } = postData(bob);
+    return addDoc(collection(db, "log_posts"), rest);
+  });
+  await denied("a post whose amount isn't a number", () =>
+    addDoc(collection(db, "log_posts"), postData(bob, { amount: "5" })),
+  );
   await allowed("the author editing", () =>
     updateDoc(postRef, { content: "edited", amounts: { CAD: 6 }, amount: 6 }),
   );
   await denied("the author changing authorship", () => updateDoc(postRef, { author: alice.ref }));
+  await denied("the author removing the postDate", () =>
+    updateDoc(postRef, { postDate: deleteField() }),
+  );
 
   await signInAs(carol);
   await denied("a non-member posting", () => addDoc(collection(db, "log_posts"), postData(carol)));
@@ -234,6 +265,17 @@ async function main() {
     });
     await batch.commit();
   });
+  await denied("a comment by a reference nested under your own user doc", async () => {
+    const batch = writeBatch(db);
+    batch.set(doc(collection(db, "log_posts", postRef.id, "comments")), {
+      authorId: nested(alice, bob),
+      authorName: "bob",
+      content: "x",
+      createdAt: serverTimestamp(),
+    });
+    batch.update(postRef, { commentCount: increment(1) });
+    await batch.commit();
+  });
   await denied("a comment without the count going up", () =>
     addDoc(collection(db, "log_posts", postRef.id, "comments"), {
       authorId: alice.ref,
@@ -262,6 +304,9 @@ async function main() {
     await batch.commit();
   });
   await denied("deleting someone else's comment", () => deleteDoc(commentRef));
+  await denied("a non-member subscribing to the comments", () =>
+    updateDoc(postRef, { commentCount: increment(1), commentSubscribers: arrayUnion(carol.ref) }),
+  );
 
   await signInAs(alice);
   await allowed("the commenter deleting (with the count)", async () => {
