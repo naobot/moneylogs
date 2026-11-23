@@ -28,6 +28,7 @@ import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import Button from "@/components/Button";
 import Tabs, { TabItem } from "@/components/Tabs";
 import { reportError } from "@/utils/reportError";
+import { absoluteEnd } from "@/utils/groupBoundaries";
 
 interface LogsSummaryProps {
   group: Group;
@@ -100,12 +101,9 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
     forceFresh: true,
   });
 
-  // Check if group is archived and needs analytics processing
-  const isArchivedGroup = useMemo(() => {
-    const now = new Date();
-    const groupEndDate = new Date(group.end.seconds * 1000);
-    return groupEndDate < now;
-  }, [group.end]);
+  // Analytics are worked out once the log has ended in every timezone (the server
+  // refuses earlier); until then the summary is computed here from the live posts.
+  const isArchivedGroup = useMemo(() => absoluteEnd(group).isBefore(Date.now()), [group]);
 
   const hasAnalytics = Boolean(group.analytics?.isCalculated);
   const needsProcessing = isArchivedGroup && !hasAnalytics && !hasStartedProcessing;
@@ -140,7 +138,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
         });
 
         // Start the analytics processing
-        await processAnalytics({ groupId: group.id, groupEnd: group.end });
+        await processAnalytics({ groupId: group.id });
       } catch (error) {
         reportError(error, { feature: "log_analytics", action: "process_group_analytics" });
         setAnalyticsError(error instanceof Error ? error.message : "Unknown error");
@@ -156,7 +154,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
     return () => {
       unsubscribe?.();
     };
-  }, [needsProcessing, loggedInUser, group.id, group.end, processAnalytics]);
+  }, [needsProcessing, loggedInUser, group.id, processAnalytics]);
 
   // Reset processing state when analytics become available
   useEffect(() => {

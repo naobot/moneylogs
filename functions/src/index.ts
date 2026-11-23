@@ -18,6 +18,8 @@ import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
 import { reportError, withSentry, withSentryCall } from "./sentry";
 import { postAmounts } from "./postAmounts";
+import { postsForAnalytics, isWellFormedPost } from "./analyticsPosts";
+import { absoluteEndMs } from "./logTimeline";
 
 initializeApp();
 const db = getFirestore();
@@ -264,11 +266,23 @@ export const processGroupAnalytics = onCall(
       throw new HttpsError("invalid-argument", "Group ID is required");
     }
 
-    // Analytics are worked out once, after the log ends; nobody can redo or overwrite them.
-    const group = await db.collection("log_groups").doc(groupId).get();
+    // Analytics are worked out once, after the log has ended for every timezone; nobody
+    // can redo or overwrite them.
+    const groupRef = db.collection("log_groups").doc(groupId);
+    const group = await groupRef.get();
     if (!group.exists) throw new HttpsError("not-found", "No such log.");
-    const groupEnd = group.get("end") as Timestamp | undefined;
-    if (!groupEnd || groupEnd.toMillis() > Date.now()) {
+    const storedEnd = group.get("end") as Timestamp | undefined;
+    if (!storedEnd) throw new HttpsError("failed-precondition", "This log hasn't ended yet.");
+    // Wall-clock logs: `end` is the creator's instant, but later timezones keep posting
+    // until the wall-clock end reaches UTC-12 (absoluteEnd on the client).
+    const endWallClock = group.get("endWallClock");
+    const cutoffMs = absoluteEndMs({
+      id: groupId,
+      title: "",
+      endWallClock: typeof endWallClock === "string" ? endWallClock : undefined,
+      endMs: storedEnd.toMillis(),
+    });
+    if (cutoffMs > Date.now()) {
       throw new HttpsError("failed-precondition", "This log hasn't ended yet.");
     }
     if (group.get("analytics.isCalculated")) return { success: true };
@@ -277,8 +291,9 @@ export const processGroupAnalytics = onCall(
       // Set up progress tracking
       await updateProgress(groupId, "Gathering group data...", 10);
 
-      // Fetch all log posts for this group
-      const logPosts = await fetchGroupLogPosts(groupId);
+      // Fetch all log posts for this group, skipping malformed ones (no author or
+      // postDate) so older data can't stop the summary.
+      const logPosts = (await fetchGroupLogPosts(groupId)).filter(isWellFormedPost);
       await updateProgress(groupId, "Processing spending data...", 40);
 
       const postsMetadata = await backfillPostMetadata(logPosts);
@@ -287,14 +302,23 @@ export const processGroupAnalytics = onCall(
       const analytics = {
         isCalculated: true,
         processedAt: FieldValue.serverTimestamp(),
-        raw: calculateRawAnalytics(logPosts, groupEnd),
+        raw: calculateRawAnalytics(logPosts, cutoffMs),
         posts: postsMetadata,
       };
 
       await updateProgress(groupId, "Saving results...", 80);
 
-      // Update group document
-      await db.collection("log_groups").doc(groupId).update({ analytics });
+      // Write only if the log hasn't changed since it was read: when two viewers open
+      // the log at once, the first write wins and the other call stops here.
+      try {
+        await groupRef.update({ analytics }, { lastUpdateTime: group.updateTime });
+      } catch (writeError) {
+        if (!isFailedPrecondition(writeError)) throw writeError;
+        const latest = await groupRef.get();
+        if (latest.get("analytics.isCalculated")) return { success: true };
+        // The log changed for another reason (a rename, a member joining): try once more.
+        await groupRef.update({ analytics }, { lastUpdateTime: latest.updateTime });
+      }
 
       await updateProgress(groupId, "Complete!", 100);
 
@@ -327,6 +351,12 @@ export const processGroupAnalytics = onCall(
 );
 
 // Helper functions
+
+// The Admin SDK reports a failed write precondition (lastUpdateTime) as gRPC code 9.
+function isFailedPrecondition(error: unknown): boolean {
+  return (error as { code?: unknown })?.code === 9;
+}
+
 async function updateProgress(groupId: string, step: string, percentage: number) {
   await db
     .collection("processing")
@@ -349,14 +379,8 @@ async function fetchGroupLogPosts(groupId: string): Promise<RawLogPost[]> {
   })) as RawLogPost[];
 }
 
-function calculateRawAnalytics(logPosts: RawLogPost[], groupEnd: FirestoreTimestamp) {
-  const groupEndDate = new Date(groupEnd.seconds * 1000);
-  const legitimatePosts = logPosts.filter((post) => {
-    // Skip malformed entries rather than failing the whole log's analytics.
-    if (typeof post.postDate?.seconds !== "number" || !post.author?.id) return false;
-    const postDate = new Date(post.postDate.seconds * 1000);
-    return postDate <= groupEndDate;
-  });
+function calculateRawAnalytics(logPosts: RawLogPost[], cutoffMs: number) {
+  const legitimatePosts = postsForAnalytics(logPosts, cutoffMs);
 
   // Currency totals across all posts
   const totalSpentByCurrency = new Map<string, number>();
