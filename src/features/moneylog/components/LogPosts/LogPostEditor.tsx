@@ -36,10 +36,9 @@ import { sumAmountsIn } from "@/utils/postCalculator";
 import { appendPulled, mergeIntoRows } from "@/utils/pullLines";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import PullSpendingModal, { PulledSpending } from "./PullSpendingModal";
+import { clearPostDraft, readPostDraft, writePostDraft } from "@/utils/postDraft";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import { storage } from "@/platform";
-
-const DRAFT_KEY = "ML__logPostDraft";
 
 const LogPostEditor = forwardRef(
   (
@@ -85,21 +84,20 @@ const LogPostEditor = forwardRef(
     const { user } = useCurrentUser();
 
     const theme = useTheme();
-    const [newEntryContent, newEntryContentSet] = useState<string | null>(() => {
-      if (type === "new") {
-        const savedDraft = storage.get(DRAFT_KEY);
-        return savedDraft || "";
-      }
-      return content;
-    });
+    // A new post picks up where an unsent one was left: text, amounts and pulls together.
+    const [draft] = useState(() => (type === "new" ? readPostDraft(userId) : null));
+    const [newEntryContent, newEntryContentSet] = useState<string | null>(() =>
+      type === "new" ? (draft?.content ?? "") : content,
+    );
     // What the post was opened with, to tell whether the amounts were touched.
     const [initialRows] = useState(() => amountRows(amounts, savedPrimary));
     const [rows, setRows] = useState<AmountRow<Currency>[]>(() => {
+      if (draft?.rows) return draft.rows;
       const initial = initialRows;
       return initial.length > 0 ? initial : [{ currency: "JPY", amount: 0 }];
     });
     const [newEntryDate, newEntryDateSet] = useState<number>(date);
-    const [pulledIds, setPulledIds] = useState<string[]>(pulledEntryIds);
+    const [pulledIds, setPulledIds] = useState<string[]>(draft?.pulledIds ?? pulledEntryIds);
     const [isPulling, setIsPulling] = useState(false);
     const { ledgers } = useGetMyLedgers();
     const hasLedgers = (ledgers?.length ?? 0) > 0;
@@ -206,7 +204,7 @@ const LogPostEditor = forwardRef(
 
         track("add_post", { travelling: !!newTimezone });
 
-        storage.remove(DRAFT_KEY);
+        clearPostDraft();
         completeTutorial();
 
         isCreateNewEntrySet(false);
@@ -248,6 +246,11 @@ const LogPostEditor = forwardRef(
         reportError(err, { feature: "log_post", action: "edit_post" });
       }
     };
+
+    // The post's day where it's filed: its own zone, else the profile's, else this device's.
+    const pickerDay = dayjs(newEntryDate)
+      .tz(newTimezone ?? user?.timezone ?? dayjs.tz.guess())
+      .format("YYYY-MM-DD");
 
     const handleClickCalculator = (index: number) => {
       if (!newEntryContent) return;
@@ -297,8 +300,9 @@ const LogPostEditor = forwardRef(
         }
       }
 
-      // New posts start on this device's last-used currency, else the user's default.
-      if (type == "new") {
+      // New posts start on this device's last-used currency, else the user's default,
+      // unless they're a restored draft's.
+      if (type == "new" && !draft?.rows) {
         setRows([{ currency: postStartCurrency(user), amount: 0 }]);
       }
     }, []);
@@ -306,12 +310,12 @@ const LogPostEditor = forwardRef(
     useEffect(() => {
       if (type === "new" && newEntryContent !== null) {
         if (newEntryContent.trim() === "") {
-          storage.remove(DRAFT_KEY);
+          clearPostDraft();
         } else {
-          storage.set(DRAFT_KEY, newEntryContent);
+          writePostDraft(userId, { content: newEntryContent, rows, pulledIds });
         }
       }
-    }, [newEntryContent, type]);
+    }, [newEntryContent, rows, pulledIds, type, userId]);
 
     return (
       <div
@@ -334,7 +338,7 @@ const LogPostEditor = forwardRef(
             uid={userId}
             authorDocId={user?.id}
             groupId={groupId}
-            day={dayjs(newEntryDate).format("YYYY-MM-DD")}
+            day={pickerDay}
             alreadyPulled={pulledAnywhere}
             onClose={() => setIsPulling(false)}
             onAdd={handlePulled}

@@ -115,8 +115,9 @@ export type LogPost = {
   /** Spending per currency for multi-currency posts; absent on older posts. */
   amounts?: Partial<Record<Currency, number>>;
   /**
-   * Financial-log entry ids the author pulled into this post, only to mark them as
-   * already pulled. Never ledger ids: posts are public.
+   * Pull keys (hashed ledger + entry ids, see `pullKey`) of the financial-log entries
+   * the author pulled into this post, only to mark them as already pulled. Never raw
+   * ledger ids: posts are public.
    */
   pulledEntryIds?: string[];
   /**

@@ -7,12 +7,14 @@ import { formatAmount, orderedCurrencies, sumByCurrency } from "@/utils/ledgerEn
  *
  * It's a one-time copy: the chosen entries become ordinary markdown lines in the post
  * (which the author can reword, reorder or delete) and their totals are added to the
- * post's amount rows. Nothing links back to the ledger except the entry ids in
+ * post's amount rows. Nothing links back to the ledger except the pull keys in
  * `pulledEntryIds`, kept only to grey out entries already pulled. Never ledger ids:
  * posts are public and a ledger id is enough to join a ledger.
  */
 
-export type PullEntry = Pick<LedgerEntry, "id" | "amount" | "currency" | "note"> & {
+export type PullEntry = Pick<LedgerEntry, "amount" | "currency" | "note"> & {
+  /** The entry's pull key (see `pullKey`), not its document id. */
+  id: string;
   categoryName: string;
 };
 
@@ -26,6 +28,36 @@ export type LogSelection = "all" | "some" | "none";
 
 const UNCATEGORISED = "uncategorised";
 
+/**
+ * An entry's identity for pulling: its document id qualified by its ledger, since the
+ * same CSV row imported into two logs gets the same document id in both. Hashed, so a
+ * public post's `pulledEntryIds` never reveal the ledger id (cyrb53, 53 bits: plenty
+ * against collisions among one author's entries, and not reversible to a ledger id).
+ */
+export const pullKey = (ledgerId: string, entryId: string): string => {
+  const text = `${ledgerId}/${entryId}`;
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return `p${(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)}`;
+};
+
+/**
+ * Text from a ledger (a note, a category or log name, possibly another member's) shown
+ * as itself, not as markdown: no images, links or HTML loading before the author posts.
+ */
+export const escapeMarkdown = (text: string): string =>
+  text
+    .replace(/[\\`*_{}[\]()<>#+!|~]/g, "\\$&")
+    .replace(/\s+/g, " ")
+    .trim();
+
 /** A ledger's entries on a day, with category names resolved, newest-added order kept. */
 export const toPullGroup = (
   ledger: Pick<Ledger, "id" | "title" | "categories">,
@@ -36,7 +68,7 @@ export const toPullGroup = (
     ledgerId: ledger.id,
     title: ledger.title,
     entries: entries.map(({ id, amount, currency, note, categoryId }) => ({
-      id,
+      id: pullKey(ledger.id, id),
       amount,
       currency,
       ...(note ? { note } : {}),
@@ -90,9 +122,16 @@ export const selectedIds = (
   selected: ReadonlySet<string>,
 ): string[] => chosen(groups, selected).flatMap((g) => g.entries.map((e) => e.id));
 
-/** "- ramen · food 1,200 JPY", or "- food 1,200 JPY" when there's no note. */
+/**
+ * "- ramen · food · 1,200 JPY", or "- food · 1,200 JPY" when there's no note. The
+ * calculator counts only the amount after the last " · ", so a note like "paid $5"
+ * isn't counted again.
+ */
 export const entryLine = ({ note, categoryName, amount, currency }: PullEntry): string =>
-  `- ${note ? `${note} · ${categoryName}` : categoryName} ${formatAmount(amount, currency)}`;
+  `- ${[note, categoryName]
+    .filter(Boolean)
+    .map((t) => escapeMarkdown(t!))
+    .join(" · ")} · ${formatAmount(amount, currency)}`;
 
 /**
  * The markdown inserted into the post: a bold line per log, then a list line per
@@ -103,14 +142,14 @@ export const buildPulledMarkdown = (
   selected: ReadonlySet<string>,
 ): string =>
   chosen(groups, selected)
-    .map((g) => [`**${g.title}**`, ...g.entries.map(entryLine)].join("\n"))
+    .map((g) => [`**${escapeMarkdown(g.title)}**`, ...g.entries.map(entryLine)].join("\n"))
     .join("\n\n");
 
 /** Put pulled lines into the post body: appended after a blank line, or alone. */
 export const appendPulled = (content: string, markdown: string): string =>
   content.trim() === "" ? markdown : `${content.replace(/\s+$/, "")}\n\n${markdown}`;
 
-/** Entry ids already pulled into the given author's posts. */
+/** Pull keys already pulled into the given author's posts. */
 export const pulledIdsIn = (
   posts: ReadonlyArray<Pick<LogPost, "author"> & { pulledEntryIds?: string[] }>,
   authorDocId: string | undefined,

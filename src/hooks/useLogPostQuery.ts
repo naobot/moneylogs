@@ -34,7 +34,7 @@ export type LogData = {
   currency: Currency;
   content: string;
   postDate: number;
-  /** Financial-log entry ids pulled into the post (no ledger ids). */
+  /** Pull keys (`pullKey`) of financial-log entries pulled into the post (no ledger ids). */
   pulledEntryIds?: string[];
   /** A travelling post's own zone. On edit, null clears it back to the author's. */
   timezone?: string | null;

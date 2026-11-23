@@ -3,11 +3,13 @@ import {
   appendPulled,
   buildPulledMarkdown,
   entryLine,
+  escapeMarkdown,
   initialSelection,
   logSelection,
   mergeIntoRows,
   PullGroup,
   pulledIdsIn,
+  pullKey,
   selectedIds,
   selectedTotals,
   toggleEntry,
@@ -44,9 +46,28 @@ describe("toPullGroup", () => {
       { id: "b", amount: 2, currency: "JPY", categoryId: "gone" },
     ]);
     expect(group.entries).toEqual([
-      { id: "a", amount: 1, currency: "JPY", categoryName: "food" },
-      { id: "b", amount: 2, currency: "JPY", categoryName: "uncategorised" },
+      { id: pullKey("l1", "a"), amount: 1, currency: "JPY", categoryName: "food" },
+      { id: pullKey("l1", "b"), amount: 2, currency: "JPY", categoryName: "uncategorised" },
     ]);
+  });
+
+  it("keeps the same imported entry in two logs apart", () => {
+    const entry = { id: "import-row-7", amount: 500, currency: "JPY", categoryId: "x" } as const;
+    const personal = toPullGroup({ id: "l1", title: "personal", categories: [] }, [entry]);
+    const trip = toPullGroup({ id: "l2", title: "trip", categories: [] }, [entry]);
+    const both = [personal, trip];
+    const onlyTrip = toggleEntry(personal.entries[0].id, initialSelection(both, new Set()));
+    expect(logSelection(personal, onlyTrip)).toBe("none");
+    expect(logSelection(trip, onlyTrip)).toBe("all");
+    expect(selectedTotals(both, onlyTrip)).toEqual({ JPY: 500 });
+  });
+});
+
+describe("pullKey", () => {
+  it("is stable, ledger-qualified, and doesn't contain the ledger id", () => {
+    expect(pullKey("ledgerA", "e1")).toBe(pullKey("ledgerA", "e1"));
+    expect(pullKey("ledgerA", "e1")).not.toBe(pullKey("ledgerB", "e1"));
+    expect(pullKey("ledgerA", "e1")).not.toContain("ledgerA");
   });
 });
 
@@ -82,19 +103,27 @@ describe("selection", () => {
 
 describe("markdown", () => {
   it("writes note · category, or just the category", () => {
-    expect(entryLine(trip.entries[0])).toBe("- ramen · food 1,200 JPY");
-    expect(entryLine(trip.entries[1])).toBe("- transit 300 JPY");
+    expect(entryLine(trip.entries[0])).toBe("- ramen · food · 1,200 JPY");
+    expect(entryLine(trip.entries[1])).toBe("- transit · 300 JPY");
+  });
+
+  it("writes ledger text as text, not markdown", () => {
+    expect(escapeMarkdown("![x](https://e.vil/p.png)")).toBe("\\!\\[x\\]\\(https://e.vil/p.png\\)");
+    expect(escapeMarkdown("<img src=x>")).toBe("\\<img src=x\\>");
+    expect(escapeMarkdown("two\nlines")).toBe("two lines");
+    const line = entryLine({ id: "x", amount: 5, currency: "CAD", categoryName: "![a](b)" });
+    expect(line).toBe("- \\!\\[a\\]\\(b\\) · 5 CAD");
   });
 
   it("groups lines under each log with ticked entries only", () => {
     expect(buildPulledMarkdown(groups, new Set(["a", "c"]))).toBe(
-      "**kyoto trip**\n- ramen · food 1,200 JPY\n\n**personal**\n- phone · bills 12.5 CAD",
+      "**kyoto trip**\n- ramen · food · 1,200 JPY\n\n**personal**\n- phone · bills · 12.5 CAD",
     );
   });
 
   it("leaves out logs with nothing ticked", () => {
     expect(buildPulledMarkdown(groups, new Set(["c"]))).toBe(
-      "**personal**\n- phone · bills 12.5 CAD",
+      "**personal**\n- phone · bills · 12.5 CAD",
     );
   });
 

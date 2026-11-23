@@ -6,6 +6,7 @@ import { auth } from "@/config/firebase-config";
 import { reportError } from "@/utils/reportError";
 import { useCurrentUser } from "@/contexts";
 import { turnPushOff } from "@/features/push/devicePush";
+import { clearPostDraft } from "@/utils/postDraft";
 
 /** Signs out and returns to /login. Shared by the nav and the /me Account drawer. */
 export const useSignOut = () => {
@@ -20,6 +21,8 @@ export const useSignOut = () => {
       .catch(() => undefined)
       .then(() => signOut(auth))
       .then(() => {
+        // An unsent post can hold private spending pulled from financial logs.
+        clearPostDraft();
         setIsPending(false);
         void navigate("/login");
       })

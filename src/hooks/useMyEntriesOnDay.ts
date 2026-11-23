@@ -17,8 +17,8 @@ import { reportError } from "@/utils/reportError";
  *
  * Also finds which of those entries are already in one of the author's posts in this
  * social log, including older posts the page hasn't loaded: one `array-contains-any`
- * read per 30 entry ids (single-field index), narrowed to the log and author
- * client-side. Only the author's own entry ids are asked for, so only their posts match.
+ * read per 30 pull keys (single-field index), narrowed to the log and author
+ * client-side. Only the author's own entries' keys are asked for, so only their posts match.
  */
 export const useMyEntriesOnDay = ({
   ledgers,
@@ -91,7 +91,7 @@ export const useMyEntriesOnDay = ({
   const current = result && result.request === request && result.ledgers === ledgers;
   return {
     groups: current ? result.groups : EMPTY,
-    /** Entry ids already in one of the author's posts in this log, loaded or not. */
+    /** Pull keys already in one of the author's posts in this log, loaded or not. */
     pulled: current ? result.pulled : EMPTY_IDS,
     isLoading: enabled && !!uid && !!ledgers && !!authorDocId && !current,
     isError: current ? result.isError : false,
