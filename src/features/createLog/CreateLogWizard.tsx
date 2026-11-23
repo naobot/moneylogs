@@ -89,7 +89,9 @@ export const CreateLogWizard = () => {
   const { addNewLogGroup } = useLogGroupQuery();
   const { createLedger } = useLedgerQuery();
   const { showToast } = useToastContext();
-  const [isInviting, setIsInviting] = useState(false);
+  // Held from the first write until we navigate away, across every step of creating (the
+  // log, then linking and inviting), so Next can't create a second log in the gaps.
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
   const update = (patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch }));
@@ -101,7 +103,6 @@ export const CreateLogWizard = () => {
   const isLast = stepIndex === steps.length - 1;
   const canAdvance = isStepValid(step, state);
 
-  const isSubmitting = addNewLogGroup.isLoading || createLedger.isLoading || isInviting;
   const submitFailed = addNewLogGroup.isError || createLedger.isError;
 
   // Logs this one could be part of (the "parent" step), personal first.
@@ -144,7 +145,6 @@ export const CreateLogWizard = () => {
   const sendInvites = async (logId: string, logKind: LogKind) => {
     const friendIds = friendsToInvite(state);
     if (!friendIds.length) return;
-    setIsInviting(true);
     try {
       await inviteFriendsToLog(logId, logKind, friendIds);
     } catch (err) {
@@ -152,13 +152,12 @@ export const CreateLogWizard = () => {
       showToast(
         "Your log is ready, but the invites didn't go out. Try again from its invite button.",
       );
-    } finally {
-      setIsInviting(false);
     }
   };
 
   const submit = async () => {
     if (!user?.userId || !state.mode || !isStepValid("review", state)) return;
+    setIsSubmitting(true);
     try {
       if (state.mode === "social") {
         const title = state.title.trim();
@@ -212,6 +211,7 @@ export const CreateLogWizard = () => {
         action: "create_log",
         tags: { mode: state.mode },
       });
+      setIsSubmitting(false);
     }
   };
 

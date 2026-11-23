@@ -118,7 +118,7 @@ export const InvitePage = () => {
                 onClick={handleJoinGroup}
                 variant="primary"
                 text="Join"
-                disabled={isProcessingJoin}
+                loading={isProcessingJoin}
               />
             )}
             {group.members.length >= group.max_participants && (

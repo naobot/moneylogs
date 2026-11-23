@@ -340,7 +340,11 @@ const LogPostItemComponent = ({
           </>
         )}
       </div>
-      <Modal isOpen={isShowDeleteWarning} onClose={() => setIsShowDeleteWarning(false)}>
+      <Modal
+        isOpen={isShowDeleteWarning}
+        onClose={() => setIsShowDeleteWarning(false)}
+        disabled={deleteLogPost.isLoading}
+      >
         <Modal.Header title={"Warning"}>Warning</Modal.Header>
         <Modal.Body>
           <p>
@@ -348,11 +352,20 @@ const LogPostItemComponent = ({
           </p>
         </Modal.Body>
         <Modal.Actions>
-          <Button onClick={() => handleDeletePost(post.id)} text="Delete" variant="primary" />
+          <Button
+            onClick={() => void handleDeletePost(post.id)}
+            text="Delete"
+            variant="primary"
+            loading={deleteLogPost.isLoading}
+          />
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
-      <Modal isOpen={showPinWarning} onClose={() => setShowPinWarning(false)}>
+      <Modal
+        isOpen={showPinWarning}
+        onClose={() => setShowPinWarning(false)}
+        disabled={updatePinnedPost.isLoading}
+      >
         <Modal.Header title={"Warning"}>Warning</Modal.Header>
         <Modal.Body>
           <p>
@@ -361,7 +374,12 @@ const LogPostItemComponent = ({
           <p>Your currently pinned post will return to being a regular post.</p>
         </Modal.Body>
         <Modal.Actions>
-          <Button onClick={() => handlePinPost(post.id)} text="Pin" variant="primary" />
+          <Button
+            onClick={() => void handlePinPost(post.id)}
+            text="Pin"
+            variant="primary"
+            loading={updatePinnedPost.isLoading}
+          />
           <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>

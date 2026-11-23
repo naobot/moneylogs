@@ -110,7 +110,7 @@ export const EntryForm = ({
       className={cx("EntryForm", `EntryForm--${mode}`)}
       onSubmit={handleSubmit}
       onKeyDown={(e) => {
-        if (e.key === "Escape" && onCancel) onCancel();
+        if (e.key === "Escape" && onCancel && !isSaving) onCancel();
       }}
       noValidate
     >
@@ -169,7 +169,14 @@ export const EntryForm = ({
             ))}
           </select>
           {onCancel && (
-            <Button variant="secondary" size="sm" text={"×"} title="Close" onClick={onCancel} />
+            <Button
+              variant="secondary"
+              size="sm"
+              text={"×"}
+              title="Close"
+              disabled={isSaving}
+              onClick={onCancel}
+            />
           )}
         </div>
       </div>

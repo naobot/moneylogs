@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Button from "@/components/Button";
 import { useToastContext } from "@/hooks/useToastContext";
 import { canShare, shareLink } from "@/platform";
@@ -10,11 +12,18 @@ import "./ShareLinkButton.scss";
  */
 const ShareLinkButton = ({ title, url }: { title: string; url: string }) => {
   const { showToast } = useToastContext();
+  // While the sheet is open: a second tap would be refused as "unavailable".
+  const [sharing, setSharing] = useState(false);
   if (!canShare()) return null;
 
   const share = async () => {
-    if ((await shareLink({ title, url })) === "unavailable") {
-      showToast("Couldn't open sharing here. Copy the link instead.", "error");
+    setSharing(true);
+    try {
+      if ((await shareLink({ title, url })) === "unavailable") {
+        showToast("Couldn't open sharing here. Copy the link instead.", "error");
+      }
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -24,6 +33,7 @@ const ShareLinkButton = ({ title, url }: { title: string; url: string }) => {
       text="SHARE"
       size="sm"
       variant="secondary"
+      disabled={sharing}
       onClick={() => void share()}
     />
   );
