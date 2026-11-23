@@ -5,6 +5,7 @@ import { pairId } from "./friendsPlan";
 import { giftBlock, giftNotificationId, parseGiftRequest } from "./giftsPlan";
 import { isNotificationEnabled } from "./notificationPrefs";
 import { withSentryCall } from "./sentry";
+import { requireConfirmedEmail } from "./confirmEmail";
 
 const BLOCK_MESSAGES = {
   missing: "That knick-knack isn't in your drawer any more.",
@@ -21,6 +22,7 @@ export const giftKnickKnack = onCall(
   withSentryCall("giftKnickKnack", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    await requireConfirmedEmail(request.auth);
     const req = parseGiftRequest(request.data);
     if (!req) throw new HttpsError("invalid-argument", "Expected { findId, toUserDocId }.");
 

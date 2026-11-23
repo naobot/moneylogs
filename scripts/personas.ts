@@ -36,7 +36,15 @@ import {
   PERSONAL_LEDGER_TITLE,
   personalLedgerId,
 } from "../src/utils/personalLedger";
-import { PASSWORD, auth, db, functions, functionsEmulatorIsUp, ownerWrite } from "./emulator";
+import {
+  PASSWORD,
+  auth,
+  db,
+  functions,
+  functionsEmulatorIsUp,
+  markEmailVerified,
+  ownerWrite,
+} from "./emulator";
 
 export const PERSONA_KEYS = ["fresh", "empty", "lapsed"] as const;
 export type PersonaKey = (typeof PERSONA_KEYS)[number];
@@ -52,6 +60,8 @@ type Persona = {
   stage: string;
   /** What the welcome wizard collected. `fresh` hasn't been through it yet. */
   profile?: { timezone: string; displayLocation: string; currency: Currency };
+  /** Opened the confirmation link. Without it: no friend requests, invite link or gifts. */
+  emailConfirmed?: boolean;
 };
 
 export const PERSONAS: Record<PersonaKey, Persona> = {
@@ -71,6 +81,7 @@ export const PERSONAS: Record<PersonaKey, Persona> = {
     displayName: "Lou Lapsed",
     stage: "set up half a year ago, logged three months of spending, then went quiet",
     profile: { timezone: "Australia/Sydney", displayLocation: "Sydney", currency: "AUD" },
+    emailConfirmed: true,
   },
 };
 
@@ -236,6 +247,7 @@ export async function resetPersona(key: PersonaKey) {
   const persona = PERSONAS[key];
   const replaced = await deleteAccountIfExists(persona.email);
   const ids = await register(persona);
+  if (persona.emailConfirmed) await markEmailVerified(ids.uid);
   if (persona.profile) {
     const ledgerId = await finishWelcome(ids, persona.profile);
     if (key === "lapsed") await lapse(ids, ledgerId, persona);

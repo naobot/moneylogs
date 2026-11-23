@@ -16,6 +16,7 @@ import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
+import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { monthKeyOf, todayInTz } from "@/utils/ledger";
 import { parentChoices, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
@@ -148,6 +149,12 @@ export const CreateLogWizard = () => {
     try {
       await inviteFriendsToLog(logId, logKind, friendIds);
     } catch (err) {
+      if (isEmailUnconfirmedError(err)) {
+        showToast(
+          "Your log is ready. Confirm your email, then invite friends from its invite button.",
+        );
+        return;
+      }
       reportError(err, { feature: "log_invites", action: "invite_on_create", tags: { logKind } });
       showToast(
         "Your log is ready, but the invites didn't go out. Try again from its invite button.",

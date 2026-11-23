@@ -7,19 +7,23 @@ import { useToastContext } from "@/hooks/useToastContext";
 import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
 import { invitePath } from "@/utils/invites";
+import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
 import { getInviteCode } from "./invites";
 
 /**
  * Your personal invite link, made on first view. Whoever opens it becomes your friend,
- * so it can be reset if it's gone further than you meant.
+ * so it can be reset if it's gone further than you meant. Needs a confirmed email: until
+ * then there's no link, just the way to confirm.
  */
 export const InviteLink = () => {
   const { showToast } = useToastContext();
+  const { confirmed, showConfirmEmail } = useConfirmEmail();
   const [code, setCode] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
+    if (!confirmed) return;
     let live = true;
     getInviteCode()
       .then((c) => live && setCode(c))
@@ -30,7 +34,7 @@ export const InviteLink = () => {
     return () => {
       live = false;
     };
-  }, []);
+  }, [confirmed]);
 
   const reset = async () => {
     if (!window.confirm("Reset your invite link? The old one will stop working.")) return;
@@ -50,7 +54,14 @@ export const InviteLink = () => {
     <div className="InviteLink">
       <h4>invite a friend</h4>
       <p>Send this link to someone you'd like to invite. When they open it, you'll be friends.</p>
-      {failed ? (
+      {!confirmed ? (
+        <>
+          <p>Confirm your email address to get your invite link.</p>
+          <div className="InviteLink__actions">
+            <RowButton onClick={showConfirmEmail}>confirm email</RowButton>
+          </div>
+        </>
+      ) : failed ? (
         <p>Your invite link couldn't be loaded. Please try again later.</p>
       ) : code ? (
         <>

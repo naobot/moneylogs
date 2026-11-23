@@ -34,6 +34,7 @@ import {
   functions,
   functionsEmulatorIsUp,
   docPath,
+  markEmailVerified,
   ownerWrite,
   type Value,
 } from "./emulator";
@@ -870,6 +871,8 @@ async function createUsers() {
       }
       throw error;
     }
+    // Long-time users: they confirmed their email long ago.
+    await markEmailVerified(uid);
     // Like registration: a random doc id, with the auth uid in `userId`. Doc ids and
     // uids differ in production, so they differ here too.
     const ref = await addDoc(collection(db, "users"), {

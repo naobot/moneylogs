@@ -33,6 +33,23 @@ connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
 connectFirestoreEmulator(db, "localhost", 8888);
 connectFunctionsEmulator(functions, "localhost", 5001);
 
+/**
+ * Confirm an account's email, as opening the link would. Accounts made today aren't
+ * grandfathered (src/utils/confirmedEmail.ts), so without this they can't send friend
+ * requests, invite links, gifts or log invites.
+ */
+export async function markEmailVerified(uid: string) {
+  const res = await fetch(
+    `http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:update`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer owner" },
+      body: JSON.stringify({ localId: uid, emailVerified: true }),
+    },
+  );
+  if (!res.ok) throw new Error(`Couldn't confirm ${uid}'s email: ${await res.text()}`);
+}
+
 export async function functionsEmulatorIsUp() {
   try {
     await fetch(FUNCTIONS_URL, { signal: AbortSignal.timeout(1500) });
