@@ -16,7 +16,10 @@ import { NotificationBell } from "@/features/notifications/NotificationBell";
 declare const __APP_VERSION__: string;
 
 const MainNav = () => {
-  const [firebaseUser] = useAuthState(auth);
+  // Until Firebase has restored the session, we don't know yet whether anyone is signed
+  // in: show neither "Sign in" nor the signed-in icons, so a returning user doesn't see
+  // "Sign in" flash up on every load.
+  const [firebaseUser, authPending] = useAuthState(auth);
   const isLoggedIn = !!firebaseUser;
 
   const location = useLocation();
@@ -54,7 +57,7 @@ const MainNav = () => {
   return (
     <nav className="MainNav">
       <div className="MainNav__nav">
-        {!isLoggedIn && location.pathname !== "/login" && (
+        {!authPending && !isLoggedIn && location.pathname !== "/login" && (
           <Button to="/login" text="Sign in" variant="secondary" />
         )}
         {isLoggedIn && (
