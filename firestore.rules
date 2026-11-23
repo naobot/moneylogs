@@ -3,6 +3,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // A guest tries the app with an anonymous sign-in (src/features/auth/guest.ts): one
+    // click, no email, so "signed in" alone says nothing about who they are. Guests can't
+    // join other people's logs or read what's shared with signed-in people only.
+    function isGuest() {
+      return request.auth.token.firebase.sign_in_provider == "anonymous";
+    }
+    // Signed in with a real account (not a guest).
+    function hasAccount() {
+      return request.auth != null && !isGuest();
+    }
+
     // The signed-in person owns this user doc (doc ids aren't auth uids).
     function ownsUserDoc(userDocId) {
       return request.auth != null
@@ -242,17 +253,19 @@ service cloud.firestore {
     }
 
     // Public knick-knack shelves: each kept item once, with how the first copy came to
-    // its owner (mirrorShelf). Signed-in people may read them; only the server writes.
+    // its owner (mirrorShelf). Signed-in people may read them (not guests, except their
+    // own); only the server writes.
     match /shelves/{userDocId} {
-      allow read: if request.auth != null;
+      allow read: if hasAccount() || ownsUserDoc(userDocId);
       allow write: if false;
     }
 
     // Public friends lists (mirrorFriendList): only exists while the owner shows it
     // (users.showFriends), and leaves out anyone with users.hideFromFriendLists.
-    // Signed-in people may read them, like shelves; only the server writes.
+    // Signed-in people may read them, like shelves (not guests, except their own); only
+    // the server writes.
     match /friendLists/{userDocId} {
-      allow read: if request.auth != null;
+      allow read: if hasAccount() || ownsUserDoc(userDocId);
       allow write: if false;
     }
 
@@ -383,12 +396,6 @@ service cloud.firestore {
     // ---------------------------------------------------------------------
     function signedIn() {
       return request.auth != null;
-    }
-
-    // A guest tries the app with an anonymous sign-in (src/features/auth/guest.ts) and
-    // can't join other people's logs until they save their account.
-    function isGuest() {
-      return request.auth.token.firebase.sign_in_provider == "anonymous";
     }
 
     function ledgerData(ledgerId) {

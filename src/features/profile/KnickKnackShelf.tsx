@@ -5,6 +5,8 @@ import { KNICK_KNACKS } from "@/features/ledger/buddy/knickknacks/catalog";
 import KnickKnack from "@/features/ledger/buddy/knickknacks/KnickKnack";
 import { giverIds, provenanceLabel } from "@/features/ledger/buddy/knickknacks/provenance";
 import { useCurrentUser } from "@/contexts";
+import { auth } from "@/config/firebase-config";
+import { isGuest } from "@/features/auth/guest";
 import { useShelf } from "./useShelf";
 import { useGiftsInTransit } from "./useGiftsInTransit";
 
@@ -19,7 +21,9 @@ import { useGiftsInTransit } from "./useGiftsInTransit";
  */
 export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
   const { user, isLoading: userLoading } = useCurrentUser();
-  const { slots: shelf, isLoading, isError } = useShelf(userDocId);
+  // Guests can only see their own shelf (shelves/ in firestore.rules), so don't ask.
+  const hidden = isGuest(auth.currentUser) && user?.id !== userDocId;
+  const { slots: shelf, isLoading, isError } = useShelf(hidden ? undefined : userDocId);
   const { gifts: inTransit, isLoading: inTransitLoading } = useGiftsInTransit(userDocId, user?.id);
   const givers = useProfiles(giverIds(shelf));
   const { formatShortDate } = useDateFormat();
@@ -28,6 +32,7 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
   const nameOf = (id: string) => profileName(givers, id) ?? "…";
   const day = (ms: number) => formatShortDate(dayjs(ms));
 
+  if (hidden) return <p className="ProfilePage__muted">save your account to see shelves.</p>;
   if (isError) return <p className="ProfilePage__muted">couldn't open the shelf.</p>;
   // The viewer's wrapped gifts count too: without them an empty shelf isn't empty yet.
   if (isLoading || inTransitLoading || userLoading) return null;
