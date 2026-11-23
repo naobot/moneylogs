@@ -19,18 +19,31 @@ export type PostAmountFields<C extends string = string> = {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** The post's amounts per currency: its `amounts` map, else its legacy single amount. */
+/**
+ * The post's amounts per currency: its `amounts` map, else its legacy single amount.
+ *
+ * Every write keeps the legacy amount/currency equal to one of the map's entries. If
+ * they disagree, a client from before multi-currency posts edited it and left the map
+ * stale, so the legacy fields win: they replace their own currency's entry, or, when
+ * the currency itself was changed (so it's unknowable which entry it replaced), they
+ * stand alone.
+ */
 export const postAmounts = <C extends string>(post: PostAmountFields<C>): AmountsMap<C> => {
-  const out: AmountsMap<C> = {};
+  const map: AmountsMap<C> = {};
   if (post.amounts) {
     for (const [currency, value] of Object.entries(post.amounts) as [C, unknown][]) {
       const n = Number(value);
-      if (Number.isFinite(n)) out[currency] = n;
+      if (Number.isFinite(n)) map[currency] = n;
     }
-    if (Object.keys(out).length > 0) return out;
   }
-  if (post.currency) out[post.currency] = Number(post.amount) || 0;
-  return out;
+  if (!post.currency) return map;
+
+  const legacy = Number(post.amount) || 0;
+  if (Object.keys(map).length === 0) return { [post.currency]: legacy } as AmountsMap<C>;
+  const mapped = map[post.currency];
+  if (mapped === undefined) return { [post.currency]: legacy } as AmountsMap<C>;
+  if (Math.abs(mapped - legacy) > 1e-9) map[post.currency] = legacy;
+  return map;
 };
 
 /** The post's amount in one currency, 0 when it has none in it. */

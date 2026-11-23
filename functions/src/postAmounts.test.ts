@@ -17,6 +17,22 @@ describe("postAmounts", () => {
     ).toEqual({ JPY: 1200, CAD: 12 });
   });
 
+  it("lets an old client's amount edit win over a stale map", () => {
+    expect(
+      postAmounts<string>({ amount: 1500, currency: "JPY", amounts: { JPY: 1200, CAD: 12 } }),
+    ).toEqual({ JPY: 1500, CAD: 12 });
+  });
+
+  it("uses the legacy fields alone when an old client changed the currency", () => {
+    expect(
+      postAmounts<string>({ amount: 20, currency: "USD", amounts: { JPY: 1200, CAD: 12 } }),
+    ).toEqual({ USD: 20 });
+  });
+
+  it("returns the map when there are no legacy fields", () => {
+    expect(postAmounts<string>({ amounts: { JPY: 1 } })).toEqual({ JPY: 1 });
+  });
+
   it("falls back to legacy fields when the map is empty", () => {
     expect(postAmounts({ amount: 5, currency: "USD", amounts: {} })).toEqual({ USD: 5 });
   });

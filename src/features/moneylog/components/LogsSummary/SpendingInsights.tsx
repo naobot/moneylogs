@@ -390,7 +390,7 @@ const DayText = ({
               const someExpensivePosts = expensiveEntries
                 .map((x) => x[1].posts)
                 .flat()
-                .filter((x) => x.amount > 0);
+                .filter((x) => Object.values(postAmounts(x)).some((a) => a > 0));
 
               // Get posts to display (either from multiple days or single most expensive day)
               const postsToShow = showMultipleDays
@@ -399,18 +399,24 @@ const DayText = ({
 
               // Group posts by currency to handle comparison properly
               const postsByCurrency = new Map<Currency, LogPost[]>();
+              // A multi-currency post joins each currency it spent in, so a post whose
+              // larger spend is in its second currency still competes there.
               postsToShow.forEach((post) => {
-                if (!postsByCurrency.has(post.currency)) {
-                  postsByCurrency.set(post.currency, []);
+                for (const [currency, amount] of Object.entries(postAmounts(post)) as [
+                  Currency,
+                  number,
+                ][]) {
+                  if (amount <= 0 && currency !== post.currency) continue;
+                  if (!postsByCurrency.has(currency)) postsByCurrency.set(currency, []);
+                  postsByCurrency.get(currency)!.push(post);
                 }
-                postsByCurrency.get(post.currency)!.push(post);
               });
 
               // Get top posts per currency, then combine
               const topPostsPerCurrency: LogPost[] = [];
               const postsPerCurrency = Math.max(1, Math.floor(10 / postsByCurrency.size)); // Distribute the 10 slots
 
-              // Grouped by each post's primary currency, ranked by its amount in it.
+              // Ranked within each currency by the post's amount in it.
               postsByCurrency.forEach((currencyPosts, groupCurrency) => {
                 // Remove duplicates within this currency
                 const uniqueCurrencyPosts = currencyPosts.filter(
@@ -422,7 +428,12 @@ const DayText = ({
                   .sort((a, b) => postAmountIn(b, groupCurrency) - postAmountIn(a, groupCurrency))
                   .slice(0, postsPerCurrency);
 
-                topPostsPerCurrency.push(...topForCurrency);
+                // A post can top more than one of its currencies; show it once.
+                topPostsPerCurrency.push(
+                  ...topForCurrency.filter(
+                    (p) => !topPostsPerCurrency.some((tp) => tp.id === p.id),
+                  ),
+                );
               });
 
               // If we have leftover slots, fill them with the next highest from any currency
@@ -433,16 +444,18 @@ const DayText = ({
                     (post, index, array) => array.findIndex((p) => p.id === post.id) === index,
                   ); // dedupe
 
-                // Sort remaining posts by relative rank within their currency
+                // Sort remaining posts by relative rank within their currency (their best
+                // one, for a multi-currency post)
                 const remainingWithRank = remainingPosts.map((post) => {
-                  const currencyPosts = postsByCurrency.get(post.currency) || [];
-                  const sortedCurrencyPosts = currencyPosts
-                    .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
-                    .sort(
-                      (a, b) => postAmountIn(b, post.currency) - postAmountIn(a, post.currency),
-                    );
-                  const rank = sortedCurrencyPosts.findIndex((p) => p.id === post.id);
-                  return { post, rank, percentile: rank / sortedCurrencyPosts.length };
+                  const percentiles = [...postsByCurrency.entries()]
+                    .filter(([, posts]) => posts.some((p) => p.id === post.id))
+                    .map(([currency, posts]) => {
+                      const sorted = posts
+                        .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
+                        .sort((a, b) => postAmountIn(b, currency) - postAmountIn(a, currency));
+                      return sorted.findIndex((p) => p.id === post.id) / sorted.length;
+                    });
+                  return { post, percentile: Math.min(...percentiles, 1) };
                 });
 
                 const additionalPosts = remainingWithRank
