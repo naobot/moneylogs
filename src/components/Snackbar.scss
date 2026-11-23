@@ -1,54 +1,63 @@
+// A toast is a small framed card that pops up in the middle of the screen, so it
+// lands where the eye already is. The layer never blocks the page: only the card
+// takes clicks.
+
 @keyframes snackbar-enter {
   from {
-    transform: translateY(-100%);
+    transform: scale(0.9);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: scale(1);
     opacity: 1;
   }
 }
 
 .Snackbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1100;
+  inset: 0;
+  z-index: var(--z-snackbar);
   pointer-events: none;
-  // Below the notch / status bar.
-  padding-top: var(--safe-top);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // Clear the notch / home indicator and keep a phone-width gutter.
+  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
 
   &__item {
     pointer-events: auto;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1em;
+    align-items: flex-start;
+    gap: var(--space-5);
     width: 100%;
-    padding: 0.5em 1em;
+    max-width: var(--modal-width);
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-none);
+    // Errors are warnings: inverted, heavy frame.
     background-color: var(--inverse-surface);
     color: var(--inverse-ink);
-    animation: snackbar-enter 0.2s ease-out;
+    border: var(--border-heavy) solid var(--ink);
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: snackbar-enter 0.18s ease-out;
+    }
 
     &--success {
-      background-color: var(--paper);
+      background-color: var(--sheet);
       color: var(--ink);
-      border-bottom: var(--border-hairline) solid var(--ink);
+      border-width: var(--border-rule);
 
       .Snackbar__close {
-        color: var(--ink-muted);
-
-        &:hover {
-          color: var(--ink);
-        }
+        color: var(--ink);
       }
     }
   }
 
   &__message {
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
   }
 
   &__close {
@@ -59,7 +68,7 @@
     cursor: pointer;
     font-size: 0.9rem;
     padding: 0;
-    line-height: 1;
+    line-height: 1.4;
     flex-shrink: 0;
 
     &:hover {
