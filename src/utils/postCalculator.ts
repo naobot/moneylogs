@@ -25,8 +25,10 @@ const SYMBOL_PATTERNS: Partial<Record<Currency, { symbol: string; re: RegExp }>>
   MYR: { symbol: "RM", re: /-?(\d+,)*\d+(?=\w?RM)/g },
 };
 
-const codePattern = (currency: Currency) =>
-  new RegExp(`(-?\\d[\\d,]*(?:\\.\\d+)?)(k|万)?\\s?${currency}\\b`, "g");
+// A minus may sit before or after an optional symbol: "-$5 CAD", "$-5 CAD", "-5 CAD".
+const SIGNED_NUMBER = "(-?)[¥￥$₩€£]?(-?)(\\d[\\d,]*(?:\\.\\d+)?)(k|万)?";
+
+const codePattern = (currency: Currency) => new RegExp(`${SIGNED_NUMBER}\\s?${currency}\\b`, "g");
 
 const parseAmount = (raw: string): number =>
   Number(
@@ -55,12 +57,13 @@ export const sumAmountsIn = (
 
   // Code form first, then blank those matches out so "¥1,200 JPY" isn't counted twice.
   let rest = text;
-  for (const match of text.matchAll(codePattern(currency))) {
-    found.push(parseAmount(`${match[1]}${match[2] ?? ""}`));
+  for (const [, signA, signB, digits, suffix] of text.matchAll(codePattern(currency))) {
+    const sign = signA || signB ? -1 : 1;
+    found.push(sign * parseAmount(`${digits}${suffix ?? ""}`));
   }
   rest = rest.replace(codePattern(currency), " ");
   // Drop every other currency's code-form amounts too, so "$5 CAD" isn't read as USD.
-  rest = rest.replace(/-?\d[\d,]*(?:\.\d+)?(?:k|万)?\s?[A-Z]{3}\b/g, " ");
+  rest = rest.replace(new RegExp(`${SIGNED_NUMBER}\\s?[A-Z]{3}\\b`, "g"), " ");
 
   const symbol = SYMBOL_PATTERNS[currency];
   if (symbol && !symbolIsAmbiguous(currency, rowCurrencies)) {

@@ -25,8 +25,11 @@ type AddNewLogPostArgs = {
 };
 
 export type LogData = {
-  /** Spending per currency, in the editor's row order (the first is the primary). */
-  amounts: CurrencyAmounts;
+  /**
+   * Spending per currency. Required for a new post; on edit, leave it out when the
+   * amounts didn't change, so they're written back untouched.
+   */
+  amounts?: CurrencyAmounts;
   /** The primary currency: the editor's first row, written to the legacy fields. */
   currency: Currency;
   content: string;
@@ -80,11 +83,13 @@ export const useLogPostQuery = () => {
 
     const batch = writeBatch(db);
     const postRef = doc(collection(db, "log_posts"));
-    const primary = primaryOf(logData.amounts, logData.currency, logData.currency);
+    const amounts = logData.amounts ?? { [logData.currency]: 0 };
+    const primary = primaryOf(amounts, logData.currency, logData.currency);
     batch.set(postRef, {
       amount: primary.amount,
       currency: primary.currency,
-      amounts: logData.amounts,
+      amounts,
+      amountsPrimary: primary.currency,
       content: logData?.content,
       author: userDocRef,
       authorName: userName,
@@ -114,6 +119,7 @@ export const useLogPostQuery = () => {
       amount: number;
       currency: string;
       amounts: CurrencyAmounts;
+      amountsPrimary: string;
       timezone: string | FieldValue;
       timezonePlace: string | FieldValue;
     }> = {};
@@ -125,6 +131,7 @@ export const useLogPostQuery = () => {
       // The whole map is replaced, so a removed currency row disappears.
       const primary = primaryOf(logData.amounts, logData.currency, logData.currency);
       updateData.amounts = logData.amounts;
+      updateData.amountsPrimary = primary.currency;
       updateData.amount = primary.amount;
       updateData.currency = primary.currency;
     }

@@ -7,11 +7,15 @@ import {
   postAmountIn as postAmountInShared,
   postAmounts as postAmountsShared,
   primaryOf as primaryOfShared,
+  rowsFor as rowsForShared,
+  sameRows as sameRowsShared,
 } from "../../functions/src/postAmounts";
 
 /** Typed wrappers over the shared functions/src/postAmounts (see there for the why). */
 
-type PostLike = Pick<LogPost, "amount" | "currency"> & { amounts?: CurrencyAmounts };
+type PostLike = Pick<LogPost, "amount" | "currency" | "amountsPrimary"> & {
+  amounts?: CurrencyAmounts;
+};
 
 export const postAmounts = (post: PostLike): CurrencyAmounts => postAmountsShared<Currency>(post);
 
@@ -27,11 +31,13 @@ export const primaryOf = (amounts: CurrencyAmounts, fallback: Currency, preferre
 export const addAmounts = (base: CurrencyAmounts, extra: CurrencyAmounts): CurrencyAmounts =>
   addAmountsShared<Currency>(base, extra);
 
-/** Map → editor rows, keeping the map's order (the first row is the primary). */
-export const amountRows = (amounts: CurrencyAmounts): AmountRow<Currency>[] =>
-  (Object.entries(amounts) as [Currency, number][]).map(([currency, amount]) => ({
-    currency,
-    amount,
-  }));
+/** A post's amounts as editor rows, primary first. */
+export const amountRows = (amounts: CurrencyAmounts, primary?: Currency): AmountRow<Currency>[] =>
+  rowsForShared<Currency>(amounts, primary);
+
+export const sameRows = (
+  a: ReadonlyArray<AmountRow<Currency>>,
+  b: ReadonlyArray<AmountRow<Currency>>,
+): boolean => sameRowsShared<Currency>(a, b);
 
 export type { AmountRow };

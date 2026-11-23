@@ -114,6 +114,11 @@ export type LogPost = {
   currency: Currency;
   /** Spending per currency for multi-currency posts; absent on older posts. */
   amounts?: Partial<Record<Currency, number>>;
+  /**
+   * The primary currency of `amounts` (what amount/currency held when last written by a
+   * multi-currency client). Firestore sorts map keys, so the map can't say on its own.
+   */
+  amountsPrimary?: Currency;
   commentCount?: number;
   author: DocumentReference;
   authorName?: string;

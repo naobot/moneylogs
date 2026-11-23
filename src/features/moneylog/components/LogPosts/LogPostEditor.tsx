@@ -31,7 +31,7 @@ import PlacePicker from "@/components/PlacePicker";
 import RowButton from "@/components/RowButton";
 
 import { CURRENCIES, LAST_CURRENCY_KEY, postStartCurrency } from "@/utils/currency";
-import { AmountRow, amountRows, normaliseAmounts } from "@/utils/postAmounts";
+import { AmountRow, amountRows, normaliseAmounts, sameRows } from "@/utils/postAmounts";
 import { sumAmountsIn } from "@/utils/postCalculator";
 import { markdownColorMode, useTheme } from "@/utils/theme";
 import { storage } from "@/platform";
@@ -50,6 +50,7 @@ const LogPostEditor = forwardRef(
       setCurrentlyEditingPostId,
       content = "",
       amounts = { JPY: 0 },
+      primaryCurrency: savedPrimary,
       timezone = null,
       timezonePlace = null,
       date = Date.now(),
@@ -63,6 +64,8 @@ const LogPostEditor = forwardRef(
       content?: string | null;
       /** Spending per currency, in row order (the first is the primary). */
       amounts?: CurrencyAmounts;
+      /** The saved post's primary currency, which becomes the first row. */
+      primaryCurrency?: Currency;
       date?: number;
       isPinned?: boolean;
       timezone?: string | null;
@@ -80,8 +83,10 @@ const LogPostEditor = forwardRef(
       }
       return content;
     });
+    // What the post was opened with, to tell whether the amounts were touched.
+    const [initialRows] = useState(() => amountRows(amounts, savedPrimary));
     const [rows, setRows] = useState<AmountRow<Currency>[]>(() => {
-      const initial = amountRows(amounts);
+      const initial = initialRows;
       return initial.length > 0 ? initial : [{ currency: "JPY", amount: 0 }];
     });
     const [newEntryDate, newEntryDateSet] = useState<number>(date);
@@ -196,7 +201,9 @@ const LogPostEditor = forwardRef(
         await editLogPost.mutate({
           postId,
           logData: {
-            amounts: normaliseAmounts(rows),
+            // Untouched rows aren't written back, so a text-only edit can't change
+            // the stored amounts (e.g. by rounding or reordering them).
+            amounts: sameRows(rows, initialRows) ? undefined : normaliseAmounts(rows),
             currency: primaryCurrency,
             content: newEntryContent,
             postDate: newEntryDate,

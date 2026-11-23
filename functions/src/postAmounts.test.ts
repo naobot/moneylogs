@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
-import { addAmounts, normaliseAmounts, postAmountIn, postAmounts, primaryOf } from "./postAmounts";
+import {
+  addAmounts,
+  normaliseAmounts,
+  postAmountIn,
+  postAmounts,
+  primaryOf,
+  rowsFor,
+  sameRows,
+} from "./postAmounts";
 
 describe("postAmounts", () => {
   it("reads a legacy single-currency post", () => {
@@ -17,16 +25,39 @@ describe("postAmounts", () => {
     ).toEqual({ JPY: 1200, CAD: 12 });
   });
 
-  it("lets an old client's amount edit win over a stale map", () => {
+  it("lets an old client's amount edit replace the primary entry", () => {
     expect(
-      postAmounts<string>({ amount: 1500, currency: "JPY", amounts: { JPY: 1200, CAD: 12 } }),
-    ).toEqual({ JPY: 1500, CAD: 12 });
+      postAmounts<string>({
+        amount: 1500,
+        currency: "JPY",
+        amountsPrimary: "JPY",
+        amounts: { CAD: 12, JPY: 1200 },
+      }),
+    ).toEqual({ CAD: 12, JPY: 1500 });
   });
 
-  it("uses the legacy fields alone when an old client changed the currency", () => {
+  it("drops the old primary when an old client switches to a new currency", () => {
     expect(
-      postAmounts<string>({ amount: 20, currency: "USD", amounts: { JPY: 1200, CAD: 12 } }),
-    ).toEqual({ USD: 20 });
+      postAmounts<string>({
+        amount: 20,
+        currency: "USD",
+        amountsPrimary: "JPY",
+        amounts: { CAD: 12, JPY: 1200 },
+      }),
+    ).toEqual({ CAD: 12, USD: 20 });
+  });
+
+  it("adds to a secondary when an old client switches to its currency", () => {
+    const post = { currency: "CAD", amountsPrimary: "JPY", amounts: { CAD: 12, JPY: 1200 } };
+    expect(postAmounts<string>({ ...post, amount: 20 })).toEqual({ CAD: 32 });
+    // The same amount as the secondary is still a switch, not a match.
+    expect(postAmounts<string>({ ...post, amount: 12 })).toEqual({ CAD: 24 });
+  });
+
+  it("treats the legacy currency as primary when none is recorded", () => {
+    expect(
+      postAmounts<string>({ amount: 5, currency: "CAD", amounts: { CAD: 12, JPY: 1200 } }),
+    ).toEqual({ CAD: 5, JPY: 1200 });
   });
 
   it("returns the map when there are no legacy fields", () => {
@@ -58,7 +89,11 @@ describe("normaliseAmounts", () => {
     ).toEqual({ JPY: 0 });
   });
 
-  it("merges duplicate currencies and rounds", () => {
+  it("keeps a single row's exact value", () => {
+    expect(normaliseAmounts([{ currency: "CAD", amount: 12.345 }])).toEqual({ CAD: 12.345 });
+  });
+
+  it("merges duplicate currencies and rounds the sum", () => {
     expect(
       normaliseAmounts([
         { currency: "CAD", amount: 0.1 },
@@ -102,5 +137,39 @@ describe("addAmounts", () => {
     const base = { JPY: 100 };
     expect(addAmounts(base, { JPY: 50, CAD: 1.1 })).toEqual({ JPY: 150, CAD: 1.1 });
     expect(base).toEqual({ JPY: 100 });
+  });
+});
+
+describe("rowsFor", () => {
+  it("puts the primary first whatever the map's key order", () => {
+    expect(rowsFor<string>({ CAD: 12, JPY: 1200 }, "JPY")).toEqual([
+      { currency: "JPY", amount: 1200 },
+      { currency: "CAD", amount: 12 },
+    ]);
+  });
+
+  it("keeps the map's order without a primary in it", () => {
+    expect(rowsFor<string>({ CAD: 12, JPY: 1200 }, "USD").map((r) => r.currency)).toEqual([
+      "CAD",
+      "JPY",
+    ]);
+  });
+});
+
+describe("sameRows", () => {
+  it("compares currencies, amounts and order", () => {
+    const a = [
+      { currency: "JPY", amount: 1200 },
+      { currency: "CAD", amount: 12.345 },
+    ];
+    expect(
+      sameRows(
+        a,
+        a.map((r) => ({ ...r })),
+      ),
+    ).toBe(true);
+    expect(sameRows(a, [a[1], a[0]])).toBe(false);
+    expect(sameRows(a, [a[0], { currency: "CAD", amount: 12.35 }])).toBe(false);
+    expect(sameRows(a, [a[0]])).toBe(false);
   });
 });

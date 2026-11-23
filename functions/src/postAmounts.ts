@@ -2,9 +2,13 @@
  * A social post's spending, per currency.
  *
  * Posts written before multi-currency posts hold one `amount` + `currency`. Newer posts
- * also hold an `amounts` map ({JPY: 3000, CAD: 12}) and still write `amount`/`currency`
- * as the primary (first) row, so older clients keep showing something sensible. Every
- * reader goes through postAmounts() so both shapes count the same.
+ * also hold an `amounts` map ({JPY: 3000, CAD: 12}) and `amountsPrimary`, the map's
+ * primary currency, and still write `amount`/`currency` as that primary entry, so older
+ * clients keep showing something sensible. Every reader goes through postAmounts() so
+ * both shapes count the same.
+ *
+ * `amountsPrimary` is needed because Firestore stores map keys sorted, so the map alone
+ * can't say which entry was the primary.
  *
  * Shared by the Cloud Functions and the web app; keep it dependency-free.
  */
@@ -15,6 +19,7 @@ export type PostAmountFields<C extends string = string> = {
   amount?: number | string | null;
   currency?: C | null;
   amounts?: AmountsMap<C> | null;
+  amountsPrimary?: C | null;
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -22,11 +27,15 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 /**
  * The post's amounts per currency: its `amounts` map, else its legacy single amount.
  *
- * Every write keeps the legacy amount/currency equal to one of the map's entries. If
- * they disagree, a client from before multi-currency posts edited it and left the map
- * stale, so the legacy fields win: they replace their own currency's entry, or, when
- * the currency itself was changed (so it's unknowable which entry it replaced), they
- * stand alone.
+ * Every new write keeps the legacy amount/currency equal to the map's primary entry. An
+ * older client edits only the legacy fields, which describe that primary entry, so they
+ * win over a stale map:
+ * - same currency: the primary entry takes the legacy amount;
+ * - currency switched: the old primary entry is dropped and the legacy amount is added
+ *   to the new currency (on top of any secondary amount already in it, which that older
+ *   client never showed or changed).
+ * Secondary entries always stay. A map without `amountsPrimary` treats the legacy
+ * currency as its primary.
  */
 export const postAmounts = <C extends string>(post: PostAmountFields<C>): AmountsMap<C> => {
   const map: AmountsMap<C> = {};
@@ -40,9 +49,14 @@ export const postAmounts = <C extends string>(post: PostAmountFields<C>): Amount
 
   const legacy = Number(post.amount) || 0;
   if (Object.keys(map).length === 0) return { [post.currency]: legacy } as AmountsMap<C>;
-  const mapped = map[post.currency];
-  if (mapped === undefined) return { [post.currency]: legacy } as AmountsMap<C>;
-  if (Math.abs(mapped - legacy) > 1e-9) map[post.currency] = legacy;
+
+  const primary = post.amountsPrimary ?? post.currency;
+  if (post.currency === primary) {
+    map[primary] = legacy;
+    return map;
+  }
+  delete map[primary];
+  map[post.currency] = round2((map[post.currency] ?? 0) + legacy);
   return map;
 };
 
@@ -55,7 +69,8 @@ export type AmountRow<C extends string = string> = { currency: C; amount: number
 /**
  * Editor rows → an amounts map. Merges rows that share a currency and drops empty or
  * zero rows, but always keeps the first (primary) currency, even at 0: "spent nothing
- * today" is a real post. Rounds to 2dp.
+ * today" is a real post. Only merged sums are rounded (to 2dp, to drop floating-point
+ * noise); a single row keeps exactly what was entered.
  */
 export const normaliseAmounts = <C extends string>(
   rows: ReadonlyArray<AmountRow<C>>,
@@ -65,10 +80,32 @@ export const normaliseAmounts = <C extends string>(
     const n = Number(amount);
     const value = Number.isFinite(n) ? n : 0;
     if (value === 0 && i > 0) return;
-    out[currency] = round2((out[currency] ?? 0) + value);
+    const prev = out[currency];
+    out[currency] = prev === undefined ? value : round2(prev + value);
   });
   return out;
 };
+
+/**
+ * A post's amounts as editor rows, primary first. The rest keep the map's order
+ * (Firestore's sorted key order for a saved post).
+ */
+export const rowsFor = <C extends string>(amounts: AmountsMap<C>, primary?: C): AmountRow<C>[] => {
+  const rows = (Object.entries(amounts) as [C, number][]).map(([currency, amount]) => ({
+    currency,
+    amount,
+  }));
+  const i = primary ? rows.findIndex((r) => r.currency === primary) : -1;
+  return i > 0 ? [rows[i], ...rows.slice(0, i), ...rows.slice(i + 1)] : rows;
+};
+
+/** Whether two row lists are the same currencies and amounts, in the same order. */
+export const sameRows = <C extends string>(
+  a: ReadonlyArray<AmountRow<C>>,
+  b: ReadonlyArray<AmountRow<C>>,
+): boolean =>
+  a.length === b.length &&
+  a.every((r, i) => r.currency === b[i].currency && Number(r.amount) === Number(b[i].amount));
 
 /**
  * The legacy amount/currency for a map: the preferred currency if it's in the map, else

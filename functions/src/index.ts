@@ -30,6 +30,7 @@ type RawLogPost = {
   amount: number;
   /** Multi-currency posts; read through postAmounts(), never amount/currency alone. */
   amounts?: Record<string, number>;
+  amountsPrimary?: string;
   postDate: FirestoreTimestamp;
   timezone?: string;
   authorName?: string;

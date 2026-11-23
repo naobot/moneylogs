@@ -35,6 +35,16 @@ describe("sumAmountsIn", () => {
     expect(sumAmountsIn("$5 CAD", "USD", ["USD"])).toBeUndefined();
   });
 
+  it("subtracts a signed code-form refund, with or without a symbol", () => {
+    expect(sumAmountsIn("lunch $20, refund -$5 CAD", "CAD")).toBe(15);
+    expect(sumAmountsIn("lunch $20, refund $-5 CAD", "CAD")).toBe(15);
+    expect(sumAmountsIn("refund -5 CAD", "CAD")).toBe(-5);
+  });
+
+  it("doesn't leave a symbol-and-code amount for another symbol currency", () => {
+    expect(sumAmountsIn("refund -$5 CAD", "USD", ["USD"])).toBeUndefined();
+  });
+
   it("returns undefined when nothing matches", () => {
     expect(sumAmountsIn("a quiet day", "JPY")).toBeUndefined();
   });
