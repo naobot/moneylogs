@@ -6,6 +6,8 @@ import { FullUserData } from "@/hooks/useGetGroupUsers";
 import PostPreview from "./PostPreview";
 import { postAmountIn, postAmounts } from "@/utils/postAmounts";
 import { formatDate } from "@/utils/dateFormat";
+import { isBeforeLogEnd } from "@/utils/groupBoundaries";
+import { inZone } from "@/utils/timezone";
 
 interface SpendingData {
   totalSpent: Map<Currency, number>;
@@ -65,7 +67,7 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
       const isNotPinnedPost = pinnedPostId ? log.id !== pinnedPostId : true;
 
       return (
-        !postDate.isAfter(groupEndDate, "day") &&
+        isBeforeLogEnd(postDate, group) &&
         !postDate.isBefore(groupStartDate, "day") &&
         isNotPinnedPost
       );
@@ -90,7 +92,7 @@ const SpendingInsights = ({ user, logPosts, group, currency, children }: Spendin
       if (hasCachedAnalytics && postsMetadata?.[log.id]?.postTimezone) {
         // Use the timezone from cached analytics
         const timezone = postsMetadata[log.id].postTimezone;
-        postDate = dayjs(log.postDate.seconds * 1000).tz(timezone);
+        postDate = inZone(log.postDate.seconds * 1000, timezone);
       } else {
         // Fallback to current behavior (browser timezone)
         postDate = dayjs(log.postDate.seconds * 1000);

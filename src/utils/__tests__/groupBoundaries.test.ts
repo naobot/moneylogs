@@ -8,6 +8,7 @@ import {
   byMostRecentlyEnded,
   bySoonestStarting,
   partitionByTime,
+  isBeforeLogEnd,
 } from "@/utils/groupBoundaries";
 import dayjs from "@/utils/configuredDayjs";
 import type { Group } from "@/types/user";
@@ -204,5 +205,31 @@ describe("partitionByTime", () => {
 
   it("returns empty parts for no groups", () => {
     expect(partitionByTime([], now)).toEqual({ ongoing: [], upcoming: [], past: [] });
+  });
+});
+
+describe("isBeforeLogEnd", () => {
+  // Ends 2026-11-20 23:59 wall-clock, created in Tokyo: `end` is 14:59 UTC, while the
+  // log stays open in UTC-12 until 2026-11-21 11:59 UTC.
+  const tokyoLog = {
+    start: ts("2026-11-14T15:00:00.000Z"),
+    end: ts("2026-11-20T14:59:00.000Z"),
+    startWallClock: "2026-11-15T00:00",
+    endWallClock: "2026-11-20T23:59",
+  } as unknown as Group;
+
+  it("counts a UTC-12 member's last-day entry, which falls after the creator's end day", () => {
+    expect(isBeforeLogEnd(dayjs("2026-11-21T10:00:00.000Z"), tokyoLog)).toBe(true);
+  });
+
+  it("cuts off exactly at the absolute end (11:59 UTC on the 21st)", () => {
+    expect(isBeforeLogEnd(dayjs("2026-11-21T11:59:00.000Z"), tokyoLog)).toBe(true);
+    expect(isBeforeLogEnd(dayjs("2026-11-21T12:00:00.000Z"), tokyoLog)).toBe(false);
+  });
+
+  it("still counts anything on the end day for a log without wall-clock times", () => {
+    const end = dayjs("2024-02-15T00:00:00.000Z").endOf("day");
+    expect(isBeforeLogEnd(end, timestampGroup)).toBe(true);
+    expect(isBeforeLogEnd(end.add(1, "day"), timestampGroup)).toBe(false);
   });
 });

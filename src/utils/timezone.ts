@@ -65,3 +65,28 @@ export const postZoneLabel = (tz: string, place?: string | null, at?: number): s
   }
   return `${place || cityFromZone(tz)}${offset}`;
 };
+
+const zoneValidity = new Map<string, boolean>();
+
+/** Whether the browser knows this IANA zone. Stored zones are user-written, so check. */
+export const isValidTimeZone = (tz: unknown): tz is string => {
+  if (typeof tz !== "string" || !tz) return false;
+  let valid = zoneValidity.get(tz);
+  if (valid === undefined) {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: tz });
+      valid = true;
+    } catch {
+      valid = false;
+    }
+    zoneValidity.set(tz, valid);
+  }
+  return valid;
+};
+
+/**
+ * `at` in a stored zone (a post's, a member's), or in the browser's zone when that one is
+ * missing or unknown: dayjs.tz throws on an unknown zone, which would take the page down.
+ */
+export const inZone = (at: number | Date | string, tz: string | null | undefined) =>
+  isValidTimeZone(tz) ? dayjs(at).tz(tz) : dayjs(at);

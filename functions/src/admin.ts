@@ -11,6 +11,7 @@ import {
   confirmsAccount,
   grantBlock,
   isAdminToken,
+  isInSocialLog,
   LogSummaryInput,
   parseAdminDeleteAccountRequest,
   parseAdminDeleteLogRequest,
@@ -157,7 +158,11 @@ export const adminLookupUser = onCall(
         archived: archivedIds.has(id),
       });
     };
-    for (const snap of groupSnaps) if (snap.exists) add("social", snap.id, snap.data()!);
+    for (const snap of groupSnaps) {
+      if (snap.exists && isInSocialLog(snap.data()!, uid, userDocIds)) {
+        add("social", snap.id, snap.data()!);
+      }
+    }
     for (const snap of ledgerSnaps)
       if (!snap.get("deleting")) add("financial", snap.id, snap.data());
 

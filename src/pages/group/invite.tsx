@@ -20,15 +20,12 @@ export const InvitePage = () => {
   const { groupId } = useParams();
   const { group, isSuccess: isSuccessGroup, isError } = useGetGroup(groupId);
   const { user: loggedInUser, isLoading: userLoading } = useCurrentUser();
-  const { addGroupToMember, addMemberToGroup } = useLogGroupQuery();
+  const { joinGroup } = useLogGroupQuery();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showJoinedModal, setShowJoinedModal] = useState(false);
 
-  const isProcessingJoin = useMemo(
-    () => addGroupToMember.isLoading || addMemberToGroup.isLoading,
-    [addGroupToMember, addMemberToGroup],
-  );
+  const isProcessingJoin = joinGroup.isLoading;
 
   const memberIds = useMemo(() => {
     if (!group?.members) return [];
@@ -43,10 +40,7 @@ export const InvitePage = () => {
   const handleJoinGroup = async () => {
     if (!loggedInUser || !groupId) return;
     try {
-      await Promise.all([
-        addGroupToMember.mutate({ currentUserId: loggedInUser.userId, groupId }),
-        addMemberToGroup.mutate({ currentUserId: loggedInUser.userId, groupId }),
-      ]);
+      await joinGroup.mutate({ currentUserId: loggedInUser.userId, groupId });
       track("join_log", { log_kind: "social" });
       void writeSelfNotification({
         userDocId: loggedInUser.id,

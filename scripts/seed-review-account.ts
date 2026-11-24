@@ -198,7 +198,8 @@ async function seed() {
     endWallClock,
     start: Timestamp.fromDate(new Date(startWallClock)),
     end: Timestamp.fromDate(new Date(endWallClock)),
-    createdAt: Timestamp.fromMillis(NOW - 3 * DAY),
+    // The rules only accept the current time (the log's start can still be backdated).
+    createdAt: serverTimestamp(),
   });
   await updateDoc(userRef, { groups: [groupRef.id] });
   for (const post of POSTS) {
@@ -211,8 +212,8 @@ async function seed() {
       authorName: "Robin",
       group: groupRef,
       groupName: "Island weekend",
+      // No createdAt: updatePostMetadata stamps it on create.
       postDate: at,
-      createdAt: at,
       commentSubscribers: [userRef],
     });
   }

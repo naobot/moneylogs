@@ -90,39 +90,41 @@ export const useLogGroupQuery = () => {
     return true;
   };
 
-  const addMemberToGroupFn = async ({
+  // Join through the invite page: the log's members and the user's own `groups` list
+  // change together, so a join refused for lack of room (the rules check capacity too)
+  // leaves neither behind.
+  const joinGroupFn = async ({
     currentUserId,
     groupId,
   }: AddMemberToGroupArgs): Promise<boolean> => {
     const groupDocRef = doc(db, "log_groups", groupId);
+    const { userDocId, userDocRef } = await getUserDocRef(currentUserId);
 
     await runTransaction(db, async (transaction) => {
-      console.log("⬇️ executing read on log_groups collection");
-
       const groupDoc = await transaction.get(groupDocRef);
-      if (!groupDoc.exists()) {
-        throw new Error("Log group does not exist");
+      if (!groupDoc.exists()) throw new Error("Log group does not exist");
+      const userDoc = await transaction.get(userDocRef);
+      if (!userDoc.exists()) throw new Error("User does not exist");
+
+      const existingMembers: { path: string }[] = groupDoc.data().members || [];
+      const isMember = existingMembers.some((ref) => ref.path === `users/${userDocId}`);
+      if (!isMember) {
+        if (existingMembers.length >= (groupDoc.data().max_participants ?? 0)) {
+          throw new Error("This log is full.");
+        }
+        transaction.update(groupDocRef, { members: [userDocRef, ...existingMembers] });
       }
 
-      const { userDocId, userDocRef } = await getUserDocRef(currentUserId);
-      const existingMembers = groupDoc.data()?.members || [];
-
-      // Check if user reference already exists
-      const userRefExists = existingMembers.some(
-        (memberRef: { path: string }) => memberRef.path === `users/${userDocId}`,
-      );
-
-      if (!userRefExists) {
-        const newMembersList = [userDocRef, ...existingMembers];
-        console.log("✍️ executing write on users collection");
-        transaction.update(groupDocRef, { members: newMembersList });
+      const existingGroups: string[] = userDoc.data().groups || [];
+      if (!existingGroups.includes(groupId)) {
+        transaction.update(userDocRef, { groups: [groupId, ...existingGroups] });
       }
     });
 
     return true;
   };
 
-  // Only the creator is offered this (LogTitleSection); log_groups rules are still open.
+  // Only the creator is offered this (LogTitleSection), and the rules allow only them.
   const updateLogGroupTitleFn = async ({
     groupId,
     title,
@@ -135,16 +137,16 @@ export const useLogGroupQuery = () => {
   };
 
   const addNewLogGroupMutation = useMutation(addNewLogGroupFn);
-  const addMemberToGroupMutation = useMutation(addMemberToGroupFn);
+  const joinGroupMutation = useMutation(joinGroupFn);
   const addGroupToMemberMutation = useMutation(addGroupToMemberFn);
 
   return {
     addNewLogGroup: addNewLogGroupMutation,
-    addMemberToGroup: addMemberToGroupMutation,
+    joinGroup: joinGroupMutation,
     addGroupToMember: addGroupToMemberMutation,
     updateLogGroupTitle: useMutation(updateLogGroupTitleFn),
     addNewLogGroupFn,
-    addMemberToGroupFn,
+    joinGroupFn,
     addGroupToMemberFn,
   };
 };

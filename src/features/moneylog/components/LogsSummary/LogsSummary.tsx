@@ -36,6 +36,9 @@ interface LogsSummaryProps {
   // True while log posts are still being fetched (e.g. switching groups on a slow
   // connection), so spending panels show a loading state instead of an empty one.
   isLoading?: boolean;
+  // The log has closed in every timezone (absoluteEnd). Group's clock keeps it current,
+  // so a summary left open across closing time notices.
+  isClosed: boolean;
 }
 
 interface ProcessingState {
@@ -44,7 +47,13 @@ interface ProcessingState {
   isComplete: boolean;
 }
 
-const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsSummaryProps) => {
+const LogsSummary = ({
+  group,
+  groupMembers,
+  logPosts,
+  isLoading = false,
+  isClosed,
+}: LogsSummaryProps) => {
   const { user: loggedInUser } = useCurrentUser();
 
   const [processingState, setProcessingState] = useState<ProcessingState | null>(null);
@@ -100,12 +109,9 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
     forceFresh: true,
   });
 
-  // Check if group is archived and needs analytics processing
-  const isArchivedGroup = useMemo(() => {
-    const now = new Date();
-    const groupEndDate = new Date(group.end.seconds * 1000);
-    return groupEndDate < now;
-  }, [group.end]);
+  // Analytics are worked out once the log has ended in every timezone (the server
+  // refuses earlier); until then the summary is computed here from the live posts.
+  const isArchivedGroup = isClosed;
 
   const hasAnalytics = Boolean(group.analytics?.isCalculated);
   const needsProcessing = isArchivedGroup && !hasAnalytics && !hasStartedProcessing;
@@ -140,7 +146,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
         });
 
         // Start the analytics processing
-        await processAnalytics({ groupId: group.id, groupEnd: group.end });
+        await processAnalytics({ groupId: group.id });
       } catch (error) {
         reportError(error, { feature: "log_analytics", action: "process_group_analytics" });
         setAnalyticsError(error instanceof Error ? error.message : "Unknown error");
@@ -156,7 +162,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
     return () => {
       unsubscribe?.();
     };
-  }, [needsProcessing, loggedInUser, group.id, group.end, processAnalytics]);
+  }, [needsProcessing, loggedInUser, group.id, processAnalytics]);
 
   // Reset processing state when analytics become available
   useEffect(() => {

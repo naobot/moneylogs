@@ -3,6 +3,7 @@ import {
   confirmsAccount,
   grantBlock,
   isAdminToken,
+  isInSocialLog,
   parseAdminDeleteAccountRequest,
   parseAdminDeleteLogRequest,
   parseAdminGiftRequest,
@@ -123,5 +124,17 @@ describe("previewAccountDeletion", () => {
       { kind: "social", id: "trip", title: "Trip", others: 2 },
       { kind: "financial", id: "shared", title: "Shared", others: 1 },
     ]);
+  });
+});
+
+describe("isInSocialLog", () => {
+  it("is true for a member or the creator", () => {
+    expect(isInSocialLog({ members: [ref("other"), ref("meDoc")] }, "me", me)).toBe(true);
+    expect(isInSocialLog({ members: [ref("other")], createdBy: "me" }, "me", me)).toBe(true);
+  });
+
+  it("is false for a log only listed in their groups (a refused join)", () => {
+    expect(isInSocialLog({ members: [ref("a"), ref("b")], createdBy: "a" }, "me", me)).toBe(false);
+    expect(isInSocialLog({}, "me", me)).toBe(false);
   });
 });

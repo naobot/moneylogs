@@ -1,9 +1,9 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { onCall } from "firebase-functions/https";
+import { HttpsError, onCall } from "firebase-functions/https";
 import sharp from "sharp";
 import {
   buildCommentNotification,
@@ -18,6 +18,8 @@ import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
 import { reportError, withSentry, withSentryCall } from "./sentry";
 import { postAmounts } from "./postAmounts";
+import { postsForAnalytics, isValidTimeZone, isWellFormedPost } from "./analyticsPosts";
+import { absoluteEndMs } from "./logTimeline";
 
 initializeApp();
 const db = getFirestore();
@@ -51,11 +53,15 @@ export const updatePostMetadata = onDocumentCreated(
     const timestamp = FieldValue.serverTimestamp();
 
     try {
+      // The client sets authorName; replace it with the author's own display name.
+      const authorName = await verifiedDisplayName(postData.author.id);
+
       // Batch these operations to use the same timestamp
       const batch = db.batch();
 
       batch.update(db.collection("log_posts").doc(postId), {
         createdAt: timestamp,
+        ...(authorName !== null && authorName !== postData.authorName ? { authorName } : {}),
       });
 
       // Update the user's lastUpdated field
@@ -96,9 +102,21 @@ export const updateCommentMetadata = onDocumentCreated(
 
     const timestamp = FieldValue.serverTimestamp();
     const actorId: string = commentData.authorId.id;
+    // The client sets authorName; notifications and the comment itself use the
+    // commenter's own display name instead.
+    const actorName = await verifiedDisplayName(actorId).catch((error) => {
+      reportError(error, { action: "comment_author_name", level: "warning" });
+      return null;
+    });
 
     try {
       const batch = db.batch();
+
+      if (actorName !== null && actorName !== commentData.authorName) {
+        batch.update(db.collection("log_posts").doc(postId).collection("comments").doc(commentId), {
+          authorName: actorName,
+        });
+      }
 
       // Update post's latest comment timestamp
       batch.update(db.collection("log_posts").doc(postId), {
@@ -156,7 +174,7 @@ export const updateCommentMetadata = onDocumentCreated(
         postId,
         commentId,
         actorId,
-        actorName: commentData.authorName ?? "Someone",
+        actorName: actorName ?? "Someone",
         content: commentData.content,
       });
       for (const group of chunk(recipients)) {
@@ -252,18 +270,46 @@ export const processUploadedImage = onObjectFinalized(
 
 export const processGroupAnalytics = onCall(
   withSentryCall("processGroupAnalytics", async (request) => {
-    const { groupId, groupEnd } = request.data;
+    // Older clients also send `groupEnd`; it's ignored. The log's own end date is used, so
+    // a caller can't choose which entries count.
+    const { groupId } = request.data;
 
-    if (!groupId) {
-      throw new Error("Group ID is required");
+    // LogsSummary only calls this for a signed-in viewer; don't run it for anyone else.
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in first.");
     }
+    if (typeof groupId !== "string" || !groupId) {
+      throw new HttpsError("invalid-argument", "Group ID is required");
+    }
+
+    // Analytics are worked out once, after the log has ended for every timezone; nobody
+    // can redo or overwrite them.
+    const groupRef = db.collection("log_groups").doc(groupId);
+    const group = await groupRef.get();
+    if (!group.exists) throw new HttpsError("not-found", "No such log.");
+    const storedEnd = group.get("end") as Timestamp | undefined;
+    if (!storedEnd) throw new HttpsError("failed-precondition", "This log hasn't ended yet.");
+    // Wall-clock logs: `end` is the creator's instant, but later timezones keep posting
+    // until the wall-clock end reaches UTC-12 (absoluteEnd on the client).
+    const endWallClock = group.get("endWallClock");
+    const cutoffMs = absoluteEndMs({
+      id: groupId,
+      title: "",
+      endWallClock: typeof endWallClock === "string" ? endWallClock : undefined,
+      endMs: storedEnd.toMillis(),
+    });
+    if (cutoffMs > Date.now()) {
+      throw new HttpsError("failed-precondition", "This log hasn't ended yet.");
+    }
+    if (group.get("analytics.isCalculated")) return { success: true };
 
     try {
       // Set up progress tracking
       await updateProgress(groupId, "Gathering group data...", 10);
 
-      // Fetch all log posts for this group
-      const logPosts = await fetchGroupLogPosts(groupId);
+      // Fetch all log posts for this group, skipping malformed ones (no author or
+      // postDate) so older data can't stop the summary.
+      const logPosts = (await fetchGroupLogPosts(groupId)).filter(isWellFormedPost);
       await updateProgress(groupId, "Processing spending data...", 40);
 
       const postsMetadata = await backfillPostMetadata(logPosts);
@@ -272,14 +318,27 @@ export const processGroupAnalytics = onCall(
       const analytics = {
         isCalculated: true,
         processedAt: FieldValue.serverTimestamp(),
-        raw: calculateRawAnalytics(logPosts, groupEnd),
+        raw: calculateRawAnalytics(logPosts, cutoffMs),
         posts: postsMetadata,
       };
 
       await updateProgress(groupId, "Saving results...", 80);
 
-      // Update group document
-      await db.collection("log_groups").doc(groupId).update({ analytics });
+      // Write only if the log hasn't changed since it was read: when two viewers open
+      // the log at once, the first write wins and the other call stops here.
+      try {
+        await groupRef.update({ analytics }, { lastUpdateTime: group.updateTime });
+      } catch (writeError) {
+        if (!isFailedPrecondition(writeError)) throw writeError;
+        const latest = await groupRef.get();
+        if (latest.get("analytics.isCalculated")) {
+          // This call's own progress writes may have landed after the winner cleaned up.
+          await clearProgress(groupId);
+          return { success: true };
+        }
+        // The log changed for another reason (a rename, a member joining): try once more.
+        await groupRef.update({ analytics }, { lastUpdateTime: latest.updateTime });
+      }
 
       await updateProgress(groupId, "Complete!", 100);
 
@@ -312,6 +371,27 @@ export const processGroupAnalytics = onCall(
 );
 
 // Helper functions
+
+// A user's display name from their own user doc (rules let only them change it), or
+// null when there's none to go by.
+async function verifiedDisplayName(userDocId: string): Promise<string | null> {
+  const name = (await db.collection("users").doc(userDocId).get()).get("displayName");
+  return typeof name === "string" && name ? name : null;
+}
+
+// The Admin SDK reports a failed write precondition (lastUpdateTime) as gRPC code 9.
+function isFailedPrecondition(error: unknown): boolean {
+  return (error as { code?: unknown })?.code === 9;
+}
+
+async function clearProgress(groupId: string) {
+  try {
+    await db.collection("processing").doc(groupId).delete();
+  } catch (error) {
+    reportError(error, { action: "analytics_cleanup", level: "warning" });
+  }
+}
+
 async function updateProgress(groupId: string, step: string, percentage: number) {
   await db
     .collection("processing")
@@ -334,12 +414,8 @@ async function fetchGroupLogPosts(groupId: string): Promise<RawLogPost[]> {
   })) as RawLogPost[];
 }
 
-function calculateRawAnalytics(logPosts: RawLogPost[], groupEnd: FirestoreTimestamp) {
-  const groupEndDate = new Date(groupEnd.seconds * 1000);
-  const legitimatePosts = logPosts.filter((post) => {
-    const postDate = new Date(post.postDate.seconds * 1000);
-    return postDate <= groupEndDate;
-  });
+function calculateRawAnalytics(logPosts: RawLogPost[], cutoffMs: number) {
+  const legitimatePosts = postsForAnalytics(logPosts, cutoffMs);
 
   // Currency totals across all posts
   const totalSpentByCurrency = new Map<string, number>();
@@ -461,7 +537,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
   logPosts.forEach((post) => {
     const authorId = post.author.id;
     const userData = userDataMap.get(authorId);
-    const timezone = post?.timezone || userData?.timezone;
+    const timezone = [post?.timezone, userData?.timezone].find(isValidTimeZone);
 
     const postMetadata: PostMetadata = {
       authorDisplayName: userData?.displayName || post.authorName || "Unknown User",

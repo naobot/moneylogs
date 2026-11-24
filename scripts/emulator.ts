@@ -45,7 +45,14 @@ export async function functionsEmulatorIsUp() {
 // ---------------------------------------------------------------------------
 // Owner writes (bypass rules) through the Firestore emulator's REST API.
 // ---------------------------------------------------------------------------
+/** A document reference for an owner write, e.g. `docPath("users/abc")`. */
+export class DocPath {
+  constructor(readonly path: string) {}
+}
+export const docPath = (path: string) => new DocPath(path);
+
 export type Value =
+  | DocPath
   | string
   | number
   | boolean
@@ -58,6 +65,8 @@ export type Value =
 const encode = (v: Value): unknown => {
   if (v === null || v === undefined) return { nullValue: null };
   if (v instanceof Date) return { timestampValue: v.toISOString() };
+  if (v instanceof DocPath)
+    return { referenceValue: `projects/${PROJECT_ID}/databases/(default)/documents/${v.path}` };
   if (typeof v === "string") return { stringValue: v };
   if (typeof v === "boolean") return { booleanValue: v };
   if (typeof v === "number")
