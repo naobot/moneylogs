@@ -54,7 +54,12 @@ async function denied(label: string, fn: () => Promise<unknown>) {
     console.log(`  ❌ should deny ${label}: it was allowed`);
   } catch (e) {
     const message = (e as Error).message;
-    if (/PERMISSION_DENIED|permission/i.test(message)) {
+    // The code is the reliable signal: some denials (e.g. a signed-out read) come back
+    // from the emulator with only "false for 'get' @ L…" as the message.
+    if (
+      (e as { code?: string }).code === "permission-denied" ||
+      /PERMISSION_DENIED|permission/i.test(message)
+    ) {
       console.log(`  ✅ denies ${label}`);
     } else {
       failures++;
