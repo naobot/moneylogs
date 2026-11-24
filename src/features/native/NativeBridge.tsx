@@ -7,6 +7,7 @@ import { auth } from "@/config/firebase-config";
 import { isNative, nativePlatform } from "@/platform";
 import { themeTone, useTheme } from "@/utils/theme";
 import { backButtonAction } from "./backButton";
+import { isNavigationHeld } from "@/utils/navigationHold";
 import { deepLinkPath } from "./deepLink";
 import { FirebaseMessaging } from "@capacitor-firebase/messaging";
 import { useCurrentUser } from "@/contexts";
@@ -33,6 +34,8 @@ const NativeBridge = () => {
   useEffect(() => {
     if (nativePlatform() !== "android") return;
     const listener = CapApp.addListener("backButton", ({ canGoBack }) => {
+      // A call this page started is still out (utils/navigationHold): stay put.
+      if (isNavigationHeld()) return;
       const action = backButtonAction(pathnameRef.current, canGoBack);
       if (action === "back") void navigate(-1);
       else if (action === "home") void navigate("/", { replace: true });

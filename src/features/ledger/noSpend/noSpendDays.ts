@@ -14,6 +14,18 @@ export const confirmNoSpendDay = () => confirmNoSpendDayCallable();
 export const isAlreadyLogged = (error: unknown): boolean =>
   (error as { code?: string } | null)?.code === "functions/failed-precondition";
 
+/** The log the server found today's entry in, when it said (older servers don't). */
+export const alreadyLoggedIn = (error: unknown): string | null => {
+  const title = (error as { details?: { ledgerTitle?: unknown } } | null)?.details?.ledgerTitle;
+  return typeof title === "string" && title ? title : null;
+};
+
+/** The toast when the server refuses the day. */
+export const alreadyLoggedMessage = (ledgerTitle: string | null): string =>
+  ledgerTitle
+    ? `You logged something in ${ledgerTitle} today, so it can't be a no-spend day.`
+    : "You've logged something today already.";
+
 // The buddy cheers a confirmed day once, whichever log it's opened in. One key holding the
 // last day cheered; losing it (private mode) only means it might cheer twice.
 const CHEER_KEY = "ML__buddy_nospend";

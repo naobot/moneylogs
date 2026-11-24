@@ -2,24 +2,39 @@ import { useState } from "react";
 
 import RowButton from "@/components/RowButton";
 import { useNoSpendDays } from "@/hooks/useNoSpendDays";
+import { useLoggedOnDayElsewhere } from "@/hooks/useLoggedOnDayElsewhere";
 import { useToastContext } from "@/hooks/useToastContext";
 import { reportError } from "@/utils/reportError";
+import { whileHoldingNavigation } from "@/utils/navigationHold";
 
-import { confirmNoSpendDay, isAlreadyLogged } from "./noSpendDays";
+import {
+  alreadyLoggedIn,
+  alreadyLoggedMessage,
+  confirmNoSpendDay,
+  isAlreadyLogged,
+} from "./noSpendDays";
 
 import "./NoSpendDay.scss";
 import { track } from "@/utils/analytics";
 
-export const ALREADY_LOGGED_MESSAGE = "You've logged something today already.";
-
 /**
  * "nothing spent today": the person telling the buddy today was a no-spend day. A day with
  * nothing logged could just be a forgotten one, so only a confirmed day counts (the buddy's
- * cheer and streak, and a quiet lift to luck on the server). Shown on today's month only,
- * and not once they've logged something today in this log; the server checks every log.
+ * cheer and streak, and a quiet lift to luck on the server). Shown on today's month only.
+ * The day is the person's, not this log's: it's not offered once they've logged something
+ * today here or in any of their other logs, and the server checks again on confirming.
  */
-export const NoSpendDay = ({ today, loggedToday }: { today: string; loggedToday: boolean }) => {
+export const NoSpendDay = ({
+  ledgerId,
+  today,
+  loggedToday,
+}: {
+  ledgerId: string;
+  today: string;
+  loggedToday: boolean;
+}) => {
   const { days, isSuccess } = useNoSpendDays();
+  const other = useLoggedOnDayElsewhere({ ledgerId, day: today, enabled: !loggedToday });
   const { showToast } = useToastContext();
   const [saving, setSaving] = useState(false);
 
@@ -36,17 +51,20 @@ export const NoSpendDay = ({ today, loggedToday }: { today: string; loggedToday:
       </p>
     );
   }
-  if (loggedToday) return null;
+  // Not while the other logs are being checked either, so the button doesn't flash.
+  if (loggedToday || other.isLoading || other.elsewhere !== null) return null;
 
   const confirm = async () => {
     setSaving(true);
     try {
       // The confirmed day arrives through the live query, which swaps the button out.
-      await confirmNoSpendDay();
+      // Stay on this log until the server answers, so the confirmation, the buddy's cheer
+      // or an error doesn't turn up in another log.
+      await whileHoldingNavigation(confirmNoSpendDay);
       track("no_spend_day");
     } catch (error) {
       if (isAlreadyLogged(error)) {
-        showToast(ALREADY_LOGGED_MESSAGE, "error");
+        showToast(alreadyLoggedMessage(alreadyLoggedIn(error)), "error");
       } else {
         reportError(error, { feature: "no_spend_day", action: "confirm" });
         showToast("Couldn't save that. Please try again.", "error");

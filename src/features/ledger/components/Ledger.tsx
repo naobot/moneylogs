@@ -112,6 +112,7 @@ const LedgerEntries = ({
         <SublogCrumb ledger={ledger} />
         {month === monthKeyOf(today) && !isLoading && (
           <NoSpendDay
+            ledgerId={ledger.id}
             today={today}
             loggedToday={entries.some((e) => e.authorUid === user?.userId && e.date === today)}
           />

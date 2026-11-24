@@ -1,0 +1,7 @@
+// Clear: the button that started the call shows its own progress. The cursor says wait.
+.NavigationHold {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-hold);
+  cursor: progress;
+}
