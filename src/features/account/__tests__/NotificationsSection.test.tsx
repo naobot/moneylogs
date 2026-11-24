@@ -19,6 +19,7 @@ vi.mock("@/hooks/useToastContext", () => ({
 }));
 vi.mock("@/hooks/useUserQuery", () => ({ updateUserFields: state.updateUserFields }));
 vi.mock("@/utils/reportError", () => ({ reportError: vi.fn() }));
+vi.mock("@/features/push/devicePush", () => ({ pushAvailable: () => false }));
 
 import { NotificationsSection } from "../NotificationsSection";
 

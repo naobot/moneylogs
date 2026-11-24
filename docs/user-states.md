@@ -51,6 +51,7 @@ values in bold. Those are the ones that get missed.
 | Sublogs       | **none** · parent · sublog · **shared sublog with members outside the parent** · unlinked (past months frozen) · **intro not seen**                | `sublogLinks/{linkId}` (server-only), ledger `parentLink` and category `sublog` (link id only), parent `hasRollups` and `rollups/{YYYY-MM}__{linkId}`, `tutorials.sublogIntro`, `sublog_counted` notifications |
 | Month review  | outside the 1st–3rd · **due** · snoozed · reviewing (card on last month's stats) · done / dismissed · **last month empty** (never asked)           | `users/{id}/monthReviews/{ledgerId}_{YYYY-MM}`, `ML__buddy_review_{ledgerId}` (opened by itself today)                                                                                                         |
 | Device        | **first visit** · returning · stored theme / dismissed tips / stats category sort / friends order (**none**: list waits for the server)            | `ML__*` keys in browser storage (e.g. `ML__stats_category_sort`, `ML__friends_order_{uid}`)                                                                                                                    |
+| Push          | **web (no push)** · native, push off (default) · push on · **blocked in phone settings** · evening reminder on (default) / off                     | `users/{id}/devices/{installId}`, `ML__pushOn`, `users.checkInReminder`, buddy `streak.lastDay` / `remindedDay` (server-only)                                                                                  |
 | Presentation  | phone width · desktop · **night shift** · **native app (Capacitor)** · **mono charts** (default: theme chart colours)                              | `data-theme`, `data-charts` (`ML__display.charts`), `isNative()`                                                                                                                                               |
 
 ## Flows
@@ -101,6 +102,7 @@ As: `lapsed@test.com`.
 - Old months, stats and the buddy still make sense; no tour or nudge reappears.
 - On the 1st–3rd after an empty month the buddy doesn't offer a month review; it only asks when last month had entries.
 - Nothing that counts "since your last visit" overflows or reads oddly after months.
+- With push on, the evening reminder stops once their last check-in is over a week old, and resumes after their next visit.
 
 ### F6. Spectator and signed out
 

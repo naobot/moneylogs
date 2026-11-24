@@ -35,3 +35,8 @@
     flex: 1 1 14em;
   }
 }
+
+// Push and email lead the drawer; no gap above the first.
+.NotificationsSection__group:first-child {
+  margin-top: 0;
+}

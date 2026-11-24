@@ -33,6 +33,14 @@ describe("pushTapPath", () => {
     expect(pushTapPath({ notificationId: "comment_c1" })).toBe("/notifications?open=comment_c1");
   });
 
+  it("opens the in-app path a push carries (the evening reminder)", () => {
+    expect(pushTapPath({ path: "/l/abc" })).toBe("/l/abc");
+    expect(pushTapPath({ path: "/" })).toBe("/");
+    expect(pushTapPath({ path: "//evil.example" })).toBeNull();
+    expect(pushTapPath({ path: "https://evil.example" })).toBeNull();
+    expect(pushTapPath({ path: "/\\evil.example" })).toBeNull();
+  });
+
   it("ignores payloads without one", () => {
     expect(pushTapPath({})).toBeNull();
     expect(pushTapPath(undefined)).toBeNull();

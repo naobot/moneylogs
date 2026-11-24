@@ -39,6 +39,7 @@ export type UserFieldsPatch = UpdateData<{
   "tutorials.ledgerNudge": FieldValue;
   "tutorials.sublogIntro": FieldValue;
   emailPaused: boolean;
+  checkInReminder: boolean;
   showFriends: boolean;
   hideFromFriendLists: boolean;
 }> &

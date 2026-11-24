@@ -74,6 +74,8 @@ export type UserData = {
   emailPrefs?: EmailPrefs;
   /** Switches all email off (the "unsubscribe from all" link sets it too). */
   emailPaused?: boolean;
+  /** The evening push when they haven't checked in all day; unset is on (functions/src/eveningReminder.ts). */
+  checkInReminder?: boolean;
   /** Show my friends list on my profile (opt-in; see functions/src/friendList.ts). */
   showFriends?: boolean;
   /** Leave me off other people's public friends lists (opt-out). */

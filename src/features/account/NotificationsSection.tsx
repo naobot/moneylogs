@@ -4,6 +4,7 @@ import { auth } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
 import { updateUserFields, UserFieldsPatch } from "@/hooks/useUserQuery";
+import { pushAvailable } from "@/features/push/devicePush";
 import { reportError } from "@/utils/reportError";
 import {
   Channel,
@@ -19,7 +20,8 @@ import "./NotificationsSection.scss";
 
 /**
  * Where each kind of notification goes: the inbox plus the daily email digest, the
- * inbox only, or nowhere. Changes save as they're made.
+ * inbox only, or nowhere. Push (PushSection, native only) follows the inbox. Changes
+ * save as they're made.
  */
 export const NotificationsSection = () => {
   const [firebaseUser] = useAuthState(auth);
@@ -42,20 +44,29 @@ export const NotificationsSection = () => {
 
   return (
     <>
-      <label className="NotificationsSection__digest">
-        <input
-          type="checkbox"
-          checked={!paused}
-          onChange={(e) => save({ emailPaused: !e.target.checked }, "toggle_email_digest")}
-        />
-        <span>Email me a daily digest of what I haven't seen</span>
-      </label>
+      <section className="NotificationsSection__group">
+        <h3>email</h3>
+        <label className="NotificationsSection__digest">
+          <input
+            type="checkbox"
+            checked={!paused}
+            onChange={(e) => save({ emailPaused: !e.target.checked }, "toggle_email_digest")}
+          />
+          <span>Email me a daily digest of what I haven't seen</span>
+        </label>
+        <p className="NotificationsSection__hint">
+          {unverified
+            ? "Verify your email address to receive the digest."
+            : paused
+              ? "Email is paused. The inbox still gets everything switched on below."
+              : `At most one email a day, at 7pm your time, to ${email ?? "your email"}. It gathers the types set to "inbox + email" below.`}
+        </p>
+      </section>
+
       <p className="NotificationsSection__hint">
-        {unverified
-          ? "Verify your email address to receive the digest."
-          : paused
-            ? "Email is paused. The inbox still gets everything switched on below."
-            : `Sent in the evening, your time, to ${email ?? "your email"}.`}
+        {pushAvailable()
+          ? 'Choose what you hear about. "inbox" is the bell in the app; with push on, anything that reaches it pops up on this phone too.'
+          : 'Choose what you hear about. "inbox" is the bell in the app.'}
       </p>
 
       {NOTIFICATION_SETTING_GROUPS.map((group) => (
