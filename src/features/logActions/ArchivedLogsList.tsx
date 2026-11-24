@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
@@ -82,7 +83,7 @@ export const ArchivedLogsList = ({ groups, ledgers, onManage }: ArchivedLogsList
                 disabled={pendingId === row.id}
                 onClick={() => void unarchive(row.id)}
               >
-                {pendingId === row.id ? "…" : "unarchive"}
+                {pendingId === row.id ? <LoadingDots /> : "unarchive"}
               </RowButton>
             )}
           </li>

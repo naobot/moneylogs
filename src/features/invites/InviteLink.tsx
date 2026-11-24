@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import RowButton from "@/components/RowButton";
@@ -61,7 +62,10 @@ export const InviteLink = () => {
           </div>
         </>
       ) : (
-        <p aria-busy="true">making your link…</p>
+        <p aria-busy="true">
+          making your link
+          <LoadingDots label="" />
+        </p>
       )}
     </div>
   );

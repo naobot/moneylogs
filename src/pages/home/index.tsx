@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
@@ -18,7 +19,12 @@ export const Home = () => {
 
   // The user too: which logs are archived is on the user doc, so without it archived logs
   // would show as current.
-  if (isLoading || ledgersLoading || userLoading) return <div className="InfoBox">...</div>;
+  if (isLoading || ledgersLoading || userLoading)
+    return (
+      <div className="InfoBox">
+        <LoadingDots />
+      </div>
+    );
   // Not "you aren't part of any logs" when they just failed to load.
   if (isError || ledgersError) {
     return (

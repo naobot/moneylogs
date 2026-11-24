@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Modal from "@/components/Modal";
@@ -45,7 +46,13 @@ export const InviteFriendPage = () => {
       });
   }, [code, navigate, showToast]);
 
-  if (status === "working") return <div className="InfoBox">opening your invite…</div>;
+  if (status === "working")
+    return (
+      <div className="InfoBox">
+        opening your invite
+        <LoadingDots label="" />
+      </div>
+    );
 
   const copy = {
     self: {

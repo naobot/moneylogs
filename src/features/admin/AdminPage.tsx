@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import Button from "@/components/Button";
@@ -50,7 +51,13 @@ export const AdminPage = () => {
     void runLookup(query);
   };
 
-  if (isAdmin === undefined) return <div className="Window Admin">checking access…</div>;
+  if (isAdmin === undefined)
+    return (
+      <div className="Window Admin">
+        checking access
+        <LoadingDots label="" />
+      </div>
+    );
   if (!isAdmin) {
     return (
       <div className="Window Admin">

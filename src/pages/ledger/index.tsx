@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link, useParams } from "react-router-dom";
 
 import { useGetLedger } from "@/hooks/useGetLedger";
@@ -14,7 +15,12 @@ const LedgerRoute = ({ render }: { render: (ledger: LedgerType) => ReactNode }) 
   // Only members can read a ledger, so a loaded ledger means a member is looking at it.
   useStampLogVisit(isSuccess && ledger ? ledgerId : undefined);
 
-  if (isLoading) return <div className="InfoBox">...</div>;
+  if (isLoading)
+    return (
+      <div className="InfoBox">
+        <LoadingDots />
+      </div>
+    );
 
   if (isDenied || isNotFound) {
     return (

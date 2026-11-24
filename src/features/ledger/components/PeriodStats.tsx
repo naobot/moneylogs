@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
@@ -78,7 +79,12 @@ export const PeriodStats = ({ ledger, period, today, onEditBudget }: PeriodStats
   const currency: Currency =
     picked && currencies.includes(picked) ? picked : (currencies[0] ?? ledger.defaultCurrency);
 
-  if (monthsLoading || snapshotsLoading) return <p className="Ledger__empty">...</p>;
+  if (monthsLoading || snapshotsLoading)
+    return (
+      <p className="Ledger__empty">
+        <LoadingDots />
+      </p>
+    );
 
   const agg = aggregatePeriod(months, byMonth);
   const hasEntries = Object.values(agg.totals).some((n) => (n ?? 0) > 0);

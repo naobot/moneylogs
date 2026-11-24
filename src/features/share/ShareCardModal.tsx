@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import dayjs from "@/utils/configuredDayjs";
 import Button from "@/components/Button";
@@ -340,7 +341,7 @@ const PhotoPicker = ({
           aria-label={`add a photo (up to ${MAX_CARD_PHOTOS})`}
           onClick={() => input.current?.click()}
         >
-          {loading ? "…" : "[+] photo"}
+          {loading ? <LoadingDots /> : "[+] photo"}
         </RowButton>
       )}
       <input
@@ -473,7 +474,9 @@ const ShareCardFrame = ({
         {isError ? (
           <p className="error-message">Couldn't load your entries. Please try again.</p>
         ) : isLoading ? (
-          <p>…</p>
+          <p>
+            <LoadingDots />
+          </p>
         ) : !spec ? (
           <p>{empty}</p>
         ) : (
@@ -497,7 +500,9 @@ const ShareCardFrame = ({
                 ) : shown ? (
                   <img src={image.url} alt={`Share card: ${spec.lines.join(" ")}`} />
                 ) : (
-                  <p>…</p>
+                  <p>
+                    <LoadingDots />
+                  </p>
                 )}
               </div>
               {reroll && <RowButton onClick={reroll}>re-roll knick-knack</RowButton>}

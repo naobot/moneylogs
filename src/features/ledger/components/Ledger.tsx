@@ -1,4 +1,5 @@
 import { useCurrentUser } from "@/contexts";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 import { useGetLedgerEntries } from "@/hooks/useGetLedgerEntries";
 import { useLedgerRollups } from "@/hooks/useLedgerRollups";
@@ -117,7 +118,11 @@ const LedgerEntries = ({
         )}
       </div>
 
-      {isLoading && <p className="Ledger__empty">...</p>}
+      {isLoading && (
+        <p className="Ledger__empty">
+          <LoadingDots />
+        </p>
+      )}
       {isError && <p className="error-message">Couldn't load entries for {formatMonth(month)}.</p>}
       {!isLoading && !isError && entries.length === 0 && rollups.length === 0 && (
         <p className="Ledger__empty">No entries in {formatMonth(month)} yet.</p>

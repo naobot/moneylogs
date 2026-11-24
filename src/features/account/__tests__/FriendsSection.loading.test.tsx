@@ -65,7 +65,8 @@ describe("FriendsSection names", () => {
     state.profiles = new Map();
     state.profilesLoading = true;
     render();
-    expect(names()).toEqual(["…", "…"]);
+    expect(container.querySelectorAll(".ProfileLink__name .LoadingDots")).toHaveLength(2);
+    expect(names().join(" ")).not.toContain("deleted user");
   });
 
   it('names a missing profile "deleted user" once they\'ve loaded', () => {

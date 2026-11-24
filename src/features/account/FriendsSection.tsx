@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useToastContext } from "@/hooks/useToastContext";
@@ -28,7 +29,7 @@ const PersonRow = ({
     <li className="FriendsSection__row">
       <ProfileLink userDocId={profile ? id : null}>
         <Avatar avatar={profile?.avatar} name={name} size={30} />
-        <span className="ProfileLink__name keep-case">{name ?? "…"}</span>
+        <span className="ProfileLink__name keep-case">{name ?? <LoadingDots />}</span>
       </ProfileLink>
       {children && <span className="FriendsSection__actions">{children}</span>}
     </li>
