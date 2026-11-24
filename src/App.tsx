@@ -21,6 +21,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import KeyByParam from "@/components/KeyByParam";
 import UpdateBanner from "@/components/UpdateBanner";
 import NativeBridge from "@/features/native/NativeBridge";
+import NavigationHold from "@/components/NavigationHold";
 import UpdateRequired from "@/features/native/UpdateRequired";
 import { useRequiredUpdate } from "@/features/native/useRequiredUpdate";
 import { DefaultCurrencyPrompt } from "@/features/account/DefaultCurrencyPrompt";
@@ -113,6 +114,7 @@ const App = () => {
   return (
     <Router>
       <NativeBridge />
+      <NavigationHold />
       <PageViewTracker />
       {updateAvailable && !updateDismissed && (
         <UpdateBanner onRefresh={refresh} onDismiss={() => setUpdateDismissed(true)} />

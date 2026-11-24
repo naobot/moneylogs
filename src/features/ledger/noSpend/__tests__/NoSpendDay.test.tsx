@@ -7,21 +7,29 @@ const state = vi.hoisted(() => ({
   isSuccess: true,
   confirm: vi.fn(async () => ({ data: { ok: true } })),
   showToast: vi.fn(),
+  elsewhere: null as string | null,
+  elsewhereLoading: false,
 }));
 
 vi.mock("@/hooks/useNoSpendDays", () => ({
   useNoSpendDays: () => ({ days: state.days, isSuccess: state.isSuccess }),
 }));
+vi.mock("@/hooks/useLoggedOnDayElsewhere", () => ({
+  useLoggedOnDayElsewhere: () => ({
+    elsewhere: state.elsewhere,
+    isLoading: state.elsewhereLoading,
+  }),
+}));
 vi.mock("@/hooks/useToastContext", () => ({
   useToastContext: () => ({ showToast: state.showToast }),
 }));
 vi.mock("@/utils/reportError", () => ({ reportError: vi.fn() }));
-vi.mock("../noSpendDays", () => ({
+vi.mock("../noSpendDays", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../noSpendDays")>()),
   confirmNoSpendDay: state.confirm,
-  isAlreadyLogged: (e: { code?: string }) => e?.code === "functions/failed-precondition",
 }));
 
-import { ALREADY_LOGGED_MESSAGE, NoSpendDay } from "../NoSpendDay";
+import { NoSpendDay } from "../NoSpendDay";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -35,6 +43,8 @@ describe("NoSpendDay", () => {
     vi.clearAllMocks();
     state.days = new Set();
     state.isSuccess = true;
+    state.elsewhere = null;
+    state.elsewhereLoading = false;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -46,7 +56,7 @@ describe("NoSpendDay", () => {
   });
 
   const render = (loggedToday = false) =>
-    act(() => root.render(<NoSpendDay today={TODAY} loggedToday={loggedToday} />));
+    act(() => root.render(<NoSpendDay ledgerId="here" today={TODAY} loggedToday={loggedToday} />));
   const button = () => container.querySelector("button");
 
   it("offers to confirm a day with nothing logged", async () => {
@@ -72,11 +82,34 @@ describe("NoSpendDay", () => {
     expect(container.textContent).toBe("");
   });
 
-  it("says so when something was logged today in another log", async () => {
+  it("isn't offered once something's logged today in another log, or while that's checked", () => {
+    state.elsewhereLoading = true;
+    render();
+    expect(button()).toBeNull();
+    state.elsewhereLoading = false;
+    state.elsewhere = "main";
+    render();
+    expect(button()).toBeNull();
+  });
+
+  it("names the log when the server finds an entry there after all", async () => {
+    state.confirm.mockRejectedValueOnce({
+      code: "functions/failed-precondition",
+      details: { ledgerTitle: "main" },
+    });
+    render();
+    await act(async () => button()!.click());
+    expect(state.showToast).toHaveBeenCalledWith(
+      "You logged something in main today, so it can't be a no-spend day.",
+      "error",
+    );
+    expect(button()!.disabled).toBe(false);
+  });
+
+  it("falls back to the plain message from a server that doesn't name the log", async () => {
     state.confirm.mockRejectedValueOnce({ code: "functions/failed-precondition" });
     render();
     await act(async () => button()!.click());
-    expect(state.showToast).toHaveBeenCalledWith(ALREADY_LOGGED_MESSAGE, "error");
-    expect(button()!.disabled).toBe(false);
+    expect(state.showToast).toHaveBeenCalledWith("You've logged something today already.", "error");
   });
 });

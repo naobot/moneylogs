@@ -95,6 +95,7 @@
   --z-tooltip: 300;
   --z-modal: 1000;
   --z-modal-popover: 1050; // a popover or tooltip opened from inside a modal
+  --z-hold: 1075; // NavigationHold: over everything but toasts, while a call is out
   --z-snackbar: 1100;
 
   // ---- device viewport ----

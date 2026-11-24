@@ -24,8 +24,11 @@ import { withSentryCall } from "./sentry";
 
 export const ALREADY_LOGGED = "You've logged something today already.";
 
-/** Whether `uid` wrote any entry dated `day`, in any financial log they're in. */
-const loggedOn = async (db: Firestore, uid: string, day: string): Promise<boolean> => {
+/**
+ * The title of a financial log `uid` is in where they wrote an entry dated `day`, or null
+ * if there's none (a log without a title gives "").
+ */
+const loggedOn = async (db: Firestore, uid: string, day: string): Promise<string | null> => {
   const ledgers = (
     await db.collection("ledgers").where("memberUids", "array-contains", uid).get()
   ).docs.filter((l) => l.get("deleting") !== true);
@@ -39,7 +42,8 @@ const loggedOn = async (db: Firestore, uid: string, day: string): Promise<boolea
         .get(),
     ),
   );
-  return hits.some((q) => !q.empty);
+  const hit = hits.findIndex((q) => !q.empty);
+  return hit < 0 ? null : String(ledgers[hit].get("title") ?? "");
 };
 
 /** "YYYY-MM-DD", `n` days before `day`. */
@@ -66,7 +70,11 @@ export const confirmNoSpendDayFor = async ({
   if (!userRef) throw new HttpsError("failed-precondition", "No user profile.");
   const user = await userRef.get();
   const today = dayIn(now, user.get("timezone") as string | undefined);
-  if (await loggedOn(db, uid, today)) throw new HttpsError("failed-precondition", ALREADY_LOGGED);
+  const loggedIn = await loggedOn(db, uid, today);
+  if (loggedIn !== null) {
+    // Which log, so a person confirming from a different log can see why.
+    throw new HttpsError("failed-precondition", ALREADY_LOGGED, { ledgerTitle: loggedIn });
+  }
 
   const days = userRef.collection("noSpendDays");
   const dayRef = days.doc(today);
