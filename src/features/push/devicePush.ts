@@ -85,9 +85,15 @@ export const refreshPushToken = async (userDocId: string, token?: string): Promi
   await saveToken(userDocId, current);
 };
 
-/** Where a tapped push opens: the inbox, which resolves the notification's own link. */
+/**
+ * Where a tapped push opens: the inbox, which resolves the notification's own link, or
+ * for a push that isn't in the inbox (the evening reminder) the app path it carries.
+ */
 export const pushTapPath = (data: unknown): string | null => {
-  const id =
-    data && typeof data === "object" ? (data as Record<string, unknown>).notificationId : null;
-  return typeof id === "string" && id ? `/notifications?open=${encodeURIComponent(id)}` : null;
+  const fields = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+  const id = fields.notificationId;
+  if (typeof id === "string" && id) return `/notifications?open=${encodeURIComponent(id)}`;
+  const path = fields.path;
+  // An in-app path only: "/l/abc", never "//host" or a full URL.
+  return typeof path === "string" && /^\/(?!\/)[^\s\\]*$/.test(path) ? path : null;
 };
