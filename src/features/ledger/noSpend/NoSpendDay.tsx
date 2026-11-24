@@ -1,11 +1,15 @@
 import { useState } from "react";
 
 import RowButton from "@/components/RowButton";
+import { useCurrentUser } from "@/contexts";
+import { CHECK_IN_FROM_HOUR } from "@/features/ledger/buddy/buddyCheckIn";
+import { useNow } from "@/hooks/useNow";
 import { useNoSpendDays } from "@/hooks/useNoSpendDays";
 import { useLoggedOnDayElsewhere } from "@/hooks/useLoggedOnDayElsewhere";
 import { useToastContext } from "@/hooks/useToastContext";
 import { reportError } from "@/utils/reportError";
 import { whileHoldingNavigation } from "@/utils/navigationHold";
+import { hourInTz } from "@/utils/ledger";
 
 import {
   alreadyLoggedIn,
@@ -23,7 +27,11 @@ import { track } from "@/utils/analytics";
  * cheer and streak, and a quiet lift to luck on the server). Shown on today's month only.
  * The day is the person's, not this log's: it's not offered once they've logged something
  * today here or in any of their other logs, and the server checks again on confirming.
+ * Nor before 17:00 in their timezone: a day isn't no-spend until most of it is over. That's
+ * when the buddy starts asking about it too.
  */
+export const NO_SPEND_FROM_HOUR = CHECK_IN_FROM_HOUR;
+
 export const NoSpendDay = ({
   ledgerId,
   today,
@@ -33,8 +41,16 @@ export const NoSpendDay = ({
   today: string;
   loggedToday: boolean;
 }) => {
+  const { user } = useCurrentUser();
+  // Re-renders each minute, so an open log offers the button once 17:00 comes round.
+  const now = useNow();
+  const evening = hourInTz(user?.timezone, now.valueOf()) >= NO_SPEND_FROM_HOUR;
   const { days, isSuccess } = useNoSpendDays();
-  const other = useLoggedOnDayElsewhere({ ledgerId, day: today, enabled: !loggedToday });
+  const other = useLoggedOnDayElsewhere({
+    ledgerId,
+    day: today,
+    enabled: evening && !loggedToday,
+  });
   const { showToast } = useToastContext();
   const [saving, setSaving] = useState(false);
 
@@ -52,7 +68,7 @@ export const NoSpendDay = ({
     );
   }
   // Not while the other logs are being checked either, so the button doesn't flash.
-  if (loggedToday || other.isLoading || other.elsewhere !== null) return null;
+  if (!evening || loggedToday || other.isLoading || other.elsewhere !== null) return null;
 
   const confirm = async () => {
     setSaving(true);
