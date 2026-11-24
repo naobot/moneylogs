@@ -3,6 +3,7 @@ import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { formatShortDate } from "@/utils/dateFormat";
 import { postAmounts } from "@/utils/postAmounts";
+import { isBeforeLogEnd } from "@/utils/groupBoundaries";
 
 export type Granularity = "day" | "week";
 
@@ -56,9 +57,9 @@ const labelOf = (d: dayjs.Dayjs, granularity: Granularity): string =>
  * Bucket a set of posts into a dense, zero-filled time series per currency.
  *
  * Mirrors SpendingInsights' aggregation so the graph agrees with the textual
- * totals: excludes the user's pinned post and posts outside [group.start, group.end]
- * (browser-tz, day-granular), and buckets each post by its cached postTimezone when
- * available (else browser tz).
+ * totals: excludes the user's pinned post, posts before group.start's day (browser tz)
+ * and posts after the log's end (isBeforeLogEnd), and buckets each post by its cached
+ * postTimezone when available (else browser tz).
  */
 export const buildSpendingSeries = (
   logPosts: LogPost[],
@@ -75,9 +76,7 @@ export const buildSpendingSeries = (
   const legitimatePosts = logPosts.filter((log) => {
     const postDate = dayjs(log.postDate.seconds * 1000);
     const isNotPinned = pinnedPostId ? log.id !== pinnedPostId : true;
-    return (
-      isNotPinned && !postDate.isAfter(groupEnd, "day") && !postDate.isBefore(groupStart, "day")
-    );
+    return isNotPinned && isBeforeLogEnd(postDate, group) && !postDate.isBefore(groupStart, "day");
   });
 
   // Aggregate amount + posts per (currency, bucket key).

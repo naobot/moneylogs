@@ -315,7 +315,11 @@ export const processGroupAnalytics = onCall(
       } catch (writeError) {
         if (!isFailedPrecondition(writeError)) throw writeError;
         const latest = await groupRef.get();
-        if (latest.get("analytics.isCalculated")) return { success: true };
+        if (latest.get("analytics.isCalculated")) {
+          // This call's own progress writes may have landed after the winner cleaned up.
+          await clearProgress(groupId);
+          return { success: true };
+        }
         // The log changed for another reason (a rename, a member joining): try once more.
         await groupRef.update({ analytics }, { lastUpdateTime: latest.updateTime });
       }
@@ -355,6 +359,14 @@ export const processGroupAnalytics = onCall(
 // The Admin SDK reports a failed write precondition (lastUpdateTime) as gRPC code 9.
 function isFailedPrecondition(error: unknown): boolean {
   return (error as { code?: unknown })?.code === 9;
+}
+
+async function clearProgress(groupId: string) {
+  try {
+    await db.collection("processing").doc(groupId).delete();
+  } catch (error) {
+    reportError(error, { action: "analytics_cleanup", level: "warning" });
+  }
 }
 
 async function updateProgress(groupId: string, step: string, percentage: number) {
