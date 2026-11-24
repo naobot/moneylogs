@@ -140,9 +140,9 @@ export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFr
         <Button
           size="sm"
           variant="primary"
-          text={sending ? "Sending…" : `Invite ${selected.length}`}
+          text={sending ? "Sending" : `Invite ${selected.length}`}
           onClick={() => void send()}
-          disabled={sending}
+          loading={sending}
         />
       )}
     </div>

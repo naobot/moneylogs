@@ -2,6 +2,7 @@ import React, { ForwardedRef, forwardRef } from "react";
 import cx from "classnames";
 import { Link } from "react-router-dom";
 import Icon, { IconType } from "./Icon";
+import { LoadingDots } from "./LoadingDots";
 
 /**
  * One look per role, so it's never a per-screen choice:
@@ -20,6 +21,7 @@ type ButtonProps = {
   /** sm: inside a section, row or form. md: modal footers and page-level actions. */
   size?: "sm" | "md";
   variant?: ButtonVariant;
+  /** Working on it: disabled, with LoadingDots after the label so it doesn't look stuck. */
   loading?: boolean;
   to?: string;
   /** Router state for a `to` link, e.g. `{ view: "register" }` for /login. */
@@ -89,10 +91,14 @@ const Button = forwardRef(
         disabled={disabled || loading}
         aria-pressed={variant === "toggle" ? isSelected : undefined}
         title={title}
+        aria-busy={loading || undefined}
         {...props}
       >
         {icon && <Icon type={icon} />}
-        <strong>{text}</strong>
+        <strong>
+          {text}
+          {loading && <LoadingDots label="" />}
+        </strong>
       </button>
     );
   },

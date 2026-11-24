@@ -338,10 +338,10 @@ const PhotoPicker = ({
         <RowButton
           className="ShareCardModal__addPhoto"
           disabled={loading}
-          aria-label={`add a photo (up to ${MAX_CARD_PHOTOS})`}
+          aria-label={loading ? "adding a photo" : `add a photo (up to ${MAX_CARD_PHOTOS})`}
           onClick={() => input.current?.click()}
         >
-          {loading ? <LoadingDots /> : "[+] photo"}
+          {loading ? <LoadingDots label="" /> : "[+] photo"}
         </RowButton>
       )}
       <input

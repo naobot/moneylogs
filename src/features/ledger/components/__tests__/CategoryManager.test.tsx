@@ -159,14 +159,14 @@ describe("CategoryManager", () => {
     expect((byLabel("Food is a fixed cost") as HTMLInputElement).checked).toBe(true);
     await settle();
     expect(onSave).toHaveBeenCalledTimes(1);
-    expect(document.body.textContent).toContain("saving…");
+    expect(document.body.textContent).toContain("saving...");
 
     await act(async () => finishFirst());
     expect(saved()).toEqual([
       [{ type: "archive", id: "transport" }],
       [{ type: "setFixed", id: "food", fixed: true }],
     ]);
-    expect(document.body.textContent).not.toContain("saving…");
+    expect(document.body.textContent).not.toContain("saving...");
   });
 
   it("explains and blocks duplicate names", () => {

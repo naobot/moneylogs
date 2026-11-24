@@ -125,7 +125,7 @@ export const LedgerStatsStrip = ({
       <Link
         className="LedgerStats__strip__link"
         to={statsPath}
-        aria-label={`${formatMonth(month)} stats`}
+        aria-label={`${formatMonth(month)} stats${isLoading ? ", loading" : ""}`}
       >
         <span className="LedgerStats__strip__totals">
           {isLoading ? (
@@ -239,7 +239,10 @@ export const LedgerStatsPanel = ({
     );
 
   return (
-    <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>
+    <section
+      className="LedgerStats LedgerStats__panel"
+      aria-label={`${formatMonth(month)} stats${isLoading ? ", loading" : ""}`}
+    >
       <div className="LedgerStats__summary">
         <strong className="LedgerStats__summary__totals">
           {hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}

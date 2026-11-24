@@ -94,7 +94,7 @@ const DeleteLogModal = ({
       <Modal.Actions>
         <Modal.CancelButton text="Back" />
         <Button
-          text={deletion.isLoading ? "Deleting…" : "Delete"}
+          text={deletion.isLoading ? "Deleting" : "Delete"}
           size="sm"
           loading={deletion.isLoading}
           disabled={!canDelete}

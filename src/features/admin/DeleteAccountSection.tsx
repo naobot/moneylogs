@@ -106,7 +106,7 @@ export const DeleteAccountSection = ({
       {error && <p className="error-message">{error}</p>}
       <div className="Admin__actions">
         <Button
-          text={deletion.isLoading ? "Deleting…" : "Delete account"}
+          text={deletion.isLoading ? "Deleting" : "Delete account"}
           size="sm"
           loading={deletion.isLoading}
           disabled={!canDelete}

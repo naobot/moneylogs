@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import {
   applyActionCode,
   checkActionCode,
@@ -50,7 +51,8 @@ const LinkProblem = ({ message }: { message: string }) => (
 
 const Checking = () => (
   <p className="AuthAction__status" role="status">
-    Checking your link…
+    Checking your link
+    <LoadingDots label="" />
   </p>
 );
 

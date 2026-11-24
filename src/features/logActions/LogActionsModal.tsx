@@ -195,7 +195,7 @@ export const LogActionsModal = ({
         <Modal.Actions>
           <Modal.CancelButton text="Back" />
           <Button
-            text={deletion.isLoading ? "Deleting…" : `Delete ${noun}`}
+            text={deletion.isLoading ? "Deleting" : `Delete ${noun}`}
             size="sm"
             loading={deletion.isLoading}
             disabled={!canDelete}

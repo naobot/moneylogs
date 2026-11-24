@@ -84,7 +84,7 @@ export const AdminPage = () => {
           onChange={(e) => setQuery(e.target.value)}
         />
         <Button
-          text={lookup.isLoading ? "Looking…" : "Look up"}
+          text={lookup.isLoading ? "Looking" : "Look up"}
           size="sm"
           loading={lookup.isLoading}
           disabled={!query.trim()}

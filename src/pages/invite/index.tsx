@@ -49,8 +49,10 @@ export const InviteFriendPage = () => {
   if (status === "working")
     return (
       <div className="InfoBox">
-        opening your invite
-        <LoadingDots label="" />
+        <span>
+          opening your invite
+          <LoadingDots label="" />
+        </span>
       </div>
     );
 

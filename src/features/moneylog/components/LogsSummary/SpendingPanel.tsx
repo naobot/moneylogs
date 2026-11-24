@@ -91,7 +91,7 @@ const SpendingPanel = ({
   return (
     <div className="SpendingPanel">
       {isLoading ? (
-        <p className="SpendingPanel__empty SpendingPanel__loading">
+        <p className="SpendingPanel__empty">
           <LoadingDots />
         </p>
       ) : currencies.length === 0 || !activeCurrency ? (

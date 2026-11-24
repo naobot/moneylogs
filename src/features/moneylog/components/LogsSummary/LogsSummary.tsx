@@ -240,10 +240,7 @@ const LogsSummary = ({
         <div className="Window">
           <h3>Processing error</h3>
           <p>Failed to process analytics: {analyticsError}</p>
-          <p>
-            Falling back to real-time analysis
-            <LoadingDots label="" />
-          </p>
+          <p>Showing real-time analysis instead.</p>
         </div>
 
         {/* Fallback to real-time spending panel */}
