@@ -81,6 +81,19 @@ export type LogSummaryInput = {
   };
 };
 
+/**
+ * Whether a social log is the person's: they're in its members, or they created it.
+ * A user doc's `groups` list is theirs to write, so a log found only through it (a join
+ * refused for lack of room, before joins were one transaction) isn't shown as theirs.
+ */
+export const isInSocialLog = (
+  data: LogSummaryInput["data"],
+  uid: string,
+  userDocIds: ReadonlySet<string>,
+): boolean =>
+  data.createdBy === uid ||
+  (data.members ?? []).some((ref) => typeof ref?.id === "string" && userDocIds.has(ref.id));
+
 export type AccountDeletionPreview = {
   /** Logs only this person is in: deleted with everything in them. */
   purge: { kind: LogKind; id: string; title: string }[];
