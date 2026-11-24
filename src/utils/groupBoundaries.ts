@@ -38,14 +38,15 @@ export const absoluteEnd = (group: Group): Dayjs => {
 };
 
 /**
- * Whether a post falls on or before the log's end, for summaries. It counts if it's dated
- * on or before the end day (in the viewer's timezone, as the summary always has) or
- * before the absolute end, so later timezones' last-day entries count, matching the
- * saved analytics (processGroupAnalytics cuts off at the absolute end).
+ * Whether a post falls on or before the log's end, for summaries. A wall-clock log ends
+ * at its absolute end, the same cutoff as the saved analytics (processGroupAnalytics), so
+ * later timezones' last-day entries count. Older logs keep the end *day* in the viewer's
+ * timezone, as the summary always has, since their `end` may sit at the start of that day.
  */
 export const isBeforeLogEnd = (postDate: Dayjs, group: Group): boolean =>
-  !postDate.isAfter(dayjs(group.end.seconds * 1000), "day") ||
-  !postDate.isAfter(absoluteEnd(group));
+  group.endWallClock
+    ? !postDate.isAfter(absoluteEnd(group))
+    : !postDate.isAfter(dayjs(group.end.seconds * 1000), "day");
 
 /**
  * Comparators for listing groups. The underlying Firestore query has no orderBy, so

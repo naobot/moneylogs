@@ -18,7 +18,7 @@ import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_COMMENT_ON_OTHERS, FIRST_SOCIAL_ENTRY, isCommentOnOthers } from "./milestones";
 import { reportError, withSentry, withSentryCall } from "./sentry";
 import { postAmounts } from "./postAmounts";
-import { postsForAnalytics, isWellFormedPost } from "./analyticsPosts";
+import { postsForAnalytics, isValidTimeZone, isWellFormedPost } from "./analyticsPosts";
 import { absoluteEndMs } from "./logTimeline";
 
 initializeApp();
@@ -53,11 +53,15 @@ export const updatePostMetadata = onDocumentCreated(
     const timestamp = FieldValue.serverTimestamp();
 
     try {
+      // The client sets authorName; replace it with the author's own display name.
+      const authorName = await verifiedDisplayName(postData.author.id);
+
       // Batch these operations to use the same timestamp
       const batch = db.batch();
 
       batch.update(db.collection("log_posts").doc(postId), {
         createdAt: timestamp,
+        ...(authorName !== null && authorName !== postData.authorName ? { authorName } : {}),
       });
 
       // Update the user's lastUpdated field
@@ -98,9 +102,21 @@ export const updateCommentMetadata = onDocumentCreated(
 
     const timestamp = FieldValue.serverTimestamp();
     const actorId: string = commentData.authorId.id;
+    // The client sets authorName; notifications and the comment itself use the
+    // commenter's own display name instead.
+    const actorName = await verifiedDisplayName(actorId).catch((error) => {
+      reportError(error, { action: "comment_author_name", level: "warning" });
+      return null;
+    });
 
     try {
       const batch = db.batch();
+
+      if (actorName !== null && actorName !== commentData.authorName) {
+        batch.update(db.collection("log_posts").doc(postId).collection("comments").doc(commentId), {
+          authorName: actorName,
+        });
+      }
 
       // Update post's latest comment timestamp
       batch.update(db.collection("log_posts").doc(postId), {
@@ -158,7 +174,7 @@ export const updateCommentMetadata = onDocumentCreated(
         postId,
         commentId,
         actorId,
-        actorName: commentData.authorName ?? "Someone",
+        actorName: actorName ?? "Someone",
         content: commentData.content,
       });
       for (const group of chunk(recipients)) {
@@ -356,6 +372,13 @@ export const processGroupAnalytics = onCall(
 
 // Helper functions
 
+// A user's display name from their own user doc (rules let only them change it), or
+// null when there's none to go by.
+async function verifiedDisplayName(userDocId: string): Promise<string | null> {
+  const name = (await db.collection("users").doc(userDocId).get()).get("displayName");
+  return typeof name === "string" && name ? name : null;
+}
+
 // The Admin SDK reports a failed write precondition (lastUpdateTime) as gRPC code 9.
 function isFailedPrecondition(error: unknown): boolean {
   return (error as { code?: unknown })?.code === 9;
@@ -514,7 +537,7 @@ async function backfillPostMetadata(logPosts: RawLogPost[]) {
   logPosts.forEach((post) => {
     const authorId = post.author.id;
     const userData = userDataMap.get(authorId);
-    const timezone = post?.timezone || userData?.timezone;
+    const timezone = [post?.timezone, userData?.timezone].find(isValidTimeZone);
 
     const postMetadata: PostMetadata = {
       authorDisplayName: userData?.displayName || post.authorName || "Unknown User",

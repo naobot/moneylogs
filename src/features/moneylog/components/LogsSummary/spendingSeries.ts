@@ -4,6 +4,7 @@ import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { formatShortDate } from "@/utils/dateFormat";
 import { postAmounts } from "@/utils/postAmounts";
 import { isBeforeLogEnd } from "@/utils/groupBoundaries";
+import { inZone } from "@/utils/timezone";
 
 export type Granularity = "day" | "week";
 
@@ -90,9 +91,7 @@ export const buildSpendingSeries = (
       hasCachedAnalytics && postsMetadata?.[log.id]?.postTimezone
         ? postsMetadata[log.id].postTimezone
         : undefined;
-    const postDate = tz
-      ? dayjs(log.postDate.seconds * 1000).tz(tz)
-      : dayjs(log.postDate.seconds * 1000);
+    const postDate = inZone(log.postDate.seconds * 1000, tz);
     const key = keyOf(postDate, granularity);
 
     // A multi-currency post counts towards each of its currencies.

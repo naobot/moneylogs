@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { isWellFormedPost, postsForAnalytics } from "./analyticsPosts";
+import { isValidTimeZone, isWellFormedPost, postsForAnalytics } from "./analyticsPosts";
 import { absoluteEndMs } from "./logTimeline";
 
 // authorId null: no author at all.
@@ -43,5 +43,14 @@ describe("postsForAnalytics", () => {
     expect(postsForAnalytics([lateEntry], absoluteEndMs(group)).map((p) => p.id)).toEqual([
       "late-tz",
     ]);
+  });
+});
+
+describe("isValidTimeZone", () => {
+  it("accepts IANA zones and rejects anything else", () => {
+    expect(isValidTimeZone("America/Toronto")).toBe(true);
+    expect(isValidTimeZone("Mars/Olympus_Mons")).toBe(false);
+    expect(isValidTimeZone("")).toBe(false);
+    expect(isValidTimeZone(undefined)).toBe(false);
   });
 });

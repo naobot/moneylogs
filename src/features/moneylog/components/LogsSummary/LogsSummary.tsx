@@ -28,7 +28,6 @@ import CustomDropdown, { DropdownOption } from "@/components/CustomDropdown";
 import Button from "@/components/Button";
 import Tabs, { TabItem } from "@/components/Tabs";
 import { reportError } from "@/utils/reportError";
-import { absoluteEnd } from "@/utils/groupBoundaries";
 
 interface LogsSummaryProps {
   group: Group;
@@ -37,6 +36,9 @@ interface LogsSummaryProps {
   // True while log posts are still being fetched (e.g. switching groups on a slow
   // connection), so spending panels show a loading state instead of an empty one.
   isLoading?: boolean;
+  // The log has closed in every timezone (absoluteEnd). Group's clock keeps it current,
+  // so a summary left open across closing time notices.
+  isClosed: boolean;
 }
 
 interface ProcessingState {
@@ -45,7 +47,13 @@ interface ProcessingState {
   isComplete: boolean;
 }
 
-const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsSummaryProps) => {
+const LogsSummary = ({
+  group,
+  groupMembers,
+  logPosts,
+  isLoading = false,
+  isClosed,
+}: LogsSummaryProps) => {
   const { user: loggedInUser } = useCurrentUser();
 
   const [processingState, setProcessingState] = useState<ProcessingState | null>(null);
@@ -103,7 +111,7 @@ const LogsSummary = ({ group, groupMembers, logPosts, isLoading = false }: LogsS
 
   // Analytics are worked out once the log has ended in every timezone (the server
   // refuses earlier); until then the summary is computed here from the live posts.
-  const isArchivedGroup = useMemo(() => absoluteEnd(group).isBefore(Date.now()), [group]);
+  const isArchivedGroup = isClosed;
 
   const hasAnalytics = Boolean(group.analytics?.isCalculated);
   const needsProcessing = isArchivedGroup && !hasAnalytics && !hasStartedProcessing;

@@ -31,6 +31,15 @@ service cloud.firestore {
     function groupMembers(groupRef) {
       return get(groupRef).data.members;
     }
+    // Entries can be added, or their amounts and dates changed, until the log has closed
+    // in every timezone and its summary is saved (processGroupAnalytics). A wall-clock
+    // log closes at its wall-clock end in UTC-12, at most 26h after the stored `end` (the
+    // creator's instant, UTC+14 at the latest); older logs close at `end`.
+    function logTakesEntries(groupRef) {
+      let g = get(groupRef).data;
+      return !g.get(['analytics', 'isCalculated'], false)
+        && request.time <= g.end + duration.value(('endWallClock' in g) ? 93600 : 0, 's');
+    }
 
     match /log_groups/{groupId} {
       allow read: if true;
@@ -61,7 +70,7 @@ service cloud.firestore {
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100;
 
-      // Join through the invite page (addMemberToGroupFn): prepend yourself, keep everyone
+      // Join through the invite page (joinGroupFn): prepend yourself, keep everyone
       // else, and only while there's room.
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
@@ -88,14 +97,18 @@ service cloud.firestore {
         && ownsUserRef(request.resource.data.author)
         && isLogRef(request.resource.data.group)
         && request.resource.data.author in groupMembers(request.resource.data.group)
-        && request.resource.data.commentSubscribers == [request.resource.data.author];
+        && request.resource.data.commentSubscribers == [request.resource.data.author]
+        && logTakesEntries(request.resource.data.group);
 
-      // The author edits their own entry (editLogPostFn).
+      // The author edits their own entry (editLogPostFn). Once the log has closed, only
+      // the words can change: amounts and dates are what the saved summary counted.
       allow update: if ownsUserRef(resource.data.author)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
              ['content', 'postDate', 'amount', 'currency', 'amounts', 'amountsPrimary',
               'pulledEntryIds', 'timezone', 'timezonePlace'])
-        && validPost(request.resource.data);
+        && validPost(request.resource.data)
+        && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])
+          || logTakesEntries(resource.data.group));
 
       // The fields the app and processGroupAnalytics rely on, with their types.
       function validPost(d) {

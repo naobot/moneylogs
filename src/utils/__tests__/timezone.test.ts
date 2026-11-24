@@ -2,6 +2,8 @@ import { describe, it, expect } from "vite-plus/test";
 import {
   cityFromZone,
   getAutoPostTimezone,
+  inZone,
+  isValidTimeZone,
   postZoneLabel,
   tzAbbrev,
   utcOffsetLabel,
@@ -75,5 +77,22 @@ describe("cityFromZone / postZoneLabel", () => {
   it("prefers the picked place over the zone's city", () => {
     expect(postZoneLabel("Asia/Tokyo", "Kyoto", JAN)).toBe("Kyoto · GMT+9");
     expect(postZoneLabel("Asia/Tokyo", null, JAN)).toBe("Tokyo · GMT+9");
+  });
+});
+
+describe("isValidTimeZone / inZone", () => {
+  it("accepts known zones and rejects junk", () => {
+    expect(isValidTimeZone("Asia/Tokyo")).toBe(true);
+    expect(isValidTimeZone("Not/AZone")).toBe(false);
+    expect(isValidTimeZone("")).toBe(false);
+    expect(isValidTimeZone(42)).toBe(false);
+  });
+
+  it("converts into a known zone and falls back to the browser's for an unknown one", () => {
+    const at = Date.UTC(2026, 10, 20, 15, 0);
+    expect(inZone(at, "Asia/Tokyo").format("YYYY-MM-DD HH:mm")).toBe("2026-11-21 00:00");
+    expect(() => inZone(at, "Not/AZone")).not.toThrow();
+    expect(inZone(at, "Not/AZone").valueOf()).toBe(at);
+    expect(inZone(at, null).valueOf()).toBe(at);
   });
 });

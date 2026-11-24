@@ -7,6 +7,7 @@ import { isMousePointer, useHoverIntent } from "@/hooks/useHoverIntent";
 import { useNow } from "@/hooks/useNow";
 import { useProfile } from "@/hooks/useProfiles";
 import { useDateFormat } from "@/utils/dateFormat";
+import { inZone } from "@/utils/timezone";
 
 import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
@@ -35,7 +36,7 @@ const PeekCard = ({ userDocId }: { userDocId: string }) => {
   if (!profile) return <p className="ProfilePeek__muted">this account was deleted.</p>;
 
   const state = stateWith(userDocId);
-  const localTime = profile.timezone ? formatTime(now.tz(profile.timezone)) : null;
+  const localTime = profile.timezone ? formatTime(inZone(now.valueOf(), profile.timezone)) : null;
 
   return (
     <>

@@ -431,6 +431,7 @@ export const Group = ({
                     groupMembers={members}
                     logPosts={logPostRes.posts}
                     isLoading={logPostRes.isLoading}
+                    isClosed={isReadOnly}
                   />
                 )}
                 {!isFutureGroup && !displaySummary && (displayAll || displayUser) && (

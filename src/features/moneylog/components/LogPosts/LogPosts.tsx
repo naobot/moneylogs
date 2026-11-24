@@ -26,7 +26,7 @@ import { markdownColorMode, useTheme } from "@/utils/theme";
 import MemberAvatarLink from "@/features/profile/MemberAvatarLink";
 import { useDateFormat } from "@/utils/dateFormat";
 import { reportError } from "@/utils/reportError";
-import { postZoneLabel, tzAbbrev } from "@/utils/timezone";
+import { inZone, postZoneLabel, tzAbbrev } from "@/utils/timezone";
 import { postAmounts } from "@/utils/postAmounts";
 import { formatTotals } from "@/utils/ledgerEntries";
 import { pulledIdsIn } from "@/utils/pullLines";
@@ -93,7 +93,7 @@ type DateBanner = {
 export { CURRENCIES } from "@/utils/currency";
 
 export const useUserTimezone = (date: string | Date | number, userTimezone?: string) => {
-  return dayjs(date).tz(userTimezone || dayjs.tz.guess());
+  return inZone(date, userTimezone);
 };
 
 // Local alias so usages inside callbacks/memos don't trigger rules-of-hooks
@@ -448,7 +448,7 @@ const LogPosts = memo(
       // console.log(user.pinnedPosts?.[groupId]?.pinnedPost)
 
       const displayRows: Array<LogPost | DateBanner> = [];
-      const now = dayjs().tz(user?.timezone || dayjs.tz.guess());
+      const now = inZone(Date.now(), user?.timezone);
       let currentWeekStart: dayjs.Dayjs | null = null;
       let currentDay: number | null = null;
       const runningTotals: { [key: string]: number } = {};

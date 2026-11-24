@@ -19,6 +19,20 @@ export const isWellFormedPost = <T extends AnalyticsPostShape>(
   post.author.id !== "" &&
   typeof post.postDate?.seconds === "number";
 
+/**
+ * Whether Node knows this IANA zone. Post and user zones are user-written; an unknown one
+ * saved into the summary would make every viewer's date conversion throw.
+ */
+export const isValidTimeZone = (tz: unknown): tz is string => {
+  if (typeof tz !== "string" || !tz) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /** Well-formed posts dated no later than the cutoff (the log's absolute end, in ms). */
 export const postsForAnalytics = <T extends AnalyticsPostShape>(posts: T[], cutoffMs: number) =>
   posts.filter(isWellFormedPost).filter((post) => post.postDate.seconds * 1000 <= cutoffMs);

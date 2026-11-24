@@ -222,8 +222,9 @@ describe("isBeforeLogEnd", () => {
     expect(isBeforeLogEnd(dayjs("2026-11-21T10:00:00.000Z"), tokyoLog)).toBe(true);
   });
 
-  it("drops an entry after the absolute end and after the end day", () => {
-    expect(isBeforeLogEnd(dayjs("2026-11-23T12:00:00.000Z"), tokyoLog)).toBe(false);
+  it("cuts off exactly at the absolute end (11:59 UTC on the 21st)", () => {
+    expect(isBeforeLogEnd(dayjs("2026-11-21T11:59:00.000Z"), tokyoLog)).toBe(true);
+    expect(isBeforeLogEnd(dayjs("2026-11-21T12:00:00.000Z"), tokyoLog)).toBe(false);
   });
 
   it("still counts anything on the end day for a log without wall-clock times", () => {

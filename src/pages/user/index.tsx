@@ -12,6 +12,7 @@ import KnickKnackShelf from "@/features/profile/KnickKnackShelf";
 import ProfileFriends from "@/features/profile/ProfileFriends";
 import { sharedGroups } from "@/features/profile/sharedLogs";
 
+import { inZone } from "@/utils/timezone";
 import "@/features/profile/profile.scss";
 
 /** /u/:userDocId — someone's public profile, for signed-in people. */
@@ -49,7 +50,7 @@ export const UserProfilePage = () => {
   }
 
   const shared = isMe ? [] : sharedGroups(allGroups, userDocId);
-  const localTime = profile.timezone ? formatTime(now.tz(profile.timezone)) : null;
+  const localTime = profile.timezone ? formatTime(inZone(now.valueOf(), profile.timezone)) : null;
 
   return (
     <div className="Window ProfilePage">

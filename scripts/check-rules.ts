@@ -27,7 +27,7 @@ import {
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
-import { auth, db, ownerWrite } from "./emulator";
+import { auth, db, docPath, ownerWrite } from "./emulator";
 
 // Outside the app tsconfig: declare the bit of Node this uses.
 declare const process: { exit(code?: number): never };
@@ -88,7 +88,7 @@ const logData = (creator: User, overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/** Join the way the invite page does (addMemberToGroupFn): prepend yourself. */
+/** Join the way the invite page does (joinGroupFn): prepend yourself. */
 const join = (logRef: ReturnType<typeof doc>, user: User) =>
   runTransaction(db, async (tx) => {
     const snap = await tx.get(logRef);
@@ -331,7 +331,50 @@ async function main() {
     setDoc(doc(db, "processing", logRef.id), { step: "x" }),
   );
 
+  console.log("\nclosed logs");
+  const HOUR = 3_600_000;
+  const closingLog = async (endMsAgo: number, wallClock: boolean) => {
+    const ref = doc(collection(db, "log_groups"));
+    await ownerWrite(`log_groups/${ref.id}`, {
+      title: "old trip",
+      max_participants: 3,
+      endWallClock: wallClock ? "2026-11-01T00:00" : undefined,
+      end: new Date(Date.now() - endMsAgo),
+      members: [docPath(`users/${bob.id}`)],
+    });
+    return ref;
+  };
+  const stillOpenLater = await closingLog(20 * HOUR, true);
+  const closedEverywhere = await closingLog(27 * HOUR, true);
+  const olderClosed = await closingLog(HOUR, false);
   await signInAs(bob);
+  await allowed("posting 20h after a wall-clock log's end (later timezones still open)", () =>
+    addDoc(collection(db, "log_posts"), postData(bob, { group: stillOpenLater })),
+  );
+  await denied("posting 27h after a wall-clock log's end", () =>
+    addDoc(collection(db, "log_posts"), postData(bob, { group: closedEverywhere })),
+  );
+  await denied("posting after an older log's end", () =>
+    addDoc(collection(db, "log_posts"), postData(bob, { group: olderClosed })),
+  );
+  await ownerWrite(
+    `log_groups/${logRef.id}`,
+    { analytics: { isCalculated: true } },
+    { merge: true },
+  );
+  await denied("posting once the log's summary is saved", () =>
+    addDoc(collection(db, "log_posts"), postData(bob)),
+  );
+  await denied("changing an amount once the summary is saved", () =>
+    updateDoc(postRef, { amount: 7, amounts: { CAD: 7 } }),
+  );
+  await denied("changing the date once the summary is saved", () =>
+    updateDoc(postRef, { postDate: Timestamp.now() }),
+  );
+  await allowed("fixing the words once the summary is saved", () =>
+    updateDoc(postRef, { content: "typo fixed" }),
+  );
+
   await allowed("the author deleting their post", () => deleteDoc(postRef));
 
   console.log(failures ? `\n❌ ${failures} case(s) failed` : "\n🎉 every case passed");

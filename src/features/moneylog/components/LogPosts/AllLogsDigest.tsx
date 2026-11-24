@@ -14,6 +14,7 @@ import { pulledIdsIn } from "@/utils/pullLines";
 import { LogPostItem } from "./LogPosts";
 import LogPostComments from "./LogPostComments";
 import dayjs from "@/utils/configuredDayjs";
+import { inZone } from "@/utils/timezone";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import { UserData } from "@/hooks/useGetUserInfo";
 import { commentsAreUnseen } from "@/utils/unread";
@@ -70,9 +71,7 @@ const AllLogsDigest = ({
         const posterTz = log.timezone ?? memberMap.get(log.author.id)?.timezone ?? viewerTz;
         return {
           log,
-          dayKey: dayjs(log.postDate.seconds * 1000)
-            .tz(posterTz)
-            .format("YYYY-MM-DD"),
+          dayKey: inZone(log.postDate.seconds * 1000, posterTz).format("YYYY-MM-DD"),
         };
       });
   }, [logs, memberMap, groupId, viewerTz]);
@@ -82,7 +81,7 @@ const AllLogsDigest = ({
     [logsWithDayKeys],
   );
 
-  const today = dayjs().tz(viewerTz).format("YYYY-MM-DD");
+  const today = inZone(Date.now(), viewerTz).format("YYYY-MM-DD");
   const latestPostDay = dayKeys[dayKeys.length - 1];
 
   // Land on the most recent day with posts; browse forward up to today (active
