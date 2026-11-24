@@ -580,4 +580,4 @@ export { awardSocialLogJoin } from "./awardSocialLogJoin";
 export { scheduleEmailDigest, sendEmailDigests } from "./emailDigest";
 export { emailUnsubscribe } from "./emailUnsubscribe";
 export { sendPushOnNotification } from "./sendPush";
-export { sendEveningReminders } from "./eveningReminder";
+export { bookEveningReminder, sendEveningReminders } from "./eveningReminder";

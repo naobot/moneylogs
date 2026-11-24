@@ -5,10 +5,14 @@
  * marker's lastDay) gets one push in their evening, asking whether today was really a
  * no-spend day. Only people who've checked in within the last week: a phone that's gone
  * quiet for longer stops being nudged until they come back.
+ *
+ * Each person with a device carries `users.checkInReminderDueAt`, their next local
+ * REMINDER_HOUR, so the hourly run reads only the people whose evening it is.
  */
 
 import { dayBefore } from "./coins";
 import { dayIn } from "./knickknacks";
+import { wallClockToInstant } from "./logTimeline";
 
 /** The local hour the reminder goes out (20:00), an hour after the email digest. */
 export const REMINDER_HOUR = 20;
@@ -16,6 +20,34 @@ export const REMINDER_HOUR = 20;
 export const REMINDER_LAST_HOUR = 22;
 /** No reminders once the last check-in is more than this many days back. */
 export const REMINDER_LAPSE_DAYS = 7;
+
+const isValidZone = (timezone: string): boolean => {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const nextDay = (day: string): string => {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+};
+
+/**
+ * The next REMINDER_HOUR:00 after `now` in the user's zone, in ms (UTC for a missing or
+ * unknown zone: they're never reminded, only rebooked).
+ */
+export const nextReminderAt = (now: number, timezone?: unknown): number => {
+  const zone = typeof timezone === "string" && timezone && isValidZone(timezone) ? timezone : "UTC";
+  const clock = `T${String(REMINDER_HOUR).padStart(2, "0")}:00`;
+  const at = (day: string) =>
+    wallClockToInstant(`${day}${clock}`, zone) ?? wallClockToInstant(`${day}${clock}`, "UTC")!;
+  const today = dayIn(now, zone);
+  const tonight = at(today);
+  return tonight > now ? tonight : at(nextDay(today));
+};
 
 /** The hour (0–23) in `timezone` at `now`. */
 export const hourIn = (now: number, timezone: string): number => {
@@ -25,15 +57,6 @@ export const hourIn = (now: number, timezone: string): number => {
     hourCycle: "h23",
   }).format(now);
   return Number(hour);
-};
-
-const isValidZone = (timezone: string): boolean => {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: timezone });
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 export type ReminderInput = {

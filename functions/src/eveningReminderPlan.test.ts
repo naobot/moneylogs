@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { hourIn, reminderDay, reminderPath } from "./eveningReminderPlan";
+import { hourIn, nextReminderAt, reminderDay, reminderPath } from "./eveningReminderPlan";
 
 // 2026-11-24 20:30 in Toronto (UTC-5) is 01:30 UTC on the 25th.
 const EVENING = Date.UTC(2026, 10, 25, 1, 30);
@@ -57,5 +57,29 @@ describe("reminderPath", () => {
     expect(reminderPath("abc_123")).toBe("/l/abc_123");
     expect(reminderPath(undefined)).toBe("/");
     expect(reminderPath("../evil")).toBe("/");
+  });
+});
+
+describe("nextReminderAt", () => {
+  const hour = 60 * 60 * 1000;
+  // 2026-11-24 20:00 in Toronto.
+  const TONIGHT = Date.UTC(2026, 10, 25, 1, 0);
+
+  it("books tonight's 20:00 before it, and tomorrow's from then on", () => {
+    expect(nextReminderAt(TONIGHT - 5 * hour, TZ)).toBe(TONIGHT);
+    expect(nextReminderAt(TONIGHT, TZ)).toBe(TONIGHT + 24 * hour);
+    expect(nextReminderAt(EVENING, TZ)).toBe(TONIGHT + 24 * hour);
+  });
+
+  it("lands inside the sending window, so a due run can send", () => {
+    const at = nextReminderAt(TONIGHT - 5 * hour, TZ);
+    expect(reminderDay({ ...base, now: at })).toBe("2026-11-24");
+  });
+
+  it("falls back to UTC without a usable zone", () => {
+    expect(nextReminderAt(Date.UTC(2026, 10, 24, 12), undefined)).toBe(Date.UTC(2026, 10, 24, 20));
+    expect(nextReminderAt(Date.UTC(2026, 10, 24, 12), "Not/AZone")).toBe(
+      Date.UTC(2026, 10, 24, 20),
+    );
   });
 });
