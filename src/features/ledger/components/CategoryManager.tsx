@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 
@@ -26,6 +26,10 @@ type CategoryManagerProps = {
   onSave: (ops: CategoryOp[]) => Promise<unknown>;
   /** Resolves true if any entry uses the category (so it can only be archived). */
   checkInUse: (categoryId: string) => Promise<boolean>;
+  /** How many scheduled payments each category has (for the list's fixed tag). */
+  scheduleCounts?: ReadonlyMap<string, number>;
+  /** A fixed category's scheduled payments section, shown in its detail. */
+  renderSchedules?: (category: LedgerCategory) => ReactNode;
 };
 
 /** Archive and delete are confirmed in the window first, explaining what they do. */
@@ -47,6 +51,8 @@ const CategoryManagerDialog = ({
   onClose,
   onSave,
   checkInUse,
+  scheduleCounts,
+  renderSchedules,
 }: CategoryManagerProps) => {
   const wide = useMediaQuery(WIDE_QUERY);
   const edits = useCategoryEdits(categories, onSave);
@@ -115,6 +121,7 @@ const CategoryManagerDialog = ({
         onArchive={() => archive(confirmed.id)}
         onDelete={() => confirmDelete(confirmed.id)}
         onRetry={() => void askDelete(confirmed.id)}
+        scheduled={scheduleCounts?.get(confirmed.id) ?? 0}
       />
     );
   }
@@ -139,6 +146,7 @@ const CategoryManagerDialog = ({
               archived={archived}
               all={draft}
               budgets={edits.budgetsShown}
+              scheduleCounts={scheduleCounts}
               selectedId={wide ? (selected?.id ?? null) : null}
               onSelect={select}
               onMove={(id, toIndex) => save({ type: "move", id, toIndex })}
@@ -160,6 +168,7 @@ const CategoryManagerDialog = ({
                 onBudgetRemove={(currency) => edits.removeBudget(selected.id, currency)}
                 onArchive={() => setConfirming({ kind: "archive", id: selected.id })}
                 onDelete={() => void askDelete(selected.id)}
+                scheduled={renderSchedules?.(selected)}
               />
             )
           }
@@ -185,8 +194,11 @@ const ConfirmView = ({
   onArchive,
   onDelete,
   onRetry,
+  scheduled,
 }: {
   confirming: Confirming;
+  /** Its scheduled payments, which stop with it. */
+  scheduled: number;
   category: LedgerCategory;
   onBack: () => void;
   onArchive: () => void;
@@ -196,7 +208,8 @@ const ConfirmView = ({
   const name = <strong className="keep-case">{category.name}</strong>;
   const status = confirming.kind === "delete" ? confirming.status : null;
   const archiveHelp =
-    "Archiving hides it when adding entries. Past entries keep it, and you can restore it any time.";
+    "Archiving hides it when adding entries. Past entries keep it, and you can restore it any time." +
+    (scheduled ? " Its scheduled payments pause until it's restored and they're resumed." : "");
 
   return (
     <Modal isOpen onClose={onBack} className="CategoryManager CategoryManager--confirm">
@@ -221,6 +234,7 @@ const ConfirmView = ({
             <p>Delete {name}?</p>
             <p className="CategoryManager__hint">
               No entries use it, so it can be removed for good. This can't be undone.
+              {scheduled > 0 && " Its scheduled payments stop too."}
             </p>
           </>
         )}

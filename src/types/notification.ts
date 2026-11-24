@@ -25,7 +25,8 @@ export type NotificationType =
   | "friend_accepted"
   | "gift_received"
   | "milestone_earned"
-  | "achievement_earned";
+  | "achievement_earned"
+  | "scheduled_logged";
 
 /** Which collection `groupId` points into. Missing on older docs, which are all social. */
 export type LogKind = "social" | "ledger";
@@ -115,6 +116,24 @@ export type BudgetNotification = Base & {
 };
 
 /**
+ * A scheduled payment on a fixed category was logged for the recipient, who set it up
+ * (functions/src/scheduledEntries.ts). They can open the ledger to fix the amount.
+ */
+export type ScheduledLoggedNotification = Base & {
+  type: "scheduled_logged";
+  logKind: "ledger";
+  entryId: string;
+  label: string;
+  amount: number;
+  currency: string;
+  /** "YYYY-MM-DD", the day it was logged on. */
+  date: string;
+  /** "YYYY-MM" */
+  month: string;
+  categoryName?: string;
+};
+
+/**
  * About a person rather than a log, so no group fields. `actorId` is their user doc id
  * (links to their profile).
  */
@@ -170,7 +189,8 @@ export type AppNotification =
   | LogInviteNotification
   | LogTimelineNotification
   | SublogCountedNotification
-  | BudgetNotification;
+  | BudgetNotification
+  | ScheduledLoggedNotification;
 
 /** The notification shape for one type, even where a variant covers several types. */
 export type NotificationOf<T extends NotificationType> = AppNotification extends infer N

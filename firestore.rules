@@ -480,11 +480,12 @@ service cloud.firestore {
       allow delete: if false;
 
       function validEntry(d) {
-        // importSource / importBatchId are set only by the importLedgerEntries function.
+        // importSource / importBatchId are set only by the importLedgerEntries function,
+        // scheduleId only by logScheduledEntries.
         return d.keys().hasOnly(
                ['amount', 'currency', 'categoryId', 'date', 'month', 'note',
                 'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt',
-                'importSource', 'importBatchId'])
+                'importSource', 'importBatchId', 'scheduleId'])
           && d.keys().hasAll(
                ['amount', 'currency', 'categoryId', 'date', 'month',
                 'author', 'authorUid', 'authorName', 'createdAt', 'updatedAt'])
@@ -508,6 +509,7 @@ service cloud.firestore {
           && validEntry(request.resource.data)
           && !('importSource' in request.resource.data)
           && !('importBatchId' in request.resource.data)
+          && !('scheduleId' in request.resource.data)
           && request.resource.data.createdAt == request.time;
 
         // Only the author may edit or delete; authorship and createdAt are immutable.
@@ -517,10 +519,65 @@ service cloud.firestore {
           && request.resource.data.author == resource.data.author
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.get('importSource', null) == resource.data.get('importSource', null)
-          && request.resource.data.get('importBatchId', null) == resource.data.get('importBatchId', null);
+          && request.resource.data.get('importBatchId', null) == resource.data.get('importBatchId', null)
+          && request.resource.data.get('scheduleId', null) == resource.data.get('scheduleId', null);
 
         allow delete: if isLedgerMember(ledgerId)
           && resource.data.authorUid == request.auth.uid;
+      }
+
+      // Scheduled payments on fixed categories (functions/src/schedulePlan.ts). Members see
+      // them all; only the person who set one up changes it, since its entries are logged
+      // as theirs. nextDue / nextDueAt / lastLogged are the functions' booking
+      // (scheduledEntries.ts) and never written here.
+      function validRepeat(r) {
+        return r is map && (
+          (r.keys().hasOnly(['every', 'day']) && r.keys().hasAll(['every', 'day'])
+            && r.every == 'month' && r.day is int && r.day >= 1 && r.day <= 31)
+          || (r.keys().hasOnly(['every', 'month', 'day']) && r.keys().hasAll(['every', 'month', 'day'])
+            && r.every == 'year' && r.month is int && r.month >= 1 && r.month <= 12
+            && r.day is int && r.day >= 1 && r.day <= 31));
+      }
+
+      function validSchedule(d) {
+        return d.keys().hasOnly(
+               ['categoryId', 'label', 'amount', 'currency', 'repeat', 'paused',
+                'ownerUid', 'ownerDocId', 'createdAt', 'updatedAt',
+                'nextDue', 'nextDueAt', 'lastLogged'])
+          && d.keys().hasAll(
+               ['categoryId', 'label', 'amount', 'currency', 'repeat',
+                'ownerUid', 'ownerDocId', 'createdAt', 'updatedAt'])
+          && d.categoryId is string && d.categoryId.size() > 0
+          && d.label is string && d.label.size() > 0 && d.label.size() <= 40
+          && (d.amount is int || d.amount is float) && d.amount > 0 && d.amount <= 1000000000
+          && d.currency in ['JPY', 'USD', 'CAD', 'KRW', 'CNY', 'SGD', 'EUR', 'GBP', 'NTD', 'AUD', 'MYR']
+          && validRepeat(d.repeat)
+          && (!('paused' in d) || d.paused is bool)
+          && d.ownerUid == request.auth.uid
+          && d.updatedAt == request.time;
+      }
+
+      match /schedules/{scheduleId} {
+        allow read: if isLedgerMember(ledgerId);
+
+        allow create: if isLedgerMember(ledgerId)
+          && ledgerData(ledgerId).get('deleting', false) == false
+          && validSchedule(request.resource.data)
+          && !('nextDue' in request.resource.data)
+          && !('nextDueAt' in request.resource.data)
+          && !('lastLogged' in request.resource.data)
+          // The owner's own user doc: its entries are logged with it as author.
+          && get(/databases/$(database)/documents/users/$(request.resource.data.ownerDocId)).data.userId
+               == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+
+        allow update: if isLedgerMember(ledgerId)
+          && resource.data.ownerUid == request.auth.uid
+          && validSchedule(request.resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['label', 'amount', 'currency', 'repeat', 'paused', 'updatedAt']);
+
+        allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
       }
 
       // Derived monthly summaries — written only by Cloud Functions (Admin SDK).

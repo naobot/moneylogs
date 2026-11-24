@@ -32,7 +32,13 @@ export const NOTIFICATION_SETTING_GROUPS: ReadonlyArray<{
   },
   {
     title: "budgets",
-    keys: ["budget_approaching", "budget_exceeded", "budget_projected", "budget_category"],
+    keys: [
+      "budget_approaching",
+      "budget_exceeded",
+      "budget_projected",
+      "budget_category",
+      "scheduled_logged",
+    ],
   },
   {
     title: "friends & finds",

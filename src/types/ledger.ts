@@ -1,5 +1,6 @@
 import { DocumentReference, Timestamp } from "firebase/firestore";
 import { Currency } from "./user";
+import type { ScheduleRepeat } from "../../functions/src/schedulePlan";
 
 /**
  * Financial-mode ("ledger") types.
@@ -83,6 +84,30 @@ export type LedgerEntry = {
   /** Set on entries brought in by importLedgerEntries (MoneyForward / YNAB). */
   importSource?: "moneyforward" | "ynab";
   importBatchId?: string;
+  /** Set on entries a scheduled payment logged (functions/src/scheduledEntries.ts). */
+  scheduleId?: string;
+};
+
+/**
+ * ledgers/{ledgerId}/schedules/{scheduleId}: a scheduled payment on a fixed category,
+ * logged as an entry by its owner on each due day (functions/src/schedulePlan.ts).
+ */
+export type LedgerSchedule = {
+  id: string;
+  categoryId: string;
+  /** Becomes each entry's note. */
+  label: string;
+  amount: number;
+  currency: Currency;
+  repeat: ScheduleRepeat;
+  /** Who set it up: the author of its entries, and the only one who can change it. */
+  ownerUid: string;
+  ownerDocId: string;
+  paused?: boolean;
+  /** "YYYY-MM-DD" in the owner's zone. Server-written; absent while paused or booking. */
+  nextDue?: string;
+  /** "YYYY-MM-DD", the last day it logged. Server-written. */
+  lastLogged?: string;
 };
 
 // ledgers/{ledgerId}/months/{YYYY-MM} — derived, backend-written summary

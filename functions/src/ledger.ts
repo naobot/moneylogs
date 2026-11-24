@@ -2,6 +2,7 @@ import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { getFirestore, DocumentReference, Firestore } from "firebase-admin/firestore";
 import { affectedMonths, aggregateFieldsChanged, AggregatableEntry } from "./ledgerAggregate";
 import { isImportCreate } from "./ledgerImportPlan";
+import { isScheduledEntry } from "./schedulePlan";
 import { alertBudgetsIfCurrent, recomputeMonth } from "./ledgerMonths";
 import { rollUpMonth } from "./sublogs";
 import { takeDailyChance } from "./knickknackFind";
@@ -67,6 +68,9 @@ export const rewardLoggedEntry = async ({
  * Entries created by a bulk import (importLedgerEntries) are skipped: that callable does
  * the same work once for the whole batch (each month recomputed and alerted once, one
  * check-in and knick-knack roll).
+ *
+ * Entries a scheduled payment logs (logScheduledEntries) recompute and alert like any other,
+ * but earn no check-in or roll and never void a no-spend day, even when edited later.
  */
 export const recomputeLedgerMonth = onDocumentWritten(
   "ledgers/{ledgerId}/entries/{entryId}",
@@ -104,6 +108,11 @@ export const recomputeLedgerMonth = onDocumentWritten(
     }
 
     const authorRef = (after as { author?: DocumentReference } | undefined)?.author;
+
+    // A scheduled payment's entry (logScheduledEntries), being logged or edited later:
+    // nobody logged it by hand, so it's no check-in, no roll, and it leaves a confirmed
+    // no-spend day alone, even when it's moved onto that day.
+    if (isScheduledEntry(after as { scheduleId?: unknown } | undefined)) return;
 
     // An entry on a day its author confirmed as no-spend (new, or moved onto that day):
     // the day no longer counts. Imports returned above, so history never undoes a day.

@@ -783,6 +783,84 @@
   }
 }
 
+// A fixed category's scheduled payments (ScheduledPayments.tsx), in its detail.
+.ScheduledPayments {
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  // One payment: what and how much, then when, then its actions (wraps on phones).
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25em 1em;
+    padding: 0.35em 0;
+
+    & + & {
+      border-top: var(--border-hairline) dashed var(--ink);
+    }
+
+    // Paused: still there, but not running. Dotted, like other things set aside.
+    &--paused &__what {
+      text-decoration: line-through dotted;
+    }
+  }
+
+  &__what {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0 0.75em;
+    font-weight: 700;
+  }
+
+  &__when,
+  &__owner {
+    font-size: 0.85em;
+    color: var(--ink-muted);
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: 0.4em;
+    margin-left: auto;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35em;
+    width: 100%;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35em 0.75em;
+  }
+
+  &__label {
+    flex: 1 1 9em;
+    min-width: 0;
+  }
+
+  &__amount,
+  &__on {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+
+  &__amountInput {
+    width: 7em;
+    text-align: right;
+  }
+}
+
 // The Budgets window: the Categories window's list + detail (see .CategoryManager),
 // plus the way into the budget helper.
 .BudgetManager {

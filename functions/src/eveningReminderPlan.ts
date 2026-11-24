@@ -13,6 +13,7 @@
 import { dayBefore } from "./coins";
 import { dayIn } from "./knickknacks";
 import { wallClockToInstant } from "./logTimeline";
+import { isValidZone, nextDay } from "./zones";
 
 /** The local hour the reminder goes out (20:00), an hour after the email digest. */
 export const REMINDER_HOUR = 20;
@@ -20,20 +21,6 @@ export const REMINDER_HOUR = 20;
 export const REMINDER_LAST_HOUR = 22;
 /** No reminders once the last check-in is more than this many days back. */
 export const REMINDER_LAPSE_DAYS = 7;
-
-const isValidZone = (timezone: string): boolean => {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: timezone });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const nextDay = (day: string): string => {
-  const [y, m, d] = day.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
-};
 
 /**
  * The next REMINDER_HOUR:00 after `now` in the user's zone, in ms (UTC for a missing or

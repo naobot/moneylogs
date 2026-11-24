@@ -61,6 +61,9 @@ export type DigestNotification = {
   categoryName?: unknown;
   /** achievement_earned: which one. */
   achievement?: unknown;
+  /** scheduled_logged: what was logged. */
+  label?: unknown;
+  amount?: unknown;
   /** sublog_counted: where it counts, and as what. */
   parentTitle?: unknown;
   lineName?: unknown;
@@ -223,6 +226,12 @@ export const DIGEST_LINES: Record<string, LineSpec> = {
         ? `about ${formatMoney(n.projected, n.currency)} by month end, against ${formatMoney(n.budget, n.currency)}`
         : undefined,
     href: budgetHref(n),
+  }),
+  scheduled_logged: (n) => ({
+    section: "budgets",
+    parts: ["logged ", name(n.label, "a scheduled payment"), " in ", ledgerName(n)],
+    detail: formatMoney(n.amount, n.currency),
+    href: `${logHref(n)}?month=${str(n.month)}`,
   }),
   friend_request: (n) => ({
     section: "friends & finds",

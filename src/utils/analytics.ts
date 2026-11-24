@@ -44,6 +44,8 @@ export type AnalyticsEvents = {
   import_entries: { source: string; created: number };
   no_spend_day: Record<string, never>;
   delete_category: Record<string, never>;
+  /** A scheduled payment on a fixed category: set up, paused or resumed, removed. */
+  schedule_payment: { action: "create" | "pause" | "resume" | "delete"; repeat: "month" | "year" };
   remove_budget: Record<string, never>;
   monthly_total: { action: "set" | "remove" };
   stats_period: { period: "month" | "quarter" | "year" };

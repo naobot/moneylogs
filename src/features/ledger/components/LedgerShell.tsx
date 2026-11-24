@@ -24,6 +24,9 @@ import CopyTextArea from "@/features/layout/components/CopyTextArea";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import CategoryManager from "./CategoryManager";
+import ScheduledPayments from "./ScheduledPayments";
+import { useLedgerSchedules } from "@/hooks/useLedgerSchedules";
+import { schedulesByCategory } from "@/utils/schedules";
 import BudgetManager from "./BudgetManager";
 import MonthlyTotalModal from "./MonthlyTotalModal";
 import ImportModal from "@/features/ledger/import/ImportModal";
@@ -99,6 +102,9 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const [showImport, setShowImport] = useState(false);
   const [showShareToday, setShowShareToday] = useState(false);
   const { saveCategoryOps, isCategoryUsed } = useLedgerCategoryQuery();
+  // Read only while the Categories window is open: it's the one place they're shown.
+  const { schedules } = useLedgerSchedules(showCategories ? ledger.id : undefined);
+  const scheduled = schedulesByCategory(schedules ?? []);
 
   // A log that's part of a family (a sublog, or a parent): someone arriving who hasn't
   // met the idea yet gets the intro once, after the ledger tour if that's running.
@@ -280,6 +286,15 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         onClose={() => setShowCategories(false)}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops, month: currentMonth })}
         checkInUse={(categoryId) => isCategoryUsed.mutate({ ledgerId: ledger.id, categoryId })}
+        scheduleCounts={new Map([...scheduled].map(([id, list]) => [id, list.length]))}
+        renderSchedules={(category) => (
+          <ScheduledPayments
+            ledgerId={ledger.id}
+            category={category}
+            schedules={scheduled.get(category.id) ?? []}
+            defaultCurrency={ledger.defaultCurrency}
+          />
+        )}
       />
       <BudgetManager
         isOpen={showBudgets}

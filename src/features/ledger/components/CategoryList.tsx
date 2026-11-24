@@ -33,6 +33,8 @@ type CategoryListProps = {
   all: ReadonlyArray<LedgerCategory>;
   /** Budgets including fields still being typed, for each row's summary. */
   budgets: ReadonlyMap<string, CurrencyAmounts | undefined>;
+  /** How many scheduled payments each category has, when they're known. */
+  scheduleCounts?: ReadonlyMap<string, number>;
   /** Highlighted row (side-by-side layout only). */
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -49,6 +51,7 @@ export const CategoryList = ({
   archived,
   all,
   budgets,
+  scheduleCounts,
   selectedId,
   onSelect,
   onMove,
@@ -82,10 +85,16 @@ export const CategoryList = ({
 
   const summary = (category: LedgerCategory) => {
     const budget = budgets.get(category.id);
+    const scheduled = scheduleCounts?.get(category.id) ?? 0;
     return (
       <>
         {!category.archived && isFixedCategory(category) && (
-          <small className="CategoryManager__tag">fixed</small>
+          <small
+            className="CategoryManager__tag"
+            aria-label={scheduled ? `fixed, ${scheduled} scheduled` : undefined}
+          >
+            {scheduled ? `fixed · ${scheduled}↻` : "fixed"}
+          </small>
         )}
         {!category.archived && budget && Object.keys(budget).length > 0 && (
           <small className="CategoryManager__tag keep-case">{formatTotals(budget)}/mo</small>

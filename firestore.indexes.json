@@ -113,6 +113,14 @@
   ],
   "fieldOverrides": [
     {
+      "collectionGroup": "schedules",
+      "fieldPath": "nextDueAt",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
       "collectionGroup": "nudges",
       "fieldPath": "expireAt",
       "ttl": true,

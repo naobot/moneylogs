@@ -1,6 +1,7 @@
 // scripts/check-rules.ts
 //
-// Checks the social-log Firestore rules (log_groups, log_posts, comments, processing)
+// Checks the social-log Firestore rules (log_groups, log_posts, comments, processing),
+// plus ledger schedules and scheduled entries,
 // against the local emulator: each case is a write the app makes, which must be allowed,
 // or a forged one, which must be denied. Run it after changing firestore.rules:
 //
@@ -53,7 +54,12 @@ async function denied(label: string, fn: () => Promise<unknown>) {
     console.log(`  ❌ should deny ${label}: it was allowed`);
   } catch (e) {
     const message = (e as Error).message;
-    if (/PERMISSION_DENIED|permission/i.test(message)) {
+    // The code is the reliable signal: some denials (e.g. a signed-out read) come back
+    // from the emulator with only "false for 'get' @ L…" as the message.
+    if (
+      (e as { code?: string }).code === "permission-denied" ||
+      /PERMISSION_DENIED|permission/i.test(message)
+    ) {
       console.log(`  ✅ denies ${label}`);
     } else {
       failures++;
@@ -376,6 +382,123 @@ async function main() {
   );
 
   await allowed("the author deleting their post", () => deleteDoc(postRef));
+
+  console.log("\nledger schedules + scheduled entries");
+  await signInAs(alice);
+  const ledgerRef = doc(collection(db, "ledgers"));
+  await allowed("a new ledger", () =>
+    setDoc(ledgerRef, {
+      title: "home",
+      max_participants: 3,
+      members: [alice.ref],
+      memberUids: [alice.uid],
+      categories: [{ id: "housing", name: "Housing", order: 0 }],
+      defaultCurrency: "CAD",
+      createdAt: serverTimestamp(),
+      createdBy: alice.uid,
+    }),
+  );
+  await signInAs(bob);
+  await allowed("bob joining the ledger", () =>
+    updateDoc(ledgerRef, { members: arrayUnion(bob.ref), memberUids: arrayUnion(bob.uid) }),
+  );
+  const scheduleData = (owner: User, overrides: Record<string, unknown> = {}) => ({
+    categoryId: "housing",
+    label: "rent",
+    amount: 1200,
+    currency: "CAD",
+    repeat: { every: "month", day: 1 },
+    ownerUid: owner.uid,
+    ownerDocId: owner.id,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides,
+  });
+  const schedules = collection(db, "ledgers", ledgerRef.id, "schedules");
+  await signInAs(alice);
+  const scheduleRef = doc(schedules);
+  await allowed("a member scheduling a payment of their own", () =>
+    setDoc(scheduleRef, scheduleData(alice)),
+  );
+  await allowed("a yearly schedule", () =>
+    addDoc(schedules, scheduleData(alice, { repeat: { every: "year", month: 3, day: 12 } })),
+  );
+  await denied("a schedule owned by someone else", () =>
+    addDoc(schedules, scheduleData(alice, { ownerUid: bob.uid, ownerDocId: bob.id })),
+  );
+  await denied("a schedule naming someone else's user doc", () =>
+    addDoc(schedules, scheduleData(alice, { ownerDocId: bob.id })),
+  );
+  await denied("a schedule that sets its own booking", () =>
+    addDoc(schedules, scheduleData(alice, { nextDue: "2026-12-01", nextDueAt: Timestamp.now() })),
+  );
+  await denied("a schedule with a bad repeat", () =>
+    addDoc(schedules, scheduleData(alice, { repeat: { every: "week", day: 1 } })),
+  );
+  await denied("a schedule with no amount", () =>
+    addDoc(schedules, scheduleData(alice, { amount: 0 })),
+  );
+  await allowed("the owner changing the amount and pausing", () =>
+    updateDoc(scheduleRef, { amount: 1250, paused: true, updatedAt: serverTimestamp() }),
+  );
+  await denied("the owner moving the booking", () =>
+    updateDoc(scheduleRef, { nextDue: "2026-12-02", updatedAt: serverTimestamp() }),
+  );
+  await denied("the owner moving it to another category", () =>
+    updateDoc(scheduleRef, { categoryId: "food", updatedAt: serverTimestamp() }),
+  );
+  await signInAs(bob);
+  await allowed("another member reading it", () => getDoc(scheduleRef));
+  await denied("another member editing it", () =>
+    updateDoc(scheduleRef, { amount: 1, updatedAt: serverTimestamp() }),
+  );
+  await denied("another member deleting it", () => deleteDoc(scheduleRef));
+  await signOut(auth);
+  await denied("a stranger reading it", () => getDoc(scheduleRef));
+
+  await signInAs(alice);
+  const entryData = (overrides: Record<string, unknown> = {}) => ({
+    amount: 1200,
+    currency: "CAD",
+    categoryId: "housing",
+    date: "2026-11-01",
+    month: "2026-11",
+    note: "rent",
+    author: alice.ref,
+    authorUid: alice.uid,
+    authorName: "alice",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides,
+  });
+  const entries = collection(db, "ledgers", ledgerRef.id, "entries");
+  await denied("a client logging an entry as scheduled", () =>
+    addDoc(entries, entryData({ scheduleId: scheduleRef.id })),
+  );
+  const scheduledEntry = doc(entries, `${scheduleRef.id}_2026-11-01`);
+  // What logScheduledEntries writes (Admin SDK, past the rules).
+  await ownerWrite(`ledgers/${ledgerRef.id}/entries/${scheduledEntry.id}`, {
+    amount: 1200,
+    currency: "CAD",
+    categoryId: "housing",
+    date: "2026-11-01",
+    month: "2026-11",
+    note: "rent",
+    author: docPath(`users/${alice.id}`),
+    authorUid: alice.uid,
+    authorName: "alice",
+    scheduleId: scheduleRef.id,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  await allowed("the owner fixing a scheduled entry's amount", () =>
+    updateDoc(scheduledEntry, { amount: 1300, updatedAt: serverTimestamp() }),
+  );
+  await denied("unmarking a scheduled entry", () =>
+    updateDoc(scheduledEntry, { scheduleId: deleteField(), updatedAt: serverTimestamp() }),
+  );
+  await allowed("the owner deleting a scheduled entry", () => deleteDoc(scheduledEntry));
+  await allowed("the owner deleting their schedule", () => deleteDoc(scheduleRef));
 
   console.log(failures ? `\n❌ ${failures} case(s) failed` : "\n🎉 every case passed");
   process.exit(failures ? 1 : 0);

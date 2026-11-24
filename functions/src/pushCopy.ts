@@ -82,6 +82,11 @@ export const pushCopy = (data: Data): PushCopy | null => {
       const name = engagementTitle(data.achievement);
       return { title, body: name ? `Achievement unlocked: ${name}` : "Achievement unlocked!" };
     }
+    case "scheduled_logged":
+      return {
+        title,
+        body: `Logged ${str(data.label)}: ${money(num(data.amount), str(data.currency))}. If it changed, edit the entry.`,
+      };
     default:
       return null;
   }
