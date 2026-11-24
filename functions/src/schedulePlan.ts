@@ -132,14 +132,14 @@ export const dueDays = (
 export const scheduleEntryId = (scheduleId: string, day: string): string => `${scheduleId}_${day}`;
 
 /**
- * Should recomputeLedgerMonth skip the rewards for this write? Only the creation of a
- * scheduled entry: nobody logged it by hand, so it's no check-in, no roll, and it doesn't
- * undo a confirmed no-spend day. Its month still recomputes and alerts as usual.
+ * Should recomputeLedgerMonth skip the rewards and the no-spend check for this write? Any
+ * write to an entry a scheduled payment logged, whether it's being logged or later edited
+ * (even moved to another day): nobody spent by hand, so it's no check-in, no roll, and it
+ * never undoes a confirmed no-spend day. scheduleId can't be removed (rules), so an entry
+ * stays scheduled for good. Its month still recomputes and alerts as usual.
  */
-export const isScheduledCreate = (
-  before: unknown,
-  after: { scheduleId?: unknown } | undefined,
-): boolean => !before && typeof after?.scheduleId === "string";
+export const isScheduledEntry = (after: { scheduleId?: unknown } | undefined): boolean =>
+  typeof after?.scheduleId === "string";
 
 /** Why a schedule can't be saved, or undefined when it can. */
 export const scheduleInputError = (input: Partial<ScheduleInput>): string | undefined => {

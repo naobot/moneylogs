@@ -4,7 +4,7 @@ import {
   dueDays,
   dueInstant,
   firstDue,
-  isScheduledCreate,
+  isScheduledEntry,
   nextOccurrence,
   occurrenceOn,
   parseSchedule,
@@ -105,16 +105,15 @@ describe("dueDays", () => {
   });
 });
 
-describe("scheduleEntryId / isScheduledCreate", () => {
+describe("scheduleEntryId / isScheduledEntry", () => {
   it("is fixed per schedule and day", () => {
     expect(scheduleEntryId("abc", "2026-11-05")).toBe("abc_2026-11-05");
   });
 
-  it("is only a scheduled entry's creation", () => {
-    expect(isScheduledCreate(undefined, { scheduleId: "abc" })).toBe(true);
-    expect(isScheduledCreate({ amount: 1 }, { scheduleId: "abc" })).toBe(false);
-    expect(isScheduledCreate(undefined, {})).toBe(false);
-    expect(isScheduledCreate(undefined, undefined)).toBe(false);
+  it("is any write to a scheduled entry, edits and day moves included", () => {
+    expect(isScheduledEntry({ scheduleId: "abc" })).toBe(true);
+    expect(isScheduledEntry({})).toBe(false);
+    expect(isScheduledEntry(undefined)).toBe(false);
   });
 });
 
