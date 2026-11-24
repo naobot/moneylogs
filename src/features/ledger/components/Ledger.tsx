@@ -93,23 +93,22 @@ const LedgerEntries = ({
         onSubmit={handleAdd}
       />
 
-      {openableSublogs.length > 0 && (
-        <p className="SublogHint">
-          For{" "}
-          {openableSublogs.map((c, i) => (
-            <span key={c.id}>
-              {i > 0 && (i === openableSublogs.length - 1 ? " or " : ", ")}
-              <Link to={sublogs.get(c.id)!}>{c.name} ›</Link>
-            </span>
-          ))}
-          , add it in that log.
-        </p>
-      )}
-
-      {/* One row: where a sublog counts on the left, the no-spend button on the right.
-          Either can be absent; an empty row takes no space. */}
+      {/* One row: where a sublog counts and where to log its sublogs' spending on the left,
+          the no-spend button on the right. Any can be absent; an empty row takes no space. */}
       <div className="Ledger__dayBar">
         <SublogCrumb ledger={ledger} />
+        {openableSublogs.length > 0 && (
+          <p className="SublogHint">
+            For{" "}
+            {openableSublogs.map((c, i) => (
+              <span key={c.id}>
+                {i > 0 && (i === openableSublogs.length - 1 ? " or " : ", ")}
+                <Link to={sublogs.get(c.id)!}>{c.name} ›</Link>
+              </span>
+            ))}
+            , add it in that log.
+          </p>
+        )}
         {month === monthKeyOf(today) && !isLoading && (
           <NoSpendDay
             ledgerId={ledger.id}

@@ -9,6 +9,15 @@ const state = vi.hoisted(() => ({
   showToast: vi.fn(),
   elsewhere: null as string | null,
   elsewhereLoading: false,
+  now: "2026-11-18T18:00:00Z",
+}));
+
+vi.mock("@/hooks/useNow", async () => {
+  const { default: dayjs } = await import("@/utils/configuredDayjs");
+  return { useNow: () => dayjs(state.now) };
+});
+vi.mock("@/contexts", () => ({
+  useCurrentUser: () => ({ user: { timezone: "UTC" } }),
 }));
 
 vi.mock("@/hooks/useNoSpendDays", () => ({
@@ -45,6 +54,7 @@ describe("NoSpendDay", () => {
     state.isSuccess = true;
     state.elsewhere = null;
     state.elsewhereLoading = false;
+    state.now = "2026-11-18T18:00:00Z";
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -65,6 +75,22 @@ describe("NoSpendDay", () => {
     await act(async () => button()!.click());
     expect(state.confirm).toHaveBeenCalledTimes(1);
     expect(state.showToast).not.toHaveBeenCalled();
+  });
+
+  it("isn't offered before 17:00 in the person's timezone", () => {
+    state.now = "2026-11-18T16:59:00Z";
+    render();
+    expect(button()).toBeNull();
+    state.now = "2026-11-18T17:00:00Z";
+    render();
+    expect(button()!.textContent).toBe("nothing spent today");
+  });
+
+  it("still shows a confirmed day before 17:00", () => {
+    state.now = "2026-11-18T09:00:00Z";
+    state.days = new Set([TODAY]);
+    render();
+    expect(container.textContent).toContain("today's a no-spend day");
   });
 
   it("shows a confirmed day instead of the button", () => {

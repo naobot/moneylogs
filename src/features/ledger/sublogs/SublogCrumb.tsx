@@ -9,7 +9,7 @@ const SUBLOG_HELP =
   "A sublog is a log whose spending also counts as one line in another log, its parent. You log the detail here, and the parent shows the total. Only spending by people who are in both logs counts.";
 
 /**
- * A small muted line on a sublog's entries view, beside the no-spend button, saying
+ * A small muted line on a sublog's entries view, on the no-spend button's row, saying
  * where it counts:
  * - to a member of the parent: "↳ your spending here counts as bali in personal ›";
  * - to anyone else: that it counts somewhere, without the parent's name (they can't read
