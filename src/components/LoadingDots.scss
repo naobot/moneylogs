@@ -1,0 +1,23 @@
+// Three dots, shown 0 → 1 → 2 → 3 and round again. Hack is monospace, so 1ch is a dot.
+// It changes no position, only how much shows, so it runs under reduced motion too:
+// still dots are exactly what made a wait look frozen.
+.LoadingDots {
+  display: inline-block;
+  width: 3ch;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.LoadingDots__dots {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  width: 0;
+  animation: LoadingDots 1.2s steps(4, jump-none) infinite;
+}
+
+@keyframes LoadingDots {
+  to {
+    width: 3ch;
+  }
+}

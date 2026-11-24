@@ -1,4 +1,5 @@
 import cx from "classnames";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Dispatch, Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dayjs from "dayjs";
 
@@ -812,7 +813,8 @@ const LogPosts = memo(
               <div className="LogPosts__loadMore" ref={loadMoreSentinelRef}>
                 {isLoadingMore ? (
                   <span className="LogPosts__loadMore__status" role="status">
-                    Loading older posts…
+                    Loading older posts
+                    <LoadingDots label="" />
                   </span>
                 ) : (
                   <Button

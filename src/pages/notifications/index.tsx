@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -88,7 +89,12 @@ export const Notifications = () => {
         <h2>notifications</h2>
       </div>
 
-      {isLoading && <p className="Notifications__status">loading…</p>}
+      {isLoading && (
+        <p className="Notifications__status">
+          loading
+          <LoadingDots label="" />
+        </p>
+      )}
       {isError && <p className="Notifications__status">couldn't load notifications.</p>}
       {!isLoading && !isError && !items.length && (
         <p className="Notifications__status">

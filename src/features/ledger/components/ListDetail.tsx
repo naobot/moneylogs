@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
@@ -60,7 +61,14 @@ export const AutosaveActions = ({
 }) => (
   <Modal.Actions>
     <small className="CategoryManager__status" role="status">
-      {isSaving ? "saving…" : "changes save automatically"}
+      {isSaving ? (
+        <>
+          saving
+          <LoadingDots label="" />
+        </>
+      ) : (
+        "changes save automatically"
+      )}
     </small>
     <Button text="Done" variant="primary" onClick={onDone} />
   </Modal.Actions>

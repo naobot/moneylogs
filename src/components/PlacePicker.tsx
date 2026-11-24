@@ -1,4 +1,5 @@
 import cx from "classnames";
+import { LoadingDots } from "@/components/LoadingDots";
 import { KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { usePlaceIndex } from "@/hooks/usePlaceIndex";
@@ -186,7 +187,8 @@ export const PlacePicker = ({
             <ul id={listId} role="listbox" className="PlacePicker__list">
               {searching && status === "loading" && (
                 <li className="PlacePicker__status" role="presentation">
-                  loading places...
+                  loading places
+                  <LoadingDots label="" />
                 </li>
               )}
               {options.map((option, i) => (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 
 import Modal from "@/components/Modal";
@@ -209,7 +210,12 @@ const ConfirmView = ({
             <p className="CategoryManager__hint">{archiveHelp}</p>
           </>
         )}
-        {status === "checking" && <p role="status">Checking whether any entries use {name}…</p>}
+        {status === "checking" && (
+          <p role="status">
+            Checking whether any entries use {name}
+            <LoadingDots label="" />
+          </p>
+        )}
         {status === "ready" && (
           <>
             <p>Delete {name}?</p>

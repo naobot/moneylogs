@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { deleteField } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
@@ -59,7 +60,12 @@ const initialState = (user: UserData): WelcomeState => ({
 export const WelcomeWizard = () => {
   const { user } = useCurrentUser();
   // The form seeds itself from the profile, so wait until it's here.
-  if (!user) return <div className="Window Wizard">...</div>;
+  if (!user)
+    return (
+      <div className="Window Wizard">
+        <LoadingDots />
+      </div>
+    );
   return <WelcomeWizardForm key={user.id} user={user} />;
 };
 

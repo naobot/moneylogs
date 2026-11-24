@@ -1,4 +1,5 @@
 import { FormEvent, useId, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useNavigate } from "react-router-dom";
 import { EmailAuthProvider, reauthenticateWithCredential, signOut } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
@@ -134,13 +135,18 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
             />
           </label>
 
-          {pending && <p role="status">Deleting your account. This can take up to a minute…</p>}
+          {pending && (
+            <p role="status">
+              Deleting your account. This can take up to a minute
+              <LoadingDots label="" />
+            </p>
+          )}
           <AuthErrorMessage message={error} />
         </Modal.Body>
         <Modal.Actions>
           <Modal.CancelButton />
           <Button
-            text={pending ? "Deleting…" : "Delete account"}
+            text={pending ? "Deleting" : "Delete account"}
             variant="primary"
             disabled={!canSubmit}
             loading={pending}

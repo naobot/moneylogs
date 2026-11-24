@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import { useFriendships } from "@/hooks/useFriendships";
@@ -40,7 +41,13 @@ export const FriendPicker = ({
   const ids = pickableFriends(friends, excludeIds);
   const profiles = useProfiles(ids);
 
-  if (isLoading) return <p className="FriendPicker__note">loading friends…</p>;
+  if (isLoading)
+    return (
+      <p className="FriendPicker__note">
+        loading friends
+        <LoadingDots label="" />
+      </p>
+    );
   if (!ids.length) {
     return (
       <p className="FriendPicker__note">
@@ -133,9 +140,9 @@ export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFr
         <Button
           size="sm"
           variant="primary"
-          text={sending ? "Sending…" : `Invite ${selected.length}`}
+          text={sending ? "Sending" : `Invite ${selected.length}`}
           onClick={() => void send()}
-          disabled={sending}
+          loading={sending}
         />
       )}
     </div>

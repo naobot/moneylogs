@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import RowButton from "@/components/RowButton";
 import { useCurrentUser } from "@/contexts";
@@ -72,7 +73,7 @@ export const PushSection = ({ onChange }: { onChange?: (state: PushState) => voi
       <h3>push notifications</h3>
       <div className="DisplaySection__row">
         <span className="DisplaySection__label">on this phone</span>
-        <span>{state ? PUSH_LABELS[state] : "…"}</span>
+        <span>{state ? PUSH_LABELS[state] : <LoadingDots />}</span>
         {state && state !== "blocked" && (
           <RowButton onClick={() => void toggle()} disabled={pending}>
             {state === "on" ? "turn off" : "turn on"}

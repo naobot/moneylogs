@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
@@ -40,10 +41,14 @@ export const UserSettings = () => {
   const { ledgers: allLedgers, isLoading: ledgersLoading } = useGetMyLedgers();
   const { achievements, isLoading: achievementsLoading } = useGetAchievements(user?.id);
   const { friends, incoming, isLoading: friendsLoading } = useFriendships();
-  // Until these are in, the sections say "…" rather than "0" or "none yet". Logs wait for
+  // Until these are in, the sections show LoadingDots rather than "0" or "none yet". Logs wait for
   // the user too: which are archived is on the user doc.
   const logsLoading = groupsLoading || ledgersLoading || userLoading;
-  const loadingNote = <p className="GroupArchive__empty">…</p>;
+  const loadingNote = (
+    <p className="GroupArchive__empty">
+      <LoadingDots />
+    </p>
+  );
   const isAdmin = useIsAdmin();
 
   const { active: activeGroups, archived: archivedGroups } = partitionArchived(groups, user);
@@ -83,9 +88,11 @@ export const UserSettings = () => {
             {
               id: "friends",
               title: "friends",
-              summary: friendsLoading
-                ? "…"
-                : friendsHint({ friends: friends.length, incoming: incoming.length }),
+              summary: friendsLoading ? (
+                <LoadingDots />
+              ) : (
+                friendsHint({ friends: friends.length, incoming: incoming.length })
+              ),
               content: <FriendsSection />,
             },
             {
@@ -115,7 +122,11 @@ export const UserSettings = () => {
             {
               id: "achievements",
               title: "achievements",
-              summary: achievementsLoading ? "…" : `${orderedAchievements.length} unlocked`,
+              summary: achievementsLoading ? (
+                <LoadingDots />
+              ) : (
+                `${orderedAchievements.length} unlocked`
+              ),
               content:
                 achievementsLoading || !user ? (
                   loadingNote
@@ -126,15 +137,17 @@ export const UserSettings = () => {
             {
               id: "logs",
               title: "my logs",
-              summary: logsLoading
-                ? "…"
-                : myLogsHint({
-                    financial: ledgers.length,
-                    ongoing: ongoing.length,
-                    upcoming: upcoming.length,
-                    past: past.length,
-                    archived: archivedCount,
-                  }),
+              summary: logsLoading ? (
+                <LoadingDots />
+              ) : (
+                myLogsHint({
+                  financial: ledgers.length,
+                  ongoing: ongoing.length,
+                  upcoming: upcoming.length,
+                  past: past.length,
+                  archived: archivedCount,
+                })
+              ),
               content: logsLoading ? (
                 loadingNote
               ) : (

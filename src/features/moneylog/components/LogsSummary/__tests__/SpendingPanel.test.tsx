@@ -62,7 +62,7 @@ describe("SpendingPanel", () => {
     act(() =>
       root.render(<SpendingPanel scope="mine" user={{}} logPosts={[]} group={group} isLoading />),
     );
-    expect(container.querySelector(".SpendingPanel__loading")).not.toBeNull();
+    expect(container.querySelector(".SpendingPanel__empty .LoadingDots")).not.toBeNull();
     expect(container.textContent).not.toContain("No spending was logged");
   });
 

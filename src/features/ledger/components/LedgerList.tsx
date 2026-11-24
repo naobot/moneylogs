@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useLedgerMonthTotals } from "@/hooks/useLedgerMonthTotals";
@@ -41,11 +42,13 @@ export const LedgerList = ({ ledgers, onManage }: LedgerListProps) => {
             </span>
             <span className="LogRowActions">
               <small className="LedgerList__month">
-                {monthTotals === undefined
-                  ? "…"
-                  : monthTotals === null
-                    ? ""
-                    : `${formatMonth(month)}: ${spent || "nothing yet"}`}
+                {monthTotals === undefined ? (
+                  <LoadingDots />
+                ) : monthTotals === null ? (
+                  ""
+                ) : (
+                  `${formatMonth(month)}: ${spent || "nothing yet"}`
+                )}
               </small>
               {onManage && (
                 <ManageLogButton target={manageTargetForLedger(ledger)} onManage={onManage} />

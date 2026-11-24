@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import Button from "@/components/Button";
@@ -82,13 +83,18 @@ const DeleteLogModal = ({
             }}
           />
         </label>
-        {deletion.isLoading && <p role="status">Removing everything…</p>}
+        {deletion.isLoading && (
+          <p role="status">
+            Removing everything
+            <LoadingDots label="" />
+          </p>
+        )}
         {error && <p className="error-message">{error}</p>}
       </Modal.Body>
       <Modal.Actions>
         <Modal.CancelButton text="Back" />
         <Button
-          text={deletion.isLoading ? "Deleting…" : "Delete"}
+          text={deletion.isLoading ? "Deleting" : "Delete"}
           size="sm"
           loading={deletion.isLoading}
           disabled={!canDelete}

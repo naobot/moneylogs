@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useNavigate } from "react-router-dom";
 import { httpsCallable } from "firebase/functions";
 import { FirebaseError } from "firebase/app";
@@ -183,7 +184,10 @@ export const LogActionsModal = ({
               />
             </label>
             {deletion.isLoading && (
-              <p role="status">Removing everything. This can take a few seconds…</p>
+              <p role="status">
+                Removing everything. This can take a few seconds
+                <LoadingDots label="" />
+              </p>
             )}
             {deleteError && <p className="error-message">{deleteError}</p>}
           </section>
@@ -191,7 +195,7 @@ export const LogActionsModal = ({
         <Modal.Actions>
           <Modal.CancelButton text="Back" />
           <Button
-            text={deletion.isLoading ? "Deleting…" : `Delete ${noun}`}
+            text={deletion.isLoading ? "Deleting" : `Delete ${noun}`}
             size="sm"
             loading={deletion.isLoading}
             disabled={!canDelete}

@@ -1,4 +1,5 @@
 import { ReactNode, SyntheticEvent, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import { useCurrentUser } from "@/contexts";
@@ -32,7 +33,13 @@ const PeekCard = ({ userDocId }: { userDocId: string }) => {
   const { formatTime } = useDateFormat();
   const now = useNow();
 
-  if (isLoading) return <p className="ProfilePeek__muted">loading…</p>;
+  if (isLoading)
+    return (
+      <p className="ProfilePeek__muted">
+        loading
+        <LoadingDots label="" />
+      </p>
+    );
   if (!profile) return <p className="ProfilePeek__muted">this account was deleted.</p>;
 
   const state = stateWith(userDocId);

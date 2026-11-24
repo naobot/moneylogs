@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link, useLocation } from "react-router-dom";
 
 import Button from "@/components/Button";
@@ -113,7 +114,7 @@ export const NotificationBell = () => {
             ))}
           </ul>
         ) : (
-          <p className="NotificationPopup__empty">{isLoading ? "…" : "nothing yet"}</p>
+          <p className="NotificationPopup__empty">{isLoading ? <LoadingDots /> : "nothing yet"}</p>
         )}
         <Link to="/notifications" className="NotificationPopup__all">
           see all

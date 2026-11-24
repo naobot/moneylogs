@@ -158,8 +158,9 @@ const MonthlyTotalDialog = ({
         <Modal.CancelButton />
         <Button
           variant="primary"
-          text={isSaving ? "Saving…" : "Save"}
-          disabled={!!error || isSaving}
+          text={isSaving ? "Saving" : "Save"}
+          disabled={!!error}
+          loading={isSaving}
           onClick={() => void save()}
         />
       </Modal.Actions>

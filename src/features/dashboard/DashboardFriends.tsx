@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Link } from "react-router-dom";
 
 import Avatar from "@/components/Avatar";
@@ -51,7 +52,9 @@ export const DashboardFriends = () => {
         )}
       </div>
       {isLoading || (shown.length > 0 && profilesLoading) ? (
-        <p className="DashboardFriends__muted">…</p>
+        <p className="DashboardFriends__muted">
+          <LoadingDots />
+        </p>
       ) : shown.length === 0 ? (
         <p className="DashboardFriends__muted">
           no friends yet. <Link to="/me#friends">invite someone</Link>, or add people from your

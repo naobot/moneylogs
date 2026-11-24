@@ -1,4 +1,5 @@
 import { ReactNode, useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { Currency, Group, LogPost } from "@/types/user";
 import { FullUserData } from "@/hooks/useGetGroupUsers";
 import Button from "@/components/Button";
@@ -90,7 +91,9 @@ const SpendingPanel = ({
   return (
     <div className="SpendingPanel">
       {isLoading ? (
-        <p className="SpendingPanel__empty SpendingPanel__loading">...</p>
+        <p className="SpendingPanel__empty">
+          <LoadingDots />
+        </p>
       ) : currencies.length === 0 || !activeCurrency ? (
         <p className="SpendingPanel__empty">No spending was logged in this period.</p>
       ) : (

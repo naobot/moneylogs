@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 
 import { LogPost } from "@/types/user";
@@ -245,7 +246,14 @@ export const PostReactions = ({ post, canReact, isFirst = false }: PostReactions
         aria-label="Choose a reaction"
       >
         {quickRow}
-        <Suspense fallback={<p className="EmojiPicker__status">loading…</p>}>
+        <Suspense
+          fallback={
+            <p className="EmojiPicker__status">
+              loading
+              <LoadingDots label="" />
+            </p>
+          }
+        >
           <EmojiPickerPanel onSelect={pick} />
         </Suspense>
       </Popover>

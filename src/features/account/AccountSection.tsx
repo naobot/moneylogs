@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { auth } from "@/config/firebase-config";
@@ -55,7 +56,7 @@ export const AccountSection = () => {
       <dl className="AccountSection__details">
         <dt>Email</dt>
         <dd>
-          {email ?? "…"}
+          {email ?? <LoadingDots />}
           {firebaseUser && !firebaseUser.emailVerified && <small> (unverified)</small>}
         </dd>
         {memberSince && (

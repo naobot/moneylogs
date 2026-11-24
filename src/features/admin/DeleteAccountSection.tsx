@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import Button from "@/components/Button";
 import { useMutation } from "@/hooks/useFirebase";
@@ -96,11 +97,16 @@ export const DeleteAccountSection = ({
           }}
         />
       </label>
-      {deletion.isLoading && <p role="status">Deleting the account. This can take a minute…</p>}
+      {deletion.isLoading && (
+        <p role="status">
+          Deleting the account. This can take a minute
+          <LoadingDots label="" />
+        </p>
+      )}
       {error && <p className="error-message">{error}</p>}
       <div className="Admin__actions">
         <Button
-          text={deletion.isLoading ? "Deleting…" : "Delete account"}
+          text={deletion.isLoading ? "Deleting" : "Delete account"}
           size="sm"
           loading={deletion.isLoading}
           disabled={!canDelete}

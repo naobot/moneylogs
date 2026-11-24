@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useFriendships } from "@/hooks/useFriendships";
@@ -84,7 +85,9 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
       <Modal.Body className="GiftModal__body">
         <KnickKnack id={item} size={64} />
         {isLoading ? (
-          <p>…</p>
+          <p>
+            <LoadingDots />
+          </p>
         ) : !giftable.length ? (
           <p>
             Open your {itemName} first, then you can give it away. Knick-knacks that come with an

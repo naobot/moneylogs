@@ -1,4 +1,5 @@
 import cx from "classnames";
+import { LoadingDots } from "@/components/LoadingDots";
 import { EmojiPicker } from "frimousse";
 
 type EmojiPickerPanelProps = {
@@ -26,7 +27,10 @@ const EmojiPickerPanel = ({ onSelect }: EmojiPickerPanelProps) => (
       autoFocus={hasHover()}
     />
     <EmojiPicker.Viewport className="EmojiPicker__viewport">
-      <EmojiPicker.Loading className="EmojiPicker__status">loading…</EmojiPicker.Loading>
+      <EmojiPicker.Loading className="EmojiPicker__status">
+        loading
+        <LoadingDots label="" />
+      </EmojiPicker.Loading>
       <EmojiPicker.Empty className="EmojiPicker__status">no emoji found</EmojiPicker.Empty>
       <EmojiPicker.List
         className="EmojiPicker__list"

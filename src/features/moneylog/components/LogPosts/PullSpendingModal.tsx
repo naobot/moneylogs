@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
 import Modal from "@/components/Modal";
@@ -124,7 +125,8 @@ const PullSpendingModal = ({
 
         {isLoading ? (
           <p className="PullSpendingModal__hint" role="status">
-            loading…
+            loading
+            <LoadingDots label="" />
           </p>
         ) : isError ? (
           <p className="error-message">Couldn't load your financial logs. Please try again.</p>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 import { Link } from "react-router-dom";
 
@@ -124,10 +125,16 @@ export const LedgerStatsStrip = ({
       <Link
         className="LedgerStats__strip__link"
         to={statsPath}
-        aria-label={`${formatMonth(month)} stats`}
+        aria-label={`${formatMonth(month)} stats${isLoading ? ", loading" : ""}`}
       >
         <span className="LedgerStats__strip__totals">
-          {isLoading ? "…" : hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}
+          {isLoading ? (
+            <LoadingDots />
+          ) : hasEntries ? (
+            <Totals totals={agg.totals} />
+          ) : (
+            "Nothing spent yet"
+          )}
         </span>
         {hasEntries && !isLoading && (
           <CategoryBar
@@ -224,10 +231,18 @@ export const LedgerStatsPanel = ({
 
   // The trend and "vs last month" need the month summaries: before they're in, earlier
   // months would draw as nothing spent.
-  if (isLoading || monthsLoading || snapshotsLoading) return <p className="Ledger__empty">...</p>;
+  if (isLoading || monthsLoading || snapshotsLoading)
+    return (
+      <p className="Ledger__empty">
+        <LoadingDots />
+      </p>
+    );
 
   return (
-    <section className="LedgerStats LedgerStats__panel" aria-label={`${formatMonth(month)} stats`}>
+    <section
+      className="LedgerStats LedgerStats__panel"
+      aria-label={`${formatMonth(month)} stats${isLoading ? ", loading" : ""}`}
+    >
       <div className="LedgerStats__summary">
         <strong className="LedgerStats__summary__totals">
           {hasEntries ? <Totals totals={agg.totals} /> : "Nothing spent yet"}

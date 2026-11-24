@@ -1,4 +1,5 @@
 import cx from "classnames";
+import { LoadingDots } from "@/components/LoadingDots";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import MDEditor from "@uiw/react-md-editor";
 import Markdown from "@/components/Markdown";
@@ -125,7 +126,7 @@ const LogPostComments = ({
   return (
     <>
       <div className="LogPostComments__wrapper">
-        {isLoadingComments && <>...</>}
+        {isLoadingComments && <LoadingDots />}
         {!isLoadingComments &&
           isSuccessComments &&
           comments?.map((comment) => {
@@ -210,7 +211,7 @@ const LogPostComments = ({
                     }}
                   />
                 )}
-                {addComment?.isLoading && <>...</>}
+                {addComment?.isLoading && <LoadingDots />}
               </div>
             </div>
             <div className="LogPostComments__item__footer">

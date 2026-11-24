@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import { useCurrentUser } from "@/contexts";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
@@ -31,7 +32,10 @@ export const UserProfilePage = () => {
   if (isLoading || userLoading) {
     return (
       <div className="Window ProfilePage">
-        <p className="ProfilePage__muted">loading…</p>
+        <p className="ProfilePage__muted">
+          loading
+          <LoadingDots label="" />
+        </p>
       </div>
     );
   }
@@ -79,7 +83,9 @@ export const UserProfilePage = () => {
         <section className="ProfilePage__section" aria-labelledby="profile-shared">
           <h3 id="profile-shared">logs together</h3>
           {groupsLoading ? (
-            <p className="ProfilePage__muted">…</p>
+            <p className="ProfilePage__muted">
+              <LoadingDots />
+            </p>
           ) : shared.length > 0 ? (
             <ul className="ProfilePage__logs">
               {shared.map((g) => (

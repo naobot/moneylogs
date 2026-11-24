@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -330,7 +331,8 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
             </p>
             {isChecking && (
               <p className="ImportModal__hint" role="status">
-                checking which rows are already in this log…
+                checking which rows are already in this log
+                <LoadingDots label="" />
               </p>
             )}
             {split && split.alreadyImported > 0 && (
@@ -455,7 +457,8 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
 
         {isImporting && progress && (
           <p className="ImportModal__progress" role="status">
-            importing {progress.done} / {progress.total}…
+            importing {progress.done} / {progress.total}
+            <LoadingDots label="" />
           </p>
         )}
         {importFailed && (

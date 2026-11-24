@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import cx from "classnames";
 import { httpsCallable } from "firebase/functions";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -213,7 +214,10 @@ const LogsSummary = ({
           Preparing insights for <span className="keep-case">{group.title}</span>
         </h2>
         <div className="Window">
-          <h3>Processing analytics...</h3>
+          <h3>
+            processing analytics
+            <LoadingDots label="" />
+          </h3>
           <div style={{ padding: "2rem", textAlign: "center" }}>
             <p style={{ marginBottom: "1rem", fontSize: "1.1em" }}>{processingState.step}</p>
             <Loader progress={processingState.percentage} />
@@ -236,7 +240,7 @@ const LogsSummary = ({
         <div className="Window">
           <h3>Processing error</h3>
           <p>Failed to process analytics: {analyticsError}</p>
-          <p>Falling back to real-time analysis...</p>
+          <p>Showing real-time analysis instead.</p>
         </div>
 
         {/* Fallback to real-time spending panel */}

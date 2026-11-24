@@ -1,4 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
+import { LoadingDots } from "@/components/LoadingDots";
 import { auth } from "@/config/firebase-config";
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -109,7 +110,11 @@ const MainNav = () => {
                 />
               ),
             )}
-          {isLoading && <div>...</div>}
+          {isLoading && (
+            <div>
+              <LoadingDots />
+            </div>
+          )}
           {isSuccess &&
             !userLoading &&
             currentGroups.map((group) => (

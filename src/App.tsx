@@ -1,4 +1,5 @@
 import { PropsWithChildren, ReactNode, Suspense, lazy, useEffect, useState } from "react";
+import { LoadingDots } from "@/components/LoadingDots";
 import {
   BrowserRouter as Router,
   Route,
@@ -62,7 +63,13 @@ export const CheckAuth = ({
   const [user, loading] = useAuthState(auth);
   const location = useLocation();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div>
+        loading
+        <LoadingDots label="" />
+      </div>
+    );
 
   if (!user && requireAuth) {
     if (fallback) return <>{fallback}</>;
@@ -174,7 +181,14 @@ const App = () => {
                 path="/admin"
                 element={
                   <CheckAuth>
-                    <Suspense fallback={<div className="Window">loading…</div>}>
+                    <Suspense
+                      fallback={
+                        <div className="Window">
+                          loading
+                          <LoadingDots label="" />
+                        </div>
+                      }
+                    >
                       <AdminPage />
                     </Suspense>
                   </CheckAuth>
