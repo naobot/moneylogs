@@ -21,45 +21,46 @@ amounts or free text.
 
 ## Events
 
-| Event                   | When                                     | Params                                                                                                                                 |
-| ----------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `page_view`             | Route change (pathname only)             | `page_path` (pattern), `page_title`, `signed_in`                                                                                       |
-| `sign_up`               | Account created                          | `method`                                                                                                                               |
-| `login`                 | Signed in from the login form            | `method`                                                                                                                               |
-| `tutorial_complete`     | Welcome wizard, ledger tour, first post  | `tutorial`                                                                                                                             |
-| `create_log`            | Create wizard finished                   | `log_kind`, `invited_friends`                                                                                                          |
-| `join_log`              | Joined from an invite page               | `log_kind`                                                                                                                             |
-| `archive_log`           | Archived / unarchived                    | `log_kind`, `archived`                                                                                                                 |
-| `delete_log`            | Deleted                                  | `log_kind`                                                                                                                             |
-| `rename_log`            | Renamed by its creator                   | `log_kind`                                                                                                                             |
-| `invite_friends_to_log` | Invites sent from the invite modal       | `log_kind`, `invited_friends`                                                                                                          |
-| `add_post`              | New post in a social log                 | `travelling`                                                                                                                           |
-| `pull_ledger_spending`  | Financial-log entries pulled into a post | `ledgers`, `entries` (counts)                                                                                                          |
-| `open_comments`         | A post's comments opened                 | `has_comments`                                                                                                                         |
-| `add_comment`           | Comment added                            | —                                                                                                                                      |
-| `add_reaction`          | Reaction added                           | —                                                                                                                                      |
-| `add_entry`             | Entry added to a financial log           | `shared_log`, `has_note`                                                                                                               |
-| `import_entries`        | CSV import finished                      | `source`, `created`                                                                                                                    |
-| `no_spend_day`          | No-spend day confirmed                   | —                                                                                                                                      |
-| `delete_category`       | Category deleted from a financial log    | —                                                                                                                                      |
-| `remove_budget`         | A category's monthly budget removed      | —                                                                                                                                      |
-| `monthly_total`         | A log's monthly total set or removed     | `action` (`set`, `remove`)                                                                                                             |
-| `stats_period`          | Stats period switched in a ledger        | `period` (`month`, `quarter`, `year`)                                                                                                  |
-| `stats_sort`            | Stats categories sorted differently      | `sort` (`order`, `amount`, `pace`)                                                                                                     |
-| `month_review`          | Answer to the buddy's month-start review | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                                              |
-| `sublog_linked`         | A log linked as a sublog of another      | `from` (`wizard`, `log_actions`), `include_past`, `shared_parent`                                                                      |
-| `sublog_unlinked`       | A sublog link ended                      | `from` (`sublog`, `parent`)                                                                                                            |
-| `sublog_intro`          | Sublog intro slides closed               | `from` (`home`, `wizard`, `link_form`, `visit`, `help`), `result`                                                                      |
-| `update_profile`        | Profile saved on /me                     | —                                                                                                                                      |
-| `send_friend_request`   | Friend request sent                      | —                                                                                                                                      |
-| `accept_friend`         | Friend request accepted                  | —                                                                                                                                      |
-| `gift_knickknack`       | Knick-knack gifted                       | —                                                                                                                                      |
-| `send_nudge`            | Poke or cheer sent to a friend           | `kind`                                                                                                                                 |
-| `read_nudge`            | Received poke/cheer opened               | —                                                                                                                                      |
-| `share`                 | Invite / profile link copied             | `method`, `content_type`                                                                                                               |
-| `share_card`            | Share card shared or saved               | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`), `photos` (0–3), `amounts` |
-| `chart_colours`         | Charts switched in /me Display           | `charts` (`colour`, `mono`)                                                                                                            |
-| `open_me_section`       | A /me section picked from its nav        | `section`                                                                                                                              |
+| Event                   | When                                                 | Params                                                                                                                                 |
+| ----------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `page_view`             | Route change (pathname only)                         | `page_path` (pattern), `page_title`, `signed_in`                                                                                       |
+| `sign_up`               | Account created                                      | `method`                                                                                                                               |
+| `login`                 | Signed in from the login form                        | `method`                                                                                                                               |
+| `tutorial_complete`     | Welcome wizard, ledger tour, first post              | `tutorial`                                                                                                                             |
+| `create_log`            | Create wizard finished                               | `log_kind`, `invited_friends`                                                                                                          |
+| `join_log`              | Joined from an invite page                           | `log_kind`                                                                                                                             |
+| `archive_log`           | Archived / unarchived                                | `log_kind`, `archived`                                                                                                                 |
+| `delete_log`            | Deleted                                              | `log_kind`                                                                                                                             |
+| `rename_log`            | Renamed by its creator                               | `log_kind`                                                                                                                             |
+| `invite_friends_to_log` | Invites sent from the invite modal                   | `log_kind`, `invited_friends`                                                                                                          |
+| `add_post`              | New post in a social log                             | `travelling`                                                                                                                           |
+| `pull_ledger_spending`  | Financial-log entries pulled into a post             | `ledgers`, `entries` (counts)                                                                                                          |
+| `open_comments`         | A post's comments opened                             | `has_comments`                                                                                                                         |
+| `add_comment`           | Comment added                                        | —                                                                                                                                      |
+| `add_reaction`          | Reaction added                                       | —                                                                                                                                      |
+| `add_entry`             | Entry added to a financial log                       | `shared_log`, `has_note`                                                                                                               |
+| `import_entries`        | CSV import finished                                  | `source`, `created`                                                                                                                    |
+| `no_spend_day`          | No-spend day confirmed                               | —                                                                                                                                      |
+| `delete_category`       | Category deleted from a financial log                | —                                                                                                                                      |
+| `schedule_payment`      | Scheduled payment set up, paused, resumed or removed | `action`, `repeat`                                                                                                                     |
+| `remove_budget`         | A category's monthly budget removed                  | —                                                                                                                                      |
+| `monthly_total`         | A log's monthly total set or removed                 | `action` (`set`, `remove`)                                                                                                             |
+| `stats_period`          | Stats period switched in a ledger                    | `period` (`month`, `quarter`, `year`)                                                                                                  |
+| `stats_sort`            | Stats categories sorted differently                  | `sort` (`order`, `amount`, `pace`)                                                                                                     |
+| `month_review`          | Answer to the buddy's month-start review             | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                                              |
+| `sublog_linked`         | A log linked as a sublog of another                  | `from` (`wizard`, `log_actions`), `include_past`, `shared_parent`                                                                      |
+| `sublog_unlinked`       | A sublog link ended                                  | `from` (`sublog`, `parent`)                                                                                                            |
+| `sublog_intro`          | Sublog intro slides closed                           | `from` (`home`, `wizard`, `link_form`, `visit`, `help`), `result`                                                                      |
+| `update_profile`        | Profile saved on /me                                 | —                                                                                                                                      |
+| `send_friend_request`   | Friend request sent                                  | —                                                                                                                                      |
+| `accept_friend`         | Friend request accepted                              | —                                                                                                                                      |
+| `gift_knickknack`       | Knick-knack gifted                                   | —                                                                                                                                      |
+| `send_nudge`            | Poke or cheer sent to a friend                       | `kind`                                                                                                                                 |
+| `read_nudge`            | Received poke/cheer opened                           | —                                                                                                                                      |
+| `share`                 | Invite / profile link copied                         | `method`, `content_type`                                                                                                               |
+| `share_card`            | Share card shared or saved                           | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`), `photos` (0–3), `amounts` |
+| `chart_colours`         | Charts switched in /me Display                       | `charts` (`colour`, `mono`)                                                                                                            |
+| `open_me_section`       | A /me section picked from its nav                    | `section`                                                                                                                              |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.
 
@@ -76,7 +77,7 @@ In the Firebase console → Analytics (or analytics.google.com, property for mon
    scope **Event**, one for each param below (dimension name can match the param):
    `log_kind`, `tutorial`, `archived`, `travelling`, `has_comments`, `shared_log`,
    `has_note`, `source`, `drawer`, `signed_in`, `period`, `action`, `kind`, `from`,
-   `include_past`, `shared_parent`, `result`.
+   `include_past`, `shared_parent`, `result`, `repeat`.
    And as custom **metrics** (unit: standard): `invited_friends`, `created`.
    `method` and `content_type` are built in. Dimensions only apply to data from the
    time they're created, not before.

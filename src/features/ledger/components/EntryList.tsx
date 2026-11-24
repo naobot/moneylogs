@@ -122,6 +122,16 @@ export const EntryList = ({
                       {resolveCategory(entry.categoryId, categories).name}
                     </span>
                     <span className="EntryList__note">
+                      {entry.scheduleId && (
+                        <span
+                          className="EntryList__scheduled"
+                          role="img"
+                          aria-label="scheduled"
+                          title="logged by a scheduled payment"
+                        >
+                          ↻{" "}
+                        </span>
+                      )}
                       {entry.note}
                       {showAuthors && (
                         <small>

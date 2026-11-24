@@ -35,6 +35,8 @@ type CategoryDetailProps = {
   /** Asks to archive or delete it (the manager confirms, explaining what happens). */
   onArchive: () => void;
   onDelete: () => void;
+  /** The scheduled payments section (a fixed, active category only). */
+  scheduled?: ReactNode;
 };
 
 /**
@@ -54,6 +56,7 @@ export const CategoryDetail = ({
   onBudgetRemove,
   onArchive,
   onDelete,
+  scheduled,
 }: CategoryDetailProps) => {
   const { id, name, archived } = category;
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -122,6 +125,8 @@ export const CategoryDetail = ({
           </div>
         </Section>
       )}
+
+      {!archived && fixed && !linked && scheduled}
 
       {!archived && (
         <CategoryBudget

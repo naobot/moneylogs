@@ -266,6 +266,15 @@ export const NOTIFICATION_TYPES: Specs = {
         : `about ${amount(n.projected, n.currency)} by month end, against ${amount(n.budget, n.currency)}`,
     href: (n) => `/l/${n.groupId}/stats?month=${n.month}`,
   },
+  scheduled_logged: {
+    label: "Scheduled payments logged for you",
+    defaultEnabled: true,
+    email: "off",
+    icon: "clock",
+    describe: (n) => ["logged ", { keep: n.label }, " in ", { keep: n.groupName }],
+    detail: (n) => `${amount(n.amount, n.currency)}: if it changed, edit the entry`,
+    href: (n) => `/l/${n.groupId}?month=${n.month}`,
+  },
 };
 
 const specOf = <N extends AppNotification>(n: N) =>

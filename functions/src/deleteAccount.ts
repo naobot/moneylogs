@@ -181,12 +181,17 @@ export const deleteUserData = async (db: Firestore, uid: string): Promise<Delete
       if (plan.action !== "leave") continue;
 
       const entries = await ledger.ref.collection("entries").where("authorUid", "==", uid).get();
+      // Their scheduled payments stop: nobody's left to log them for.
+      const schedules = await ledger.ref.collection("schedules").where("ownerUid", "==", uid).get();
       const bulk = db.bulkWriter();
       for (const entry of entries.docs) {
         if (entry.data().authorName === DELETED_USER_NAME) continue;
         bulk
           .update(entry.ref, { authorName: DELETED_USER_NAME })
           .catch(failures.record(`anonymise entry ${entry.id}`));
+      }
+      for (const schedule of schedules.docs) {
+        bulk.delete(schedule.ref).catch(failures.record(`delete schedule ${schedule.id}`));
       }
       await bulk.close();
       if (failures.count) break;
