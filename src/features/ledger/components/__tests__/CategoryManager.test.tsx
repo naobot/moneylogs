@@ -90,7 +90,7 @@ describe("CategoryManager", () => {
   const saved = () => onSave.mock.calls.map(([ops]) => ops);
 
   it("only offers the sublog line when given a handler", () => {
-    expect(document.body.textContent).not.toContain("make it a sublog");
+    expect(document.body.textContent).not.toContain("Make it a sublog");
   });
 
   it("closes the window, then opens the sublog intro, from the sublog line", () => {
@@ -110,7 +110,7 @@ describe("CategoryManager", () => {
         </ToastProvider>,
       ),
     );
-    act(() => button("make it a sublog").click());
+    act(() => button("Make it a sublog").click());
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onSublogHelp).toHaveBeenCalledTimes(1);
   });

@@ -29,7 +29,7 @@ const PHONE = { width: 390, height: 844 };
 // The browser's size in the visual project unless a test changes it.
 const DEFAULT = { width: 414, height: 896 };
 
-// The categories window on a phone, with the "make it a sublog" line under the add form
+// The categories window on a phone, with the "Make it a sublog" line under the add form
 // (only offered on logs that can have sublogs).
 describe("CategoryManager (visual)", () => {
   const v = useVisualHarness();
@@ -54,7 +54,7 @@ describe("CategoryManager (visual)", () => {
       </ToastProvider>,
     );
 
-    expect(document.body.textContent).toContain("make it a sublog");
+    expect(document.body.textContent).toContain("Make it a sublog");
     await v.snapshot("categories window with sublog line");
   });
 });

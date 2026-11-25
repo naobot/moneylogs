@@ -31,7 +31,7 @@ type CategoryManagerProps = {
   /** A fixed category's scheduled payments section, shown in its detail. */
   renderSchedules?: (category: LedgerCategory) => ReactNode;
   /**
-   * Adds a "make it a sublog" line under the list, for logs that can have sublogs. The
+   * Adds a "Make it a sublog" line under the list, for logs that can have sublogs. The
    * window closes (saving any budget being typed) before this is called.
    */
   onSublogHelp?: () => void;

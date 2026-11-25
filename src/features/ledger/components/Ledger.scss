@@ -245,8 +245,9 @@
     font-size: 0.75em;
     color: var(--ink-muted);
 
+    // The sideways strip on small screens: the ↳ on each item already says sublog.
     @media (max-width: constants.$breakpoint-md) {
-      align-self: center;
+      display: none;
     }
   }
 
@@ -679,6 +680,11 @@
     margin: 0 0 ui(0.5em);
     font-size: 0.8em;
     opacity: 0.7;
+
+    // Under the add form: its own step down, so it doesn't read as part of the form.
+    &--sublog {
+      margin-top: ui(1.5em);
+    }
   }
 
   // Wide screens: list | detail, split by a container rule.
@@ -1279,4 +1285,12 @@
 .EntryList__day__header .Totals {
   align-items: flex-end;
   text-align: right;
+}
+
+// The ⋮⋮ drag grip: two monospace cells put the dot columns a full cell apart. Pull them
+// in until the columns sit as far apart as the dots in a column, one even grip (the
+// tracking after the last dot is given back so the label doesn't shift).
+.GripDots {
+  letter-spacing: -0.2em;
+  margin-right: 0.2em;
 }
