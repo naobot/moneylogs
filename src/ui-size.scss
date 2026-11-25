@@ -16,7 +16,7 @@
     @return $out;
   }
   @if meta.type-of($value) == "number" and $value != 0 {
-    @return calc(#{$value} * var(--ui-scale));
+    @return calc(#{$value} * var(--ui-scale, 1));
   }
   @return $value;
 }
