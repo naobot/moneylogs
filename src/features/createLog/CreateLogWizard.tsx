@@ -458,8 +458,8 @@ export const CreateLogWizard = () => {
             </>
           ) : !user ? (
             <p>
-              Sign in to invite friends. You can still create the log now and invite them later from
-              its invite button.
+              Sign in to create the log and invite friends. You can also invite them later from its
+              invite button.
             </p>
           ) : (
             <>

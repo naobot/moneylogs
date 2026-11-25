@@ -70,21 +70,24 @@ export const ConfirmEmailProvider = ({ children }: PropsWithChildren) => {
     track("confirm_email", { action: "prompt" });
   }, []);
 
-  const ensureConfirmed = useCallback(async () => {
-    const user = auth.currentUser;
-    if (!user) return false;
-    if (confirmed(user)) return true;
-    try {
-      if (await refreshed(user)) {
-        setChecks((n) => n + 1);
-        return true;
+  const ensureConfirmed = useCallback(
+    async ({ recheck = false } = {}) => {
+      const user = auth.currentUser;
+      if (!user) return false;
+      if (!recheck && confirmed(user)) return true;
+      try {
+        if (await refreshed(user)) {
+          setChecks((n) => n + 1);
+          return true;
+        }
+      } catch {
+        // Offline or similar: fall through to the modal, which can check again.
       }
-    } catch {
-      // Offline or similar: fall through to the modal, which can check again.
-    }
-    showConfirmEmail();
-    return false;
-  }, [showConfirmEmail]);
+      showConfirmEmail();
+      return false;
+    },
+    [showConfirmEmail],
+  );
 
   const checkAgain = async () => {
     const user = auth.currentUser;

@@ -46,7 +46,8 @@ export const InviteLink = () => {
   }, [confirmed, attempt]);
 
   const confirmThenRetry = async () => {
-    if (!(await ensureConfirmed())) return;
+    // After a server rejection the cached "confirmed" can't be trusted: check again.
+    if (!(await ensureConfirmed({ recheck: serverUnconfirmed }))) return;
     setServerUnconfirmed(false);
     setAttempt((n) => n + 1);
   };

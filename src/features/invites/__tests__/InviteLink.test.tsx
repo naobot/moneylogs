@@ -67,7 +67,7 @@ describe("InviteLink", () => {
     expect(state.reportError).not.toHaveBeenCalled();
 
     await act(async () => confirmButton()!.click());
-    expect(state.ensureConfirmed).toHaveBeenCalled();
+    expect(state.ensureConfirmed).toHaveBeenCalledWith({ recheck: true });
     expect(state.getInviteCode).toHaveBeenCalledTimes(2);
     expect(container.textContent).toContain("https://x/invite/code-1");
   });

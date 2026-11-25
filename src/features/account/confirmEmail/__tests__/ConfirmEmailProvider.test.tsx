@@ -101,4 +101,25 @@ describe("ConfirmEmailProvider", () => {
     });
     expect(container.querySelector("#confirmed")!.textContent).toBe("true");
   });
+
+  it("checks the account again, not the cached state, when asked to recheck", async () => {
+    const user = newUser();
+    // Cached as confirmed, but the account itself isn't (what the server goes by).
+    user.emailVerified = true;
+    state.auth.currentUser = user;
+    render();
+
+    let ok: boolean | undefined;
+    await act(async () => {
+      ok = await ctx.ensureConfirmed();
+    });
+    expect(ok).toBe(true);
+    expect(modal()).toBeNull();
+
+    await act(async () => {
+      ok = await ctx.ensureConfirmed({ recheck: true });
+    });
+    expect(ok).toBe(false);
+    expect(modal()).not.toBeNull();
+  });
 });

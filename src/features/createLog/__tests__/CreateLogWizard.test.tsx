@@ -289,7 +289,7 @@ describe("CreateLogWizard", () => {
     await click("Next");
     await click("Next"); // dates
     expect(question()).toMatch(/Invite friends/);
-    expect(container.textContent).toContain("Sign in to invite friends");
+    expect(container.textContent).toContain("Sign in to create the log and invite friends");
     expect(button("confirm email")).toBeUndefined();
     expect(button("pick friend-1")).toBeUndefined();
   });
