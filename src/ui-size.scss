@@ -7,16 +7,27 @@
 @use "sass:list";
 @use "sass:meta";
 
-@function ui($value) {
+@function -scaled($value, $scale) {
   @if meta.type-of($value) == "list" {
     $out: ();
     @each $item in $value {
-      $out: list.append($out, ui($item), $separator: space);
+      $out: list.append($out, -scaled($item, $scale), $separator: space);
     }
     @return $out;
   }
   @if meta.type-of($value) == "number" and $value != 0 {
-    @return calc(#{$value} * var(--ui-scale, 1));
+    @return calc(#{$value} * var(#{$scale}, 1));
   }
   @return $value;
+}
+
+@function ui($value) {
+  @return -scaled($value, --ui-scale);
+}
+
+// The same, a step gentler (--ui-scale-soft): for surfaces that float over the page
+// (modals, tooltips) and aren't competing for room, so S keeps them comfortable and
+// L doesn't balloon them.
+@function ui-soft($value) {
+  @return -scaled($value, --ui-scale-soft);
 }

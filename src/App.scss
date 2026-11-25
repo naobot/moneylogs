@@ -1579,7 +1579,7 @@ input[type="search"] {
   background-color: var(--paper);
   color: var(--ink);
   border: var(--border-hairline) solid var(--ink);
-  padding: ui(0.5em) ui(0.8em);
+  padding: ui-soft(0.9em) ui-soft(1.2em);
   border-radius: var(--radius-none);
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -1591,7 +1591,7 @@ input[type="search"] {
   line-height: 1.4;
   display: flex;
   flex-direction: column;
-  gap: ui(0.2em);
+  gap: ui-soft(0.4em);
 
   small {
     font-size: 0.78em;
@@ -1958,7 +1958,7 @@ input[type="search"] {
     cursor: default;
     border: var(--border-rule) solid var(--ink);
     border-radius: var(--radius-none);
-    margin: ui(1em);
+    margin: ui-soft(1em);
     width: 100%;
     // Tall modals scroll inside the frame instead of running off a short screen.
     max-height: calc(100% - 2em);
@@ -2009,29 +2009,30 @@ input[type="search"] {
   &__title {
     font-size: 1em;
     color: var(--paper);
-    margin: ui(0.2em) 0;
+    margin: ui-soft(0.2em) 0;
   }
 
   &__button {
     &--close {
       border-radius: var(--radius-none);
       border: none;
-      padding: ui(0.4em);
+      padding: ui-soft(0.4em);
       background-color: transparent;
       color: var(--paper);
       font-weight: 700;
     }
   }
 
+  // Modals vary less with UI size than the page (ui-soft), and keep a little more room.
   &__body {
-    padding: ui(1em);
+    padding: ui-soft(1.25em);
     text-align: center;
   }
 
   &__footer {
     display: flex;
     justify-content: center;
-    grid-gap: ui(0.2em);
-    padding: ui(1em);
+    grid-gap: ui-soft(0.4em);
+    padding: ui-soft(1.25em);
   }
 }
