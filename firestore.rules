@@ -82,8 +82,9 @@ service cloud.firestore {
         && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100;
 
       // Join through the invite page (joinGroupFn): prepend yourself, keep everyone
-      // else, and only while there's room.
-      allow update: if request.auth != null
+      // else, and only while there's room. Not as a guest: joining someone else's log
+      // needs a saved account (guests may still spectate, and post in their own logs).
+      allow update: if hasAccount()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
         && request.resource.data.members.size() == resource.data.members.size() + 1
         && request.resource.data.members.size() <= resource.data.get('max_participants', 0)

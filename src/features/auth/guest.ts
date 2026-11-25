@@ -5,7 +5,7 @@ import {
   signInAnonymously,
   type User,
 } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDocs, limit, query, updateDoc, where } from "firebase/firestore";
 
 import { auth, db } from "@/config/firebase-config";
 import { getRegistrationErrorMessage } from "./registrationErrors";
@@ -27,10 +27,23 @@ export const isGuest = (user?: Pick<User, "isAnonymous"> | null): boolean => !!u
 
 type AddNewUser = (args: { userId: string; displayName: string; email: null }) => Promise<string>;
 
-/** Sign in as a new guest and make their user doc (onboarding still pending). */
+/** The signed-in person's user doc id, if they have one. */
+const userDocIdOf = async (uid: string): Promise<string | null> => {
+  const found = await getDocs(query(collection(db, "users"), where("userId", "==", uid), limit(1)));
+  return found.empty ? null : found.docs[0].id;
+};
+
+/**
+ * Sign in as a guest and make their user doc (onboarding still pending). Idempotent: a
+ * guest who's already signed in carries on with the same uid and the same user doc, so
+ * starting again never makes a second profile that could hide their progress.
+ */
 export const startGuest = async (addNewUser: AddNewUser) => {
-  const { user } = await signInAnonymously(auth);
-  await addNewUser({ userId: user.uid, displayName: GUEST_DISPLAY_NAME, email: null });
+  const current = auth.currentUser;
+  const user = current?.isAnonymous ? current : (await signInAnonymously(auth)).user;
+  if (!(await userDocIdOf(user.uid))) {
+    await addNewUser({ userId: user.uid, displayName: GUEST_DISPLAY_NAME, email: null });
+  }
   return user;
 };
 

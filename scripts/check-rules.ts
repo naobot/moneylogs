@@ -9,7 +9,12 @@
 //   npm run check-rules
 //
 // It signs up throwaway users (*@rules-check.test), so it's safe alongside seeded data.
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 import {
   addDoc,
   arrayRemove,
@@ -135,6 +140,17 @@ async function main() {
   await signInAs(bob);
   await denied("a non-creator renaming", () => updateDoc(logRef, { title: "pwned" }));
   await allowed("joining through the invite page", () => join(logRef, bob));
+
+  // A guest (anonymous sign-in, src/features/auth/guest.ts) with their own user doc.
+  const { user: guestAuth } = await signInAnonymously(auth);
+  const guestRef = await addDoc(collection(db, "users"), {
+    userId: guestAuth.uid,
+    displayName: "guest",
+  });
+  await denied("a guest joining someone else's log", () =>
+    join(logRef, { email: "", uid: guestAuth.uid, ref: guestRef, id: guestRef.id }),
+  );
+  await signOut(auth);
 
   await signInAs(mallory);
   await denied("adding someone else as a member", async () => {

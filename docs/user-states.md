@@ -84,6 +84,13 @@ As: a private window, signed out.
 - Add friend, the invite link, gifts and inviting friends into a log open "save your account" with the form.
 - Opening an invite link (friend, social log, financial log) shows "save your account to accept" instead.
 - Signing out asks first, saying everything they've logged will be lost.
+- Back on `/login` (e.g. through the browser history) a guest sees the save form, "keep going as a guest",
+  and "sign in to another account" (through the sign-out warning), never the sign-in forms. Starting as a
+  guest again reuses the same guest and user doc. Guests can't join someone else's social log (rules).
+- Saving from the create wizard's friends step reloads the page; the half-made log comes back
+  (`ML__create_log_draft`, for an hour, dropped once read or once the log is created).
+- On an invite page signed out, the header's "Sign in" carries the invite along like the page's own buttons,
+  so guest mode isn't offered there either.
 - Saving with an email that already has an account says so and keeps them a guest. Saving with a new one
   reloads as a normal, unconfirmed account (the banner's gone, same logs), and the confirmation email arrives.
 

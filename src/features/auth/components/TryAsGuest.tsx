@@ -20,8 +20,9 @@ export const TryAsGuest = ({ size }: { size?: "sm" | "md" }) => {
     try {
       await startGuest(addNewUserFn);
       track("try_as_guest");
-      // A full load, like registration: every provider starts from the new account.
-      window.location.href = "/welcome";
+      // A full load, like registration: every provider starts from the new account. It
+      // replaces this page in the history, so Back doesn't lead to the sign-in forms.
+      window.location.replace("/welcome");
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code !== "auth/operation-not-allowed" && code !== "auth/too-many-requests") {

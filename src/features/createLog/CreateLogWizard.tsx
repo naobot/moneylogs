@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import cx from "classnames";
 import dayjs from "@/utils/configuredDayjs";
@@ -21,6 +21,7 @@ import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailCon
 import RowButton from "@/components/RowButton";
 import { auth } from "@/config/firebase-config";
 import { isGuest } from "@/features/auth/guest";
+import { dropCreateLogDraft, keepCreateLogDraft, peekCreateLogDraft } from "./guestDraft";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { monthKeyOf, todayInTz } from "@/utils/ledger";
 import { parentChoices, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
@@ -98,7 +99,20 @@ export const CreateLogWizard = () => {
   // log, then linking and inviting), so Next can't create a second log in the gaps.
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
+  // A guest who saved their account from the friends step comes back here after the
+  // reload with what they'd filled in (guestDraft.ts), as long as it's theirs.
+  const [draft] = useState(() => peekCreateLogDraft());
+  const [state, setState] = useState<WizardState>(
+    () => draft?.state ?? initialState(ledgerStartCurrency(user)),
+  );
+  useEffect(() => {
+    if (draft) dropCreateLogDraft();
+  }, [draft]);
+  const [draftOwnerChecked, setDraftOwnerChecked] = useState(!draft);
+  if (!draftOwnerChecked && user?.userId) {
+    setDraftOwnerChecked(true);
+    if (draft && draft.uid !== user.userId) setState(initialState(ledgerStartCurrency(user)));
+  }
   // Inviting needs a confirmed email (utils/confirmedEmail.ts). Until then nobody is
   // invited, so review never promises invites that won't go out.
   const { confirmed, showConfirmEmail } = useConfirmEmail();
@@ -174,6 +188,7 @@ export const CreateLogWizard = () => {
   const submit = async () => {
     if (!user?.userId || !state.mode || !isStepValid("review", state)) return;
     setIsSubmitting(true);
+    dropCreateLogDraft();
     try {
       if (state.mode === "social") {
         const title = state.title.trim();
@@ -471,7 +486,14 @@ export const CreateLogWizard = () => {
                   : "Confirm your email address to invite friends."}{" "}
                 You can still create the log now and invite them later from its invite button.
               </p>
-              <RowButton onClick={showConfirmEmail}>
+              <RowButton
+                onClick={() => {
+                  // Saving reloads the page: keep what they've filled in for after.
+                  const guest = auth.currentUser;
+                  if (guest && isGuest(guest)) keepCreateLogDraft(guest.uid, state);
+                  showConfirmEmail();
+                }}
+              >
                 {isGuest(auth.currentUser) ? "save account" : "confirm email"}
               </RowButton>
             </>
