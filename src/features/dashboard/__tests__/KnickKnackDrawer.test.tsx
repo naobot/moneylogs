@@ -201,7 +201,7 @@ describe("KnickKnackDrawer", () => {
       (b) => b.querySelector("svg")!.getAttribute("aria-label") === name,
     )!;
   const giveButton = () =>
-    Array.from(details()!.querySelectorAll<HTMLButtonElement>(".Modal__footer button")).find((b) =>
+    Array.from(details()!.querySelectorAll<HTMLButtonElement>("button")).find((b) =>
       /give one/i.test(b.textContent ?? ""),
     );
 
@@ -212,8 +212,8 @@ describe("KnickKnackDrawer", () => {
     expect(details()!.querySelector(".KnickKnackDetails__rarity")!.textContent).toBe(
       "rarity: rare",
     );
-    expect(details()!.textContent).toContain("there's a little worm living in it");
-    expect(details()!.querySelector(".KnickKnackDetails__note")!.textContent).toBe("you have 2.");
+    expect(details()!.textContent).toContain("There's a little worm living in it");
+    expect(details()!.querySelector("h2")!.textContent).toBe("apple ×2");
     // No friend to give to: no way into gifting.
     expect(giveButton()).toBeUndefined();
   });
@@ -229,10 +229,9 @@ describe("KnickKnackDrawer", () => {
 
     act(() => item("copper coin").click());
     expect(giveButton()).toBeUndefined();
-    expect(details()!.textContent).toContain(
-      "milestone knick-knacks stay with whoever earned them",
-    );
-    act(() => details()!.querySelector<HTMLButtonElement>(".Modal__button--cancel")!.click());
+    // A click away closes it.
+    act(() => document.querySelector<HTMLElement>(".Modal__backdrop")!.click());
+    expect(details()).toBeNull();
 
     act(() => item("holly").click());
     expect(giveButton()).toBeDefined();

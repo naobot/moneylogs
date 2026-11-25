@@ -22,14 +22,16 @@ afterEach(() => {
   root = null;
 });
 
-const modal = () => document.querySelector(".KnickKnackDetails")!;
-const buttons = () =>
-  Array.from(modal().querySelectorAll<HTMLButtonElement>(".Modal__footer button"));
+const modal = () => document.querySelector<HTMLElement>(".KnickKnackDetails")!;
+const buttons = () => Array.from(modal().querySelectorAll<HTMLButtonElement>("button"));
 
 describe("KnickKnackDetails", () => {
-  it("shows the art large, the name, the rarity and the buddy's line", () => {
+  it("shows the art large, the name, the rarity and the buddy's line, with no title bar", () => {
     render(<KnickKnackDetails item="apple" onClose={() => {}} />);
-    expect(modal().querySelector(".Modal__title")!.textContent).toBe("apple");
+    expect(modal().querySelector(".Modal__header")).toBeNull();
+    const dialog = modal().querySelector('[role="dialog"]')!;
+    const title = document.getElementById(dialog.getAttribute("aria-labelledby")!)!;
+    expect(title.textContent).toBe("apple");
     expect(modal().querySelector("svg")!.getAttribute("width")).toBe("128");
     const rarity = modal().querySelector(".KnickKnackDetails__rarity")!;
     expect(rarity.textContent).toBe("rarity: rare");
@@ -37,25 +39,45 @@ describe("KnickKnackDetails", () => {
     expect(modal().querySelector(".KnickKnackDetails__found")!.textContent).toBe(
       `“${KNICK_KNACKS.apple.found}”`,
     );
-    expect(modal().querySelector(".KnickKnackDetails__note")).toBeNull();
+    // Clicking away closes it: no close button.
+    expect(buttons()).toHaveLength(0);
+  });
+
+  it("shows how many after the name, only when more than one", () => {
+    render(<KnickKnackDetails item="acorn" count={1} onClose={() => {}} />);
+    expect(modal().querySelector("h2")!.textContent).toBe("acorn");
+    act(() => root!.render(<KnickKnackDetails item="acorn" count={3} onClose={() => {}} />));
+    expect(modal().querySelector("h2")!.textContent).toBe("acorn ×3");
   });
 
   it("calls super-common items everyday", () => {
     expect(RARITY_LABELS.super_common).toBe("everyday");
   });
 
-  it("shows a note, and a give button only when there's a way to give", () => {
-    const onGive = vi.fn();
+  it("closes on a click away", () => {
     const onClose = vi.fn();
-    render(<KnickKnackDetails item="acorn" note="found 3 nov" onClose={onClose} />);
-    expect(modal().querySelector(".KnickKnackDetails__note")!.textContent).toBe("found 3 nov");
-    expect(buttons().map((b) => b.textContent!.toLowerCase())).toEqual(["close"]);
-    act(() => buttons()[0].click());
+    render(<KnickKnackDetails item="acorn" onClose={onClose} />);
+    act(() => modal().click());
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => document.querySelector<HTMLElement>(".Modal__backdrop")!.click());
     expect(onClose).toHaveBeenCalled();
+  });
 
-    act(() => root!.render(<KnickKnackDetails item="acorn" onGive={onGive} onClose={onClose} />));
-    const give = buttons().find((b) => /give one/i.test(b.textContent ?? ""))!;
-    act(() => give.click());
+  it("shows a give button only when there's a way to give", () => {
+    const onGive = vi.fn();
+    render(<KnickKnackDetails item="acorn" onGive={onGive} onClose={() => {}} />);
+    act(() => buttons()[0].click());
     expect(onGive).toHaveBeenCalled();
+  });
+});
+
+describe("find lines", () => {
+  it("start each sentence with a capital", () => {
+    for (const { found } of Object.values(KNICK_KNACKS)) {
+      expect(found[0]).toBe(found[0].toUpperCase());
+      // Sentence ends (". ", "! ", "? ") are followed by a capital, and "i" is "I".
+      expect(found).not.toMatch(/[.!?] [a-z]/);
+      expect(found).not.toMatch(/\bi\b|\bi'/);
+    }
   });
 });

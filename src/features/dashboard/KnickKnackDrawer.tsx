@@ -27,21 +27,7 @@ import KnickKnackDetails from "@/features/ledger/buddy/knickknacks/KnickKnackDet
 import "./Dashboard.scss";
 
 export const KNICK_KNACK_HELP =
-  "budget buddies in financial logs sometimes find random things throughout the day. rumour has it that better spending habits increase your luck. so does dropping by every day.";
-
-/**
- * Under a kept item's description: how many you have, and, when you could otherwise
- * give things away, why a milestone one can't go.
- */
-const detailsNote = (item: KnickKnackId, count: number, hasFriends: boolean) =>
-  [
-    `you have ${count}.`,
-    hasFriends && KNICK_KNACKS[item].rarity === "milestone"
-      ? "milestone knick-knacks stay with whoever earned them."
-      : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  "Budget buddies in financial logs sometimes find random things throughout the day. Rumour has it that better spending habits increase your luck. So does dropping by every day.";
 
 /** The bouncing "!" on the drawer's alerts. */
 const AlertMark = () => (
@@ -122,8 +108,9 @@ export const KnickKnackDrawer = () => {
       {givingTo && (
         <div className="KnickKnackDrawer__givingTo" role="status">
           <span className="keep-case">
-            pick something to give to {givingToName}
-            {giftable.size ? "" : ". you don't have anything to give yet"}
+            {giftable.size
+              ? `pick something to give to ${givingToName}`
+              : `you don't have anything to give ${givingToName} yet`}
           </span>
           <RowButton onClick={stopGivingTo}>cancel</RowButton>
         </div>
@@ -182,7 +169,7 @@ export const KnickKnackDrawer = () => {
           !isLoading &&
           !gifts.length && (
             <p className="KnickKnackDrawer__empty">
-              nothing in here yet. the budget buddies are keeping an eye out~
+              Nothing in here yet. The budget buddies are keeping an eye out~
             </p>
           )
         )}
@@ -197,7 +184,7 @@ export const KnickKnackDrawer = () => {
       {viewing && (
         <KnickKnackDetails
           item={viewing.item}
-          note={detailsNote(viewing.item, viewing.count, friends.length > 0)}
+          count={viewing.count}
           onGive={
             giftable.has(viewing.item)
               ? () => {

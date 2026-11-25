@@ -16,8 +16,8 @@ import { useGiftsInTransit } from "./useGiftsInTransit";
  * Someone's kept knick-knacks on their profile: each item once, with how they first got
  * it (found, earned, or a gift from whom) and when. How many of anything they have is
  * private, so it's never shown (or readable: see shelves/ in firestore.rules). A display
- * only: no totals, no comparing with anyone. Each item opens a closer look: its rarity,
- * the buddy's line, and the same how-they-got-it line.
+ * only: no totals, no comparing with anyone. Each item opens a closer look: its rarity
+ * and the buddy's line.
  *
  * Gifts the viewer sent that are still wrapped show after it, dimmed: only the viewer's
  * own, never anyone else's (firestore.rules).
@@ -30,7 +30,7 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
   const { gifts: inTransit, isLoading: inTransitLoading } = useGiftsInTransit(userDocId, user?.id);
   const givers = useProfiles(giverIds(shelf));
   const { formatShortDate } = useDateFormat();
-  const [viewing, setViewing] = useState<{ item: KnickKnackId; note: ReactNode } | null>(null);
+  const [viewing, setViewing] = useState<KnickKnackId | null>(null);
 
   // "…" while the giver's profile loads; "deleted user" only once it's known to be gone.
   const nameOf = (id: string) => profileName(givers, id) ?? "…";
@@ -49,7 +49,7 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
       type="button"
       className="KnickKnackShelf__button"
       aria-haspopup="dialog"
-      onClick={() => setViewing({ item, note })}
+      onClick={() => setViewing(item)}
     >
       {art ?? <KnickKnack id={item} size={64} />}
       <span className="KnickKnackShelf__name">{KNICK_KNACKS[item].name}</span>
@@ -77,13 +77,7 @@ export const KnickKnackShelf = ({ userDocId }: { userDocId: string }) => {
           </li>
         ))}
       </ul>
-      {viewing && (
-        <KnickKnackDetails
-          item={viewing.item}
-          note={viewing.note}
-          onClose={() => setViewing(null)}
-        />
-      )}
+      {viewing && <KnickKnackDetails item={viewing} onClose={() => setViewing(null)} />}
     </>
   );
 };
