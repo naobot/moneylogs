@@ -195,25 +195,50 @@ describe("KnickKnackDrawer", () => {
     expect(reveal()!.textContent).not.toContain("deleted user");
   });
 
-  it("makes opened items giftable once you have a friend, gifts included but not milestones", () => {
+  const details = () => document.querySelector(".KnickKnackDetails");
+  const item = (name: string) =>
+    Array.from(container.querySelectorAll<HTMLButtonElement>(".KnickKnackDrawer__item")).find(
+      (b) => b.querySelector("svg")!.getAttribute("aria-label") === name,
+    )!;
+  const giveButton = () =>
+    Array.from(details()!.querySelectorAll<HTMLButtonElement>(".Modal__footer button")).find((b) =>
+      /give one/i.test(b.textContent ?? ""),
+    );
+
+  it("opens a closer look at a kept item, with its rarity, the buddy's line and how many", () => {
+    state.finds = [find("f1", "apple", true), find("f2", "apple", true)];
+    render();
+    act(() => item("apple").click());
+    expect(details()!.querySelector(".KnickKnackDetails__rarity")!.textContent).toBe(
+      "rarity: rare",
+    );
+    expect(details()!.textContent).toContain("there's a little worm living in it");
+    expect(details()!.querySelector(".KnickKnackDetails__note")!.textContent).toBe("you have 2.");
+    // No friend to give to: no way into gifting.
+    expect(giveButton()).toBeUndefined();
+  });
+
+  it("starts gifting from the closer look once you have a friend, gifts included but not milestones", () => {
     state.finds = [
       find("f1", "acorn", true),
       { ...find("f2", "holly", true), source: "gift", giftedBy: "mina", ledgerId: null },
       { ...find("f3", "copper_coin", true), source: "milestone" },
     ];
-    render();
-    expect(container.querySelector(".KnickKnackDrawer__item--giftable")).toBeNull();
-
     state.friends = ["mina"];
     render();
-    const buttons = Array.from(
-      container.querySelectorAll<HTMLButtonElement>(".KnickKnackDrawer__item--giftable"),
+
+    act(() => item("copper coin").click());
+    expect(giveButton()).toBeUndefined();
+    expect(details()!.textContent).toContain(
+      "milestone knick-knacks stay with whoever earned them",
     );
-    expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual([
-      "Give one acorn to a friend",
-      "Give one holly to a friend",
-    ]);
-    act(() => buttons[0].click());
+    act(() => details()!.querySelector<HTMLButtonElement>(".Modal__button--cancel")!.click());
+
+    act(() => item("holly").click());
+    expect(giveButton()).toBeDefined();
+    act(() => item("acorn").click());
+    act(() => giveButton()!.click());
+    expect(details()).toBeNull();
     expect(container.querySelector(".mock-gift-modal")!.textContent).toBe("give acorn to anyone");
   });
 
@@ -224,9 +249,8 @@ describe("KnickKnackDrawer", () => {
     expect(container.querySelector(".KnickKnackDrawer__givingTo")!.textContent).toContain(
       "pick something to give to Mina",
     );
-    act(() =>
-      container.querySelector<HTMLButtonElement>(".KnickKnackDrawer__item--giftable")!.click(),
-    );
+    act(() => item("acorn").click());
+    act(() => giveButton()!.click());
     expect(container.querySelector(".mock-gift-modal")!.textContent).toBe("give acorn to mina");
   });
 

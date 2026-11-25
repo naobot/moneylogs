@@ -361,7 +361,18 @@
     width: 100%;
     padding: var(--space-2) 0;
     border: var(--border-hairline) dashed transparent;
+    background: none;
+    color: var(--ink);
+    font: inherit;
     text-align: center;
+    // The slot itself is the button that opens a closer look.
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--ink);
+      outline: none;
+    }
 
     .KnickKnack {
       flex: none;
@@ -423,20 +434,6 @@
 
     @media (prefers-reduced-motion: no-preference) {
       animation: drawer-alert-bounce 1.2s ease-in-out infinite;
-    }
-  }
-
-  // A kept item you can give away: the slot itself is the button.
-  &__item--giftable {
-    background: none;
-    color: var(--ink);
-    font: inherit;
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--ink);
-      outline: none;
     }
   }
 

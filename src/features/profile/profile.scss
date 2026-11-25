@@ -66,10 +66,28 @@
 
   &__item {
     display: flex;
+  }
+
+  // The slot itself is the button that opens a closer look.
+  &__button {
+    display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     gap: ui(0.3em);
+    padding: var(--space-2);
+    border: var(--border-hairline) dashed transparent;
+    background: none;
+    color: var(--ink);
+    font: inherit;
     text-align: center;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--ink);
+      outline: none;
+    }
   }
 
   &__name {
@@ -85,8 +103,16 @@
 
   // A gift the viewer sent that's still wrapped: dimmed art, dashed frame (not yet kept).
   &__item--transit {
-    padding: var(--space-2);
     border: var(--border-hairline) dashed var(--ink);
+  }
+
+  &__item--transit &__button {
+    border: none;
+  }
+
+  &__item--transit:hover,
+  &__item--transit:focus-within {
+    border-style: solid;
   }
 
   &__item--transit &__art {

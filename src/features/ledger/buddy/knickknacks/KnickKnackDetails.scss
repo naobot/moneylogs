@@ -1,0 +1,42 @@
+.KnickKnackDetails {
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: center;
+  }
+
+  // The art on its own dotted mat, like a find set out to look at.
+  &__art {
+    display: inline-flex;
+    padding: var(--space-3);
+    border: var(--border-hairline) dotted var(--ink);
+  }
+
+  // Everyday and common items get a plain frame; rarer ones are inverted.
+  &__rarity {
+    padding: 0 ui(0.5em);
+    border: var(--border-hairline) solid var(--ink);
+    font-size: 0.8em;
+    font-weight: 700;
+
+    &--rare,
+    &--milestone,
+    &--special {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+  }
+
+  &__found {
+    max-width: 32ch;
+    margin: 0;
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 0.85em;
+    color: var(--ink-muted);
+  }
+}
