@@ -18,6 +18,7 @@ describe("DisplaySection", () => {
     delete document.documentElement.dataset.entrySize;
     delete document.documentElement.dataset.entryAlign;
     delete document.documentElement.dataset.uiSize;
+    delete document.documentElement.dataset.textSize;
     initTheme();
     initDisplayPrefs();
     container = document.createElement("div");
@@ -119,6 +120,16 @@ describe("DisplaySection", () => {
     expect(selected("UI size")).toBe("L");
     act(() => group("UI size")[0].click());
     expect(document.documentElement.dataset.uiSize).toBe("s");
+  });
+
+  it("sets the text size on the document, M by default", () => {
+    expect(selected("Text size")).toBe("M");
+    act(() => group("Text size")[2].click());
+    expect(document.documentElement.dataset.textSize).toBe("l");
+    expect(getDisplayPrefs().textSize).toBe("l");
+    expect(selected("Text size")).toBe("L");
+    act(() => group("Text size")[1].click());
+    expect(document.documentElement.dataset.textSize).toBeUndefined();
   });
 
   it("shows a sample entry", () => {

@@ -74,4 +74,33 @@ describe("EntryList editing", () => {
     expect(container.querySelector(".EntryList__row--editing")).toBeNull();
     expect(scrim()).toBeNull();
   });
+
+  const more = () => container.querySelector(".EntryList__more") as HTMLButtonElement;
+  const drawerButton = (label: string) =>
+    [...container.querySelectorAll(".EntryList__drawer button")].find(
+      (b) => b.textContent === label,
+    ) as HTMLButtonElement;
+
+  it("opens and closes the phone's actions drawer from the … button", () => {
+    expect(more().getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".EntryList__drawer")).toBeNull();
+    act(() => more().click());
+    expect(more().getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector("#entry-actions-e1")).not.toBeNull();
+    act(() => more().click());
+    expect(container.querySelector(".EntryList__drawer")).toBeNull();
+  });
+
+  it("starts editing from the drawer and closes it", () => {
+    act(() => more().click());
+    act(() => drawerButton("edit").click());
+    expect(container.querySelector(".EntryList__row--editing")).not.toBeNull();
+    expect(container.querySelector(".EntryList__drawer")).toBeNull();
+  });
+
+  it("asks before deleting from the drawer", () => {
+    act(() => more().click());
+    act(() => drawerButton("delete").click());
+    expect(document.body.textContent).toContain("Nevermind");
+  });
 });

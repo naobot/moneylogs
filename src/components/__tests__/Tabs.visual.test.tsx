@@ -22,6 +22,6 @@ describe("Tabs (visual)", () => {
     );
 
     expect(v.container.querySelector("[aria-selected=true]")?.textContent).toContain("summary");
-    await v.snapshot("tabs with active summary");
+    await v.sizes("tabs with active summary");
   });
 });

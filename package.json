@@ -24,6 +24,7 @@
     "prepare": "vp config",
     "test": "vitest run",
     "test:watch": "vitest",
+    "visual-gallery": "vp test --project visual && node scripts/visual-gallery.mjs",
     "e2e": "vitest run --config e2e/vitest.config.ts"
   },
   "dependencies": {

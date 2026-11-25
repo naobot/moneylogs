@@ -18,7 +18,7 @@ describe("Modal (visual)", () => {
     );
 
     expect(document.querySelector(".Modal__content")).not.toBeNull();
-    await v.snapshot("confirmation modal");
+    await v.sizes("confirmation modal");
   });
 
   it("renders a striped tool modal", async () => {
@@ -33,7 +33,7 @@ describe("Modal (visual)", () => {
     );
 
     expect(document.querySelector(".Modal__header--striped")).not.toBeNull();
-    await v.snapshot("striped tool modal");
+    await v.sizes("striped tool modal");
   });
 
   it("renders disabled actions while busy", async () => {

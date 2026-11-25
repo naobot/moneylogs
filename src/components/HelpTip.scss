@@ -18,7 +18,8 @@
 
   &__panel {
     max-width: min(20em, calc(100vw - 32px));
-    padding: var(--space-2) var(--space-3);
+    // Floats over the page like a modal: a gentler UI size scale, and more room.
+    padding: ui-soft(0.8em) ui-soft(1em);
   }
 
   &__text {

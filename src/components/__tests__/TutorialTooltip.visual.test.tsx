@@ -25,7 +25,7 @@ describe("TutorialTooltip (visual)", () => {
     const bubble = document.querySelector<HTMLElement>(".TutorialTooltip");
     await expect.poll(() => bubble!.style.visibility).not.toBe("hidden");
     expect(bubble!.classList.contains("TutorialTooltip--bottom")).toBe(true);
-    await v.snapshot("tutorial tooltip below");
+    await v.sizes("tutorial tooltip below");
   });
 
   it("renders a bubble above its anchor", async () => {

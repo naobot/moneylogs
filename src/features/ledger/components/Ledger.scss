@@ -205,6 +205,12 @@
     text-decoration: none;
     font-weight: 700;
 
+    // This file loads after App.scss, so `color: inherit` above would beat LogsMenu's
+    // inverted active item (same specificity) and leave ink on ink.
+    &.LogsMenu__item--active {
+      color: var(--inverse-ink);
+    }
+
     &--period {
       font-weight: 400;
       border-width: var(--border-hairline);
@@ -448,8 +454,17 @@
     padding: ui(0.4em) ui(0.5em);
     border-bottom: var(--border-hairline) dashed var(--ink);
 
+    // Phones: category and amount, then the "…" that opens the actions; the note
+    // gets its own full-width line, and the drawer (when open) one more under it.
+    // The "…" column is fixed so amounts line up whether or not a row has one.
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto 2.25em;
+      row-gap: ui(0.3em);
+
+      .EntryList__category {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
 
       .EntryList__note {
         grid-column: 1 / -1;
@@ -493,8 +508,36 @@
     gap: ui(0.4em);
 
     @media (max-width: constants.$breakpoint-sm) {
-      grid-column: 2;
-      grid-row: 2;
+      display: none;
+    }
+  }
+
+  // The phone's stand-in for &__menu: a box "…" that opens &__drawer.
+  &__more {
+    display: none;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      display: inline-flex;
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+
+      &[aria-expanded="true"] {
+        background: var(--inverse-surface);
+        color: var(--inverse-ink);
+      }
+    }
+  }
+
+  &__drawer {
+    display: none;
+
+    @media (max-width: constants.$breakpoint-sm) {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      gap: ui(0.5em);
+      padding-top: ui(0.2em);
     }
   }
 }
