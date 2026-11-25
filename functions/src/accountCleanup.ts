@@ -35,6 +35,7 @@ const toAccount = (u: UserRecord): CleanupAccount => ({
   guest: u.providerData.length === 0,
   emailVerified: u.emailVerified,
   admin: u.customClaims?.admin === true,
+  keep: u.customClaims?.keep === true,
   creationTime: u.metadata.creationTime,
   lastSignInTime: u.metadata.lastSignInTime,
   lastRefreshTime: u.metadata.lastRefreshTime,

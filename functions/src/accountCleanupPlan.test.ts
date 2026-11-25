@@ -15,6 +15,11 @@ const account = (over: Partial<CleanupAccount> = {}): CleanupAccount => ({
 });
 
 describe("cleanupReason", () => {
+  it("never lists an account with the keep claim", () => {
+    expect(cleanupReason(account({ keep: true }), NOW)).toBeNull();
+    expect(cleanupReason(account({ keep: true, guest: true }), NOW)).toBeNull();
+  });
+
   it("takes idle guests", () => {
     expect(cleanupReason(account({ guest: true }), NOW)).toBe("idle_guest");
   });

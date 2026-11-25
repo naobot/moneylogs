@@ -9,7 +9,8 @@
  *   no ties to anyone: no friendships, requests included, and no log shared with others.
  *   Grandfathered accounts count too: the cutoff only decides who may reach out.
  *
- * Admins are never listed. Deletion runs the app's own cascade (deleteUserData).
+ * Admins and accounts with the `keep` claim (functions/scripts/set-admin.ts --claim keep,
+ * e.g. the app-store review account) are never listed. Deletion runs the app's own cascade (deleteUserData).
  */
 
 export const INACTIVE_DAYS = 30;
@@ -21,6 +22,8 @@ export type CleanupAccount = {
   guest: boolean;
   emailVerified: boolean;
   admin: boolean;
+  /** The `keep` custom claim: never listed. */
+  keep?: boolean;
   /** Auth metadata, as Firebase gives it (HTTP date strings). */
   creationTime?: string | null;
   lastSignInTime?: string | null;
@@ -42,7 +45,7 @@ export const lastActiveMs = (a: CleanupAccount): number =>
  * `idle_unconfirmed` one still needs its ties checked (hasTies) before it goes.
  */
 export const cleanupReason = (a: CleanupAccount, nowMs: number): CleanupReason | null => {
-  if (a.admin) return null;
+  if (a.admin || a.keep) return null;
   const last = lastActiveMs(a);
   // Nothing known about when it was used: leave it alone rather than guess.
   if (!last || nowMs - last < INACTIVE_DAYS * DAY_MS) return null;

@@ -39,6 +39,6 @@ Done: 1, 2, the Team ID in 3, and the fingerprints in 4. The first internal-test
    - Store listing: 512 icon is `assets/icon-512.png`; still needed are a 1024×500 feature graphic and 2+ phone screenshots.
    - Forms: Data safety (Firebase, Sentry; account deletion link https://moneylogs.app/privacy), Financial features (personal budgeting only; no money moves), content rating, target audience, no ads, and App access (the demo account below).
    - The app calls Firebase from `https://localhost`. If the Firebase API key is restricted to moneylogs.app in Google Cloud, sign-in fails in the app: check on the first internal-test build.
-5. Demo account for review: `scripts/seed-review-account.ts` (try `--emulator` first).
+5. Demo account for review: `scripts/seed-review-account.ts` (try `--emulator` first), then give it the `keep` claim (`functions/scripts/set-admin.ts --claim keep`) so the account cleanup never lists it.
 6. Store listings: privacy policy at https://moneylogs.app/privacy, privacy and data-safety forms (Firebase, Sentry; no replay in the apps), a demo account with a seeded log for review, and a note that the app moves no money.
 7. Deploy when the epic merges: `firestore:rules` (config, devices), `functions` (`sendPushOnNotification`) and hosting (`.well-known`).

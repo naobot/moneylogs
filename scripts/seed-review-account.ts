@@ -15,6 +15,9 @@
 // VITE_FIREBASE_* values the build uses, e.g. from .env):
 //   REVIEW_EMAIL=… REVIEW_PASSWORD=… npx tsx --env-file=.env scripts/seed-review-account.ts
 // Put the email and password in the store listings' review notes, never in the repo.
+// Its email is never confirmed and it has no friends, so give it the `keep` claim or the
+// account cleanup lists it once reviewers have been away 30 days (from functions/):
+//   npx tsx scripts/set-admin.ts --claim keep --email … --write
 import { initializeApp } from "firebase/app";
 import { connectAuthEmulator, createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import {
