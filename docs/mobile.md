@@ -35,7 +35,7 @@ Done: 1, 2, the Team ID in 3, and the fingerprints in 4. The first internal-test
    - Upload an APNs key (`.p8`, Certificates, Identifiers & Profiles → Keys) to Firebase → Project settings → Cloud Messaging → Apple app configuration. One key covers both development and production.
    - `aps-environment` stays `development` in `App.entitlements`; `ios:release` checks that the App Store export is re-signed as `production`.
    - App Store Connect: create the app record (`app.moneylogs`, name "moneylogs"). It needs a privacy policy URL (https://moneylogs.app/privacy), App Privacy answers (Firebase, Sentry; no tracking, no replay in the apps), age rating, a category (Finance), and the demo account (step 5) under App Review Information. Note for review: personal budgeting only, the app moves no money. Keep the words "alpha" and "beta" out of the listing and screenshots: guideline 2.2 rejects pre-release apps.
-   - Screenshots: iPhone 6.9" (1320×2868, or 6.7"/6.5"). The app also runs on iPad (`TARGETED_DEVICE_FAMILY = 1,2`), so 13" iPad screenshots are needed too.
+   - Screenshots: iPhone 6.9" (1320×2868, or 6.7"/6.5"). The app is iPhone-only for now (`TARGETED_DEVICE_FAMILY = 1`): iPads run it in an iPhone-sized window, and no iPad screenshots are needed. To support iPad, set it back to `"1,2"` in both build configurations, check the layout on an iPad simulator, and add 13" iPad screenshots.
    - Before submitting, put one build on TestFlight (internal testers, no review) and check sign-in, push and moneylogs.app links on a real phone.
 4. Google Play Console:
    - New personal accounts need a closed test with 12+ testers for 14 days before production, so start early.
