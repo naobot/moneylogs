@@ -158,7 +158,8 @@ html {
   box-sizing: border-box;
 }
 
-// The header: nav icons, the ongoing logs, and the brand (wordmark, theme, sign out).
+// The header: nav icons, the ongoing logs, and the brand (wordmark, theme, and the menu
+// with display settings and sign out).
 // Desktop: one row, brand pushed right. Phones: nav icons + brand on top, and the logs on
 // a scrollable row of their own beneath, so titles stay readable and taps land.
 .MainNav {
@@ -225,11 +226,11 @@ html {
       }
     }
 
-    .MainNav__iconPair > .Button:not(.MainNav__signOut) {
+    .MainNav__iconPair > .Button {
       display: none;
     }
 
-    .MainNav__signOut {
+    .NavMenu__trigger {
       min-width: calc(40px * var(--icon-scale));
       min-height: calc(40px * var(--icon-scale));
       justify-content: center;
@@ -262,15 +263,62 @@ html {
   font-weight: 700;
 }
 
-// Adjacent icon-only buttons in the nav (theme toggle + sign out): no gap between them
+// Adjacent icon-only buttons in the nav (theme toggle + the menu): no gap between them
 // and slimmer side padding, so the two icons sit close and share a centre line.
 .MainNav__iconPair {
   display: inline-flex;
   align-items: center;
 
-  > .Button {
+  > .Button,
+  .NavMenu__trigger {
     padding-left: ui(0.1em);
     padding-right: ui(0.1em);
+  }
+}
+
+.NavMenu {
+  display: inline-flex;
+}
+
+// The nav menu: a short list of icon + word rows, inverting on hover like row buttons.
+.NavMenu__panel [role="menu"] {
+  display: flex;
+  flex-direction: column;
+  padding: ui(0.25em) 0;
+  min-width: 10em;
+}
+
+.NavMenu__item {
+  display: flex;
+  align-items: center;
+  gap: ui(0.6em);
+  padding: ui(0.45em) ui(0.9em);
+  font: inherit;
+  font-size: 0.9em;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+    outline: none;
+
+    .Icon {
+      filter: var(--icon-filter-inverse);
+    }
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  // Comfortable taps on phones (and bigger at UI L, like the nav icons).
+  @media (max-width: constants.$breakpoint-sm) {
+    min-height: calc(44px * var(--icon-scale));
   }
 }
 

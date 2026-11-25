@@ -35,13 +35,26 @@ export type IconType =
   | "bell"
   | "folder"
   | "wallet"
-  | "gift";
+  | "gift"
+  | "eye"
+  | "more";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
   const kyIcons = ["pencil"];
   const bluetipIcons = ["pin"];
-  const moneylogsIcons = ["gear", "smiley", "social", "bell", "folder", "wallet", "gift", "star"]; // drawn in-house
+  const moneylogsIcons = [
+    "gear",
+    "smiley",
+    "social",
+    "bell",
+    "folder",
+    "wallet",
+    "gift",
+    "star",
+    "eye",
+    "more",
+  ]; // drawn in-house
 
   const iconSet = rkIcons.includes(type)
     ? "reandra-khansa"

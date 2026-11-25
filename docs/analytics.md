@@ -63,8 +63,9 @@ amounts or free text.
 | `share`                 | Invite / profile link copied                         | `method`, `content_type`                                                                                                               |
 | `share_card`            | Share card shared or saved                           | `card` (`daily`, `breakdown`), `format` (`story`, `square`), `result` (`shared`, `cancelled`, `downloaded`), `photos` (0–3), `amounts` |
 | `chart_colours`         | Charts switched in /me Display                       | `charts` (`colour`, `mono`)                                                                                                            |
-| `ui_size`               | UI size switched in /me Display                      | `size` (`s`, `m`, `l`)                                                                                                                 |
-| `text_size`             | Text size switched in /me Display                    | `size` (`s`, `m`, `l`)                                                                                                                 |
+| `ui_size`               | UI size switched in /me Display or the nav menu      | `size` (`s`, `m`, `l`), `from` (`me`, `nav`)                                                                                           |
+| `text_size`             | Text size switched in /me Display or the nav menu    | `size` (`s`, `m`, `l`), `from` (`me`, `nav`)                                                                                           |
+| `quick_display`         | Quick display settings opened from the nav menu      | `signed_in`                                                                                                                            |
 | `open_me_section`       | A /me section picked from its nav                    | `section`                                                                                                                              |
 
 `log_kind` is `social` or `financial`. Booleans arrive as `"true"` / `"false"`.

@@ -87,16 +87,20 @@ export type AnalyticsEvents = {
 
   // Display
   chart_colours: { charts: "colour" | "mono" };
-  /** UI size switched in /me Display. */
-  ui_size: { size: "s" | "m" | "l" };
-  /** Text size switched in /me Display. */
-  text_size: { size: "s" | "m" | "l" };
+  /** UI size switched in /me Display, or the nav's quick display settings. */
+  ui_size: { size: "s" | "m" | "l"; from: DisplayFrom };
+  /** Text size switched in /me Display, or the nav's quick display settings. */
+  text_size: { size: "s" | "m" | "l"; from: DisplayFrom };
+  /** The quick display settings opened from the nav's menu. */
+  quick_display: { signed_in: boolean };
 
   // Navigation
   open_me_section: { section: string };
 };
 
 export type AnalyticsEvent = keyof AnalyticsEvents;
+/** Where a display setting was changed: the /me drawer or the nav menu's quick panel. */
+export type DisplayFrom = "me" | "nav";
 export type ShareContent = "log_invite" | "friend_invite" | "profile";
 /** How a share card left the app: the share sheet, dismissed, or saved as a download. */
 export type ShareCardResult = "shared" | "cancelled" | "downloaded";
