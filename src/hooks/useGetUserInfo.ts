@@ -7,7 +7,8 @@ import {
   Timestamp,
   waitForPendingWrites,
 } from "firebase/firestore";
-import { db } from "@/config/firebase-config";
+import { auth, db } from "@/config/firebase-config";
+import { ensureUserDoc, missingUserDocDelay } from "@/features/auth/ensureUserDoc";
 import { ArchivedLogsMap } from "@/utils/archivedLogs";
 import type { EmailPrefs, NotificationPrefs } from "@/types/notification";
 import { LogLastViewedAtMap } from "@/utils/logActivity";
@@ -181,6 +182,23 @@ export const useGetUserInfo = (userId: string) => {
     setUser(cachedUser ? (cachedUser as unknown as UserData) : undefined);
     if (cachedUser) setResolvedFor(userId);
 
+    let healTimer: ReturnType<typeof setTimeout> | undefined;
+    let healAsked = false;
+    const healMissingUserDoc = (uid: string) => {
+      const authUser = auth.currentUser;
+      if (healAsked || healTimer || authUser?.uid !== uid) return;
+      healTimer = setTimeout(
+        () => {
+          healTimer = undefined;
+          healAsked = true;
+          ensureUserDoc().catch((err) =>
+            reportError(err, { feature: "account", action: "ensure_user_doc" }),
+          );
+        },
+        missingUserDocDelay(authUser.metadata.creationTime, Date.now()),
+      );
+    };
+
     console.log("🔄 setting up real-time listener for current user");
 
     const userQuery = query(collection(db, "users"), where("userId", "==", userId));
@@ -189,6 +207,8 @@ export const useGetUserInfo = (userId: string) => {
       userQuery,
       (snapshot) => {
         if (!snapshot.empty) {
+          clearTimeout(healTimer);
+          healTimer = undefined;
           const userDoc = snapshot.docs[0];
           const userData = {
             id: userDoc.id,
@@ -241,6 +261,9 @@ export const useGetUserInfo = (userId: string) => {
           setUser(undefined);
           setResolvedFor(userId);
           setError(new Error("User not found"));
+          // Signed in, and the server says there's no user doc: registration was cut off
+          // between making the account and the doc. Make it now; this listener picks it up.
+          if (!snapshot.metadata.fromCache) healMissingUserDoc(userId);
         }
       },
       (err) => {
@@ -253,6 +276,7 @@ export const useGetUserInfo = (userId: string) => {
     unsubscribeRef.current = unsubscribe;
 
     return () => {
+      clearTimeout(healTimer);
       if (unsubscribeRef.current) {
         console.log("🔌 cleaning up current user real-time listener");
         unsubscribeRef.current();

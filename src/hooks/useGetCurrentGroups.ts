@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { auth, db } from "@/config/firebase-config";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { storage } from "@/platform";
+import { useCurrentUser } from "@/contexts";
 
 export type GroupsResponse = {
   currentGroups: Array<Group>;
@@ -116,6 +117,9 @@ export const useGetCurrentGroups = (): GroupsResponse => {
 
   const [firebaseUser, firebaseLoading] = useAuthState(auth);
   const currentUserId = firebaseUser?.uid || null;
+  // Looks again once the current user's doc turns up, e.g. after a missing one is made
+  // (features/auth/ensureUserDoc.ts), so Home doesn't stay on "couldn't load".
+  const knownUserDocId = useCurrentUser().user?.id;
 
   // Fetch the user's document ID from their userId (with caching)
   useEffect(() => {
@@ -124,7 +128,7 @@ export const useGetCurrentGroups = (): GroupsResponse => {
       return;
     }
     void fetchUserDocIdFromFirestore(currentUserId, setUserDocId, setUserIdFetchError);
-  }, [currentUserId]);
+  }, [currentUserId, knownUserDocId]);
 
   const { data, isLoading, isSuccess, isError, error } = useFirebaseCollection<Group>({
     queryBuilder: () => {

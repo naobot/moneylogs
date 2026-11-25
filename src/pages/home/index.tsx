@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { LoadingDots } from "@/components/LoadingDots";
 
@@ -10,13 +11,32 @@ import { PersonalLogNudge } from "@/features/ledger/tour/PersonalLogNudge";
 import { GuestBanner } from "@/features/dashboard/GuestBanner";
 import { HomeSublogIntro } from "@/features/ledger/sublogs/HomeSublogIntro";
 import { partitionArchived } from "@/utils/archivedLogs";
+import { reportError } from "@/utils/reportError";
 
 // Home is a dashboard of what's current. The full history (every past and archived log)
 // lives on /me under My logs.
 export const Home = () => {
   const { user, isLoading: userLoading } = useCurrentUser();
-  const { allGroups: groups, isSuccess, isLoading, isError } = useGetCurrentGroups();
+  const {
+    allGroups: groups,
+    isSuccess,
+    isLoading,
+    isError,
+    error: groupsError,
+  } = useGetCurrentGroups();
   const { ledgers, isLoading: ledgersLoading, isError: ledgersError } = useGetMyLedgers();
+
+  // Behind "couldn't load your logs" (the ledgers half reports itself in useGetMyLedgers).
+  // A missing user doc is a warning: useGetUserInfo asks the server to make it.
+  useEffect(() => {
+    if (!isError) return;
+    const missingDoc = (groupsError as Error | undefined)?.message === "User document not found";
+    reportError(groupsError, {
+      feature: "dashboard",
+      action: missingDoc ? "find_user_doc" : "load_log_groups",
+      level: missingDoc ? "warning" : "error",
+    });
+  }, [isError, groupsError]);
 
   // The user too: which logs are archived is on the user doc, so without it archived logs
   // would show as current.

@@ -112,7 +112,32 @@ describe("RegistrationHandler", () => {
     });
     expect(mockReportError).toHaveBeenCalledWith(
       { code: "auth/network-request-failed" },
-      { feature: "registration", action: "register" },
+      { feature: "registration", action: "register", tags: { step: "auth_account" } },
+    );
+  });
+
+  it("tags which step failed, so only a failed user doc reads as a half-made account", async () => {
+    mockCreateUser
+      .mockResolvedValueOnce({ user: { uid: "uid-1" } })
+      .mockResolvedValueOnce({ user: { uid: "uid-1" } });
+    mockMutate.mockRejectedValueOnce({ code: "unavailable" });
+
+    act(() => root.render(<RegistrationHandler />));
+    await fillAndSubmit();
+    expect(mockReportError).toHaveBeenLastCalledWith(
+      { code: "unavailable" },
+      { feature: "registration", action: "register", tags: { step: "user_doc" } },
+    );
+
+    // The doc saved; a later step failing is a different problem.
+    mockMutate.mockResolvedValueOnce("doc-1");
+    mockSendVerification.mockRejectedValueOnce({ code: "auth/internal-error" });
+    await act(async () => {
+      container.querySelector("button")!.click();
+    });
+    expect(mockReportError).toHaveBeenLastCalledWith(
+      { code: "auth/internal-error" },
+      { feature: "registration", action: "register", tags: { step: "after_user_doc" } },
     );
   });
 
