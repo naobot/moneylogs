@@ -44,6 +44,8 @@ ol,
 
 html {
   position: relative;
+  // Display → Text size (--text-scale in tokens.scss): every em and rem follows.
+  font-size: calc(100% * var(--text-scale, 1));
 }
 
 .disable-scroll {

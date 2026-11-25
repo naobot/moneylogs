@@ -15,6 +15,8 @@ import {
   EntryAlign,
   EntrySize,
   setDisplayPrefs,
+  TEXT_SIZES,
+  TextSize,
   UI_SIZES,
   UiSize,
 } from "@/utils/displayPrefs";
@@ -40,6 +42,7 @@ export const displaySummary = (theme: Theme, prefs: DisplayPrefs) =>
 
 const SIZE_LABELS: Record<EntrySize, string> = { s: "S", m: "M", l: "L", xl: "XL" };
 const UI_SIZE_LABELS: Record<UiSize, string> = { s: "S", m: "M", l: "L" };
+const TEXT_SIZE_LABELS: Record<TextSize, string> = { s: "S", m: "M", l: "L" };
 const ALIGN_LABELS: Record<EntryAlign, string> = {
   left: "Left",
   center: "Center",
@@ -212,6 +215,17 @@ export const DisplaySection = () => {
         onChange={(dateOrder) => setDisplayPrefs({ dateOrder })}
       />
       <Segmented
+        label="Text size"
+        options={TEXT_SIZES}
+        value={prefs.textSize}
+        labelFor={(size) => TEXT_SIZE_LABELS[size]}
+        onChange={(textSize) => {
+          if (textSize === prefs.textSize) return;
+          setDisplayPrefs({ textSize });
+          track("text_size", { size: textSize });
+        }}
+      />
+      <Segmented
         label="UI size"
         options={UI_SIZES}
         value={prefs.uiSize}
@@ -237,8 +251,8 @@ export const DisplaySection = () => {
         onChange={(entryAlign) => setDisplayPrefs({ entryAlign })}
       />
       <p className="DisplaySection__hint">
-        UI size sets the room around things: padding, rows and buttons. Entry text sets the size of
-        what you wrote.
+        Text size sets the size of everything, like zooming in. UI size sets the room around things:
+        padding, rows and buttons. Entry text sets what you wrote, relative to the rest.
       </p>
 
       <div className="DisplaySample" aria-label="Preview">

@@ -49,6 +49,13 @@
   --entry-font-size: 1em;
   --entry-text-align: left;
 
+  // ---- text size: set per device in the /me Display drawer (src/utils/displayPrefs.ts) ----
+  // Scales the root font size (App.scss), so every em and rem follows: the UI's text,
+  // the em spacing around it (like zoom) and entry text, which is relative to it.
+  // px sizes (chart ticks, avatar initials) are sized to fixed boxes and stay put.
+  // M is today's type exactly.
+  --text-scale: 1;
+
   // ---- UI size: set per device in the /me Display drawer (src/utils/displayPrefs.ts) ----
   // How much room the parts take, apart from the text: spacing scales by --ui-scale
   // (here and through ui() in src/ui-size.scss), icons by --icon-scale, and L sets
@@ -126,7 +133,7 @@
   color-scheme: light;
 }
 
-// Display prefs for entry text and UI size, written to <html> by src/utils/displayPrefs.ts.
+// Display prefs for entry text, text size and UI size, written to <html> by src/utils/displayPrefs.ts.
 :root[data-entry-size="s"] {
   --entry-font-size: 0.85em;
 }
@@ -135,6 +142,12 @@
 }
 :root[data-entry-size="xl"] {
   --entry-font-size: 1.3em;
+}
+:root[data-text-size="s"] {
+  --text-scale: 0.9;
+}
+:root[data-text-size="l"] {
+  --text-scale: 1.15;
 }
 :root[data-ui-size="s"] {
   --ui-scale: 0.65;

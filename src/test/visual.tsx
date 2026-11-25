@@ -24,7 +24,7 @@ const archiveFonts = () =>
 
 /**
  * Shared harness for *.visual.test.tsx files: mounts into a fresh root per test and
- * cleans up after (including portals, the night theme and the UI size). Call inside a `describe`.
+ * cleans up after (including portals, the night theme, UI size and text size). Call inside a `describe`.
  *
  * Auto-snapshots are off (vitest.config.ts) because they fire after unmount, so each
  * test calls `snapshot(name)` itself once the UI is in the state worth capturing.
@@ -48,6 +48,7 @@ export const useVisualHarness = () => {
     document.body.style.overflow = "";
     delete document.documentElement.dataset.theme;
     delete document.documentElement.dataset.uiSize;
+    delete document.documentElement.dataset.textSize;
   });
 
   return {
@@ -72,6 +73,11 @@ export const useVisualHarness = () => {
     uiSize: (size: "s" | "m" | "l") => {
       if (size === "m") delete document.documentElement.dataset.uiSize;
       else document.documentElement.dataset.uiSize = size;
+    },
+    /** Switch the Display → Text size (reset after each test). M is the default. */
+    textSize: (size: "s" | "m" | "l") => {
+      if (size === "m") delete document.documentElement.dataset.textSize;
+      else document.documentElement.dataset.textSize = size;
     },
   };
 };

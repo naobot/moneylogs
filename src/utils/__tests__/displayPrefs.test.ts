@@ -18,6 +18,7 @@ describe("displayPrefs", () => {
     delete root.dataset.entryAlign;
     delete root.dataset.charts;
     delete root.dataset.uiSize;
+    delete root.dataset.textSize;
     initDisplayPrefs();
   });
 
@@ -29,6 +30,7 @@ describe("displayPrefs", () => {
     expect(root.dataset.entryAlign).toBeUndefined();
     expect(root.dataset.charts).toBeUndefined();
     expect(root.dataset.uiSize).toBeUndefined();
+    expect(root.dataset.textSize).toBeUndefined();
     expect(getDisplayPrefs().charts).toBe("colour");
     expect(getDisplayPrefs().uiSize).toBe("m");
   });
@@ -43,6 +45,7 @@ describe("displayPrefs", () => {
       entrySize: "xl",
       entryAlign: "justify",
       uiSize: "m",
+      textSize: "m",
       charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("xl");
@@ -69,6 +72,7 @@ describe("displayPrefs", () => {
       entrySize: "l",
       entryAlign: "left",
       uiSize: "m",
+      textSize: "m",
       charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("l");
@@ -109,6 +113,27 @@ describe("displayPrefs", () => {
     expect(parsePrefs({ uiSize: "xl", clock: "12h" })).toEqual({
       ...DEFAULT_DISPLAY_PREFS,
       clock: "12h",
+    });
+  });
+
+  it("marks text size on <html>, clearing it back at M", () => {
+    setDisplayPrefs({ textSize: "l" });
+    expect(root.dataset.textSize).toBe("l");
+    expect(readStoredPrefs().textSize).toBe("l");
+    setDisplayPrefs({ textSize: "s" });
+    expect(root.dataset.textSize).toBe("s");
+    setDisplayPrefs({ textSize: "m" });
+    expect(root.dataset.textSize).toBeUndefined();
+  });
+
+  it("restores text size on its own, falling back to M for a bad value", () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ textSize: "l", uiSize: "s" }));
+    initDisplayPrefs();
+    expect(root.dataset.textSize).toBe("l");
+    expect(root.dataset.uiSize).toBe("s");
+    expect(parsePrefs({ textSize: "xl", uiSize: "s" })).toEqual({
+      ...DEFAULT_DISPLAY_PREFS,
+      uiSize: "s",
     });
   });
 

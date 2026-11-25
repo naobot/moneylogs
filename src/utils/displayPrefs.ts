@@ -7,6 +7,7 @@ import { storage } from "@/platform";
  * theme, they are viewing preferences kept per device in local storage, not account data.
  * Entry size and alignment reach the CSS as data attributes on <html> (see the
  * --entry-* tokens in src/tokens.scss), UI size as data-ui-size (--ui-scale and friends),
+ * text size as data-text-size (--text-scale on the root font size),
  * and mono charts as data-charts="mono"; date formats are read by src/utils/dateFormat.ts.
  */
 export type Clock = "24h" | "12h";
@@ -15,6 +16,9 @@ export type EntrySize = "s" | "m" | "l" | "xl";
 export type EntryAlign = "left" | "center" | "justify";
 /** How much room the app's parts take (padding, rows, tap targets, icons), not the text. */
 export type UiSize = "s" | "m" | "l";
+/** The size of the app's own text. Like zoom: em spacing grows with it, and entry text
+ *  (set relative to it) too. UI size then adds or takes away room on top. */
+export type TextSize = "s" | "m" | "l";
 /** Categorical charts: the theme's muted --chart-* palette, or 1-bit textures in ink. */
 export type ChartColours = "colour" | "mono";
 
@@ -24,6 +28,7 @@ export type DisplayPrefs = {
   entrySize: EntrySize;
   entryAlign: EntryAlign;
   uiSize: UiSize;
+  textSize: TextSize;
   charts: ChartColours;
 };
 
@@ -33,6 +38,7 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
   entrySize: "m",
   entryAlign: "left",
   uiSize: "m",
+  textSize: "m",
   charts: "colour",
 };
 
@@ -41,6 +47,7 @@ export const DATE_ORDERS: readonly DateOrder[] = ["dmy", "mdy", "iso"];
 export const ENTRY_SIZES: readonly EntrySize[] = ["s", "m", "l", "xl"];
 export const ENTRY_ALIGNS: readonly EntryAlign[] = ["left", "center", "justify"];
 export const UI_SIZES: readonly UiSize[] = ["s", "m", "l"];
+export const TEXT_SIZES: readonly TextSize[] = ["s", "m", "l"];
 export const CHART_COLOURS: readonly ChartColours[] = ["colour", "mono"];
 
 export const STORAGE_KEY = "ML__display";
@@ -60,6 +67,7 @@ export const parsePrefs = (raw: unknown): DisplayPrefs => {
     entrySize: pick(ENTRY_SIZES, source.entrySize, d.entrySize),
     entryAlign: pick(ENTRY_ALIGNS, source.entryAlign, d.entryAlign),
     uiSize: pick(UI_SIZES, source.uiSize, d.uiSize),
+    textSize: pick(TEXT_SIZES, source.textSize, d.textSize),
     charts: pick(CHART_COLOURS, source.charts, d.charts),
   };
 };
@@ -77,6 +85,8 @@ const applyToDocument = (prefs: DisplayPrefs) => {
   else dataset.entryAlign = prefs.entryAlign;
   if (prefs.uiSize === DEFAULT_DISPLAY_PREFS.uiSize) delete dataset.uiSize;
   else dataset.uiSize = prefs.uiSize;
+  if (prefs.textSize === DEFAULT_DISPLAY_PREFS.textSize) delete dataset.textSize;
+  else dataset.textSize = prefs.textSize;
   if (prefs.charts === DEFAULT_DISPLAY_PREFS.charts) delete dataset.charts;
   else dataset.charts = prefs.charts;
 };
