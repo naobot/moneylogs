@@ -591,3 +591,4 @@ export { emailUnsubscribe } from "./emailUnsubscribe";
 export { sendPushOnNotification } from "./sendPush";
 export { bookEveningReminder, sendEveningReminders } from "./eveningReminder";
 export { bookSchedule, logScheduledEntries } from "./scheduledEntries";
+export { ensureUserDoc } from "./ensureUserDoc";
