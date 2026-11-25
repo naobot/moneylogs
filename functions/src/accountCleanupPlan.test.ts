@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, it, expect, vi } from "vite-plus/test";
 import {
   asList,
   cleanupReason,
+  planCleanupDelete,
   hasTies,
   lastActiveMs,
   type CleanupAccount,
@@ -86,5 +87,29 @@ describe("asList", () => {
   it("reads a malformed list field as empty instead of throwing", () => {
     expect(asList(["a", "b"])).toEqual(["a", "b"]);
     for (const bad of [undefined, null, "group-1", 3, { 0: "a" }]) expect(asList(bad)).toEqual([]);
+  });
+});
+
+describe("planCleanupDelete", () => {
+  const plan = (exists: boolean, inProgress: boolean, eligible: boolean) => {
+    const check = vi.fn(async () => eligible);
+    return { step: planCleanupDelete({ exists, inProgress, eligible: check }), check };
+  };
+
+  it("finishes a deletion that stopped partway without asking about eligibility again", async () => {
+    // They signed in since (so they'd look active), but their logs may already be gone.
+    const { step, check } = plan(true, true, false);
+    expect(await step).toBe("resume");
+    expect(check).not.toHaveBeenCalled();
+  });
+
+  it("keeps someone no longer up for cleanup, and starts on someone who is", async () => {
+    expect(await plan(true, false, false).step).toBe("kept");
+    expect(await plan(true, false, true).step).toBe("start");
+  });
+
+  it("has nothing to do once the Auth account is gone", async () => {
+    expect(await plan(false, true, true).step).toBe("gone");
+    expect(await plan(false, false, true).step).toBe("gone");
   });
 });

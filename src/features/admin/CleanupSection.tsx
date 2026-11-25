@@ -77,9 +77,10 @@ export const CleanupSection = ({ onLookUp }: { onLookUp: (uid: string) => void }
 
   const remove = async (c: CleanupCandidate) => {
     const who = c.email ?? `guest ${c.uid}`;
-    if (!window.confirm(`Delete ${who} and everything they logged? This can't be undone.`)) {
-      return;
-    }
+    const question = c.unfinished
+      ? `Finish deleting ${who}? It stopped partway, so some of their logs may already be gone.`
+      : `Delete ${who} and everything they logged? This can't be undone.`;
+    if (!window.confirm(question)) return;
     setDeleting(c.uid);
     try {
       const { data } = await adminCleanupDelete({ uid: c.uid });
@@ -130,6 +131,7 @@ export const CleanupSection = ({ onLookUp }: { onLookUp: (uid: string) => void }
                   <span className="Admin__logTitle">
                     <span className="keep-case">{c.email ?? "(guest)"}</span>{" "}
                     <small>
+                      {c.unfinished && <strong>deletion stopped partway · </strong>}
                       {REASONS[c.reason]} · joined {day(c.createdAt)} · last seen{" "}
                       {day(c.lastActiveAt)}
                     </small>
@@ -145,7 +147,7 @@ export const CleanupSection = ({ onLookUp }: { onLookUp: (uid: string) => void }
                     disabled={deleting !== null}
                     onClick={() => void remove(c)}
                   >
-                    {deleting === c.uid ? "deleting…" : "delete"}
+                    {deleting === c.uid ? "deleting…" : c.unfinished ? "finish deleting" : "delete"}
                   </RowButton>
                 </li>
               ))}

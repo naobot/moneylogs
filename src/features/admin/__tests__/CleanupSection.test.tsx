@@ -93,4 +93,23 @@ describe("CleanupSection", () => {
     expect(state.showToast).toHaveBeenCalledWith(expect.stringContaining("Kept fake@example.com"));
     expect(container.textContent).not.toContain("fake@example.com");
   });
+
+  it("marks a deletion that stopped partway and offers to finish it", async () => {
+    state.list.mockResolvedValue({
+      data: {
+        candidates: [{ ...candidate("u3", "half@example.com"), unfinished: true }],
+        total: 0,
+        inactiveDays: 30,
+        listedAt: "2026-11-25T12:00:00.000Z",
+      },
+    });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    state.remove.mockResolvedValue({ data: { deleted: true, reason: "idle_unconfirmed" } });
+    await render();
+    expect(container.textContent).toContain("deletion stopped partway");
+    expect(button("Delete half@example.com").textContent).toBe("finish deleting");
+    await act(async () => button("Delete half@example.com").click());
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining("Finish deleting"));
+    expect(state.remove).toHaveBeenCalledWith({ uid: "u3" });
+  });
 });

@@ -19,6 +19,14 @@ import { reportError, withSentry } from "./sentry";
  */
 export const cleanupListRef = (db: Firestore) => db.collection("admin_cleanup").doc("latest");
 
+/**
+ * A deletion that started (so logs may already be erased) and hasn't finished, one doc
+ * per uid: { candidate, adminUid, startedAt }. No client access. Shown in /admin until a
+ * retry finishes it.
+ */
+export const cleanupDeletionRef = (db: Firestore, uid: string) =>
+  db.collection("admin_cleanup_deletions").doc(uid);
+
 /** At most this many are stored (a Firestore doc tops out at 1 MiB); `total` keeps the count. */
 export const MAX_LISTED = 500;
 
@@ -28,6 +36,8 @@ export type CleanupCandidate = {
   email: string | null;
   createdAt: string | null;
   lastActiveAt: string | null;
+  /** A deletion of this account stopped partway: deleting again finishes it. */
+  unfinished?: boolean;
 };
 
 const ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
@@ -154,3 +164,22 @@ export const listCleanupCandidates = onSchedule(
     console.log(`listCleanupCandidates: ${list.total} listed (${JSON.stringify(counts)})`);
   }),
 );
+
+/** Flags (and adds, if missing) accounts whose deletion stopped partway, first in the list. */
+export const withUnfinished = async <T extends { candidates: CleanupCandidate[] }>(
+  db: Firestore,
+  list: T,
+): Promise<T> => {
+  const started = await db.collection("admin_cleanup_deletions").get();
+  if (started.empty) return list;
+  const unfinished = started.docs.map((d) => ({
+    ...(d.get("candidate") as CleanupCandidate),
+    uid: d.id,
+    unfinished: true,
+  }));
+  const ids = new Set(unfinished.map((c) => c.uid));
+  return {
+    ...list,
+    candidates: [...unfinished, ...list.candidates.filter((c) => !ids.has(c.uid))],
+  };
+};

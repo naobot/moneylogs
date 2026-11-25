@@ -64,3 +64,26 @@ export const hasTies = (t: Ties): boolean => t.friendships > 0 || t.sharedLogs >
  * (`groups`), so a malformed field must not stop the scan.
  */
 export const asList = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+
+/**
+ * What an admin's "delete" on a listed account does (adminCleanupDelete):
+ * - `gone`: the Auth account no longer exists;
+ * - `resume`: a deletion was started and stopped partway (logs may already be erased).
+ *   It finishes without checking eligibility again: the account stayed disabled, and
+ *   "they came back" can't undo what's been erased;
+ * - `kept`: no longer up for cleanup (came back, or made ties);
+ * - `start`: lock the account, check again, then delete.
+ */
+export type CleanupDeleteStep = "gone" | "resume" | "kept" | "start";
+
+export const planCleanupDelete = (s: {
+  exists: boolean;
+  inProgress: boolean;
+  /** Only asked when it matters (it costs a few reads). */
+  eligible: () => Promise<boolean>;
+}): Promise<CleanupDeleteStep> =>
+  !s.exists
+    ? Promise.resolve("gone")
+    : s.inProgress
+      ? Promise.resolve("resume")
+      : s.eligible().then((ok) => (ok ? "start" : "kept"));

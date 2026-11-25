@@ -26,11 +26,13 @@ import { purgeLog } from "./purgeLog";
 import { reportError, withSentryCall } from "./sentry";
 import {
   candidateFor,
+  cleanupDeletionRef,
   cleanupListRef,
   refreshCleanupList,
+  withUnfinished,
   type CleanupCandidate,
 } from "./accountCleanup";
-import { asList, INACTIVE_DAYS } from "./accountCleanupPlan";
+import { asList, INACTIVE_DAYS, planCleanupDelete } from "./accountCleanupPlan";
 
 /**
  * Admin-only callables behind the /admin page. Admins carry the `admin` custom claim
@@ -331,31 +333,39 @@ export const adminCleanupList = onCall(
     requireAdmin(request);
     const db = getFirestore();
     const refresh = (request.data as { refresh?: unknown } | null)?.refresh === true;
-    if (refresh) return await refreshCleanupList(db);
+    if (refresh) return await withUnfinished(db, await refreshCleanupList(db));
     const snap = await cleanupListRef(db).get();
     if (!snap.exists) {
-      return { candidates: [], total: 0, inactiveDays: INACTIVE_DAYS, listedAt: null };
+      return withUnfinished(db, {
+        candidates: [] as CleanupCandidate[],
+        total: 0,
+        inactiveDays: INACTIVE_DAYS,
+        listedAt: null as string | null,
+      });
     }
-    return {
+    return withUnfinished(db, {
       candidates: (snap.get("candidates") ?? []) as CleanupCandidate[],
       total: (snap.get("total") as number | undefined) ?? 0,
       inactiveDays: (snap.get("inactiveDays") as number | undefined) ?? INACTIVE_DAYS,
-      listedAt: (snap.get("listedAt") as string | undefined) ?? null,
-    };
+      listedAt: (snap.get("listedAt") as string | null | undefined) ?? null,
+    });
   }),
 );
 
 /**
- * Delete one listed account, by hand. It's checked again first against a fresh auth
- * record and its ties: someone who came back or made a friend since the list was built
- * is kept (and taken off the list) instead.
+ * Delete one listed account, by hand, in two phases (planCleanupDelete):
  *
- * Then the account is disabled and checked once more, so a sign-in or token refresh that
- * raced the first check is seen, and none can happen while its data is deleted. Its
- * sessions aren't revoked: a kept guest has no other way back in, and an idle account
- * holds no live ID token anyway (tokens last an hour, and minting one counts as activity).
- * If they did come back, or anything fails before the Auth account is gone, it's enabled
- * again, so a failure never leaves someone locked out; the row stays to try again.
+ * 1. Before anything is erased: check it again against a fresh auth record and its ties
+ *    (someone who came back or made a friend since the list was built is kept and taken
+ *    off the list), disable it, and check once more, so a sign-in or token refresh that
+ *    raced the first check is seen and none can happen from here on. Sessions aren't
+ *    revoked: a kept guest has no other way back in, and an idle account holds no live
+ *    ID token (they last an hour; minting one is activity). A failure in this phase
+ *    enables the account again.
+ * 2. Erasing: a marker (admin_cleanup_deletions/{uid}) is saved first. If deleteUserData
+ *    stops partway, logs may already be gone, so the account stays disabled and listed as
+ *    unfinished, and deleting again resumes the cascade (it's safe to retry) instead of
+ *    asking whether they're still eligible.
  */
 export const adminCleanupDelete = onCall(
   { timeoutSeconds: 540, memory: "512MiB" },
@@ -370,43 +380,70 @@ export const adminCleanupDelete = onCall(
     }
 
     const db = getFirestore();
-    const authUser = await authUserOrNull(uid);
-    if (!authUser) {
+    const auth = getAuth();
+    const markerRef = cleanupDeletionRef(db, uid);
+    const [authUser, marker] = await Promise.all([authUserOrNull(uid), markerRef.get()]);
+
+    const step = await planCleanupDelete({
+      exists: !!authUser,
+      inProgress: marker.exists,
+      eligible: async () => !!authUser && !!(await candidateFor(db, authUser, Date.now())),
+    });
+    if (step === "gone" || step === "kept") {
+      // deleteUserData removes the Auth account last: gone means nothing's left to finish.
+      await markerRef.delete();
       await unlist(db, uid);
-      return { deleted: false, reason: "gone" as const };
+      return { deleted: false, reason: step };
     }
-    if (!(await candidateFor(db, authUser, Date.now()))) {
-      await unlist(db, uid);
-      return { deleted: false, reason: "kept" as const };
+    if (!authUser) throw new HttpsError("internal", "Unreachable.");
+
+    let candidate: CleanupCandidate;
+    if (step === "resume") {
+      candidate = marker.get("candidate") as CleanupCandidate;
+      if (!authUser.disabled) await auth.updateUser(uid, { disabled: true });
+    } else {
+      // Phase 1: lock, check again, then mark the deletion as started.
+      const unlock = async () => {
+        // Unless an admin had disabled the account before this.
+        if (!authUser.disabled) await auth.updateUser(uid, { disabled: false });
+      };
+      let found: CleanupCandidate | null;
+      try {
+        await auth.updateUser(uid, { disabled: true });
+        found = await candidateFor(db, await auth.getUser(uid), Date.now());
+        if (found) {
+          await markerRef.set({
+            candidate: found,
+            adminUid,
+            startedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (error) {
+        await unlock().catch((unlockError) =>
+          reportError(unlockError, { action: "cleanup_unlock", level: "error" }),
+        );
+        throw error;
+      }
+      if (!found) {
+        // Back since the first check.
+        await unlock();
+        await unlist(db, uid);
+        return { deleted: false, reason: "kept" as const };
+      }
+      candidate = found;
     }
 
-    const auth = getAuth();
-    // Unlock, unless an admin had disabled the account before this.
-    const unlock = async () => {
-      if (!authUser.disabled) await auth.updateUser(uid, { disabled: false });
-    };
-    await auth.updateUser(uid, { disabled: true });
-    let outcome: {
-      candidate: CleanupCandidate;
-      result: Awaited<ReturnType<typeof deleteUserData>>;
-    } | null;
+    // Phase 2: erase. From here a failure leaves the account disabled and marked.
+    let result: Awaited<ReturnType<typeof deleteUserData>>;
     try {
-      const candidate = await candidateFor(db, await auth.getUser(uid), Date.now());
-      outcome = candidate ? { candidate, result: await deleteUserData(db, uid) } : null;
+      result = await deleteUserData(db, uid);
     } catch (error) {
-      // deleteUserData removes the Auth account last, so it still exists here.
-      await unlock().catch((unlockError) =>
-        reportError(unlockError, { action: "cleanup_unlock", level: "error" }),
+      reportError(error, { action: "cleanup_delete_partway", level: "error" });
+      throw new HttpsError(
+        "aborted",
+        "The deletion stopped partway. The account stays disabled; delete it again to finish.",
       );
-      throw error;
     }
-    if (!outcome) {
-      // Back since the first check.
-      await unlock();
-      await unlist(db, uid);
-      return { deleted: false, reason: "kept" as const };
-    }
-    const { candidate, result } = outcome;
     await audit(
       db,
       adminUid,
@@ -416,11 +453,15 @@ export const adminCleanupDelete = onCall(
         reason: candidate.reason,
         email: candidate.email,
         lastActiveAt: candidate.lastActiveAt,
+        resumed: step === "resume",
         ...result,
       },
     );
+    await markerRef.delete();
     await unlist(db, uid);
-    console.log(`adminCleanupDelete: ${uid} (${candidate.reason}) by ${adminUid}`);
+    console.log(
+      `adminCleanupDelete: ${uid} (${candidate.reason}) by ${adminUid}${step === "resume" ? ", resumed" : ""}`,
+    );
     return { deleted: true, reason: candidate.reason, ...result };
   }),
 );

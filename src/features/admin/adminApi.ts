@@ -65,6 +65,8 @@ export type CleanupCandidate = {
   email: string | null;
   createdAt: string | null;
   lastActiveAt: string | null;
+  /** A deletion stopped partway (logs may be gone; the account is disabled): delete again. */
+  unfinished?: boolean;
 };
 
 export type CleanupList = {
