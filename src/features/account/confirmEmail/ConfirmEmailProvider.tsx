@@ -19,6 +19,7 @@ const confirmed = (user: User) =>
   isEmailConfirmed({
     emailVerified: user.emailVerified,
     creationTime: user.metadata.creationTime,
+    anonymous: user.isAnonymous,
   });
 
 /**
