@@ -25,6 +25,7 @@ import { MAX_CATEGORY_NAME_LENGTH } from "@/utils/ledger";
 import { categoryNameError, isFixedCategory, MAX_CATEGORIES } from "@/utils/ledgerCategories";
 import { isActiveSublog } from "@/utils/sublogs";
 import { SublogMark, SublogName } from "@/features/ledger/sublogs/SublogName";
+import "@/features/ledger/sublogs/sublogs.scss";
 
 type CategoryListProps = {
   active: ReadonlyArray<LedgerCategory>;
@@ -40,6 +41,8 @@ type CategoryListProps = {
   onSelect: (id: string) => void;
   onMove: (id: string, toIndex: number) => void;
   onAdd: (name: string) => void;
+  /** Shows the "make it a sublog" line under the add form. */
+  onSublogHelp?: () => void;
 };
 
 /**
@@ -56,6 +59,7 @@ export const CategoryList = ({
   onSelect,
   onMove,
   onAdd,
+  onSublogHelp,
 }: CategoryListProps) => {
   const [newName, setNewName] = useState("");
   const addError = newName.trim() ? categoryNameError(newName, all) : undefined;
@@ -156,6 +160,14 @@ export const CategoryList = ({
         />
         {addError && <small className="CategoryManager__error">{addError}</small>}
       </form>
+      {onSublogHelp && (
+        <p className="CategoryManager__hint">
+          Want one category to have its own log, with its own categories?{" "}
+          <button type="button" className="SublogHelp" onClick={onSublogHelp}>
+            make it a sublog
+          </button>
+        </p>
+      )}
 
       {archived.length > 0 && (
         <>

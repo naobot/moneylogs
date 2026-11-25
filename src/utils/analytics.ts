@@ -56,13 +56,15 @@ export type AnalyticsEvents = {
   stats_period: { period: "month" | "quarter" | "year" };
   stats_sort: { sort: "order" | "amount" | "pace" };
   month_review: { action: "start" | "snooze" | "dismiss" | "adjust" | "keep" };
+  /** The categories window opened: from the header's pencil or the entry form's picker. */
+  categories_opened: { from: "header" | "entry_picker" };
   /** A log made a sublog of another: from the create wizard or its log actions. */
   sublog_linked: { from: "wizard" | "log_actions"; include_past: boolean; shared_parent: boolean };
   /** A sublog link ended, from the sublog's side or the parent's. */
   sublog_unlinked: { from: "sublog" | "parent" };
   /** The "what's a sublog?" slides closed: where they opened, and whether read to the end. */
   sublog_intro: {
-    from: "home" | "wizard" | "link_form" | "visit" | "help";
+    from: "home" | "wizard" | "link_form" | "visit" | "help" | "categories" | "sidebar";
     result: "finished" | "skipped";
   };
 

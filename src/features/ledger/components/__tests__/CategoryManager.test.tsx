@@ -89,6 +89,32 @@ describe("CategoryManager", () => {
   const settle = () => act(async () => {});
   const saved = () => onSave.mock.calls.map(([ops]) => ops);
 
+  it("only offers the sublog line when given a handler", () => {
+    expect(document.body.textContent).not.toContain("make it a sublog");
+  });
+
+  it("closes the window, then opens the sublog intro, from the sublog line", () => {
+    const onSublogHelp = vi.fn();
+    act(() =>
+      root.render(
+        <ToastProvider>
+          <CategoryManager
+            isOpen
+            categories={CATEGORIES}
+            defaultCurrency="JPY"
+            onClose={onClose}
+            onSave={onSave}
+            checkInUse={checkInUse}
+            onSublogHelp={onSublogHelp}
+          />
+        </ToastProvider>,
+      ),
+    );
+    act(() => button("make it a sublog").click());
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onSublogHelp).toHaveBeenCalledTimes(1);
+  });
+
   it("has no Save or Cancel, just Done", () => {
     expect(activeNames()).toEqual(["Food", "Transport"]);
     expect(button("Save")).toBeUndefined();

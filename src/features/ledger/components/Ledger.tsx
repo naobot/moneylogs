@@ -35,6 +35,7 @@ const LedgerEntries = ({
   today,
   setMonth,
   openBudgets,
+  openCategories,
 }: LedgerProps & LedgerShellContext) => {
   const { user } = useCurrentUser();
   const entriesQuery = useGetLedgerEntries({ ledgerId: ledger.id, month });
@@ -91,6 +92,7 @@ const LedgerEntries = ({
           note: "",
         }}
         onSubmit={handleAdd}
+        onEditCategories={openCategories}
       />
 
       {/* One row: where a sublog counts and where to log its sublogs' spending on the left,

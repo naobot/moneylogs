@@ -205,6 +205,24 @@
       border-width: var(--border-hairline);
     }
 
+    // "+ sublog" on a log with none yet: a dashed (editable) frame, a step quieter
+    // than the real items. A button, so it drops the browser's button styling.
+    &--add {
+      font: inherit;
+      font-weight: 400;
+      color: var(--ink-muted);
+      background: none;
+      border-width: var(--border-hairline);
+      border-style: dashed;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--inverse-ink);
+        background: var(--inverse-surface);
+      }
+    }
+
     // A sublog the viewer isn't in: listed, but not a link.
     &--closed {
       cursor: default;

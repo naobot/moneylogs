@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
 import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
-import EntryForm, { EntryFormValues } from "@/features/ledger/components/EntryForm";
+import EntryForm, {
+  EDIT_CATEGORIES,
+  EntryFormValues,
+} from "@/features/ledger/components/EntryForm";
 import { LedgerCategory } from "@/types/ledger";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -153,6 +156,27 @@ describe("EntryForm", () => {
     const select = field("Category") as HTMLSelectElement;
     expect(select.value).toBe("old");
     expect(Array.from(select.options).map((o) => o.textContent)).toContain("Old stuff (archived)");
+  });
+
+  it("offers edit categories… only when given a handler", () => {
+    render();
+    const texts = () =>
+      Array.from((field("Category") as HTMLSelectElement).options).map((o) => o.textContent);
+    expect(texts()).not.toContain("edit categories…");
+
+    const onEditCategories = vi.fn();
+    render({ onEditCategories });
+    expect(texts()).toContain("edit categories…");
+  });
+
+  it("opens the categories window from the picker and keeps the chosen category", () => {
+    const onEditCategories = vi.fn();
+    render({ onEditCategories });
+    const select = field("Category") as HTMLSelectElement;
+    setValue(select, "transport");
+    setValue(select, EDIT_CATEGORIES);
+    expect(onEditCategories).toHaveBeenCalledTimes(1);
+    expect(select.value).toBe("transport");
   });
 });
 

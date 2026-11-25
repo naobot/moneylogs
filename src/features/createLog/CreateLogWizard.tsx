@@ -45,6 +45,7 @@ import {
   stepsForState,
   sublogLineName,
   sublogNameError,
+  presetFromParams,
   titleError,
   WizardState,
 } from "./wizardSteps";
@@ -104,7 +105,10 @@ export const CreateLogWizard = () => {
   // storage, and only shown once the signed-in account is known to be its owner: /create
   // works signed out, so nobody else using this browser ever sees it.
   const [draft] = useState(() => peekCreateLogDraft());
-  const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
+  const [state, setState] = useState<WizardState>(() => ({
+    ...initialState(ledgerStartCurrency(user)),
+    ...presetFromParams(searchParams),
+  }));
   useEffect(() => {
     if (draft) dropCreateLogDraft();
   }, [draft]);
@@ -132,6 +136,15 @@ export const CreateLogWizard = () => {
   const { ledgers: myLedgers } = useGetMyLedgers();
   const parents = parentChoices(myLedgers, user?.userId ?? "");
   const parent = parents.find((c) => c.ledger.id === state.parentId)?.ledger;
+  // A preset parent (?parent=) that can't be one after all: back to standing alone, so
+  // the step never shows a pick that isn't on offer. Waits for the logs to load.
+  if (
+    state.parentId &&
+    myLedgers.length > 0 &&
+    !parents.some((c) => c.ledger.id === state.parentId && !c.disabledReason)
+  ) {
+    update({ parentId: null });
+  }
   // "What's a sublog?": opens by itself the first time someone reaches the step, and
   // from its link any time.
   const [introClosed, setIntroClosed] = useState(false);

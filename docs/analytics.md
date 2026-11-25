@@ -43,6 +43,7 @@ amounts or free text.
 | `add_entry`             | Entry added to a financial log                       | `shared_log`, `has_note`                                                                                                               |
 | `import_entries`        | CSV import finished                                  | `source`, `created`                                                                                                                    |
 | `no_spend_day`          | No-spend day confirmed                               | —                                                                                                                                      |
+| `categories_opened`     | Categories window opened in a financial log          | `from` (`header`, `entry_picker`)                                                                                                      |
 | `delete_category`       | Category deleted from a financial log                | —                                                                                                                                      |
 | `schedule_payment`      | Scheduled payment set up, paused, resumed or removed | `action`, `repeat`                                                                                                                     |
 | `remove_budget`         | A category's monthly budget removed                  | —                                                                                                                                      |
@@ -52,7 +53,7 @@ amounts or free text.
 | `month_review`          | Answer to the buddy's month-start review             | `action` (`start`, `snooze`, `dismiss`, `adjust`, `keep`)                                                                              |
 | `sublog_linked`         | A log linked as a sublog of another                  | `from` (`wizard`, `log_actions`), `include_past`, `shared_parent`                                                                      |
 | `sublog_unlinked`       | A sublog link ended                                  | `from` (`sublog`, `parent`)                                                                                                            |
-| `sublog_intro`          | Sublog intro slides closed                           | `from` (`home`, `wizard`, `link_form`, `visit`, `help`), `result`                                                                      |
+| `sublog_intro`          | Sublog intro slides closed                           | `from` (`home`, `wizard`, `link_form`, `visit`, `help`, `categories`, `sidebar`), `result`                                             |
 | `update_profile`        | Profile saved on /me                                 | —                                                                                                                                      |
 | `send_friend_request`   | Friend request sent                                  | —                                                                                                                                      |
 | `accept_friend`         | Friend request accepted                              | —                                                                                                                                      |

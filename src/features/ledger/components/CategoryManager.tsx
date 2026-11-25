@@ -30,6 +30,11 @@ type CategoryManagerProps = {
   scheduleCounts?: ReadonlyMap<string, number>;
   /** A fixed category's scheduled payments section, shown in its detail. */
   renderSchedules?: (category: LedgerCategory) => ReactNode;
+  /**
+   * Adds a "make it a sublog" line under the list, for logs that can have sublogs. The
+   * window closes (saving any budget being typed) before this is called.
+   */
+  onSublogHelp?: () => void;
 };
 
 /** Archive and delete are confirmed in the window first, explaining what they do. */
@@ -53,6 +58,7 @@ const CategoryManagerDialog = ({
   checkInUse,
   scheduleCounts,
   renderSchedules,
+  onSublogHelp,
 }: CategoryManagerProps) => {
   const wide = useMediaQuery(WIDE_QUERY);
   const edits = useCategoryEdits(categories, onSave);
@@ -151,6 +157,13 @@ const CategoryManagerDialog = ({
               onSelect={select}
               onMove={(id, toIndex) => save({ type: "move", id, toIndex })}
               onAdd={addCategory}
+              onSublogHelp={
+                onSublogHelp &&
+                (() => {
+                  close();
+                  onSublogHelp();
+                })
+              }
             />
           }
           detail={
