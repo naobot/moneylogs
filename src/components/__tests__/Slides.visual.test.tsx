@@ -44,6 +44,6 @@ describe("Slides (visual)", () => {
     act(() => next.click());
 
     expect(document.querySelector(".Slides__skip")).toBeNull();
-    await v.snapshot("last slide with action");
+    await v.sizes("last slide with action");
   });
 });

@@ -51,7 +51,7 @@ describe("SettingsLayout (visual)", () => {
     expect(getComputedStyle(v.container.querySelector(".SettingsLayout__pane")!).display).toBe(
       "none",
     );
-    await v.snapshot("phone section list");
+    await v.sizes("phone section list");
   });
 
   it("renders one section with a way back on a phone", async () => {
@@ -61,6 +61,6 @@ describe("SettingsLayout (visual)", () => {
     expect(getComputedStyle(v.container.querySelector(".SettingsLayout__nav")!).display).toBe(
       "none",
     );
-    await v.snapshot("phone section");
+    await v.sizes("phone section");
   });
 });

@@ -25,7 +25,7 @@ describe("Wizard (visual)", () => {
     );
 
     expect(v.container.querySelector("[aria-current=step]")?.textContent).toContain("1. name");
-    await v.snapshot("wizard first step");
+    await v.sizes("wizard first step");
   });
 
   it("renders a later step with done steps and a large disabled next", async () => {
@@ -43,6 +43,6 @@ describe("Wizard (visual)", () => {
     );
 
     expect(v.container.querySelectorAll(".Wizard__progress__step--done")).toHaveLength(2);
-    await v.snapshot("wizard last step");
+    await v.sizes("wizard last step");
   });
 });

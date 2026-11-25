@@ -35,7 +35,7 @@ describe("Snackbar (visual)", () => {
   it("wraps a long message inside the card", async () => {
     v.render(toast(LONG, "error"));
 
-    await v.snapshot("snackbar long message");
+    await v.sizes("snackbar long message");
   });
 
   it("renders both variants in night shift", async () => {

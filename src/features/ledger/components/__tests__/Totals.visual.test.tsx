@@ -15,6 +15,6 @@ describe("Totals (visual)", () => {
     );
 
     expect(v.container.querySelector(".Totals--multi")).not.toBeNull();
-    await v.snapshot("single and multi-currency totals");
+    await v.sizes("single and multi-currency totals");
   });
 });

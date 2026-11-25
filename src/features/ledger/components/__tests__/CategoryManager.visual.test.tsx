@@ -55,6 +55,6 @@ describe("CategoryManager (visual)", () => {
     );
 
     expect(document.body.textContent).toContain("Make it a sublog");
-    await v.snapshot("categories window with sublog line");
+    await v.sizes("categories window with sublog line");
   });
 });

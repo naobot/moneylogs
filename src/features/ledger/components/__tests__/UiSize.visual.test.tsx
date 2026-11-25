@@ -1,5 +1,4 @@
-import { afterEach, describe, it, expect, vi } from "vite-plus/test";
-import { page } from "vite-plus/test/browser/context";
+import { describe, it, expect, vi } from "vite-plus/test";
 import { MemoryRouter } from "react-router-dom";
 
 // These ledger components import the Firebase config, which starts Firebase on import
@@ -48,24 +47,14 @@ const ENTRIES = [
   entry("e4", "food", 3000, "weekly shop", "2026-11-24"),
 ] as unknown as LedgerEntry[];
 
-const PHONE = { width: 390, height: 844 };
-// The browser's size in the visual project unless a test changes it.
-const DEFAULT = { width: 414, height: 896 };
-
 const noop = async () => {};
 
-// One phone snapshot per Display → UI size: the same ledger parts, so S / M / L can be
-// compared side by side. M must match the snapshots from before UI size existed.
-describe("UI size (visual)", () => {
+// The ledger's everyday parts at every Display → Text size × UI size (see v.sizes).
+// Text M · UI M must match the snapshots from before either setting existed.
+describe("ledger parts at each size (visual)", () => {
   const v = useVisualHarness();
 
-  afterEach(async () => {
-    await page.viewport(DEFAULT.width, DEFAULT.height);
-  });
-
-  it.each(["s", "m", "l"] as const)("renders the ledger's parts at UI size %s", async (size) => {
-    await page.viewport(PHONE.width, PHONE.height);
-    v.uiSize(size);
+  it("renders the ledger's parts at every text and UI size", async () => {
     v.render(
       <MemoryRouter>
         <div className="Ledger" style={{ display: "flex", flexDirection: "column", gap: "0.75em" }}>
@@ -114,7 +103,7 @@ describe("UI size (visual)", () => {
       </MemoryRouter>,
     );
 
-    expect(document.documentElement.dataset.uiSize).toBe(size === "m" ? undefined : size);
-    await v.snapshot(`ledger parts · ui size ${size}`);
+    expect(v.container.querySelector(".Ledger")).not.toBeNull();
+    await v.sizes("ledger parts");
   });
 });
