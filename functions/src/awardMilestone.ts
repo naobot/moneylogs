@@ -42,8 +42,9 @@ export const writeMilestone = (
 };
 
 /**
- * Give a one-off milestone unless the person already has its achievement. Triggers are
- * at-least-once, and the check runs in the transaction, so it's never given twice.
+ * Give a one-off milestone unless the person already has its achievement, or that of any
+ * item in `unlessHeld` (for items that are one or the other). Triggers are at-least-once,
+ * and the check runs in the transaction, so it's never given twice.
  * Any buddy shows it; the drawer points to their personal log while they still have
  * it, and otherwise to another of their logs (drawerContents).
  */
@@ -51,16 +52,23 @@ export const awardMilestoneOnce = async ({
   db,
   userId,
   item,
+  unlessHeld = [],
 }: {
   db: Firestore;
   userId: string;
   item: string;
+  unlessHeld?: readonly string[];
 }): Promise<boolean> => {
   const userRef = db.collection("users").doc(userId);
-  const achievementRef = userRef.collection("achievements").doc(milestoneAchievementId(item));
+  const achievementRefs = [...new Set([item, ...unlessHeld])].map((id) =>
+    userRef.collection("achievements").doc(milestoneAchievementId(id)),
+  );
   return db.runTransaction(async (tx) => {
-    const [user, held] = await Promise.all([tx.get(userRef), tx.get(achievementRef)]);
-    if (!user.exists || held.exists) return false;
+    const [user, ...held] = await Promise.all([
+      tx.get(userRef),
+      ...achievementRefs.map((ref) => tx.get(ref)),
+    ]);
+    if (!user.exists || held.some((h) => h.exists)) return false;
     // personalLedgerId outlives a deleted personal log (so it's never recreated): only
     // point there if it's still around. Otherwise no log, and the drawer points to
     // whichever of the person's logs it can.

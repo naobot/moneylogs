@@ -55,6 +55,7 @@ export const KNICK_KNACK_FINDS = {
   friendship_bracelet: { seasons: [], rarity: "milestone" },
   little_envelope: { seasons: [], rarity: "milestone" },
   shiny_gear: { seasons: [], rarity: "milestone" },
+  extra_shiny_gear: { seasons: [], rarity: "milestone" },
   mini_robot_charm: { seasons: [], rarity: "special" },
   enoki_bunch: { seasons: [], rarity: "special" },
   olive_branch: { seasons: [], rarity: "special" },

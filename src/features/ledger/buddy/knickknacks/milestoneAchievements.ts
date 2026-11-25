@@ -40,7 +40,11 @@ export const MILESTONE_ACHIEVEMENTS = {
   },
   shiny_gear: {
     title: "Early Tester",
-    description: "Helped test the moneylogs app before it launched",
+    description: "Helped test the moneylogs Android app before it launched",
+  },
+  extra_shiny_gear: {
+    title: "Fourteen Days of Testing",
+    description: "Used the moneylogs Android app every day for two weeks before it launched",
   },
 } as const satisfies Partial<Record<KnickKnackId, { title: string; description: string }>>;
 
