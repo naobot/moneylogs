@@ -34,6 +34,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      trackStep("registration", "created auth account");
 
       // A placeholder until the welcome wizard asks for a real display name.
       const displayName = placeholderDisplayName(email);
@@ -65,7 +66,13 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       if (isExpectedRegistrationError(err.code)) {
         console.log(`${err.code}: ${err.message}`);
       } else {
-        reportError(error, { feature: "registration", action: "register" });
+        // After the Auth account exists, a failure leaves it without a user doc until the
+        // app makes one on the next load (features/auth/ensureUserDoc.ts).
+        reportError(error, {
+          feature: "registration",
+          action: "register",
+          tags: { auth_account_created: String(!!auth.currentUser) },
+        });
       }
     }
   };

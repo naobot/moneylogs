@@ -112,7 +112,11 @@ describe("RegistrationHandler", () => {
     });
     expect(mockReportError).toHaveBeenCalledWith(
       { code: "auth/network-request-failed" },
-      { feature: "registration", action: "register" },
+      {
+        feature: "registration",
+        action: "register",
+        tags: { auth_account_created: expect.any(String) },
+      },
     );
   });
 
