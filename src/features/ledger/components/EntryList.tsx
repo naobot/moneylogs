@@ -9,6 +9,7 @@ import Totals from "./Totals";
 import { IconText } from "@/components/Icon";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
+import RowButton from "@/components/RowButton";
 import EntryForm from "./EntryForm";
 import { reportError } from "@/utils/reportError";
 import { SublogDayRow, SublogPaths, withSublogDays } from "@/utils/sublogs";
@@ -43,6 +44,8 @@ export const EntryList = ({
 }: EntryListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<LedgerEntry | null>(null);
+  // Phones: the entry whose "…" drawer (edit / delete) is open.
+  const [actionsId, setActionsId] = useState<string | null>(null);
   const editingRowRef = useRef<HTMLLIElement>(null);
 
   // Bring the entry being edited to the top of the log. scrollIntoView stops wherever the
@@ -160,6 +163,40 @@ export const EntryList = ({
                         </>
                       )}
                     </span>
+                    {/* Phones: the actions fold into a drawer under the row, so a long
+                        note or a big amount never collides with them. */}
+                    {isMine && (
+                      <RowButton
+                        glyph
+                        className="EntryList__more"
+                        aria-label="entry actions"
+                        aria-expanded={actionsId === entry.id}
+                        aria-controls={`entry-actions-${entry.id}`}
+                        onClick={() => setActionsId(actionsId === entry.id ? null : entry.id)}
+                      >
+                        …
+                      </RowButton>
+                    )}
+                    {isMine && actionsId === entry.id && (
+                      <div className="EntryList__drawer" id={`entry-actions-${entry.id}`}>
+                        <RowButton
+                          onClick={() => {
+                            setActionsId(null);
+                            setEditingId(entry.id);
+                          }}
+                        >
+                          edit
+                        </RowButton>
+                        <RowButton
+                          onClick={() => {
+                            setActionsId(null);
+                            setDeletingEntry(entry);
+                          }}
+                        >
+                          delete
+                        </RowButton>
+                      </div>
+                    )}
                   </li>
                 );
               })}
