@@ -1,7 +1,7 @@
 // scripts/check-rules.ts
 //
 // Checks the social-log Firestore rules (log_groups, log_posts, comments, processing),
-// plus ledger schedules and scheduled entries,
+// plus ledger schedules, scheduled entries, budget snapshots and the `deleting` guards,
 // against the local emulator: each case is a write the app makes, which must be allowed,
 // or a forged one, which must be denied. Run it after changing firestore.rules:
 //
@@ -399,6 +399,33 @@ async function main() {
 
   await allowed("the author deleting their post", () => deleteDoc(postRef));
 
+  console.log("\na social log being deleted (purgeLog)");
+  await signInAs(alice);
+  const doomedLog = doc(collection(db, "log_groups"));
+  await setDoc(doomedLog, logData(alice));
+  const doomedPost = doc(collection(db, "log_posts"));
+  await setDoc(doomedPost, postData(alice, { group: doomedLog }));
+  // What purgeLog sets (Admin SDK) before removing the posts.
+  await ownerWrite(`log_groups/${doomedLog.id}`, { deleting: true }, { merge: true });
+  await denied("a new post in it", () =>
+    addDoc(collection(db, "log_posts"), postData(alice, { group: doomedLog })),
+  );
+  await denied("a new comment in it", async () => {
+    const batch = writeBatch(db);
+    batch.set(doc(collection(db, "log_posts", doomedPost.id, "comments")), {
+      authorId: alice.ref,
+      authorName: "alice",
+      content: "x",
+      createdAt: serverTimestamp(),
+    });
+    batch.update(doomedPost, {
+      commentCount: increment(1),
+      commentSubscribers: arrayUnion(alice.ref),
+    });
+    await batch.commit();
+  });
+  await signOut(auth);
+
   console.log("\nledger schedules + scheduled entries");
   await signInAs(alice);
   const ledgerRef = doc(collection(db, "ledgers"));
@@ -515,6 +542,25 @@ async function main() {
   );
   await allowed("the owner deleting a scheduled entry", () => deleteDoc(scheduledEntry));
   await allowed("the owner deleting their schedule", () => deleteDoc(scheduleRef));
+
+  console.log("\nledger budget snapshots");
+  const snapshotData = () => ({
+    budgets: { housing: { CAD: 1200 } },
+    names: { housing: "Housing" },
+    snapshotAt: serverTimestamp(),
+  });
+  await allowed("a member keeping a finished month's budgets", () =>
+    setDoc(doc(db, "ledgers", ledgerRef.id, "budgetSnapshots", "2026-10"), snapshotData()),
+  );
+  await denied("rewriting a kept month", () =>
+    setDoc(doc(db, "ledgers", ledgerRef.id, "budgetSnapshots", "2026-10"), snapshotData()),
+  );
+  // What purgeLog sets (Admin SDK) before removing the ledger.
+  await ownerWrite(`ledgers/${ledgerRef.id}`, { deleting: true }, { merge: true });
+  await denied("a snapshot while the ledger is being deleted", () =>
+    setDoc(doc(db, "ledgers", ledgerRef.id, "budgetSnapshots", "2026-09"), snapshotData()),
+  );
+  await denied("an entry while the ledger is being deleted", () => addDoc(entries, entryData()));
 
   console.log(failures ? `\n❌ ${failures} case(s) failed` : "\n🎉 every case passed");
   process.exit(failures ? 1 : 0);

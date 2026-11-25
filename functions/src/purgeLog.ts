@@ -13,8 +13,9 @@ export type PurgeResult = { posts: number; participants: number };
  * posts and comments, participants' bookkeeping, achievements and notifications, images,
  * and finally the log document itself. Callers check who may do this.
  *
- * Safe to retry: the log document is removed last (ledgers stay flagged `deleting`), so a
- * partial failure can be finished by calling again.
+ * Safe to retry: the log document is removed last and stays flagged `deleting` (which the
+ * rules check, so nothing new is written under it meanwhile), so a partial failure can be
+ * finished by calling again.
  */
 export const purgeLog = async (
   db: Firestore,
@@ -44,6 +45,8 @@ export const purgeLog = async (
     await endSublogLinks(db, id);
     participantIds = uniqueDocIds(memberRefs);
   } else {
+    // Stop new posts and comments (via rules) before finding the posts to remove.
+    await logRef.update({ deleting: true });
     const posts = await db.collection("log_posts").where("group", "==", logRef).get();
     postIds = posts.docs.map((d) => d.id);
     const subscribers = posts.docs.flatMap(
