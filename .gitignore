@@ -29,3 +29,6 @@ serviceAccountKey.json
 
 # Walkthrough screenshots (npm run e2e)
 e2e/.output/
+
+# App Store / Play listing screenshots (kept locally)
+store-screenshots/
