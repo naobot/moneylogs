@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { getDisplayPrefs, initDisplayPrefs } from "@/utils/displayPrefs";
-import { initTheme } from "@/utils/theme";
+import { getTheme, initTheme } from "@/utils/theme";
 
 const mocks = vi.hoisted(() => ({ signOut: vi.fn(), track: vi.fn() }));
 vi.mock("@/features/auth/hooks/useSignOut", () => ({
@@ -23,6 +23,7 @@ describe("NavMenu", () => {
     window.localStorage.clear();
     delete document.documentElement.dataset.textSize;
     delete document.documentElement.dataset.uiSize;
+    delete document.documentElement.dataset.theme;
     initTheme();
     initDisplayPrefs();
     mocks.signOut.mockReset();
@@ -58,7 +59,7 @@ describe("NavMenu", () => {
 
     toggle();
     expect(trigger().getAttribute("aria-expanded")).toBe("true");
-    expect(items().map((b) => b.textContent)).toEqual(["display", "sign out"]);
+    expect(items().map((b) => b.textContent)).toEqual(["display", "theme · paper", "sign out"]);
     expect(document.activeElement).toBe(item("display"));
 
     toggle();
@@ -74,6 +75,15 @@ describe("NavMenu", () => {
     expect(items()).toHaveLength(0);
   });
 
+  it("cycles the theme from the menu and stays open", () => {
+    render(true);
+    toggle();
+    act(() => item("theme")!.click());
+    expect(getTheme()).toBe("night");
+    expect(item("theme")!.textContent).toBe("theme · night shift");
+    expect(item("theme")!.getAttribute("aria-label")).toBe("Theme: Night shift. Switch to Paper");
+  });
+
   it("signs out from the menu", () => {
     render(true);
     toggle();
@@ -84,8 +94,8 @@ describe("NavMenu", () => {
   it("offers only display when signed out", () => {
     render(false);
     toggle();
-    expect(items().map((b) => b.textContent)).toEqual(["display"]);
-    expect(trigger().getAttribute("aria-label")).toBe("More: display settings");
+    expect(items().map((b) => b.textContent)).toEqual(["display", "theme · paper"]);
+    expect(trigger().getAttribute("aria-label")).toBe("Menu: display and theme");
   });
 
   it("opens quick display settings that change text and UI size", () => {

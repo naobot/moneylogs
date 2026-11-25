@@ -144,8 +144,8 @@ const MainNav = () => {
           </Link>
         )}
         {/* The theme toggle and the menu (display settings, sign out) read as one pair
-            of icons, set close together. On phones the theme toggle is left to the menu's
-            display settings; the menu stays, far right. It waits for auth, so sign out
+            of icons, set close together. On phones the theme toggle moves into the menu;
+            the caret stays, far right. It waits for auth, so sign out
             doesn't pop into it a moment later. */}
         <span className="MainNav__iconPair">
           <ThemeToggle isLoggedIn={isLoggedIn} />

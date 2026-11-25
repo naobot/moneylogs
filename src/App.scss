@@ -158,8 +158,8 @@ html {
   box-sizing: border-box;
 }
 
-// The header: nav icons, the ongoing logs, and the brand (wordmark, theme, and the menu
-// with display settings and sign out).
+// The header: nav icons, the ongoing logs, and the brand (wordmark, theme, and the
+// dropdown with display settings, the theme on phones, and sign out).
 // Desktop: one row, brand pushed right. Phones: nav icons + brand on top, and the logs on
 // a scrollable row of their own beneath, so titles stay readable and taps land.
 .MainNav {
@@ -316,9 +316,18 @@ html {
     cursor: default;
   }
 
+  // Wide screens have the theme toggle in the nav itself.
+  &--theme {
+    display: none;
+  }
+
   // Comfortable taps on phones (and bigger at UI L, like the nav icons).
   @media (max-width: constants.$breakpoint-sm) {
     min-height: calc(44px * var(--icon-scale));
+
+    &--theme {
+      display: flex;
+    }
   }
 }
 

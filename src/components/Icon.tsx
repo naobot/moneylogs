@@ -37,7 +37,7 @@ export type IconType =
   | "wallet"
   | "gift"
   | "eye"
-  | "more";
+  | "caret";
 
 const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
   const rkIcons = ["exit", "document", "user", "speech", "speech-filled", "plus"];
@@ -53,7 +53,7 @@ const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
     "gift",
     "star",
     "eye",
-    "more",
+    "caret",
   ]; // drawn in-house
 
   const iconSet = rkIcons.includes(type)

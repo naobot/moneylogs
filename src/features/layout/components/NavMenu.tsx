@@ -9,6 +9,8 @@ import Popover from "@/components/Popover";
 import { SizeRows, ThemeRow } from "@/features/account/DisplaySection";
 import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { track } from "@/utils/analytics";
+import { setTheme, THEME_LABELS } from "@/utils/theme";
+import { themeIcon, useThemeToggle } from "./useThemeToggle";
 
 /**
  * Display settings that matter from any screen: theme, text size, UI size and entry text.
@@ -44,7 +46,8 @@ export const QuickDisplay = ({
 );
 
 /**
- * The nav's "more" menu, far right: display settings (the eye) for everyone, and sign out
+ * The nav's dropdown (a caret), far right: display settings (the eye) for everyone, the
+ * theme toggle on phones (wide screens keep it in the nav, beside the caret), and sign out
  * when signed in. Display opens QuickDisplay over whatever page you're on.
  */
 export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
@@ -56,6 +59,7 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
   const [displayOpen, setDisplayOpen] = useState(false);
+  const themeToggle = useThemeToggle(isLoggedIn);
 
   // Keyboard users land on the first item, as in any menu.
   useEffect(() => {
@@ -74,12 +78,12 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
         <Button
           variant="icon"
           className="NavMenu__trigger"
-          title="More"
-          aria-label={isLoggedIn ? "More: display settings and sign out" : "More: display settings"}
+          title="Menu"
+          aria-label={isLoggedIn ? "Menu: display, theme and sign out" : "Menu: display and theme"}
           aria-haspopup="menu"
           aria-expanded={open}
           aria-controls="nav-menu"
-          icon="more"
+          icon="caret"
           onClick={() => setOpenOn(open ? null : pathname)}
         />
       </span>
@@ -91,10 +95,21 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
         align="end"
         className="NavMenu__panel"
       >
-        <div ref={menuRef} id="nav-menu" role="menu" aria-label="More">
+        <div ref={menuRef} id="nav-menu" role="menu" aria-label="Menu">
           <button type="button" role="menuitem" className="NavMenu__item" onClick={openDisplay}>
             <Icon type="eye" />
             display
+          </button>
+          {/* Phones only (see App.scss): it stays open, so the next tap cycles on. */}
+          <button
+            type="button"
+            role="menuitem"
+            className="NavMenu__item NavMenu__item--theme"
+            aria-label={themeToggle.label}
+            onClick={() => setTheme(themeToggle.next)}
+          >
+            <Icon type={themeIcon(themeToggle.theme)} />
+            {`theme · ${THEME_LABELS[themeToggle.theme].toLowerCase()}`}
           </button>
           {isLoggedIn && (
             <button
