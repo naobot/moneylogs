@@ -2,6 +2,15 @@ import { afterEach, describe, it, expect, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser/context";
 import { MemoryRouter } from "react-router-dom";
 
+// These ledger components import the Firebase config, which starts Firebase on import
+// and fails without the app's env keys (as in CI). Nothing here talks to a backend.
+vi.mock("@/config/firebase-config", () => ({
+  auth: {},
+  db: {},
+  storage: {},
+  functions: {},
+  analytics: null,
+}));
 // The sidebar looks up the viewer's logs to link sublogs; no backend in a visual test.
 vi.mock("@/hooks/useGetMyLedgers", () => ({ useGetMyLedgers: () => ({ ledgers: [] }) }));
 

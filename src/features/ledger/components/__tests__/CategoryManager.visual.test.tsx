@@ -1,5 +1,17 @@
-import { afterEach, describe, it, expect } from "vite-plus/test";
+import { afterEach, describe, it, expect, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser/context";
+// The category window imports the Firebase config, which starts Firebase on import
+// and fails without the app's env keys (as in CI). Nothing here talks to a backend.
+vi.mock("@/config/firebase-config", () => ({
+  auth: {},
+  db: {},
+  storage: {},
+  functions: {},
+  analytics: null,
+}));
+// Its sublog lines look up the viewer's logs; there are no sublogs here.
+vi.mock("@/hooks/useGetMyLedgers", () => ({ useGetMyLedgers: () => ({ ledgers: [] }) }));
+
 import CategoryManager from "../CategoryManager";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { LedgerCategory } from "@/types/ledger";
