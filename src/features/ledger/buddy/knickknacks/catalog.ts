@@ -227,6 +227,14 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
       "a little envelope from your first invite! someone said yes~ i licked the seal myself *mlem*",
     fromLog: false,
   },
+  shiny_gear: {
+    name: "shiny gear",
+    rarity: "milestone",
+    seasons: [],
+    found:
+      "found a shiny gear~ i think it's what keeps everything running. thank you for helping fix it ♪",
+    fromLog: false,
+  },
   mini_robot_charm: {
     name: "mini robot charm",
     rarity: "special",
