@@ -165,8 +165,11 @@ export const listCleanupCandidates = onSchedule(
   }),
 );
 
-/** Flags (and adds, if missing) accounts whose deletion stopped partway, first in the list. */
-export const withUnfinished = async <T extends { candidates: CleanupCandidate[] }>(
+/**
+ * Flags (and adds, if missing) accounts whose deletion stopped partway, first in the list.
+ * Added ones count towards `total`, so it still says when the stored list was capped.
+ */
+export const withUnfinished = async <T extends { candidates: CleanupCandidate[]; total: number }>(
   db: Firestore,
   list: T,
 ): Promise<T> => {
@@ -178,8 +181,10 @@ export const withUnfinished = async <T extends { candidates: CleanupCandidate[] 
     unfinished: true,
   }));
   const ids = new Set(unfinished.map((c) => c.uid));
+  const rest = list.candidates.filter((c) => !ids.has(c.uid));
   return {
     ...list,
-    candidates: [...unfinished, ...list.candidates.filter((c) => !ids.has(c.uid))],
+    candidates: [...unfinished, ...rest],
+    total: list.total + unfinished.length - (list.candidates.length - rest.length),
   };
 };

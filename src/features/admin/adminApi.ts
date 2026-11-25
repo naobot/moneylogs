@@ -85,6 +85,9 @@ export type CleanupList = {
 export const adminCleanupList = httpsCallable<{ refresh?: boolean }, CleanupList>(
   functions,
   "adminCleanupList",
+  // A refresh scans every account: wait as long as the function may run (300 s), not the
+  // SDK's default 70 s.
+  { timeout: 300_000 },
 );
 
 /**
@@ -95,7 +98,7 @@ export const adminCleanupList = httpsCallable<{ refresh?: boolean }, CleanupList
 export const adminCleanupDelete = httpsCallable<
   { uid: string },
   { deleted: boolean; reason: "idle_guest" | "idle_unconfirmed" | "kept" | "gone" }
->(functions, "adminCleanupDelete");
+>(functions, "adminCleanupDelete", { timeout: 540_000 });
 
 /** The server's own message for an HttpsError, else a generic one. */
 export const adminErrorMessage = (err: unknown): string =>
