@@ -38,6 +38,10 @@ export const MILESTONE_ACHIEVEMENTS = {
     title: "The More the Merrier",
     description: "Invited someone who became a friend",
   },
+  shiny_gear: {
+    title: "Early Tester",
+    description: "Helped test the moneylogs app before it launched",
+  },
 } as const satisfies Partial<Record<KnickKnackId, { title: string; description: string }>>;
 
 export type MilestoneAchievementType = keyof typeof MILESTONE_ACHIEVEMENTS;

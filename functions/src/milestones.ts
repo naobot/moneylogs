@@ -5,7 +5,8 @@
  * with an achievement, and only for achievements that encourage healthy use of the app
  * (achievements like top spender stay achievements only). They stay with whoever
  * earned them: none can be gifted. The coins come from check-in streaks (coins.ts); the
- * others are one-offs given the first time something happens (awardMilestone.ts).
+ * others are one-offs given the first time something happens (awardMilestone.ts), except
+ * the shiny gear, which is given by hand to early testers (scripts/award-tester-gear.ts).
  */
 
 import type { KnickKnackId } from "./knickknacks";
@@ -15,6 +16,8 @@ export const FIRST_SOCIAL_ENTRY = "heart_leaf" satisfies KnickKnackId;
 export const FIRST_COMMENT_ON_OTHERS = "paper_crane" satisfies KnickKnackId;
 export const FIRST_FRIEND = "friendship_bracelet" satisfies KnickKnackId;
 export const FIRST_INVITE = "little_envelope" satisfies KnickKnackId;
+/** Given by hand to the app's early testers (scripts/award-tester-gear.ts). */
+export const EARLY_TESTER = "shiny_gear" satisfies KnickKnackId;
 
 /**
  * users/{id}/achievements/{id} for a milestone. One per item, so the id is fixed and

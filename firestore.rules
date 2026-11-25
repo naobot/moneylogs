@@ -227,7 +227,7 @@ service cloud.firestore {
       allow create, update: if ownsUserDoc(userDocId)
         && !(request.resource.data.type in [
           "copper_coin", "silver_coin", "gold_coin", "extra_shiny_gold_coin",
-          "heart_leaf", "paper_crane", "friendship_bracelet", "little_envelope",
+          "heart_leaf", "paper_crane", "friendship_bracelet", "little_envelope", "shiny_gear",
           "first_gift", "first_no_spend_day", "super_lucky", "first_social_log"
         ]);
     }

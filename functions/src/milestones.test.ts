@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import {
   FIRST_COMMENT_ON_OTHERS,
   FIRST_FRIEND,
+  EARLY_TESTER,
   FIRST_INVITE,
   FIRST_SOCIAL_ENTRY,
   isCommentOnOthers,
@@ -27,6 +28,7 @@ describe("milestones", () => {
         FIRST_COMMENT_ON_OTHERS,
         FIRST_FRIEND,
         FIRST_INVITE,
+        EARLY_TESTER,
       ].sort(),
     );
   });
