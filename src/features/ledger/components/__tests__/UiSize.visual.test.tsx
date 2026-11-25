@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vite-plus/test";
+import { act } from "react";
 import { MemoryRouter } from "react-router-dom";
 
 // These ledger components import the Firebase config, which starts Firebase on import
@@ -103,7 +104,9 @@ describe("ledger parts at each size (visual)", () => {
       </MemoryRouter>,
     );
 
-    expect(v.container.querySelector(".Ledger")).not.toBeNull();
+    // The first entry's phone actions drawer ("…") open, the rest closed.
+    act(() => (v.container.querySelector(".EntryList__more") as HTMLButtonElement).click());
+    expect(v.container.querySelector(".EntryList__drawer")).not.toBeNull();
     await v.sizes("ledger parts");
   });
 });

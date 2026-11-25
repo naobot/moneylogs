@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Builds a review page from the screenshots `vp test --project visual` saves through
 // v.sizes() (src/test/visual.tsx): one section per scene, a 3 × 3 grid of text size
-// (rows) by UI size (columns). Writes .vitest/gallery/index.html next to the images.
+// (rows) by UI size (columns), plus a row of the same scene on a narrow phone. Writes .vitest/gallery/index.html next to the images.
 //
 //   npx vp test --project visual && node scripts/visual-gallery.mjs
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -33,7 +33,14 @@ for (const file of walk(join(ROOT, "src")).filter((f) => f.endsWith(".visual.tes
   }
 }
 
-const shot = (id, text, ui) => `${id}/text-${text}__ui-${ui}.png`;
+const shot = (id, text, ui, narrow = false) =>
+  `${id}/${narrow ? "narrow__" : ""}text-${text}__ui-${ui}.png`;
+// Must match NARROW_PAIRS in src/test/visual.tsx.
+const NARROW_PAIRS = [
+  ["m", "m"],
+  ["l", "m"],
+  ["l", "l"],
+];
 const found = readdirSync(GALLERY)
   .filter((id) => statSync(join(GALLERY, id)).isDirectory())
   .sort();
@@ -62,6 +69,18 @@ const section = (id) => {
             (text, row) => `<div class="axis-side">text ${text.toUpperCase()}</div>
           ${cells.slice(row * 3, row * 3 + 3).join("\n")}`,
           ).join("\n")}
+          <div class="axis-side axis-side--narrow">narrow 360px</div>
+          ${NARROW_PAIRS.filter(([t, u]) => existsSync(join(GALLERY, shot(id, t, u, true))))
+            .map(
+              ([
+                text,
+                ui,
+              ]) => `<figure class="cell cell--narrow" id="${id}--narrow-text-${text}-ui-${ui}">
+          <figcaption>narrow · text ${text.toUpperCase()} · ui ${ui.toUpperCase()}</figcaption>
+          <img src="${shot(id, text, ui, true)}" alt="${escape(`${name} · narrow phone · text ${text.toUpperCase()} · ui ${ui.toUpperCase()}`)}" loading="lazy" width="360">
+        </figure>`,
+            )
+            .join("\n")}
         </div>
       </div>
     </section>`;
@@ -127,13 +146,16 @@ const html = `<title>moneylogs size review</title>
   .cell { margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
   .cell figcaption { font-size: 0.8rem; color: var(--muted); display: flex; gap: 0.5rem; }
   .tag { background: var(--ink); color: var(--paper); padding: 0 0.35rem; }
+  .axis-side--narrow { border-top: 2px solid var(--ink); padding-top: 0.5rem; }
+  .cell--narrow { border-top: 2px solid var(--ink); padding-top: 0.5rem; }
+  .cell.cell--narrow img { width: 360px; }
   .cell img { display: block; width: 390px; max-width: none; border: 1px solid var(--rule); background: var(--sheet); }
   .cell:target img { outline: 3px solid var(--ink); outline-offset: 2px; }
 </style>
 <main>
   <div class="intro">
     <h1>size review</h1>
-    <p>Each scene from the visual tests at phone width (390px), at every Display → Text size (rows) and UI size (columns). Text M · UI M is the default and matches production.</p>
+    <p>Each scene from the visual tests at phone width (390px), at every Display → Text size (rows) and UI size (columns). Text M · UI M is the default and matches production. The last row is the same scene on a narrow phone (360px), where text collides first.</p>
     <p>Leave a comment on any screenshot. Saying the scene and the size pair is enough for me to find the component. Comments on a whole row or column apply to that size across the scene.</p>
     <nav aria-label="Scenes">
       ${found.map((id) => `<a href="#${id}">${escape(scenes.get(id)?.name ?? id)}</a>`).join("\n      ")}

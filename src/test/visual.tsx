@@ -29,6 +29,8 @@ const SIZES: readonly Size[] = ["s", "m", "l"];
 
 /** A phone, where sizes get tight first. */
 export const PHONE = { width: 390, height: 844 };
+/** A narrow phone (many Androids, older iPhones at zoomed display): where text collides. */
+export const NARROW_PHONE = { width: 360, height: 780 };
 /** The browser's size in the visual project unless a test changes it. */
 const DEFAULT_VIEWPORT = { width: 414, height: 896 };
 
@@ -41,6 +43,13 @@ const CHROMATIC_PAIRS: readonly [text: Size, ui: Size][] = [
   ["m", "m"],
   ["l", "l"], // biggest: text and room both up
   ["l", "s"], // most cramped: big text, tight room
+];
+
+/** On a narrow phone, the pairs where things collide first; Chromatic gets the last. */
+const NARROW_PAIRS: readonly [text: Size, ui: Size][] = [
+  ["m", "m"],
+  ["l", "m"],
+  ["l", "l"],
 ];
 
 /** Through the real prefs, so <html> gets the attribute and anything showing the
@@ -61,8 +70,8 @@ const slug = (name: string) =>
     .replace(/^-|-$/g, "");
 
 /** Where the review gallery's screenshots go (gitignored); see scripts/visual-gallery.mjs. */
-const galleryPath = (scene: string, text: Size, ui: Size) =>
-  `${server.config.root}/.vitest/gallery/${slug(scene)}/text-${text}__ui-${ui}.png`;
+const galleryPath = (scene: string, text: Size, ui: Size, narrow = false) =>
+  `${server.config.root}/.vitest/gallery/${slug(scene)}/${narrow ? "narrow__" : ""}text-${text}__ui-${ui}.png`;
 
 /**
  * Shared harness for *.visual.test.tsx files: mounts into a fresh root per test and
@@ -126,35 +135,43 @@ export const useVisualHarness = () => {
     viewport: (size: { width: number; height: number }) => page.viewport(size.width, size.height),
     /**
      * Walks the rendered UI through every Display → Text size × UI size pair at phone
-     * width: each one is saved to the local review gallery (.vitest/gallery/<scene>/),
-     * and the pairs in CHROMATIC_PAIRS are also snapshotted for Chromatic as
-     * "<scene> · text X · ui Y". Render first; the sizes are CSS, so nothing re-renders.
+     * width, then NARROW_PAIRS on a narrow phone: each one is saved to the local review
+     * gallery (.vitest/gallery/<scene>/), and CHROMATIC_PAIRS plus the narrow L · L are
+     * also snapshotted for Chromatic. Render first; the sizes are CSS, so only what reads
+     * the prefs re-renders.
      */
     sizes: async (scene: string) => {
-      await page.viewport(PHONE.width, PHONE.height);
+      const shoot = async (text: Size, ui: Size, width: number, narrow: boolean) => {
+        setSize("textSize", text);
+        setSize("uiSize", ui);
+        await page.viewport(width, PHONE.height);
+        await settle();
+        // An open modal is portalled outside the container and fixed to the viewport,
+        // so it's shot at a phone's height. Anything else grows the viewport to fit:
+        // tests run in an iframe that only paints what's inside it.
+        const modalOpen = !!document.getElementById("modal-root")?.childElementCount;
+        await page.viewport(
+          width,
+          modalOpen ? PHONE.height : Math.max(PHONE.height, Math.ceil(container.scrollHeight)),
+        );
+        await settle();
+        await page.screenshot({
+          element: modalOpen ? document.body : container,
+          path: galleryPath(scene, text, ui, narrow),
+        });
+      };
       for (const text of SIZES) {
         for (const ui of SIZES) {
-          setSize("textSize", text);
-          setSize("uiSize", ui);
-          await settle();
-          // An open modal is portalled outside the container and fixed to the viewport,
-          // so it's shot at a phone's height. Anything else grows the viewport to fit:
-          // tests run in an iframe that only paints what's inside it.
-          const modalOpen = !!document.getElementById("modal-root")?.childElementCount;
-          await page.viewport(
-            PHONE.width,
-            modalOpen ? PHONE.height : Math.max(PHONE.height, Math.ceil(container.scrollHeight)),
-          );
-          await settle();
-          await page.screenshot({
-            element: modalOpen ? document.body : container,
-            path: galleryPath(scene, text, ui),
-          });
+          await shoot(text, ui, PHONE.width, false);
           if (CHROMATIC_PAIRS.some(([t, u]) => t === text && u === ui)) {
             await takeSnapshot(`${scene} · text ${text} · ui ${ui}`);
           }
         }
       }
+      for (const [text, ui] of NARROW_PAIRS) {
+        await shoot(text, ui, NARROW_PHONE.width, true);
+      }
+      await takeSnapshot(`${scene} · narrow · text l · ui l`);
     },
   };
 };
