@@ -235,6 +235,14 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
       "found a shiny gear~ i think it's what keeps everything running. thank you for helping fix it ♪",
     fromLog: false,
   },
+  extra_shiny_gear: {
+    name: "extra shiny gear",
+    rarity: "milestone",
+    seasons: [],
+    found:
+      "an extra shiny gear!! fourteen days in a row, you kept every wheel turning ♪ thank you~",
+    fromLog: false,
+  },
   mini_robot_charm: {
     name: "mini robot charm",
     rarity: "special",

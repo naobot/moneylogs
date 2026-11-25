@@ -47,6 +47,8 @@ describe("daily check-in scheduling", () => {
       requestDailyCheckIn({ userDocId: "u1", today: "2026-11-18", hour: 12 });
       await flush();
       expect(state.call).toHaveBeenCalledTimes(1);
+      // The web says so: only Android check-ins count towards the closed test.
+      expect(state.call).toHaveBeenCalledWith({ platform: "web" });
 
       requestDailyCheckIn({ userDocId: "u1", today: "2026-11-18", hour: 18 });
       await flush();

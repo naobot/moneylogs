@@ -573,6 +573,7 @@ export {
 export { listCleanupCandidates } from "./accountCleanup";
 export { rollQuietDay } from "./rollQuietDay";
 export { checkInLedger, dailyCheckIn } from "./checkIn";
+export { awardEarlyTesters } from "./awardEarlyTesters";
 export { confirmNoSpendDay } from "./noSpend";
 export { notifyOnReaction } from "./notifyOnReaction";
 export { notifyLogTimeline } from "./notifyLogTimeline";

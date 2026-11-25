@@ -4,7 +4,15 @@ import { coinsDue, nextStreak, parseCheckInRequest, StreakMarker } from "./coins
 import { dayIn } from "./knickknacks";
 import { takeDailyChance } from "./knickknackFind";
 import { writeMilestone } from "./awardMilestone";
-import { withSentryCall } from "./sentry";
+import {
+  CheckInPlatform,
+  inWindow,
+  nextTesterMarker,
+  parseCheckInPlatform,
+  parseTesterWindow,
+  TesterMarker,
+} from "./earlyTesters";
+import { reportError, withSentryCall } from "./sentry";
 
 /**
  * Count a check-in towards the person's streak, and hand over any coin it earns (coins.ts).
@@ -49,16 +57,50 @@ export const callerUserRef = async (db: Firestore, uid: string) => {
 };
 
 /**
+ * Count today towards the Android closed test (earlyTesters.ts), while its window is open.
+ * The day is the person's own, like the streak's. Best-effort: a failure here never stops
+ * the check-in.
+ */
+export const recordTesterDay = async ({
+  db,
+  userRef,
+  now = Date.now(),
+}: {
+  db: Firestore;
+  userRef: DocumentReference;
+  now?: number;
+}): Promise<void> => {
+  const window = parseTesterWindow((await db.collection("config").doc("app").get()).data());
+  if (!inWindow(window, now)) return;
+  const markerRef = userRef.collection("testing").doc("android");
+  await db.runTransaction(async (tx) => {
+    const [user, markerSnap] = await Promise.all([tx.get(userRef), tx.get(markerRef)]);
+    if (!user.exists) return;
+    const today = dayIn(now, user.get("timezone") as string | undefined);
+    const next = nextTesterMarker(markerSnap.data() as TesterMarker | undefined, today);
+    if (next) tx.set(markerRef, next);
+  });
+};
+
+/**
  * A signed-in visit: today's check-in (streak, coins, luck), and the day's visit roll for a
  * knick-knack, or the evening one once that's spent. The server decides the day and the
  * hour from the stored timezone, so the client can't add days or rolls. `more` tells the
  * client whether a visit later today could still roll, so it knows to ask again.
  */
-const checkInVisit = async (uid: string): Promise<{ ok: true; more: boolean }> => {
+const checkInVisit = async (
+  uid: string,
+  platform: CheckInPlatform | null,
+): Promise<{ ok: true; more: boolean }> => {
   const db = getFirestore();
   const userRef = await callerUserRef(db, uid);
   if (!userRef) return { ok: true, more: false };
   await recordCheckIn({ db, userRef, loggedEntry: false });
+  if (platform === "android") {
+    await recordTesterDay({ db, userRef }).catch((error) =>
+      reportError(error, { action: "record_tester_day", level: "warning" }),
+    );
+  }
   // Like other finds, what turns up is revealed through the live finds query, not here.
   const { more } = await takeDailyChance({ db, userRef, kind: "visit" });
   return { ok: true, more };
@@ -68,7 +110,7 @@ export const dailyCheckIn = onCall(
   withSentryCall("dailyCheckIn", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
-    return checkInVisit(uid);
+    return checkInVisit(uid, parseCheckInPlatform(request.data));
   }),
 );
 
@@ -83,6 +125,6 @@ export const checkInLedger = onCall(
     if (!parseCheckInRequest(request.data)) {
       throw new HttpsError("invalid-argument", "Expected { ledgerId }.");
     }
-    return checkInVisit(uid);
+    return checkInVisit(uid, null);
   }),
 );

@@ -3,13 +3,14 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase-config";
 import { useCurrentUser } from "@/contexts";
 import { reportError } from "@/utils/reportError";
-import { storage } from "@/platform";
+import { nativePlatform, storage } from "@/platform";
 import { hourInTz, todayInTz } from "@/utils/ledger";
 
-const dailyCheckInCallable = httpsCallable<void, { ok: boolean; more: boolean }>(
-  functions,
-  "dailyCheckIn",
-);
+/** The platform tells the server which check-ins count towards the Android closed test. */
+const dailyCheckInCallable = httpsCallable<
+  { platform: "android" | "ios" | "web" },
+  { ok: boolean; more: boolean }
+>(functions, "dailyCheckIn");
 
 /** The evening roll opens at this hour (functions/src/knickknacks.ts EVENING_FROM_HOUR). */
 export const EVENING_FROM_HOUR = 17;
@@ -70,7 +71,7 @@ export const requestDailyCheckIn = ({
 }) => {
   if (inFlight || !shouldAsk(readNext(userDocId), today, hour)) return;
   inFlight = true;
-  dailyCheckInCallable()
+  dailyCheckInCallable({ platform: nativePlatform() ?? "web" })
     .then(({ data }) =>
       storage.set(key(userDocId), JSON.stringify(nextAsk({ more: data.more, today, hour }))),
     )

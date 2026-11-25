@@ -3,6 +3,7 @@ import {
   FIRST_COMMENT_ON_OTHERS,
   FIRST_FRIEND,
   EARLY_TESTER,
+  EARLY_TESTER_EXTRA,
   FIRST_INVITE,
   FIRST_SOCIAL_ENTRY,
   isCommentOnOthers,
@@ -29,6 +30,7 @@ describe("milestones", () => {
         FIRST_FRIEND,
         FIRST_INVITE,
         EARLY_TESTER,
+        EARLY_TESTER_EXTRA,
       ].sort(),
     );
   });
