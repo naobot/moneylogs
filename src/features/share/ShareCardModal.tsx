@@ -407,7 +407,14 @@ const ShareCardFrame = ({
 }) => {
   const { showToast } = useToastContext();
   const [format, setFormat] = useState<CardFormat>("story");
-  const [image, setImage] = useState<{ blob: Blob; url: string } | null>(null);
+  // What was drawn, for which shape and spec: a render lags behind a switch, and the other
+  // shape's image mustn't stand in for it meanwhile.
+  const [image, setImage] = useState<{
+    blob: Blob;
+    url: string;
+    format: CardFormat;
+    specKey: string;
+  } | null>(null);
   const [renderFailed, setRenderFailed] = useState(false);
   const [pending, setPending] = useState(false);
   const canShareFiles = useMemo(() => canShareImages(), []);
@@ -424,7 +431,7 @@ const ShareCardFrame = ({
       .then((blob) => {
         if (cancelled) return;
         url = URL.createObjectURL(blob);
-        setImage({ blob, url });
+        setImage({ blob, url, format, specKey });
         setRenderFailed(false);
       })
       .catch((err) => {
@@ -438,8 +445,14 @@ const ShareCardFrame = ({
     };
   }, [specKey, format, sources]);
 
+  // The current shape's image; after an option change the previous one stays up until
+  // the redraw lands, but only a fully current image can be shared.
+  const shapeImage = image?.format === format ? image : null;
+  const current = shapeImage?.specKey === specKey ? shapeImage : null;
+
   const share = async () => {
-    if (!image || pending) return;
+    if (!current || pending) return;
+    const image = current;
     setPending(true);
     try {
       const shared = canShareFiles
@@ -459,7 +472,7 @@ const ShareCardFrame = ({
   };
 
   const ready = !!spec && !isLoading && !isError;
-  const shown = ready && image;
+  const shown = ready && shapeImage;
 
   return (
     <Modal
@@ -498,7 +511,7 @@ const ShareCardFrame = ({
                 {renderFailed ? (
                   <p className="error-message">Couldn't draw the card.</p>
                 ) : shown ? (
-                  <img src={image.url} alt={`Share card: ${spec.lines.join(" ")}`} />
+                  <img src={shapeImage.url} alt={`Share card: ${spec.lines.join(" ")}`} />
                 ) : (
                   <p>
                     <LoadingDots />
@@ -524,7 +537,7 @@ const ShareCardFrame = ({
           <Button
             text={canShareFiles ? "share" : "save image"}
             variant="primary"
-            disabled={!image || renderFailed}
+            disabled={!current || renderFailed}
             loading={pending}
             onClick={() => void share()}
           />
