@@ -58,10 +58,14 @@ const setSize = (key: "textSize" | "uiSize", size: Size) =>
   act(() => setDisplayPrefs({ [key]: size }));
 
 /** Two frames: one for styles to apply, one for anything that measures layout. */
-const settle = () =>
-  new Promise<void>((resolve) =>
+// Two frames for layout, after every image has loaded: an icon fetched for the first
+// time otherwise shows as a broken image in the shot.
+const settle = async () => {
+  await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => undefined)));
+  await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
+};
 
 const slug = (name: string) =>
   name

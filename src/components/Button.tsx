@@ -33,6 +33,10 @@ type ButtonProps = {
   isSelected?: boolean;
   /** For icon-only buttons whose name should differ from `title`. */
   "aria-label"?: string;
+  /** For a button that opens a menu or panel. */
+  "aria-expanded"?: boolean;
+  "aria-haspopup"?: "menu" | "dialog";
+  "aria-controls"?: string;
 };
 
 const Button = forwardRef(

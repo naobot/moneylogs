@@ -6,11 +6,11 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useGetCurrentGroups } from "@/hooks/useGetCurrentGroups";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { useCurrentUser } from "@/contexts";
-import { useSignOut } from "@/features/auth/hooks/useSignOut";
 import { arrangeDashboard, navLedgers } from "@/utils/dashboard";
 
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
+import NavMenu from "./NavMenu";
 import { showNavWordmark } from "../navWordmark";
 import { inviteSignInState } from "@/features/auth/authRedirect";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
@@ -47,8 +47,6 @@ const MainNav = () => {
 
   // Home is a list of logs now, so only highlight the log actually being viewed.
   const highlightedGroupId = currentGroupId ?? null;
-
-  const { signOut, isPending: signOutPending } = useSignOut();
 
   const showLogs = isLoggedIn && (ledgers.length > 0 || isLoading || currentGroups.length > 0);
   const showWordmark = showNavWordmark(isLoggedIn, location.pathname);
@@ -145,20 +143,13 @@ const MainNav = () => {
             moneylogs <small>{__APP_VERSION__}</small>
           </Link>
         )}
-        {/* Theme toggle and sign-out read as one pair of icons, set close together. On
-            phones the theme toggle is left to /me (Display drawer); sign-out stays. */}
+        {/* The theme toggle and the menu (display settings, sign out) read as one pair
+            of icons, set close together. On phones the theme toggle moves into the menu;
+            the caret stays, far right. It waits for auth, so sign out
+            doesn't pop into it a moment later. */}
         <span className="MainNav__iconPair">
           <ThemeToggle isLoggedIn={isLoggedIn} />
-          {isLoggedIn && (
-            <Button
-              variant="icon"
-              className="MainNav__signOut"
-              title="Sign out"
-              onClick={signOut}
-              loading={signOutPending}
-              icon="exit"
-            />
-          )}
+          {!authPending && <NavMenu isLoggedIn={isLoggedIn} />}
         </span>
       </div>
     </nav>

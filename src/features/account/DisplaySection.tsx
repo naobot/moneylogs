@@ -3,7 +3,7 @@ import Markdown from "@/components/Markdown";
 import Button from "@/components/Button";
 import dayjs from "@/utils/configuredDayjs";
 import { formatShortDate, formatTime, useDateFormat } from "@/utils/dateFormat";
-import { track } from "@/utils/analytics";
+import { DisplayFrom, track } from "@/utils/analytics";
 import {
   CHART_COLOURS,
   ChartColours,
@@ -19,6 +19,7 @@ import {
   TextSize,
   UI_SIZES,
   UiSize,
+  useDisplayPrefs,
 } from "@/utils/displayPrefs";
 import {
   ColourTheme,
@@ -143,6 +144,85 @@ const ColourSwatches = ({
   </div>
 );
 
+/** Paper, the last colour theme (a star), or Night shift. */
+export const ThemeRow = () => {
+  const theme = useTheme();
+  const lastColour = useLastColourTheme();
+  const starTheme = lastColour ?? COLOUR_THEMES[0];
+  return (
+    <div className="DisplaySection__row">
+      <span className="DisplaySection__label">Theme</span>
+      <div className="Segmented" role="group" aria-label="Theme">
+        <Button
+          text={THEME_LABELS.paper}
+          icon="sun"
+          variant="toggle"
+          size="sm"
+          isSelected={theme === "paper"}
+          onClick={() => setTheme("paper")}
+        />
+        <Button
+          text={lastColour ? THEME_LABELS[lastColour] : "Colour"}
+          icon="star"
+          variant="toggle"
+          size="sm"
+          isSelected={isColourTheme(theme)}
+          onClick={() => setTheme(starTheme)}
+        />
+        <Button
+          text={THEME_LABELS.night}
+          icon="moon"
+          variant="toggle"
+          size="sm"
+          isSelected={theme === "night"}
+          onClick={() => setTheme("night")}
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Text size, UI size and entry text size: the rows that change how big things are. Shared
+ * by /me Display and the nav menu's quick display settings (`from` tells them apart).
+ */
+export const SizeRows = ({ from }: { from: DisplayFrom }) => {
+  const prefs = useDisplayPrefs();
+  return (
+    <>
+      <Segmented
+        label="Text size"
+        options={TEXT_SIZES}
+        value={prefs.textSize}
+        labelFor={(size) => TEXT_SIZE_LABELS[size]}
+        onChange={(textSize) => {
+          if (textSize === prefs.textSize) return;
+          setDisplayPrefs({ textSize });
+          track("text_size", { size: textSize, from });
+        }}
+      />
+      <Segmented
+        label="UI size"
+        options={UI_SIZES}
+        value={prefs.uiSize}
+        labelFor={(size) => UI_SIZE_LABELS[size]}
+        onChange={(uiSize) => {
+          if (uiSize === prefs.uiSize) return;
+          setDisplayPrefs({ uiSize });
+          track("ui_size", { size: uiSize, from });
+        }}
+      />
+      <Segmented
+        label="Entry text"
+        options={ENTRY_SIZES}
+        value={prefs.entrySize}
+        labelFor={(size) => SIZE_LABELS[size]}
+        onChange={(entrySize) => setDisplayPrefs({ entrySize })}
+      />
+    </>
+  );
+};
+
 /**
  * Viewing preferences remembered on this device: theme (Paper, the last colour theme as
  * a star, or Night shift, plus a row picking the colour theme), whether charts use the
@@ -151,43 +231,12 @@ const ColourSwatches = ({
  */
 export const DisplaySection = () => {
   const theme = useTheme();
-  const lastColour = useLastColourTheme();
-  const starTheme = lastColour ?? COLOUR_THEMES[0];
   const { prefs, formatDate } = useDateFormat();
   const now = dayjs();
 
   return (
     <>
-      <div className="DisplaySection__row">
-        <span className="DisplaySection__label">Theme</span>
-        <div className="Segmented" role="group" aria-label="Theme">
-          <Button
-            text={THEME_LABELS.paper}
-            icon="sun"
-            variant="toggle"
-            size="sm"
-            isSelected={theme === "paper"}
-            onClick={() => setTheme("paper")}
-          />
-          <Button
-            text={lastColour ? THEME_LABELS[lastColour] : "Colour"}
-            icon="star"
-            variant="toggle"
-            size="sm"
-            isSelected={isColourTheme(theme)}
-            onClick={() => setTheme(starTheme)}
-          />
-          <Button
-            text={THEME_LABELS.night}
-            icon="moon"
-            variant="toggle"
-            size="sm"
-            isSelected={theme === "night"}
-            onClick={() => setTheme("night")}
-          />
-        </div>
-      </div>
-
+      <ThemeRow />
       <ColourSwatches value={isColourTheme(theme) ? theme : null} onChange={setTheme} />
       <Segmented
         label="Charts"
@@ -214,35 +263,7 @@ export const DisplaySection = () => {
         labelFor={(dateOrder) => formatShortDate(SAMPLE_MOMENT, { ...prefs, dateOrder })}
         onChange={(dateOrder) => setDisplayPrefs({ dateOrder })}
       />
-      <Segmented
-        label="Text size"
-        options={TEXT_SIZES}
-        value={prefs.textSize}
-        labelFor={(size) => TEXT_SIZE_LABELS[size]}
-        onChange={(textSize) => {
-          if (textSize === prefs.textSize) return;
-          setDisplayPrefs({ textSize });
-          track("text_size", { size: textSize });
-        }}
-      />
-      <Segmented
-        label="UI size"
-        options={UI_SIZES}
-        value={prefs.uiSize}
-        labelFor={(size) => UI_SIZE_LABELS[size]}
-        onChange={(uiSize) => {
-          if (uiSize === prefs.uiSize) return;
-          setDisplayPrefs({ uiSize });
-          track("ui_size", { size: uiSize });
-        }}
-      />
-      <Segmented
-        label="Entry text"
-        options={ENTRY_SIZES}
-        value={prefs.entrySize}
-        labelFor={(size) => SIZE_LABELS[size]}
-        onChange={(entrySize) => setDisplayPrefs({ entrySize })}
-      />
+      <SizeRows from="me" />
       <Segmented
         label="Entry align"
         options={ENTRY_ALIGNS}
