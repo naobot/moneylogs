@@ -185,23 +185,23 @@ describe("rollFind", () => {
     );
   });
 
-  it("picks super-common items twice as often as common ones", () => {
-    // Mushroom (6) then acorn (3), out of 9.
+  it("picks super-common items 2.4 times as often as common ones", () => {
+    // Mushroom (6) then acorn (2.5), out of 8.5.
     const pick = (r: number) =>
       rollFind({ rand: seq(0, r), chance: 1, findable: ["mushroom", "acorn"] });
-    expect(pick(0.66)).toBe("mushroom");
-    expect(pick(0.67)).toBe("acorn");
+    expect(pick(0.7)).toBe("mushroom");
+    expect(pick(0.71)).toBe("acorn");
   });
 
-  it("picks rare items a third as often as common ones", () => {
-    // Autumn: acorn, pinecone, maple leaf (3 each) and the apple (1), out of 10.
+  it("picks rare items 2.5 times less often than common ones", () => {
+    // Autumn: acorn, pinecone, maple leaf (2.5 each) and the apple (1), out of 8.5.
     const autumn = ["acorn", "pinecone", "maple_leaf", "apple"] as const;
     const pick = (r: number) => rollFind({ rand: seq(0, r), chance: 1, findable: autumn });
     expect(pick(0)).toBe("acorn");
     expect(pick(0.29)).toBe("acorn");
-    expect(pick(0.31)).toBe("pinecone");
-    expect(pick(0.89)).toBe("maple_leaf");
-    expect(pick(0.91)).toBe("apple");
+    expect(pick(0.3)).toBe("pinecone");
+    expect(pick(0.88)).toBe("maple_leaf");
+    expect(pick(0.89)).toBe("apple");
     expect(pick(0.999)).toBe("apple");
   });
 

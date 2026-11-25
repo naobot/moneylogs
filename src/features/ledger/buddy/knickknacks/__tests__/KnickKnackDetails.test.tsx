@@ -50,8 +50,14 @@ describe("KnickKnackDetails", () => {
     expect(modal().querySelector("h2")!.textContent).toBe("acorn ×3");
   });
 
-  it("calls super-common items everyday", () => {
-    expect(RARITY_LABELS.super_common).toBe("everyday");
+  it("names rarities everyday, uncommon, rare, unique and special", () => {
+    expect(RARITY_LABELS).toEqual({
+      super_common: "everyday",
+      common: "uncommon",
+      rare: "rare",
+      milestone: "unique",
+      special: "special",
+    });
   });
 
   it("closes on a click away", () => {

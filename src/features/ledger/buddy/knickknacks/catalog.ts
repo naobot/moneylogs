@@ -19,12 +19,16 @@ export type KnickKnackId = keyof typeof ART;
  */
 export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
-/** How each rarity reads in the UI. Super-common items are the everyday ones. */
+/**
+ * How each rarity reads in the UI. The ids stay as they are in data and in the
+ * functions' weights: super-common reads "everyday", common "uncommon", milestone
+ * "unique".
+ */
 export const RARITY_LABELS: Record<Rarity, string> = {
   super_common: "everyday",
-  common: "common",
+  common: "uncommon",
   rare: "rare",
-  milestone: "milestone",
+  milestone: "unique",
   special: "special",
 };
 

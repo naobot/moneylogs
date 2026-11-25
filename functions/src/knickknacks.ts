@@ -17,10 +17,13 @@ export type Hemisphere = "north" | "south";
  */
 export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
-/** How often each rarity is picked, relative to the others in season. */
+/**
+ * How often each rarity is picked, relative to the others in season. In the app,
+ * super-common reads "everyday" and common "uncommon" (RARITY_LABELS in the catalog).
+ */
 export const RARITY_WEIGHTS: Record<Rarity, number> = {
   super_common: 6,
-  common: 3,
+  common: 2.5,
   rare: 1,
   milestone: 0,
   special: 0,
