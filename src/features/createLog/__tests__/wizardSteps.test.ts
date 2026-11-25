@@ -11,6 +11,7 @@ import {
   WizardState,
   sublogLineName,
   sublogNameError,
+  presetFromParams,
 } from "@/features/createLog/wizardSteps";
 
 const base: WizardState = {
@@ -143,5 +144,23 @@ describe("the parent step", () => {
   it("names the line after the log unless given a name", () => {
     expect(sublogLineName({ title: " Bali 2026 ", sublogName: "" })).toBe("Bali 2026");
     expect(sublogLineName({ title: "Bali 2026", sublogName: "trip" })).toBe("trip");
+  });
+});
+
+describe("presetFromParams", () => {
+  it("starts a financial sublog of the given parent", () => {
+    expect(presetFromParams(new URLSearchParams("parent=abc&step=1"))).toEqual({
+      mode: "financial",
+      parentId: "abc",
+    });
+  });
+
+  it("presets nothing without a parent", () => {
+    expect(presetFromParams(new URLSearchParams("step=1"))).toEqual({});
+  });
+
+  it("lets a preset sublog skip straight past the type step", () => {
+    const s = { ...base, ...presetFromParams(new URLSearchParams("parent=abc")) };
+    expect(reachableStepIndex(1, s)).toBe(1);
   });
 });

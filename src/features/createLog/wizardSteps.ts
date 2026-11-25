@@ -82,6 +82,15 @@ export const sublogNameError = (name: string): string | undefined =>
     ? `Must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
     : undefined;
 
+/**
+ * What a link into the wizard fills in: `?parent=<ledgerId>` (from a log's "start a
+ * sublog") starts a financial log already picked as that log's sublog.
+ */
+export const presetFromParams = (params: URLSearchParams): Partial<WizardState> => {
+  const parentId = params.get("parent");
+  return parentId ? { mode: "financial", parentId } : {};
+};
+
 /** What the new log counts as in its parent. */
 export const sublogLineName = (s: Pick<WizardState, "sublogName" | "title">): string =>
   (s.sublogName.trim() || s.title.trim()).slice(0, MAX_CATEGORY_NAME_LENGTH);

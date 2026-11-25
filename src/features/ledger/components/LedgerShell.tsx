@@ -33,7 +33,7 @@ import ImportModal from "@/features/ledger/import/ImportModal";
 import LogActionsModal from "@/features/logActions/LogActionsModal";
 import LedgerCurrencySection from "./LedgerCurrencySection";
 import SublogSection from "@/features/ledger/sublogs/SublogSection";
-import SublogIntro from "@/features/ledger/sublogs/SublogIntro";
+import SublogIntro, { SublogIntroFrom } from "@/features/ledger/sublogs/SublogIntro";
 import { isActiveSublog, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
 import LedgerSidebar from "./LedgerSidebar";
 import useMediaQuery from "@/hooks/useMediaQuery";
@@ -42,6 +42,7 @@ import { shareUrl } from "@/utils/shareUrl";
 import InviteFriends from "@/features/invites/FriendPicker";
 import { BudgetBuddy } from "@/features/ledger/buddy/BudgetBuddy";
 import { LedgerTourProvider, useLedgerTour } from "@/features/ledger/tour/LedgerTour";
+import { track } from "@/utils/analytics";
 import ShareCardModal from "@/features/share/ShareCardModal";
 import { shareDayOf } from "@/features/share/shareLines";
 
@@ -60,6 +61,8 @@ export type LedgerShellContext = {
   period: Period;
   today: string;
   setMonth: (month: string) => void;
+  /** Opens the categories window (from the entry form's picker). */
+  openCategories: () => void;
   /** Opens the monthly budgets editor. */
   openBudgets: () => void;
   /** Opens the month's total budget, on one currency. */
@@ -111,6 +114,15 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
   const inFamily = !!ledger.parentLink || (ledger.categories ?? []).some(isActiveSublog);
   const [introClosed, setIntroClosed] = useState(false);
   const introAuto = inFamily && shouldAutoOpenSublogIntro(user) && !activeTarget && !introClosed;
+  // Or on request, from the categories window or the sidebar's "+ sublog".
+  const [introAsked, setIntroAsked] = useState<SublogIntroFrom | null>(null);
+  // A sublog can't have sublogs of its own, so only other logs offer to start one.
+  const canHaveSublogs = !ledger.parentLink;
+
+  const openCategories = (from: "header" | "entry_picker") => {
+    track("categories_opened", { from });
+    setShowCategories(true);
+  };
 
   const spots = spotsLeft(ledger);
   const isShared = (ledger.memberUids?.length ?? 0) > 1;
@@ -164,7 +176,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             <div
               className="handler Group__header__item Group__header__item--iconOnly"
               title="Categories"
-              onClick={() => setShowCategories(true)}
+              onClick={() => openCategories("header")}
             >
               <IconText type={"pencil"} fill={"white"} text="categories" />
               {tip("categories")}
@@ -204,6 +216,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
             view={view}
             period={period}
             currentMonth={currentMonth}
+            onAddSublog={canHaveSublogs ? () => setIntroAsked("sidebar") : undefined}
           />
           <div className="Ledger__body">
             <nav className="Ledger__month" aria-label="Period">
@@ -238,6 +251,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
               period,
               today,
               setMonth,
+              openCategories: () => openCategories("entry_picker"),
               openBudgets: () => setShowBudgets(true),
               openTotal: setTotalCurrency,
             })}
@@ -250,12 +264,14 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         </div>
       </div>
       <SublogIntro
-        isOpen={introAuto}
-        from="visit"
+        isOpen={introAuto || introAsked !== null}
+        from={introAsked ?? "visit"}
         onClose={() => {
           setIntroClosed(true);
+          setIntroAsked(null);
         }}
-        onStart={() => navigate("/create")}
+        // From a log that can be a parent, start one already picked as its sublog.
+        onStart={() => navigate(canHaveSublogs ? `/create?parent=${ledger.id}&step=1` : "/create")}
       />
       {showShareToday && (
         <ShareCardModal
@@ -286,6 +302,7 @@ const LedgerShellFrame = ({ ledger, view, children }: LedgerShellProps) => {
         onClose={() => setShowCategories(false)}
         onSave={(ops) => saveCategoryOps.mutate({ ledgerId: ledger.id, ops, month: currentMonth })}
         checkInUse={(categoryId) => isCategoryUsed.mutate({ ledgerId: ledger.id, categoryId })}
+        onSublogHelp={canHaveSublogs ? () => setIntroAsked("categories") : undefined}
         scheduleCounts={new Map([...scheduled].map(([id, list]) => [id, list.length]))}
         renderSchedules={(category) => (
           <ScheduledPayments

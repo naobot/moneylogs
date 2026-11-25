@@ -22,7 +22,12 @@ type EntryFormProps = {
   isSaving: boolean;
   onSubmit: (input: LedgerEntryInput) => Promise<unknown>;
   onCancel?: () => void;
+  /** Adds "edit categories…" to the category picker, which calls this instead of picking. */
+  onEditCategories?: () => void;
 };
+
+/** The picker's "edit categories…" option: never a category id. */
+export const EDIT_CATEGORIES = "__edit_categories";
 
 /**
  * Compact, keyboard-first form for one entry. In "add" mode, a successful save clears the
@@ -36,6 +41,7 @@ export const EntryForm = ({
   isSaving,
   onSubmit,
   onCancel,
+  onEditCategories,
 }: EntryFormProps) => {
   const [values, setValues] = useState<EntryFormValues>(initial);
   const [failed, setFailed] = useState(false);
@@ -159,7 +165,11 @@ export const EntryForm = ({
           <select
             aria-label="Category"
             value={values.categoryId}
-            onChange={(e) => set({ categoryId: e.target.value })}
+            onChange={(e) => {
+              // Opens the categories window; the picked category stays as it was.
+              if (e.target.value === EDIT_CATEGORIES) onEditCategories?.();
+              else set({ categoryId: e.target.value });
+            }}
           >
             {options.map((c) => (
               <option key={c.id} value={c.id}>
@@ -167,6 +177,12 @@ export const EntryForm = ({
                 {c.archived ? " (archived)" : ""}
               </option>
             ))}
+            {onEditCategories && (
+              <>
+                <option disabled>──────</option>
+                <option value={EDIT_CATEGORIES}>edit categories…</option>
+              </>
+            )}
           </select>
           {onCancel && (
             <Button

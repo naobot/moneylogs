@@ -22,6 +22,8 @@ type LedgerSidebarProps = {
   view: LedgerView;
   period: Period;
   currentMonth: string;
+  /** When set and the log has no sublogs, a "+ sublog" item that calls it. */
+  onAddSublog?: () => void;
 };
 
 const NO_CATEGORIES: ReadonlyArray<LedgerCategory> = [];
@@ -37,7 +39,8 @@ const PERIOD_LABELS: Record<PeriodKind, string> = {
  * The financial log's left column: which view (entries or stats) and, for stats, how much
  * time to look at (a month, a quarter or a year). Quarters and years are stats-only, so on
  * the entries view picking one moves to stats. A parent log then lists its sublogs, each
- * opening the sublog when you're in it. Below the md breakpoint it's a strip that
+ * opening the sublog when you're in it; a log that could have sublogs but has none gets a
+ * "+ sublog" item instead, so the idea is findable. Below the md breakpoint it's a strip that
  * scrolls sideways, like the social log's member list.
  */
 export const LedgerSidebar = ({
@@ -46,6 +49,7 @@ export const LedgerSidebar = ({
   view,
   period,
   currentMonth,
+  onAddSublog,
 }: LedgerSidebarProps) => {
   const { tip } = useLedgerTour();
   const sublogs = categories.filter(isActiveSublog);
@@ -133,6 +137,21 @@ export const LedgerSidebar = ({
               </span>
             );
           })}
+        </div>
+      )}
+      {sublogs.length === 0 && onAddSublog && (
+        <div
+          className="LedgerSidebar__group LedgerSidebar__group--sublogs"
+          role="group"
+          aria-label="Sublogs"
+        >
+          <button
+            type="button"
+            className={item(false, " LedgerSidebar__item--add")}
+            onClick={onAddSublog}
+          >
+            <span className="LogsMenu__item__content LogsMenu__item__title">+ sublog</span>
+          </button>
         </div>
       )}
     </nav>
