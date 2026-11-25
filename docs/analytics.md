@@ -27,6 +27,7 @@ amounts or free text.
 | `sign_up`               | Account created                                      | `method`                                                                                                                               |
 | `login`                 | Signed in from the login form                        | `method`                                                                                                                               |
 | `tutorial_complete`     | Welcome wizard, ledger tour, first post              | `tutorial`                                                                                                                             |
+| `confirm_email`         | Confirm-email modal step                             | `action` (`prompt`, `resend`, `confirmed`)                                                                                             |
 | `create_log`            | Create wizard finished                               | `log_kind`, `invited_friends`                                                                                                          |
 | `join_log`              | Joined from an invite page                           | `log_kind`                                                                                                                             |
 | `archive_log`           | Archived / unarchived                                | `log_kind`, `archived`                                                                                                                 |

@@ -7,6 +7,8 @@ import { profileName, useProfiles } from "@/hooks/useProfiles";
 import { useToastContext } from "@/hooks/useToastContext";
 import type { LogKind } from "@/types/notification";
 import { reportError } from "@/utils/reportError";
+import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
+import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
 import Avatar from "@/components/Avatar";
 import Button from "@/components/Button";
 
@@ -103,6 +105,7 @@ type InviteFriendsProps = {
 /** The invite modal's "friends" part: pick friends and send them each an invite. */
 export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFriendsProps) => {
   const { showToast } = useToastContext();
+  const { ensureConfirmed, showConfirmEmail } = useConfirmEmail();
   const [selected, setSelected] = useState<string[]>([]);
   const [invited, setInvited] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
@@ -111,6 +114,7 @@ export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFr
     if (!selected.length || sending) return;
     setSending(true);
     try {
+      if (!(await ensureConfirmed())) return;
       const result = await inviteFriendsToLog(logId, logKind, selected);
       setInvited((prev) => [...prev, ...result.invited]);
       setSelected([]);
@@ -119,6 +123,7 @@ export const InviteFriends = ({ logId, logKind, memberIds, spotsLeft }: InviteFr
         track("invite_friends_to_log", { log_kind: logKindParam(logKind), invited_friends: n });
       showToast(n ? `Invite${n > 1 ? "s" : ""} sent` : "Nobody new to invite", "success");
     } catch (err) {
+      if (isEmailUnconfirmedError(err)) return showConfirmEmail();
       reportError(err, { feature: "log_invites", action: "invite_friends", tags: { logKind } });
       showToast("Couldn't send those invites. Please try again.");
     } finally {

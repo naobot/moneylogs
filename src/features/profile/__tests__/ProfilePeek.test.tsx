@@ -34,6 +34,13 @@ vi.mock("@/hooks/useFriendships", () => ({
   respondFriend: vi.fn(),
 }));
 vi.mock("@/hooks/useToastContext", () => ({ useToastContext: () => ({ showToast: vi.fn() }) }));
+vi.mock("@/features/account/confirmEmail/confirmEmailContext", () => ({
+  useConfirmEmail: () => ({
+    confirmed: true,
+    ensureConfirmed: () => Promise.resolve(true),
+    showConfirmEmail: vi.fn(),
+  }),
+}));
 
 import { ProfilePeek, PROFILE_PEEK_DELAY } from "../ProfilePeek";
 

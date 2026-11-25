@@ -6,6 +6,7 @@ import { newInviteCode, parseInviteCode, parseReset, planInvite } from "./invite
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_FRIEND, FIRST_INVITE } from "./milestones";
 import { reportError, withSentryCall } from "./sentry";
+import { requireConfirmedEmail } from "./confirmEmail";
 
 /**
  * Personal invite links (/invite/{code}). invites/{code} → { inviterId } is closed to
@@ -18,6 +19,7 @@ export const getInviteCode = onCall(
   withSentryCall("getInviteCode", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    await requireConfirmedEmail(request.auth);
     const reset = parseReset(request.data);
     const db = getFirestore();
     const me = await callerUserDoc(db, uid);

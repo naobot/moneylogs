@@ -22,6 +22,8 @@ export type AnalyticsEvents = {
   sign_up: { method: "email" };
   login: { method: "email" };
   tutorial_complete: { tutorial: "welcome" | "ledger_tour" | "first_post" };
+  /** The "confirm your email" modal: shown before reaching out, link resent, confirmed. */
+  confirm_email: { action: "prompt" | "resend" | "confirmed" };
 
   // Logs
   create_log: { log_kind: LogKindParam; invited_friends: number };

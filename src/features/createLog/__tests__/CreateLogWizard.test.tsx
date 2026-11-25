@@ -13,16 +13,19 @@ const personal = vi.hoisted(() => ({
 }));
 const me = vi.hoisted(() => ({
   tutorials: { sublogIntro: { seconds: 1 } } as { sublogIntro?: unknown },
+  signedIn: true,
 }));
 vi.mock("@/contexts", () => ({
   useCurrentUser: () => ({
-    user: {
-      id: "doc-1",
-      userId: "uid-1",
-      displayName: "Nao",
-      personalLedgerId: "personal-uid-1",
-      tutorials: me.tutorials,
-    },
+    user: me.signedIn
+      ? {
+          id: "doc-1",
+          userId: "uid-1",
+          displayName: "Nao",
+          personalLedgerId: "personal-uid-1",
+          tutorials: me.tutorials,
+        }
+      : undefined,
   }),
 }));
 const updateUserFields = vi.hoisted(() => vi.fn(async () => {}));
@@ -42,6 +45,14 @@ vi.mock("@/hooks/useGetMyLedgers", () => ({
   }),
 }));
 vi.mock("@/features/invites/logInvites", () => ({ inviteFriendsToLog }));
+const confirm = vi.hoisted(() => ({ confirmed: true, showConfirmEmail: vi.fn() }));
+vi.mock("@/features/account/confirmEmail/confirmEmailContext", () => ({
+  useConfirmEmail: () => ({
+    confirmed: confirm.confirmed,
+    ensureConfirmed: () => Promise.resolve(confirm.confirmed),
+    showConfirmEmail: confirm.showConfirmEmail,
+  }),
+}));
 // The real picker reads friendships and profiles; a stand-in that picks one friend.
 vi.mock("@/features/invites/FriendPicker", () => ({
   FriendPicker: ({ onChange }: { onChange: (ids: string[]) => void }) => (
@@ -80,9 +91,12 @@ describe("CreateLogWizard", () => {
     createLedgerMutate.mockClear();
     addNewLogGroupMutate.mockClear();
     inviteFriendsToLog.mockClear();
+    confirm.confirmed = true;
+    confirm.showConfirmEmail.mockClear();
     linkSublog.mockClear();
     updateUserFields.mockClear();
     me.tutorials = { sublogIntro: { seconds: 1 } };
+    me.signedIn = true;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -246,6 +260,54 @@ describe("CreateLogWizard", () => {
     expect(container.querySelector(".Wizard__review")!.textContent).toContain("1 friend");
     await click("Start financial log");
     expect(inviteFriendsToLog).toHaveBeenCalledWith("new-ledger", "ledger", ["friend-1"]);
+    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+  });
+
+  it("asks an unconfirmed email to confirm instead of promising invites", async () => {
+    confirm.confirmed = false;
+    await click("Financial");
+    typeInto("Title", "Flat");
+    await click("Next");
+    await click("Next"); // part of
+    await click("Next"); // currency
+    expect(question()).toMatch(/Invite friends/);
+    expect(button("pick friend-1")).toBeUndefined();
+    await click("confirm email");
+    expect(confirm.showConfirmEmail).toHaveBeenCalled();
+    await click("Next");
+    expect(container.querySelector(".Wizard__review")!.textContent).not.toContain("Inviting");
+    await click("Start financial log");
+    expect(inviteFriendsToLog).not.toHaveBeenCalled();
+    expect(container.querySelector("#landed")?.textContent).toBe("ledger");
+  });
+
+  it("asks signed-out visitors to sign in, not to confirm an email", async () => {
+    me.signedIn = false;
+    confirm.confirmed = false;
+    await click("Social");
+    typeInto("Title", "Tokyo trip");
+    await click("Next");
+    await click("Next"); // dates
+    expect(question()).toMatch(/Invite friends/);
+    expect(container.textContent).toContain("Sign in to create the log and invite friends");
+    expect(button("confirm email")).toBeUndefined();
+    expect(button("pick friend-1")).toBeUndefined();
+  });
+
+  it("opens the confirm prompt when the server turns the invites away", async () => {
+    inviteFriendsToLog.mockRejectedValueOnce({
+      code: "functions/failed-precondition",
+      details: { reason: "email_unconfirmed" },
+    });
+    await click("Financial");
+    typeInto("Title", "Flat");
+    await click("Next");
+    await click("Next"); // part of
+    await click("Next"); // currency
+    await click("pick friend-1");
+    await click("Next");
+    await click("Start financial log");
+    expect(confirm.showConfirmEmail).toHaveBeenCalled();
     expect(container.querySelector("#landed")?.textContent).toBe("ledger");
   });
 

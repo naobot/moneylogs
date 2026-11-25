@@ -11,6 +11,7 @@ import {
 } from "./logInvitesPlan";
 import { isNotificationEnabled } from "./notificationPrefs";
 import { withSentryCall } from "./sentry";
+import { requireConfirmedEmail } from "./confirmEmail";
 
 /**
  * Invite friends into a log you're in: each one gets a `log_invite` notification that
@@ -22,6 +23,7 @@ export const inviteFriendsToLog = onCall(
   withSentryCall("inviteFriendsToLog", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    await requireConfirmedEmail(request.auth);
     const req = parseInviteRequest(request.data);
     if (!req) {
       throw new HttpsError("invalid-argument", "Expected { logId, logKind, friendIds }.");

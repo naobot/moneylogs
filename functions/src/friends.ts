@@ -22,6 +22,7 @@ import { isNotificationEnabled } from "./notificationPrefs";
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_FRIEND } from "./milestones";
 import { reportError, withSentryCall } from "./sentry";
+import { requireConfirmedEmail } from "./confirmEmail";
 
 /**
  * Friend requests. friendships/{pairId} is read-only to clients, so every change goes
@@ -200,11 +201,15 @@ const run = async (
   return result;
 };
 
-/** Ask someone to be friends (accepts instead if they already asked you). */
+/**
+ * Ask someone to be friends (accepts instead if they already asked you). Reaching out
+ * needs a confirmed email; answering a request or an invite link doesn't.
+ */
 export const requestFriend = onCall(
-  withSentryCall("requestFriend", (request) =>
-    run(request.auth?.uid, request.data, (state) => planRequest(state)),
-  ),
+  withSentryCall("requestFriend", async (request) => {
+    await requireConfirmedEmail(request.auth);
+    return run(request.auth?.uid, request.data, (state) => planRequest(state));
+  }),
 );
 
 /** Accept or decline a request someone sent you. */

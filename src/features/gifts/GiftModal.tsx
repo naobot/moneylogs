@@ -6,6 +6,8 @@ import { useFriendships } from "@/hooks/useFriendships";
 import { profileName, useProfiles } from "@/hooks/useProfiles";
 import { useToastContext } from "@/hooks/useToastContext";
 import { reportError } from "@/utils/reportError";
+import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
+import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
@@ -36,6 +38,7 @@ type GiftModalProps = {
 export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProps) => {
   const { user } = useCurrentUser();
   const { showToast } = useToastContext();
+  const { ensureConfirmed, showConfirmEmail } = useConfirmEmail();
   const { data: finds, isLoading: findsLoading } = useKnickKnackFinds(user?.id);
   const { friends, isLoading: friendsLoading } = useFriendships();
   // Until both are in, "open it first" or "add a friend first" would be a guess.
@@ -63,12 +66,14 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
     if (!find || !chosenFriend || pending) return;
     setPending(true);
     try {
+      if (!(await ensureConfirmed())) return;
       await giftKnickKnack(find.id, chosenFriend);
       track("gift_knickknack");
       showToast(`Gave 1 ${itemName} to ${nameOf(chosenFriend)}`, "success");
       onGiven?.();
       onClose();
     } catch (err) {
+      if (isEmailUnconfirmedError(err)) return showConfirmEmail();
       reportError(err, { feature: "friends", action: "gift_knickknack" });
       const message = (err as { message?: string })?.message;
       showToast(message || "Couldn't send the gift. Please try again.");

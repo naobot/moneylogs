@@ -16,6 +16,9 @@ import { writeSelfNotification } from "@/hooks/useNotifications";
 import { Currency } from "@/types/user";
 import { ledgerStartCurrency } from "@/utils/currency";
 import { reportError } from "@/utils/reportError";
+import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
+import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
+import RowButton from "@/components/RowButton";
 import { useGetMyLedgers } from "@/hooks/useGetMyLedgers";
 import { monthKeyOf, todayInTz } from "@/utils/ledger";
 import { parentChoices, shouldAutoOpenSublogIntro } from "@/utils/sublogs";
@@ -94,6 +97,10 @@ export const CreateLogWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
+  // Inviting needs a confirmed email (utils/confirmedEmail.ts). Until then nobody is
+  // invited, so review never promises invites that won't go out.
+  const { confirmed, showConfirmEmail } = useConfirmEmail();
+  const invitees = confirmed ? friendsToInvite(state) : [];
   const update = (patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch }));
 
   const steps = stepsForState(state);
@@ -143,11 +150,18 @@ export const CreateLogWizard = () => {
 
   // Best effort: the log exists either way, and invites can be sent again from inside it.
   const sendInvites = async (logId: string, logKind: LogKind) => {
-    const friendIds = friendsToInvite(state);
+    const friendIds = invitees;
     if (!friendIds.length) return;
     try {
       await inviteFriendsToLog(logId, logKind, friendIds);
     } catch (err) {
+      if (isEmailUnconfirmedError(err)) {
+        showToast(
+          "Your log is ready. Confirm your email, then invite friends from its invite button.",
+        );
+        showConfirmEmail();
+        return;
+      }
       reportError(err, { feature: "log_invites", action: "invite_on_create", tags: { logKind } });
       showToast(
         "Your log is ready, but the invites didn't go out. Try again from its invite button.",
@@ -178,7 +192,7 @@ export const CreateLogWizard = () => {
         });
         track("create_log", {
           log_kind: "social",
-          invited_friends: friendsToInvite(state).length,
+          invited_friends: invitees.length,
         });
         await sendInvites(groupId, "social");
         void navigate("/", { replace: true });
@@ -199,7 +213,7 @@ export const CreateLogWizard = () => {
         });
         track("create_log", {
           log_kind: "financial",
-          invited_friends: friendsToInvite(state).length,
+          invited_friends: invitees.length,
         });
         await linkToParent(ledgerId);
         await sendInvites(ledgerId, "ledger");
@@ -430,15 +444,32 @@ export const CreateLogWizard = () => {
       body = (
         <>
           <h3 className="Wizard__question">Invite friends?</h3>
-          <FriendPicker
-            selected={state.inviteFriendIds}
-            onChange={(inviteFriendIds) => update({ inviteFriendIds })}
-            max={state.maxParticipants - 1}
-          />
-          <p className="Wizard__hint">
-            Optional. Each friend you pick gets an invite in their notifications once the log is
-            created. You can also share a link from inside the log.
-          </p>
+          {confirmed ? (
+            <>
+              <FriendPicker
+                selected={state.inviteFriendIds}
+                onChange={(inviteFriendIds) => update({ inviteFriendIds })}
+                max={state.maxParticipants - 1}
+              />
+              <p className="Wizard__hint">
+                Optional. Each friend you pick gets an invite in their notifications once the log is
+                created. You can also share a link from inside the log.
+              </p>
+            </>
+          ) : !user ? (
+            <p>
+              Sign in to create the log and invite friends. You can also invite them later from its
+              invite button.
+            </p>
+          ) : (
+            <>
+              <p>
+                Confirm your email address to invite friends. You can still create the log now and
+                invite them later from its invite button.
+              </p>
+              <RowButton onClick={showConfirmEmail}>confirm email</RowButton>
+            </>
+          )}
         </>
       );
       break;
@@ -454,12 +485,12 @@ export const CreateLogWizard = () => {
             <dd>{state.title.trim()}</dd>
             <dt>Participants</dt>
             <dd>{state.maxParticipants === 1 ? "Just you" : `Up to ${state.maxParticipants}`}</dd>
-            {friendsToInvite(state).length > 0 && (
+            {invitees.length > 0 && (
               <>
                 <dt>Inviting</dt>
                 <dd>
-                  {friendsToInvite(state).length} friend
-                  {friendsToInvite(state).length > 1 && "s"}
+                  {invitees.length} friend
+                  {invitees.length > 1 && "s"}
                 </dd>
               </>
             )}

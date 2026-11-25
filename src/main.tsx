@@ -11,6 +11,7 @@ import "@/utils/configuredDayjs";
 import { CurrentUserProvider } from "@/contexts/CurrentUserContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { TutorialProvider } from "@/contexts/TutorialContext";
+import { ConfirmEmailProvider } from "@/features/account/confirmEmail/ConfirmEmailProvider";
 import { classifyErrorMessage } from "@/utils/errorNoise";
 
 // Message of the thrown error, wherever Sentry put it.
@@ -81,9 +82,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <CurrentUserProvider>
       <ToastProvider>
-        <TutorialProvider>
-          <App />
-        </TutorialProvider>
+        <ConfirmEmailProvider>
+          <TutorialProvider>
+            <App />
+          </TutorialProvider>
+        </ConfirmEmailProvider>
       </ToastProvider>
     </CurrentUserProvider>
   </StrictMode>,
