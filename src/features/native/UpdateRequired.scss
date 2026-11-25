@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 .UpdateRequired {
   display: flex;
   align-items: center;
@@ -12,7 +14,7 @@
 
 .UpdateRequired__frame {
   max-width: var(--modal-width);
-  padding: 1.5em;
+  padding: ui(1.5em);
   border: var(--border-heavy) solid var(--ink);
   background-color: var(--sheet);
 

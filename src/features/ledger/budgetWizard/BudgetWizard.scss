@@ -1,4 +1,5 @@
 @use "@/constants.scss";
+@use "@/ui-size" as *;
 
 // The budget helper, shown inside the Budgets modal. Shared chrome is in
 // components/Wizard/Wizard.scss; this drops the page-level frame and lays out the plan.
@@ -15,11 +16,11 @@
   // The modal is narrow: one answer per row.
   .Wizard__choices {
     grid-template-columns: 1fr;
-    gap: 0.5em;
+    gap: ui(0.5em);
   }
 
   .Wizard__choice {
-    padding: 0.6em 0.8em;
+    padding: ui(0.6em) ui(0.8em);
   }
 
   p {
@@ -34,8 +35,8 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.25em 1em;
-    padding: 0.3em 0;
+    gap: ui(0.25em) ui(1em);
+    padding: ui(0.3em) 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
   }
 
@@ -48,7 +49,7 @@
   &__amount {
     display: inline-flex;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
 
     input {
       width: 8em;
@@ -59,13 +60,13 @@
 
   // The reset notice: a heavier frame, since it changes the log's categories.
   &__warning {
-    padding: 0.6em 0.8em;
+    padding: ui(0.6em) ui(0.8em);
     border: var(--border-heavy) solid var(--ink);
     font-size: 0.85em;
 
     ul {
-      margin: 0.4em 0;
-      padding-left: 1.2em;
+      margin: ui(0.4em) 0;
+      padding-left: ui(1.2em);
     }
   }
 
@@ -73,7 +74,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1em;
+    gap: ui(1em);
   }
 
   // The modal body centres text; the plan reads as a left-aligned list.
@@ -85,7 +86,7 @@
   }
 
   .BudgetPie {
-    margin: 0.25em 0 0.5em;
+    margin: ui(0.25em) 0 ui(0.5em);
   }
 
   // Wide screens: the pie (and its key) in a left column, the figures beside it.
@@ -94,11 +95,11 @@
       display: grid;
       grid-template-columns: auto 1fr;
       align-items: start;
-      gap: 1.5em;
+      gap: ui(1.5em);
 
       .BudgetPie {
         flex-direction: column;
-        margin: 0.5em 0 0;
+        margin: ui(0.5em) 0 0;
       }
     }
   }
@@ -106,7 +107,7 @@
   &__planDetails {
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    gap: ui(0.5em);
     min-width: 0;
     text-align: left;
   }
@@ -115,14 +116,14 @@
     display: grid;
     grid-template-columns: auto 1fr 3.5em auto;
     align-items: center;
-    gap: 0.75em;
-    padding: 0.25em 0;
+    gap: ui(0.75em);
+    padding: ui(0.25em) 0;
     font-size: 0.9em;
 
     // What's left over, set apart from the categories it isn't one of.
     &--savings {
-      margin-top: 0.3em;
-      padding-top: 0.5em;
+      margin-top: ui(0.3em);
+      padding-top: ui(0.5em);
       border-top: var(--border-rule) dotted var(--ink);
       font-weight: 700;
     }

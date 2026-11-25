@@ -15,6 +15,8 @@ import {
   EntryAlign,
   EntrySize,
   setDisplayPrefs,
+  UI_SIZES,
+  UiSize,
 } from "@/utils/displayPrefs";
 import {
   ColourTheme,
@@ -37,6 +39,7 @@ export const displaySummary = (theme: Theme, prefs: DisplayPrefs) =>
   `${THEME_LABELS[theme]} · ${prefs.clock}`;
 
 const SIZE_LABELS: Record<EntrySize, string> = { s: "S", m: "M", l: "L", xl: "XL" };
+const UI_SIZE_LABELS: Record<UiSize, string> = { s: "S", m: "M", l: "L" };
 const ALIGN_LABELS: Record<EntryAlign, string> = {
   left: "Left",
   center: "Center",
@@ -140,8 +143,8 @@ const ColourSwatches = ({
 /**
  * Viewing preferences remembered on this device: theme (Paper, the last colour theme as
  * a star, or Night shift, plus a row picking the colour theme), whether charts use the
- * theme's colours or 1-bit textures, how dates and times read, and the size and alignment
- * of entry text. A sample entry and chart show the result live.
+ * theme's colours or 1-bit textures, how dates and times read, how much room the UI takes,
+ * and the size and alignment of entry text. A sample entry and chart show the result live.
  */
 export const DisplaySection = () => {
   const theme = useTheme();
@@ -209,7 +212,18 @@ export const DisplaySection = () => {
         onChange={(dateOrder) => setDisplayPrefs({ dateOrder })}
       />
       <Segmented
-        label="Entry size"
+        label="UI size"
+        options={UI_SIZES}
+        value={prefs.uiSize}
+        labelFor={(size) => UI_SIZE_LABELS[size]}
+        onChange={(uiSize) => {
+          if (uiSize === prefs.uiSize) return;
+          setDisplayPrefs({ uiSize });
+          track("ui_size", { size: uiSize });
+        }}
+      />
+      <Segmented
+        label="Entry text"
         options={ENTRY_SIZES}
         value={prefs.entrySize}
         labelFor={(size) => SIZE_LABELS[size]}
@@ -222,6 +236,10 @@ export const DisplaySection = () => {
         labelFor={(align) => ALIGN_LABELS[align]}
         onChange={(entryAlign) => setDisplayPrefs({ entryAlign })}
       />
+      <p className="DisplaySection__hint">
+        UI size sets the room around things: padding, rows and buttons. Entry text sets the size of
+        what you wrote.
+      </p>
 
       <div className="DisplaySample" aria-label="Preview">
         <div className="DisplaySample__meta">{formatDate(now)}</div>

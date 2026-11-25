@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // Under the add form, right-aligned like a small row action: tokens only.
 .NoSpendDay {
   display: flex;
@@ -11,6 +13,6 @@
 
   // Hack has no ✓, so a fallback glyph draws it and eats the space before it.
   &__tick {
-    margin-left: 0.5em;
+    margin-left: ui(0.5em);
   }
 }

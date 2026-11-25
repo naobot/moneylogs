@@ -1,10 +1,12 @@
+@use "@/ui-size" as *;
+
 // Reactions in the post header, left of the comment bubble. Applied emoji are bare
 // (no frames): an emoji and its count, in plain weight.
 .PostReactions {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.6em;
+  gap: ui(0.6em);
   // Shrinks before anything else in the header cell. The cell itself is min-width: 0
   // (see .LogPosts__posts__item__comments), so the applied emoji clip at the cell's
   // edge rather than widening the column into the centred currency label.
@@ -14,7 +16,7 @@
   &__applied {
     display: inline-flex;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -34,7 +36,7 @@
   &__tally {
     display: inline-flex;
     align-items: center;
-    gap: 0.3em;
+    gap: ui(0.3em);
     flex-shrink: 0;
   }
 

@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // /admin: a plain tool page. Sections are dashed-ruled like LogActions; the account
 // deletion carries the 3px warning frame.
 .Admin {
@@ -27,7 +29,7 @@
 
   ul {
     margin: 0;
-    padding-left: 1.2em;
+    padding-left: ui(1.2em);
   }
 
   &__muted {

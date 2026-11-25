@@ -1,5 +1,6 @@
 @use "/src/constants.scss";
 @use "@/texture.scss" as tex;
+@use "@/ui-size" as *;
 
 // Logged-out landing page. Example screens sit in striped window frames (the tool-modal
 // chrome) so they read as "a look at the app", not as the visitor's own logs.
@@ -86,7 +87,7 @@
     text-align: center;
 
     .LogPosts__posts__item__body p {
-      margin: 0.5em 0;
+      margin: ui(0.5em) 0;
     }
   }
 
@@ -164,7 +165,7 @@
 
   // Leave room at the bottom so the fixed invite bar never covers the footer.
   &--invited {
-    padding-bottom: calc(6em + var(--safe-bottom));
+    padding-bottom: calc(ui(6em) + var(--safe-bottom));
   }
 
   // Fixed sign-up prompt for visitors who arrived from an invite link. Inverted, like other

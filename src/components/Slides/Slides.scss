@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // A feature introduction, one slide at a time (Slides.tsx). Two inks; the pictures
 // inside bring their own fills.
 .Slides {
@@ -43,7 +45,7 @@
 
   &__dots {
     display: flex;
-    gap: 0.4em;
+    gap: ui(0.4em);
     margin-right: auto;
   }
 

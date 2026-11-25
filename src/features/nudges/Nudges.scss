@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // Pokes and cheers between friends. Tokens only; emphasis is inversion.
 
 .NudgeActions {
@@ -26,7 +28,7 @@
   &__cheer {
     display: block;
     width: 100%;
-    padding: 0.2em 0.6em;
+    padding: ui(0.2em) ui(0.6em);
     font: inherit;
     font-size: 0.85em;
     text-align: left;
@@ -131,7 +133,7 @@
 
   &__close {
     flex-shrink: 0;
-    padding: 0 0.2em;
+    padding: 0 ui(0.2em);
     font: inherit;
     line-height: 1.2;
     color: var(--ink);

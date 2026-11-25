@@ -2,17 +2,19 @@ import { useSyncExternalStore } from "react";
 import { storage } from "@/platform";
 
 /**
- * Display preferences: how dates/times read, how entry text is set, and whether charts use
- * the theme's colour palette or 1-bit textures. Like the theme,
- * they are viewing preferences kept per device in local storage, not account data.
+ * Display preferences: how dates/times read, how entry text is set, how much room the UI
+ * takes, and whether charts use the theme's colour palette or 1-bit textures. Like the
+ * theme, they are viewing preferences kept per device in local storage, not account data.
  * Entry size and alignment reach the CSS as data attributes on <html> (see the
- * --entry-* tokens in src/tokens.scss), and mono charts as data-charts="mono"; date formats
- * are read by src/utils/dateFormat.ts.
+ * --entry-* tokens in src/tokens.scss), UI size as data-ui-size (--ui-scale and friends),
+ * and mono charts as data-charts="mono"; date formats are read by src/utils/dateFormat.ts.
  */
 export type Clock = "24h" | "12h";
 export type DateOrder = "dmy" | "mdy" | "iso";
 export type EntrySize = "s" | "m" | "l" | "xl";
 export type EntryAlign = "left" | "center" | "justify";
+/** How much room the app's parts take (padding, rows, tap targets, icons), not the text. */
+export type UiSize = "s" | "m" | "l";
 /** Categorical charts: the theme's muted --chart-* palette, or 1-bit textures in ink. */
 export type ChartColours = "colour" | "mono";
 
@@ -21,6 +23,7 @@ export type DisplayPrefs = {
   dateOrder: DateOrder;
   entrySize: EntrySize;
   entryAlign: EntryAlign;
+  uiSize: UiSize;
   charts: ChartColours;
 };
 
@@ -29,6 +32,7 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
   dateOrder: "dmy",
   entrySize: "m",
   entryAlign: "left",
+  uiSize: "m",
   charts: "colour",
 };
 
@@ -36,6 +40,7 @@ export const CLOCKS: readonly Clock[] = ["24h", "12h"];
 export const DATE_ORDERS: readonly DateOrder[] = ["dmy", "mdy", "iso"];
 export const ENTRY_SIZES: readonly EntrySize[] = ["s", "m", "l", "xl"];
 export const ENTRY_ALIGNS: readonly EntryAlign[] = ["left", "center", "justify"];
+export const UI_SIZES: readonly UiSize[] = ["s", "m", "l"];
 export const CHART_COLOURS: readonly ChartColours[] = ["colour", "mono"];
 
 export const STORAGE_KEY = "ML__display";
@@ -54,6 +59,7 @@ export const parsePrefs = (raw: unknown): DisplayPrefs => {
     dateOrder: pick(DATE_ORDERS, source.dateOrder, d.dateOrder),
     entrySize: pick(ENTRY_SIZES, source.entrySize, d.entrySize),
     entryAlign: pick(ENTRY_ALIGNS, source.entryAlign, d.entryAlign),
+    uiSize: pick(UI_SIZES, source.uiSize, d.uiSize),
     charts: pick(CHART_COLOURS, source.charts, d.charts),
   };
 };
@@ -69,6 +75,8 @@ const applyToDocument = (prefs: DisplayPrefs) => {
   else dataset.entrySize = prefs.entrySize;
   if (prefs.entryAlign === DEFAULT_DISPLAY_PREFS.entryAlign) delete dataset.entryAlign;
   else dataset.entryAlign = prefs.entryAlign;
+  if (prefs.uiSize === DEFAULT_DISPLAY_PREFS.uiSize) delete dataset.uiSize;
+  else dataset.uiSize = prefs.uiSize;
   if (prefs.charts === DEFAULT_DISPLAY_PREFS.charts) delete dataset.charts;
   else dataset.charts = prefs.charts;
 };

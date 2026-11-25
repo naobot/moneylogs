@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 .ProfilePage {
   display: flex;
   flex-direction: column;
@@ -41,7 +43,7 @@
 
   &__logs {
     margin: 0;
-    padding-left: 1.2em;
+    padding-left: ui(1.2em);
     list-style: "> ";
   }
 
@@ -66,7 +68,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3em;
+    gap: ui(0.3em);
     text-align: center;
   }
 
@@ -124,7 +126,7 @@
   // A status that happens to open a menu: unframed, so it reads as a label
   // beside the gift button rather than a third competing action.
   &__friends {
-    padding: 0.1em 0;
+    padding: ui(0.1em) 0;
     font: inherit;
     font-size: 0.85em;
     font-weight: 700;
@@ -148,7 +150,7 @@
   &__menuItem {
     display: block;
     width: 100%;
-    padding: 0.2em 0.6em;
+    padding: ui(0.2em) ui(0.6em);
     font: inherit;
     font-size: 0.85em;
     text-align: left;
@@ -215,7 +217,7 @@
   }
 
   &__friends {
-    padding: 0.1em 0.5em;
+    padding: ui(0.1em) ui(0.5em);
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     font-weight: 700;

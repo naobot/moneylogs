@@ -87,6 +87,8 @@ export type AnalyticsEvents = {
 
   // Display
   chart_colours: { charts: "colour" | "mono" };
+  /** UI size switched in /me Display. */
+  ui_size: { size: "s" | "m" | "l" };
 
   // Navigation
   open_me_section: { section: string };

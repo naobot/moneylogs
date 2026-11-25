@@ -17,6 +17,7 @@ describe("displayPrefs", () => {
     delete root.dataset.entrySize;
     delete root.dataset.entryAlign;
     delete root.dataset.charts;
+    delete root.dataset.uiSize;
     initDisplayPrefs();
   });
 
@@ -27,7 +28,9 @@ describe("displayPrefs", () => {
     expect(root.dataset.entrySize).toBeUndefined();
     expect(root.dataset.entryAlign).toBeUndefined();
     expect(root.dataset.charts).toBeUndefined();
+    expect(root.dataset.uiSize).toBeUndefined();
     expect(getDisplayPrefs().charts).toBe("colour");
+    expect(getDisplayPrefs().uiSize).toBe("m");
   });
 
   it("applies, remembers and merges partial changes", () => {
@@ -39,6 +42,7 @@ describe("displayPrefs", () => {
       dateOrder: "dmy",
       entrySize: "xl",
       entryAlign: "justify",
+      uiSize: "m",
       charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("xl");
@@ -64,6 +68,7 @@ describe("displayPrefs", () => {
       dateOrder: "dmy",
       entrySize: "l",
       entryAlign: "left",
+      uiSize: "m",
       charts: "colour",
     });
     expect(root.dataset.entrySize).toBe("l");
@@ -82,6 +87,26 @@ describe("displayPrefs", () => {
     initDisplayPrefs();
     expect(root.dataset.charts).toBe("mono");
     expect(parsePrefs({ clock: "12h", charts: "rainbow" })).toEqual({
+      ...DEFAULT_DISPLAY_PREFS,
+      clock: "12h",
+    });
+  });
+
+  it("marks UI size on <html>, clearing it back at M", () => {
+    setDisplayPrefs({ uiSize: "l" });
+    expect(root.dataset.uiSize).toBe("l");
+    expect(readStoredPrefs().uiSize).toBe("l");
+    setDisplayPrefs({ uiSize: "s" });
+    expect(root.dataset.uiSize).toBe("s");
+    setDisplayPrefs({ uiSize: "m" });
+    expect(root.dataset.uiSize).toBeUndefined();
+  });
+
+  it("restores UI size, falling back to M for a bad value only", () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ uiSize: "s", clock: "12h" }));
+    initDisplayPrefs();
+    expect(root.dataset.uiSize).toBe("s");
+    expect(parsePrefs({ uiSize: "xl", clock: "12h" })).toEqual({
       ...DEFAULT_DISPLAY_PREFS,
       clock: "12h",
     });

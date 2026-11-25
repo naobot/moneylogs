@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // The nav bell, its hover pop-up, and the /notifications page.
 
 .NotificationBell {
@@ -10,7 +12,7 @@
     top: 0;
     right: -0.3em;
     min-width: 1.4em;
-    padding: 0 0.2em;
+    padding: 0 ui(0.2em);
     box-sizing: border-box;
     font-size: 0.75em;
     font-weight: 700;
@@ -135,7 +137,7 @@ li + li > .NotificationItem {
 .Notifications {
   display: flex;
   flex-direction: column;
-  grid-gap: 1em;
+  grid-gap: ui(1em);
   max-width: var(--main-width);
   // A direct child of .Content: scroll inside so the Window frame stays put.
   min-height: 0;

@@ -2,6 +2,7 @@
 @use "@/surfaces.scss";
 @use "@/charts.scss";
 @use "@/features/ledger/sublogs/mark";
+@use "@/ui-size" as *;
 
 .Ledger {
   // Phones: one row like on wide screens (kind · title · actions), but the side columns
@@ -11,7 +12,7 @@
   > .Group__header {
     @media (max-width: constants.$breakpoint-sm) {
       grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
-      grid-gap: 0.75em;
+      grid-gap: ui(0.75em);
 
       .Group__header__left,
       .Group__header__center {
@@ -19,7 +20,7 @@
       }
 
       .Group__header__right {
-        grid-gap: 0.75em;
+        grid-gap: ui(0.75em);
       }
 
       .Ledger__kind {
@@ -49,7 +50,7 @@
 
     @media (max-width: constants.$breakpoint-md) {
       flex-direction: column;
-      gap: 0.75em;
+      gap: ui(0.75em);
     }
 
     @media (min-width: constants.$breakpoint-md) {
@@ -82,7 +83,7 @@
 
     // Level with the middle of the period row beside it; "share today" under it.
     > .Ledger__month__buddy {
-      padding-top: 0.15em;
+      padding-top: ui(0.15em);
       flex-direction: column;
     }
   }
@@ -90,13 +91,13 @@
   &__body {
     display: flex;
     flex-direction: column;
-    grid-gap: 1em;
+    grid-gap: ui(1em);
     width: 100%;
     max-width: var(--main-width);
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
-    padding-bottom: 1em;
+    padding-bottom: ui(1em);
 
     @media (max-width: constants.$breakpoint-md) {
       align-self: center;
@@ -118,13 +119,26 @@
     grid-template-columns: 1fr auto 1fr;
     grid-template-areas: ". controls buddy";
     align-items: center;
-    gap: 0.5em 0.75em;
-    padding-bottom: 0.5em;
+    gap: ui(0.5em) ui(0.75em);
+    padding-bottom: ui(0.5em);
     border-bottom: var(--border-rule) solid var(--ink);
 
     @media (max-width: constants.$breakpoint-sm) {
       grid-template-columns: auto 1fr;
       grid-template-areas: "controls buddy";
+
+      // UI size L: the bigger controls and buddy don't fit one phone row (the month
+      // would wrap mid-stepper), so the buddy takes the row below.
+      :root[data-ui-size="l"] & {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+          "controls"
+          "buddy";
+
+        .Ledger__month__controls {
+          justify-content: flex-start;
+        }
+      }
     }
 
     &__controls {
@@ -133,7 +147,7 @@
       justify-content: center;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.5em 0.75em;
+      gap: ui(0.5em) ui(0.75em);
       min-width: 0;
     }
 
@@ -143,7 +157,7 @@
       min-height: 1.6em;
       display: flex;
       align-items: center;
-      gap: 0.5em;
+      gap: ui(0.5em);
     }
 
     &__label {
@@ -158,7 +172,7 @@
 // The left column: views, then stats periods. Rows come from .LogsMenu__item; these are
 // links, so they keep the menu's ink instead of link styling.
 .LedgerSidebar {
-  gap: 1em;
+  gap: ui(1em);
 
   @media (max-width: constants.$breakpoint-md) {
     font-size: 0.8em;
@@ -169,7 +183,7 @@
   &__group {
     display: flex;
     flex-direction: column;
-    gap: 0.4em;
+    gap: ui(0.4em);
 
     @media (max-width: constants.$breakpoint-md) {
       flex-direction: row;
@@ -179,7 +193,7 @@
 
   // Periods are a sub-choice, so they sit a step quieter than the views.
   &__group + &__group {
-    padding-top: 1em;
+    padding-top: ui(1em);
     border-top: var(--border-hairline) dotted var(--ink);
 
     @media (max-width: constants.$breakpoint-md) {
@@ -293,8 +307,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
-  padding: 0.75em 1em;
+  gap: ui(0.5em);
+  padding: ui(0.75em) ui(1em);
   border: var(--border-rule) solid var(--ink);
   background-color: var(--sheet);
 
@@ -302,7 +316,7 @@
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
     font-size: 0.8em;
     font-weight: 700;
 
@@ -311,7 +325,7 @@
     &__right {
       display: inline-flex;
       align-items: center;
-      gap: 0.2rem;
+      gap: ui(0.2rem);
       min-width: 0;
     }
 
@@ -333,7 +347,7 @@
       grid-template-areas:
         "left right"
         "center center";
-      row-gap: 0.4em;
+      row-gap: ui(0.4em);
 
       &__left {
         grid-area: left;
@@ -358,7 +372,7 @@
   &__body {
     display: flex;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
   }
 
   &__noteField {
@@ -366,7 +380,7 @@
     min-width: 0;
     display: flex;
     align-items: baseline;
-    gap: 0.5em;
+    gap: ui(0.5em);
   }
 
   &__noteLabel {
@@ -403,7 +417,7 @@
 .EntryList {
   display: flex;
   flex-direction: column;
-  gap: 1em;
+  gap: ui(1em);
 
   // Dims the whole screen while an entry is being edited.
   &__scrim {
@@ -423,7 +437,7 @@
     &__header {
       display: flex;
       justify-content: space-between;
-      gap: 1em;
+      gap: ui(1em);
       @include surfaces.strip;
       font-size: 0.85em;
     }
@@ -433,8 +447,8 @@
     display: grid;
     grid-template-columns: minmax(7em, 10em) 1fr auto 3.5em;
     align-items: center;
-    gap: 0.75em;
-    padding: 0.4em 0.5em;
+    gap: ui(0.75em);
+    padding: ui(0.4em) ui(0.5em);
     border-bottom: var(--border-hairline) dashed var(--ink);
 
     @media (max-width: constants.$breakpoint-sm) {
@@ -451,7 +465,7 @@
       display: block;
       position: relative;
       z-index: var(--z-selected);
-      padding: 0.5em 0;
+      padding: ui(0.5em) 0;
       border-bottom: none;
       scroll-margin-top: 0.5em;
     }
@@ -479,7 +493,7 @@
   &__menu {
     display: inline-flex;
     justify-content: flex-end;
-    gap: 0.4em;
+    gap: ui(0.4em);
 
     @media (max-width: constants.$breakpoint-sm) {
       grid-column: 2;
@@ -497,8 +511,8 @@
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: baseline;
-    gap: 0.25em 1em;
-    padding: 0.4em 0;
+    gap: ui(0.25em) ui(1em);
+    padding: ui(0.4em) 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
   }
 
@@ -513,7 +527,7 @@
   // Inputs sit in a framed sheet box here, not on a dashed underline: rows and sections
   // are divided by dashed lines, and an underlined field would read as another divider.
   .LineInput {
-    padding: 0.2em 0.4em;
+    padding: ui(0.2em) ui(0.4em);
     background: var(--sheet);
     border: var(--border-hairline) solid var(--ink);
 
@@ -528,7 +542,7 @@
 
   &__list {
     list-style: none;
-    margin: 0 0 1em;
+    margin: 0 0 ui(1em);
     padding: 0;
 
     // Archived: dotted, for things in the past.
@@ -540,7 +554,7 @@
   &__row {
     display: flex;
     align-items: center;
-    gap: 0.25em;
+    gap: ui(0.25em);
     border-bottom: var(--border-hairline) dashed var(--ink);
     background: var(--paper);
 
@@ -561,13 +575,13 @@
   &__handle {
     cursor: grab;
     user-select: none;
-    padding: 0 0.25em;
+    padding: 0 ui(0.25em);
     opacity: 0.7; // muted text floor
     touch-action: none;
 
     // A fingertip-sized target on touch screens.
     @media (pointer: coarse) {
-      padding: 0.3em 0.6em;
+      padding: ui(0.3em) ui(0.6em);
     }
 
     &:focus-visible {
@@ -582,8 +596,8 @@
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 0.5em;
-    padding: 0.45em 0.25em;
+    gap: ui(0.5em);
+    padding: ui(0.45em) ui(0.25em);
     font: inherit;
     text-align: left;
     color: inherit;
@@ -632,7 +646,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
 
     input {
       flex: 1;
@@ -646,14 +660,14 @@
   }
 
   &__back {
-    margin-bottom: 0.5em;
+    margin-bottom: ui(0.5em);
   }
 
   // Saved-as-you-go status, left of Done.
   .Modal__footer {
     justify-content: space-between;
     align-items: center;
-    gap: 1em;
+    gap: ui(1em);
   }
 
   &__status {
@@ -662,11 +676,11 @@
   }
 
   &__subheading {
-    margin: 1.5em 0 0.25em;
+    margin: ui(1.5em) 0 ui(0.25em);
   }
 
   &__hint {
-    margin: 0 0 0.5em;
+    margin: 0 0 ui(0.5em);
     font-size: 0.8em;
     opacity: 0.7;
   }
@@ -675,12 +689,12 @@
   &__panes {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 0 1em;
+    gap: 0 ui(1em);
     align-items: start;
   }
 
   &--wide &__detailPane {
-    padding-left: 1em;
+    padding-left: ui(1em);
     border-left: var(--border-rule) solid var(--ink);
     min-height: 100%;
   }
@@ -698,11 +712,11 @@
 .CategoryDetail {
   // The category's name over its budget (Budgets window, where it isn't editable).
   &__title {
-    margin: 0 0 0.25em;
+    margin: 0 0 ui(0.25em);
   }
 
   &__section {
-    padding: 0.6em 0;
+    padding: ui(0.6em) 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
 
     &:last-child {
@@ -716,8 +730,8 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.25em 1em;
-    padding: 0.2em 0;
+    gap: ui(0.25em) ui(1em);
+    padding: ui(0.2em) 0;
   }
 
   &__label {
@@ -734,7 +748,7 @@
 
   // Fine print, left-aligned under everything in its section.
   &__help {
-    margin: 0.4em 0 0;
+    margin: ui(0.4em) 0 0;
     font-size: 0.8em;
     text-align: left;
     opacity: 0.7; // muted text floor
@@ -755,13 +769,13 @@
   &__budget {
     display: inline-flex;
     align-items: center;
-    gap: 0.5em;
+    gap: ui(0.5em);
   }
 
   // [+ mixed currency budget]: a quiet text toggle for the drawer below it.
   &__drawerToggle {
     display: block;
-    margin: 0.35em 0 0 auto;
+    margin: ui(0.35em) 0 0 auto;
     padding: 0;
     font: inherit;
     font-size: 0.85em;
@@ -778,8 +792,8 @@
   }
 
   &__drawer {
-    margin-top: 0.25em;
-    padding-top: 0.25em;
+    margin-top: ui(0.25em);
+    padding-top: ui(0.25em);
     border-top: var(--border-hairline) dashed var(--ink);
   }
 
@@ -787,7 +801,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1em;
+    gap: ui(1em);
   }
 
   // Told apart by frame, not colour: dotted = moving it to the past; 3px = warning.
@@ -815,8 +829,8 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.25em 1em;
-    padding: 0.35em 0;
+    gap: ui(0.25em) ui(1em);
+    padding: ui(0.35em) 0;
 
     & + & {
       border-top: var(--border-hairline) dashed var(--ink);
@@ -831,7 +845,7 @@
   &__what {
     display: inline-flex;
     flex-wrap: wrap;
-    gap: 0 0.75em;
+    gap: 0 ui(0.75em);
     font-weight: 700;
   }
 
@@ -843,14 +857,14 @@
 
   &__actions {
     display: inline-flex;
-    gap: 0.4em;
+    gap: ui(0.4em);
     margin-left: auto;
   }
 
   &__form {
     display: flex;
     flex-direction: column;
-    gap: 0.35em;
+    gap: ui(0.35em);
     width: 100%;
   }
 
@@ -858,7 +872,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.35em 0.75em;
+    gap: ui(0.35em) ui(0.75em);
   }
 
   &__label {
@@ -870,7 +884,7 @@
   &__on {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
+    gap: ui(0.4em);
   }
 
   &__amountInput {
@@ -887,16 +901,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1em;
-    margin-bottom: 0.6em;
-    padding-bottom: 0.6em;
+    gap: ui(1em);
+    margin-bottom: ui(0.6em);
+    padding-bottom: ui(0.6em);
     border-bottom: var(--border-hairline) dashed var(--ink);
   }
 
   // Entry to the budget helper: a quiet, centred text link, not a framed button.
   &__helper {
     display: block;
-    margin: 0 auto 0.75em;
+    margin: 0 auto ui(0.75em);
     padding: 0;
     font: inherit;
     font-size: 0.85em;
@@ -915,8 +929,8 @@
 
   // After using a helper plan: that it's saved.
   &__notice {
-    margin: 0 0 0.75em;
-    padding: 0.5em 0.75em;
+    margin: 0 0 ui(0.75em);
+    padding: ui(0.5em) ui(0.75em);
     border: var(--border-rule) dashed var(--ink);
     font-size: 0.8em;
   }
@@ -931,7 +945,7 @@
 
 // The monthly total modal: the intro above the field.
 .MonthlyTotal__intro {
-  margin: 0 0 0.6em;
+  margin: 0 0 ui(0.6em);
 }
 
 // One budget amount (right-aligned) with its currency: a fixed unit or a picker.
@@ -940,7 +954,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.25em 0.5em;
+  gap: ui(0.25em) ui(0.5em);
   flex-shrink: 0;
 
   &__amount {
@@ -975,7 +989,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4em 1em;
+    gap: ui(0.4em) ui(1em);
     width: 100%;
     @include surfaces.strip(0.5em 0.75em);
     box-sizing: border-box;
@@ -986,7 +1000,7 @@
       flex: 1;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.4em 1em;
+      gap: ui(0.4em) ui(1em);
       min-width: 0;
       color: inherit;
       text-decoration: none;
@@ -1014,7 +1028,7 @@
 
       // Over budget: inverted within the strip.
       &--over {
-        padding: 0 0.4em;
+        padding: 0 ui(0.4em);
         color: var(--ink);
         background: var(--paper);
         font-weight: 700;
@@ -1025,7 +1039,7 @@
     &__cta {
       display: inline-flex;
       align-items: center;
-      gap: 0.35em;
+      gap: ui(0.35em);
       font: inherit;
       font-size: 0.75em;
       text-transform: uppercase;
@@ -1100,8 +1114,8 @@
   &__panel {
     display: flex;
     flex-direction: column;
-    gap: 0.75em;
-    padding: 0.75em;
+    gap: ui(0.75em);
+    padding: ui(0.75em);
     background: var(--sheet);
   }
 
@@ -1110,13 +1124,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4em 1em;
+    gap: ui(0.4em) ui(1em);
     @include surfaces.strip(0.5em 0.75em);
-    margin: -0.75em -0.75em 0;
+    margin: ui(-0.75em) ui(-0.75em) 0;
   }
 
   &__heading {
-    margin: 0.5em 0 0;
+    margin: ui(0.5em) 0 0;
     font-size: 0.85em;
   }
 
@@ -1125,7 +1139,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 0.5em;
+    gap: ui(0.5em);
   }
 
   &__note {
@@ -1142,13 +1156,13 @@
   &__budget {
     display: flex;
     flex-direction: column;
-    gap: 0.4em;
+    gap: ui(0.4em);
 
     &__meter {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.4em 1em;
+      gap: ui(0.4em) ui(1em);
       font-size: 0.9em;
     }
 
@@ -1179,11 +1193,11 @@
 
   &__insights {
     margin: 0;
-    padding-left: 1.2em;
+    padding-left: ui(1.2em);
     font-size: 0.9em;
 
     li + li {
-      margin-top: 0.2em;
+      margin-top: ui(0.2em);
     }
   }
 
@@ -1197,14 +1211,14 @@
       display: grid;
       grid-template-columns: minmax(6em, 9em) 1fr auto 3em;
       align-items: center;
-      gap: 0.5em;
-      padding: 0.2em 0;
+      gap: ui(0.5em);
+      padding: ui(0.2em) 0;
     }
 
     &__name {
       display: flex;
       align-items: center;
-      gap: 0.4em;
+      gap: ui(0.4em);
       min-width: 0;
       font-weight: 700;
     }
@@ -1224,7 +1238,7 @@
         font-weight: 700;
         color: var(--paper);
         background: var(--ink);
-        padding: 0 0.2em;
+        padding: 0 ui(0.2em);
       }
     }
 

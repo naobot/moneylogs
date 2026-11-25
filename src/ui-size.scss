@@ -1,0 +1,22 @@
+// UI size (Display → UI size, src/utils/displayPrefs.ts): how much room the app's parts
+// take, separate from the size of the text. `ui()` scales a padding, gap or margin by
+// --ui-scale (1 at M, so M is exactly the unscaled value). Use it for every em/rem
+// spacing that isn't already a --space-* token (those are scaled in tokens.scss).
+// Font sizes never go through it, and neither do px nudges that line things up
+// (border overlaps, icon offsets).
+@use "sass:list";
+@use "sass:meta";
+
+@function ui($value) {
+  @if meta.type-of($value) == "list" {
+    $out: ();
+    @each $item in $value {
+      $out: list.append($out, ui($item), $separator: space);
+    }
+    @return $out;
+  }
+  @if meta.type-of($value) == "number" and $value != 0 {
+    @return calc(#{$value} * var(--ui-scale));
+  }
+  @return $value;
+}
