@@ -6,7 +6,7 @@ import { newInviteCode, parseInviteCode, parseReset, planInvite } from "./invite
 import { awardMilestoneOnce } from "./awardMilestone";
 import { FIRST_FRIEND, FIRST_INVITE } from "./milestones";
 import { reportError, withSentryCall } from "./sentry";
-import { requireConfirmedEmail } from "./confirmEmail";
+import { rejectGuests, requireConfirmedEmail } from "./confirmEmail";
 
 /**
  * Personal invite links (/invite/{code}). invites/{code} → { inviterId } is closed to
@@ -55,6 +55,7 @@ export const acceptInvite = onCall(
   withSentryCall("acceptInvite", async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    rejectGuests(request.auth);
     const code = parseInviteCode(request.data);
     if (!code) throw new HttpsError("invalid-argument", "Expected { code }.");
     const db = getFirestore();

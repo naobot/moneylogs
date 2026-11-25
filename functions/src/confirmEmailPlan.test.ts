@@ -25,6 +25,12 @@ describe("isEmailConfirmed", () => {
     expect(isEmailConfirmed({ creationTime: "not a date" })).toBe(false);
   });
 
+  it("never counts a guest as confirmed, even one made before the cutoff", () => {
+    expect(
+      isEmailConfirmed({ anonymous: true, creationTime: "Mon, 02 Mar 2026 10:00:00 GMT" }),
+    ).toBe(false);
+  });
+
   it("matches the app's copy", () => {
     expect(app.CONFIRM_EMAIL_CUTOFF_MS).toBe(CONFIRM_EMAIL_CUTOFF_MS);
     expect(app.EMAIL_UNCONFIRMED).toBe(EMAIL_UNCONFIRMED);
@@ -32,6 +38,7 @@ describe("isEmailConfirmed", () => {
       { emailVerified: true },
       { creationTime: "Mon, 23 Nov 2026 07:59:59 GMT" },
       { creationTime: "Mon, 23 Nov 2026 08:00:00 GMT" },
+      { anonymous: true, creationTime: "Mon, 02 Mar 2026 10:00:00 GMT" },
     ]) {
       expect(app.isEmailConfirmed(account)).toBe(isEmailConfirmed(account));
     }

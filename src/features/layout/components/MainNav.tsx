@@ -12,6 +12,7 @@ import { arrangeDashboard, navLedgers } from "@/utils/dashboard";
 import Button from "@/components/Button";
 import ThemeToggle from "./ThemeToggle";
 import { showNavWordmark } from "../navWordmark";
+import { inviteSignInState } from "@/features/auth/authRedirect";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 
 declare const __APP_VERSION__: string;
@@ -59,7 +60,14 @@ const MainNav = () => {
     <nav className="MainNav">
       <div className="MainNav__nav">
         {!authPending && !isLoggedIn && location.pathname !== "/login" && (
-          <Button to="/login" text="Sign in" variant="secondary" />
+          <Button
+            to="/login"
+            // On an invite page, sign-in carries the invite along (like the page's own
+            // buttons), so nobody ends up on Home, or offered guest mode, instead.
+            state={inviteSignInState(location.pathname, location.search)}
+            text="Sign in"
+            variant="secondary"
+          />
         )}
         {isLoggedIn && (
           <>

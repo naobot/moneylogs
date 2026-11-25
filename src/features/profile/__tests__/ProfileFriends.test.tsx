@@ -5,10 +5,13 @@ import { MemoryRouter } from "react-router-dom";
 
 const state = vi.hoisted(() => ({
   friends: null as string[] | null,
+  auth: { currentUser: null as { isAnonymous: boolean } | null },
 }));
+// Like the real hook: no id, nothing read.
 vi.mock("../useFriendList", () => ({
-  useFriendList: () => ({ friends: state.friends, isLoading: false }),
+  useFriendList: (id?: string) => ({ friends: id ? state.friends : null, isLoading: false }),
 }));
+vi.mock("@/config/firebase-config", () => ({ auth: state.auth, db: {}, functions: {} }));
 vi.mock("@/hooks/useProfiles", () => ({
   useProfiles: (ids: string[]) => ({
     profiles: new Map(ids.map((id) => [id, { id, displayName: id.toUpperCase(), avatar: null }])),
@@ -26,6 +29,7 @@ describe("ProfileFriends", () => {
   let root: Root;
 
   beforeEach(() => {
+    state.auth.currentUser = null;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -66,6 +70,20 @@ describe("ProfileFriends", () => {
     expect(container.querySelectorAll(".ProfileFriends .Avatar")).toHaveLength(2);
     expect(container.querySelector(".ProfileLink__name")).toBeNull();
     expect(container.textContent).not.toContain("AMY");
+  });
+
+  it("doesn't read anyone else's list for a guest", () => {
+    state.friends = ["amy", "bo"];
+    state.auth.currentUser = { isAnonymous: true };
+    render(false);
+    expect(container.textContent).toBe("");
+  });
+
+  it("still shows a guest their own", () => {
+    state.friends = [];
+    state.auth.currentUser = { isAnonymous: true };
+    render(true);
+    expect(container.textContent).toContain("no friends to show yet");
   });
 
   it("says when a shown list is empty", () => {

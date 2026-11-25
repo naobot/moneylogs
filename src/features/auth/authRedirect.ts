@@ -28,3 +28,11 @@ export const welcomePath = (redirectTo?: string): string => {
 // Something to show until the welcome wizard asks for a real name: the email's local part.
 export const placeholderDisplayName = (email: string): string =>
   email.split("@")[0]?.trim() || "new user";
+
+/**
+ * Router state for a sign-in link on an invite page (/invite/:code, /g/:id/invite,
+ * /l/:id/invite): the invite rides along, as from the invite landing's own buttons, so
+ * signing in or registering lands back on it. Elsewhere, none.
+ */
+export const inviteSignInState = (pathname: string, search = ""): AuthLocationState | undefined =>
+  /(^|\/)invite(\/|$)/.test(pathname) ? { view: "login", from: pathname + search } : undefined;

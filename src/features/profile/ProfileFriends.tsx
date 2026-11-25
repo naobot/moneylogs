@@ -9,6 +9,8 @@ import {
 
 import MemberAvatarLink from "./MemberAvatarLink";
 import { useFriendList } from "./useFriendList";
+import { auth } from "@/config/firebase-config";
+import { isGuest } from "@/features/auth/guest";
 
 type ProfileFriendsProps = {
   userDocId: string;
@@ -22,7 +24,11 @@ type ProfileFriendsProps = {
  * switched it on in /me. The owner sees exactly what others see, plus a note.
  */
 export const ProfileFriends = ({ userDocId, isMe }: ProfileFriendsProps) => {
-  const { friends, isLoading } = useFriendList(userDocId);
+  // Guests can only read their own list (friendLists/ in firestore.rules): to them,
+  // everyone else's reads as not shown.
+  const { friends, isLoading } = useFriendList(
+    isMe || !isGuest(auth.currentUser) ? userDocId : undefined,
+  );
   const { profiles, isLoading: profilesLoading } = useProfiles(friends ?? []);
   const memberProfiles = useMemo(
     () =>

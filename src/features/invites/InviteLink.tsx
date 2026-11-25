@@ -8,6 +8,8 @@ import { reportError } from "@/utils/reportError";
 import { shareUrl } from "@/utils/shareUrl";
 import { invitePath } from "@/utils/invites";
 import { useConfirmEmail } from "@/features/account/confirmEmail/confirmEmailContext";
+import { auth } from "@/config/firebase-config";
+import { isGuest } from "@/features/auth/guest";
 import { isEmailUnconfirmedError } from "@/utils/confirmedEmail";
 import { getInviteCode } from "./invites";
 
@@ -19,6 +21,7 @@ import { getInviteCode } from "./invites";
 export const InviteLink = () => {
   const { showToast } = useToastContext();
   const { confirmed, ensureConfirmed } = useConfirmEmail();
+  const guest = isGuest(auth.currentUser);
   const [code, setCode] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   // The server said "confirm first" though the app thought they had (e.g. a stale
@@ -76,9 +79,15 @@ export const InviteLink = () => {
       <p>Send this link to someone you'd like to invite. When they open it, you'll be friends.</p>
       {!confirmed || serverUnconfirmed ? (
         <>
-          <p>Confirm your email address to get your invite link.</p>
+          <p>
+            {guest
+              ? "Save your account to get your invite link."
+              : "Confirm your email address to get your invite link."}
+          </p>
           <div className="InviteLink__actions">
-            <RowButton onClick={() => void confirmThenRetry()}>confirm email</RowButton>
+            <RowButton onClick={() => void confirmThenRetry()}>
+              {guest ? "save account" : "confirm email"}
+            </RowButton>
           </div>
         </>
       ) : failed ? (

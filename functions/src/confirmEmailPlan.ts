@@ -16,7 +16,10 @@ export const EMAIL_UNCONFIRMED = "email_unconfirmed";
 export const isEmailConfirmed = (account: {
   emailVerified?: boolean;
   creationTime?: string | null;
+  /** A guest (anonymous sign-in): never confirmed, whenever it was made. Saving comes first. */
+  anonymous?: boolean;
 }): boolean => {
+  if (account.anonymous === true) return false;
   if (account.emailVerified === true) return true;
   const created = account.creationTime ? Date.parse(account.creationTime) : NaN;
   return Number.isFinite(created) && created < CONFIRM_EMAIL_CUTOFF_MS;

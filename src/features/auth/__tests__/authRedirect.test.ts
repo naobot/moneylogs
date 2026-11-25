@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
 import {
   initialAuthView,
+  inviteSignInState,
   placeholderDisplayName,
   sanitizeRedirect,
   welcomePath,
@@ -86,5 +87,21 @@ describe("placeholderDisplayName", () => {
 
   it("never comes back empty", () => {
     expect(placeholderDisplayName("@example.com")).toBe("new user");
+  });
+});
+
+describe("inviteSignInState", () => {
+  it("carries every kind of invite through sign-in, which also hides guest mode", () => {
+    for (const path of ["/invite/abc", "/g/g1/invite", "/l/l1/invite"]) {
+      const state = inviteSignInState(path, "?x=1");
+      expect(state).toEqual({ view: "login", from: `${path}?x=1` });
+      expect(sanitizeRedirect(state?.from)).toContain("/invite");
+    }
+  });
+
+  it("adds nothing elsewhere", () => {
+    for (const path of ["/", "/about", "/g/g1", "/l/l1/stats", "/g/invited-trip"]) {
+      expect(inviteSignInState(path)).toBeUndefined();
+    }
   });
 });

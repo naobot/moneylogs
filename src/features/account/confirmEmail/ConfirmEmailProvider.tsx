@@ -10,6 +10,8 @@ import { isEmailConfirmed } from "@/utils/confirmedEmail";
 import { reportError } from "@/utils/reportError";
 import { track } from "@/utils/analytics";
 import { ConfirmEmailContext } from "./confirmEmailContext";
+import { isGuest } from "@/features/auth/guest";
+import SaveGuestAccount from "@/features/auth/components/SaveGuestAccount";
 
 import "./ConfirmEmail.scss";
 
@@ -17,6 +19,7 @@ const confirmed = (user: User) =>
   isEmailConfirmed({
     emailVerified: user.emailVerified,
     creationTime: user.metadata.creationTime,
+    anonymous: user.isAnonymous,
   });
 
 /**
@@ -141,7 +144,22 @@ export const ConfirmEmailProvider = ({ children }: PropsWithChildren) => {
   return (
     <ConfirmEmailContext.Provider value={value}>
       {children}
-      {open && (
+      {open && isGuest(user) && (
+        <Modal isOpen onClose={() => setOpen(false)} className="ConfirmEmail">
+          <Modal.Header striped title="save your account" />
+          <Modal.Body className="ConfirmEmail__body">
+            <p>
+              Adding friends, sending gifts and inviting people need an account. Save yours with an
+              email and password. Everything you've logged as a guest stays.
+            </p>
+            <SaveGuestAccount />
+          </Modal.Body>
+          <Modal.Actions>
+            <Modal.CancelButton text="Not now" />
+          </Modal.Actions>
+        </Modal>
+      )}
+      {open && !isGuest(user) && (
         <Modal isOpen onClose={() => setOpen(false)} className="ConfirmEmail">
           <Modal.Header striped title="confirm your email" />
           <Modal.Body className="ConfirmEmail__body">

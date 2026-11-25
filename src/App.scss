@@ -681,6 +681,25 @@ h6,
   }
 }
 
+// "Just looking?": below the forms, set off by a thin rule (an option, not a form).
+.LoginPage__guest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-gap: var(--space-4);
+  max-width: 340px;
+  margin: 0 auto;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--ink);
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 0.9em;
+  }
+}
+
 .AuthError {
   display: inline-flex;
   align-items: center;
