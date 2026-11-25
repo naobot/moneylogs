@@ -52,10 +52,10 @@ export const Auth = () => {
     );
   }
   if (isGuest(authUser)) return <GuestOnLogin />;
-  return <AuthForms />;
+  return <AuthForms signedIn={!!authUser} />;
 };
 
-const AuthForms = () => {
+const AuthForms = ({ signedIn }: { signedIn: boolean }) => {
   const location = useLocation();
   const state = location.state as AuthLocationState | null;
 
@@ -100,8 +100,9 @@ const AuthForms = () => {
         <ForgotPasswordHandler initialEmail={resetEmail} onBack={() => setCurrentView("login")} />
       )}
       {currentView === "register" && <RegistrationHandler redirectTo={redirectTo} />}
-      {/* Not on the way to an invite: accepting one needs a real account. */}
-      {!redirectTo?.includes("/invite") && (
+      {/* Not on the way to an invite (accepting one needs a real account), and not over a
+          signed-in account (e.g. back here through the history): it would replace it. */}
+      {!signedIn && !redirectTo?.includes("/invite") && (
         <div className="LoginPage__guest">
           <p>Just looking? Try it first, and save your account later if you like it.</p>
           <TryAsGuest size="sm" />

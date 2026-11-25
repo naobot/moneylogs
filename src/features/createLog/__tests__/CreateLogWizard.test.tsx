@@ -137,6 +137,69 @@ describe("CreateLogWizard", () => {
     });
   };
 
+  describe("a guest's draft kept across the save-account reload", () => {
+    const draft = (uid: string) =>
+      localStorage.setItem(
+        "ML__create_log_draft",
+        JSON.stringify({
+          uid,
+          savedAt: Date.now(),
+          state: {
+            mode: "financial",
+            title: "groceries",
+            maxParticipants: 4,
+            startDate: "2026-11-25",
+            startTime: "00:00",
+            endDate: "2026-12-25",
+            endTime: "23:59",
+            defaultCurrency: "CAD",
+            inviteFriendIds: [],
+            parentId: null,
+            sublogName: "",
+          },
+        }),
+      );
+    const remount = () => {
+      act(() => root.unmount());
+      root = createRoot(container);
+      act(() =>
+        root.render(
+          <MemoryRouter initialEntries={["/create?step=1"]}>
+            <Routes>
+              <Route path="/create" element={<CreateLogWizard />} />
+            </Routes>
+          </MemoryRouter>,
+        ),
+      );
+    };
+    const shown = () =>
+      Array.from(container.querySelectorAll("input")).some((i) => i.value === "groceries");
+
+    afterEach(() => localStorage.clear());
+
+    it("comes back for the guest who kept it, where they left off", () => {
+      draft("uid-1");
+      remount();
+      expect(shown()).toBe(true);
+      expect(localStorage.getItem("ML__create_log_draft")).toBeNull();
+    });
+
+    it("is never shown to someone signed out, and is gone afterwards", () => {
+      me.signedIn = false;
+      draft("uid-1");
+      remount();
+      expect(shown()).toBe(false);
+      expect(localStorage.getItem("ML__create_log_draft")).toBeNull();
+    });
+
+    it("is never shown to another account", () => {
+      draft("uid-2");
+      remount();
+      expect(shown()).toBe(false);
+      expect(localStorage.getItem("ML__create_log_draft")).toBeNull();
+    });
+  });
+
   it("starts by asking for the log type, with no way forward until one is picked", () => {
     expect(question()).toMatch(/What kind of log/);
     expect(button("Next")).toBeUndefined();

@@ -100,18 +100,18 @@ export const CreateLogWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // A guest who saved their account from the friends step comes back here after the
-  // reload with what they'd filled in (guestDraft.ts), as long as it's theirs.
+  // reload with what they'd filled in (guestDraft.ts). It's read once and taken out of
+  // storage, and only shown once the signed-in account is known to be its owner: /create
+  // works signed out, so nobody else using this browser ever sees it.
   const [draft] = useState(() => peekCreateLogDraft());
-  const [state, setState] = useState<WizardState>(
-    () => draft?.state ?? initialState(ledgerStartCurrency(user)),
-  );
+  const [state, setState] = useState<WizardState>(() => initialState(ledgerStartCurrency(user)));
   useEffect(() => {
     if (draft) dropCreateLogDraft();
   }, [draft]);
-  const [draftOwnerChecked, setDraftOwnerChecked] = useState(!draft);
-  if (!draftOwnerChecked && user?.userId) {
-    setDraftOwnerChecked(true);
-    if (draft && draft.uid !== user.userId) setState(initialState(ledgerStartCurrency(user)));
+  const [draftRestored, setDraftRestored] = useState(false);
+  if (draft && !draftRestored && user?.userId === draft.uid) {
+    setDraftRestored(true);
+    setState(draft.state);
   }
   // Inviting needs a confirmed email (utils/confirmedEmail.ts). Until then nobody is
   // invited, so review never promises invites that won't go out.

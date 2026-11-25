@@ -40,7 +40,9 @@ const userDocIdOf = async (uid: string): Promise<string | null> => {
  */
 export const startGuest = async (addNewUser: AddNewUser) => {
   const current = auth.currentUser;
-  const user = current?.isAnonymous ? current : (await signInAnonymously(auth)).user;
+  // Never swap a real account's session for a guest one.
+  if (current && !current.isAnonymous) throw new Error("Already signed in to an account");
+  const user = current ?? (await signInAnonymously(auth)).user;
   if (!(await userDocIdOf(user.uid))) {
     await addNewUser({ userId: user.uid, displayName: GUEST_DISPLAY_NAME, email: null });
   }
