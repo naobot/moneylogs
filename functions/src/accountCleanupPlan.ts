@@ -1,6 +1,7 @@
 /**
- * Which accounts the daily cleanup removes (accountCleanup.ts). Two kinds, both idle for
- * INACTIVE_DAYS:
+ * Which accounts the daily cleanup lists for an admin to remove (accountCleanup.ts). Nothing
+ * is deleted automatically: an admin reviews the list in /admin and deletes each one by
+ * hand. Two kinds, both idle for INACTIVE_DAYS:
  *
  * - guests (anonymous sign-ins that never saved their account): nobody can get back
  *   into one once its browser forgets it, so an idle one is already lost;
@@ -8,14 +9,11 @@
  *   no ties to anyone: no friendships, requests included, and no log shared with others.
  *   Grandfathered accounts count too: the cutoff only decides who may reach out.
  *
- * Admins are never removed. Deletion runs the app's own cascade (deleteUserData).
+ * Admins are never listed. Deletion runs the app's own cascade (deleteUserData).
  */
 
 export const INACTIVE_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** A run deletes at most this many, so a mistake can't sweep everyone at once. */
-export const MAX_DELETIONS_PER_RUN = 25;
 
 export type CleanupReason = "idle_guest" | "idle_unconfirmed";
 
@@ -40,7 +38,7 @@ export const lastActiveMs = (a: CleanupAccount): number =>
   Math.max(ms(a.creationTime), ms(a.lastSignInTime), ms(a.lastRefreshTime));
 
 /**
- * The reason an account is up for cleanup, judging by its auth record alone. An
+ * The reason an account is listed for cleanup, judging by its auth record alone. An
  * `idle_unconfirmed` one still needs its ties checked (hasTies) before it goes.
  */
 export const cleanupReason = (a: CleanupAccount, nowMs: number): CleanupReason | null => {

@@ -567,9 +567,10 @@ export {
   adminGift,
   adminDeleteLog,
   adminDeleteAccount,
-  adminCleanupPreview,
+  adminCleanupList,
+  adminCleanupDelete,
 } from "./admin";
-export { cleanupAccounts } from "./accountCleanup";
+export { listCleanupCandidates } from "./accountCleanup";
 export { rollQuietDay } from "./rollQuietDay";
 export { checkInLedger, dailyCheckIn } from "./checkIn";
 export { confirmNoSpendDay } from "./noSpend";

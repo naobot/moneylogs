@@ -24,8 +24,13 @@ import { KNICK_KNACK_FINDS } from "./knickknacks";
 import { grantKept, sendSpiritGift } from "./knickknackGrants";
 import { purgeLog } from "./purgeLog";
 import { withSentryCall } from "./sentry";
-import { ACCOUNT_CLEANUP_DELETE, findCleanupCandidates } from "./accountCleanup";
-import { INACTIVE_DAYS, MAX_DELETIONS_PER_RUN } from "./accountCleanupPlan";
+import {
+  candidateFor,
+  cleanupListRef,
+  refreshCleanupList,
+  type CleanupCandidate,
+} from "./accountCleanup";
+import { INACTIVE_DAYS } from "./accountCleanupPlan";
 
 /**
  * Admin-only callables behind the /admin page. Admins carry the `admin` custom claim
@@ -302,20 +307,88 @@ export const adminDeleteAccount = onCall(
   }),
 );
 
+/** Takes one account off the stored cleanup list (deleted, or no longer up for it). */
+const unlist = (db: Firestore, uid: string) =>
+  db.runTransaction(async (tx) => {
+    const snap = await tx.get(cleanupListRef(db));
+    if (!snap.exists) return;
+    const candidates = (snap.get("candidates") ?? []) as CleanupCandidate[];
+    const kept = candidates.filter((c) => c.uid !== uid);
+    if (kept.length === candidates.length) return;
+    tx.update(cleanupListRef(db), {
+      candidates: kept,
+      total: Math.max(0, ((snap.get("total") as number | undefined) ?? kept.length + 1) - 1),
+    });
+  });
+
 /**
- * What the daily account cleanup (accountCleanup.ts) would remove right now, and whether
- * it's allowed to. Read-only: check this before switching ACCOUNT_CLEANUP_DELETE on.
+ * The account cleanup list (accountCleanup.ts): built every day, or now with
+ * `{ refresh: true }`. Listing never deletes; adminCleanupDelete does, one at a time.
  */
-export const adminCleanupPreview = onCall(
+export const adminCleanupList = onCall(
   { timeoutSeconds: 300, memory: "512MiB" },
-  withSentryCall("adminCleanupPreview", async (request) => {
+  withSentryCall("adminCleanupList", async (request) => {
     requireAdmin(request);
-    const candidates = await findCleanupCandidates(getFirestore());
+    const db = getFirestore();
+    const refresh = (request.data as { refresh?: unknown } | null)?.refresh === true;
+    if (refresh) return await refreshCleanupList(db);
+    const snap = await cleanupListRef(db).get();
+    if (!snap.exists) {
+      return { candidates: [], total: 0, inactiveDays: INACTIVE_DAYS, listedAt: null };
+    }
     return {
-      deleteEnabled: ACCOUNT_CLEANUP_DELETE.value(),
-      inactiveDays: INACTIVE_DAYS,
-      maxPerRun: MAX_DELETIONS_PER_RUN,
-      candidates,
+      candidates: (snap.get("candidates") ?? []) as CleanupCandidate[],
+      total: (snap.get("total") as number | undefined) ?? 0,
+      inactiveDays: (snap.get("inactiveDays") as number | undefined) ?? INACTIVE_DAYS,
+      listedAt: (snap.get("listedAt") as string | undefined) ?? null,
     };
+  }),
+);
+
+/**
+ * Delete one listed account, by hand. It's checked again first against a fresh auth
+ * record and its ties: someone who came back or made a friend since the list was built
+ * is kept (and taken off the list) instead.
+ */
+export const adminCleanupDelete = onCall(
+  { timeoutSeconds: 540, memory: "512MiB" },
+  withSentryCall("adminCleanupDelete", async (request) => {
+    const adminUid = requireAdmin(request);
+    const uid = (request.data as { uid?: unknown } | null)?.uid;
+    if (typeof uid !== "string" || !ID_RE.test(uid)) {
+      throw new HttpsError("invalid-argument", "Expected { uid }.");
+    }
+    if (uid === adminUid) {
+      throw new HttpsError("failed-precondition", "Delete your own account from /me instead.");
+    }
+
+    const db = getFirestore();
+    const authUser = await authUserOrNull(uid);
+    if (!authUser) {
+      await unlist(db, uid);
+      return { deleted: false, reason: "gone" as const };
+    }
+    const candidate = await candidateFor(db, authUser, Date.now());
+    if (!candidate) {
+      await unlist(db, uid);
+      return { deleted: false, reason: "kept" as const };
+    }
+
+    const result = await deleteUserData(db, uid);
+    await audit(
+      db,
+      adminUid,
+      "cleanup_account",
+      { uid },
+      {
+        reason: candidate.reason,
+        email: candidate.email,
+        lastActiveAt: candidate.lastActiveAt,
+        ...result,
+      },
+    );
+    await unlist(db, uid);
+    console.log(`adminCleanupDelete: ${uid} (${candidate.reason}) by ${adminUid}`);
+    return { deleted: true, reason: candidate.reason, ...result };
   }),
 );

@@ -1,5 +1,4 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { defineBoolean } from "firebase-functions/params";
 import { FieldValue, Firestore, getFirestore } from "firebase-admin/firestore";
 import { getAuth, UserRecord } from "firebase-admin/auth";
 import {
@@ -8,22 +7,19 @@ import {
   hasTies,
   INACTIVE_DAYS,
   lastActiveMs,
-  MAX_DELETIONS_PER_RUN,
   Ties,
   type CleanupAccount,
 } from "./accountCleanupPlan";
-import { deleteUserData } from "./deleteAccount";
-import { reportError, withSentry } from "./sentry";
+import { withSentry } from "./sentry";
 
 /**
- * Off until someone has looked at the admin preview (/admin → cleanup) and set this to
- * true in functions/.env.<project>, then redeployed. Until then the daily run only logs
- * what it would delete.
+ * Where the daily list is kept for /admin. No client access (rules deny by default): the
+ * admin callables read and update it.
  */
-export const ACCOUNT_CLEANUP_DELETE = defineBoolean("ACCOUNT_CLEANUP_DELETE", {
-  default: false,
-  description: "Let the daily account cleanup actually delete accounts (else it only logs).",
-});
+export const cleanupListRef = (db: Firestore) => db.collection("admin_cleanup").doc("latest");
+
+/** At most this many are stored (a Firestore doc tops out at 1 MiB); `total` keeps the count. */
+export const MAX_LISTED = 500;
 
 export type CleanupCandidate = {
   uid: string;
@@ -81,8 +77,8 @@ const tiesOf = async (db: Firestore, uid: string): Promise<Ties> => {
   return { friendships, sharedLogs };
 };
 
-/** Whether this account should go now, re-read fresh: null to keep it. */
-const candidateFor = async (
+/** Whether this account is up for cleanup now, re-read fresh: null to keep it. */
+export const candidateFor = async (
   db: Firestore,
   user: UserRecord,
   nowMs: number,
@@ -121,59 +117,37 @@ export const findCleanupCandidates = async (
   return found.sort((a, b) => (a.lastActiveAt ?? "").localeCompare(b.lastActiveAt ?? ""));
 };
 
+/** Scan every account now and store the list /admin shows. */
+export const refreshCleanupList = async (db: Firestore) => {
+  const candidates = await findCleanupCandidates(db);
+  const list = {
+    candidates: candidates.slice(0, MAX_LISTED),
+    total: candidates.length,
+    inactiveDays: INACTIVE_DAYS,
+    listedAt: new Date().toISOString(),
+  };
+  await cleanupListRef(db).set({ ...list, updatedAt: FieldValue.serverTimestamp() });
+  return list;
+};
+
 /**
- * Daily: remove idle guests and idle, unconnected unconfirmed accounts (see
- * accountCleanupPlan.ts), at most MAX_DELETIONS_PER_RUN at a time, each recorded in
- * admin_actions. Only logs what it would do while ACCOUNT_CLEANUP_DELETE is off.
+ * Daily: list idle guests and idle, unconnected unconfirmed accounts (see
+ * accountCleanupPlan.ts) for /admin → account cleanup. It never deletes anything: an
+ * admin deletes each listed account by hand (adminCleanupDelete), which checks it again.
  */
-export const cleanupAccounts = onSchedule(
+export const listCleanupCandidates = onSchedule(
   {
     schedule: "every day 04:00",
     timeZone: "America/Vancouver",
     timeoutSeconds: 540,
     memory: "512MiB",
   },
-  withSentry("cleanupAccounts", async () => {
-    const db = getFirestore();
-    const candidates = await findCleanupCandidates(db);
-    const counts = candidates.reduce<Record<string, number>>(
+  withSentry("listCleanupCandidates", async () => {
+    const list = await refreshCleanupList(getFirestore());
+    const counts = list.candidates.reduce<Record<string, number>>(
       (acc, c) => ({ ...acc, [c.reason]: (acc[c.reason] ?? 0) + 1 }),
       {},
     );
-    if (!ACCOUNT_CLEANUP_DELETE.value()) {
-      console.log(
-        `cleanupAccounts: would delete ${candidates.length} (${JSON.stringify(counts)}); deletion is off`,
-      );
-      return;
-    }
-
-    let deleted = 0;
-    for (const candidate of candidates.slice(0, MAX_DELETIONS_PER_RUN)) {
-      try {
-        // Re-check against a fresh record: they may have come back since the scan.
-        const fresh = await getAuth().getUser(candidate.uid);
-        if (!(await candidateFor(db, fresh, Date.now()))) continue;
-        const result = await deleteUserData(db, candidate.uid);
-        await db.collection("admin_actions").add({
-          action: "cleanup_account",
-          adminUid: "system",
-          target: { uid: candidate.uid },
-          details: {
-            reason: candidate.reason,
-            email: candidate.email,
-            lastActiveAt: candidate.lastActiveAt,
-            ...result,
-          },
-          at: FieldValue.serverTimestamp(),
-        });
-        deleted += 1;
-      } catch (error) {
-        reportError(error, { action: "cleanup_account", level: "warning" });
-      }
-    }
-    console.log(
-      `cleanupAccounts: deleted ${deleted} of ${candidates.length} (${JSON.stringify(counts)}); ` +
-        `idle for ${INACTIVE_DAYS}+ days`,
-    );
+    console.log(`listCleanupCandidates: ${list.total} listed (${JSON.stringify(counts)})`);
   }),
 );

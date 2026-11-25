@@ -67,19 +67,33 @@ export type CleanupCandidate = {
   lastActiveAt: string | null;
 };
 
-export type CleanupPreview = {
-  /** Whether the daily run deletes (ACCOUNT_CLEANUP_DELETE), or only logs. */
-  deleteEnabled: boolean;
-  inactiveDays: number;
-  maxPerRun: number;
+export type CleanupList = {
   candidates: CleanupCandidate[];
+  /** How many were found; more than `candidates` when the stored list was capped. */
+  total: number;
+  inactiveDays: number;
+  /** When the list was built (ISO), or null before the first daily run. */
+  listedAt: string | null;
 };
 
-/** What the daily account cleanup would remove now (functions/src/accountCleanup.ts). */
-export const adminCleanupPreview = httpsCallable<void, CleanupPreview>(
+/**
+ * The account cleanup list (functions/src/accountCleanup.ts), built daily. `refresh`
+ * builds it again now. Listing never deletes anything.
+ */
+export const adminCleanupList = httpsCallable<{ refresh?: boolean }, CleanupList>(
   functions,
-  "adminCleanupPreview",
+  "adminCleanupList",
 );
+
+/**
+ * Delete one listed account. The server checks it again first: `kept` means they came
+ * back or made ties since, `gone` that the account no longer exists. Either way it's
+ * taken off the list.
+ */
+export const adminCleanupDelete = httpsCallable<
+  { uid: string },
+  { deleted: boolean; reason: "idle_guest" | "idle_unconfirmed" | "kept" | "gone" }
+>(functions, "adminCleanupDelete");
 
 /** The server's own message for an HttpsError, else a generic one. */
 export const adminErrorMessage = (err: unknown): string =>
