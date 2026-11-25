@@ -11,6 +11,7 @@ type ControlledInputProps = {
   type?: "text" | "password" | "number" | "date" | "time";
   max?: number;
   min?: number;
+  placeholder?: string;
 };
 
 const ControlledInput = ({
@@ -22,6 +23,7 @@ const ControlledInput = ({
   type = "text",
   max,
   min,
+  placeholder,
 }: ControlledInputProps) => {
   // useEffect(() => {
   //   if (isError) {
@@ -37,7 +39,14 @@ const ControlledInput = ({
     >
       <div className="ControlledInput__input">
         <label>{label}</label>
-        <input type={type} value={value ?? ""} onChange={onChange} max={max} min={min} />
+        <input
+          type={type}
+          value={value ?? ""}
+          onChange={onChange}
+          max={max}
+          min={min}
+          placeholder={placeholder}
+        />
       </div>
       <div className="ControlledInput__alert">
         {isError && <Icon type="warning" />}

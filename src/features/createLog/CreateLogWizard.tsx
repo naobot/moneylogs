@@ -421,7 +421,8 @@ export const CreateLogWizard = () => {
             <>
               <ControlledInput
                 label="Counts as"
-                value={state.sublogName || state.title.trim()}
+                value={state.sublogName}
+                placeholder={state.title.trim()}
                 onChange={(e) => update({ sublogName: e.target.value })}
                 isError={!!sublogNameError(state.sublogName)}
                 errorMessage={sublogNameError(state.sublogName)}
