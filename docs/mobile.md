@@ -20,6 +20,7 @@ Capacitor 8 shells (`ios/`, `android/`, app id `app.moneylogs`) around the same 
   2. Copy `android/keystore.properties.example` to `android/keystore.properties` and fill in the passwords. Both files are git-ignored; keep copies in a password manager.
   3. In Play Console, enrol in Play App Signing (Google holds the app-signing key; you upload with this key).
      Without `keystore.properties`, release builds stop with directions rather than producing an unsigned bundle. Debug builds and CI don't need it.
+- **iOS release:** `npm run ios:release` syncs the versions, makes a production build, archives it to `ios/App/build/moneylogs-<version>.xcarchive` and exports an App Store `.ipa`. It then checks that the export was re-signed with `aps-environment = production`. The project keeps `development` for simulator and USB builds, and an App Store build left on `development` gets no push. Finally it opens the archive in Xcode's Organizer (Distribute App → App Store Connect). With `npm run ios:release -- --upload` it uploads straight away, using the Apple ID signed in to Xcode → Settings → Accounts. Signing is automatic: the first run creates the distribution certificate and profile. `Info.plist` sets `ITSAppUsesNonExemptEncryption = NO` (HTTPS only), so uploads skip the export-compliance question.
 - To force old builds to update, set `config/app.minNativeVersion` in Firestore. The store links go in the same doc as `iosStoreUrl` and `androidStoreUrl`.
 - App icons and splash screens are drawn from `public/favicon.svg` by `node scripts/generate-native-icons.mjs`; rerun it whenever the favicon changes. It writes the Android vector mark, adaptive icon, splash and legacy launcher PNGs, the iOS app icon, launch image and `SplashBackground` colour, and the store-listing icons in `assets/` (`icon-only.png` 1024, `icon-512.png` for Play). Don't use `@capacitor/assets`: it resamples the pixel art, which blurs it.
 
@@ -31,8 +32,11 @@ Done: 1, 2, the Team ID in 3, and the fingerprints in 4. The first internal-test
 2. Register the iOS and Android apps (`app.moneylogs`) in the Firebase console. Add `GoogleService-Info.plist` to `ios/App/App/` and `google-services.json` to `android/app/`. Both get committed.
 3. Apple Developer account:
    - Put the Team ID (`N95N7S65JJ`) in `public/.well-known/apple-app-site-association` and set it as the Xcode signing team.
-   - Upload an APNs key to Firebase.
-   - Switch `aps-environment` to `production` for store builds.
+   - Upload an APNs key (`.p8`, Certificates, Identifiers & Profiles → Keys) to Firebase → Project settings → Cloud Messaging → Apple app configuration. One key covers both development and production.
+   - `aps-environment` stays `development` in `App.entitlements`; `ios:release` checks that the App Store export is re-signed as `production`.
+   - App Store Connect: create the app record (`app.moneylogs`, name "moneylogs"). It needs a privacy policy URL (https://moneylogs.app/privacy), App Privacy answers (Firebase, Sentry; no tracking, no replay in the apps), age rating, a category (Finance), and the demo account (step 5) under App Review Information. Note for review: personal budgeting only, the app moves no money. Keep the words "alpha" and "beta" out of the listing and screenshots: guideline 2.2 rejects pre-release apps.
+   - Screenshots: iPhone 6.9" (1320×2868, or 6.7"/6.5"). The app also runs on iPad (`TARGETED_DEVICE_FAMILY = 1,2`), so 13" iPad screenshots are needed too.
+   - Before submitting, put one build on TestFlight (internal testers, no review) and check sign-in, push and moneylogs.app links on a real phone.
 4. Google Play Console:
    - New personal accounts need a closed test with 12+ testers for 14 days before production, so start early.
    - Early tester gears (`functions/src/earlyTesters.ts`) are given automatically. Each Android check-in inside `config/app.testerWindow { from, to }` (Timestamps, set in the console) is counted. Once `to` passes, the daily `awardEarlyTesters` run gives each tester one gear: the extra shiny gear for 14 Android days in a row, the shiny gear otherwise. It then sets `testerWindow.awardedAt`. Deploy rules and functions first, and set `from` once a build that sends its platform at check-in (after 5.18.3) reaches testers; older builds aren't counted. Set `to` at launch.
