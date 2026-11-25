@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { FieldValue, Firestore, getFirestore } from "firebase-admin/firestore";
 import { getAuth, UserRecord } from "firebase-admin/auth";
 import {
+  asList,
   cleanupReason,
   CleanupReason,
   hasTies,
@@ -10,7 +11,7 @@ import {
   Ties,
   type CleanupAccount,
 } from "./accountCleanupPlan";
-import { withSentry } from "./sentry";
+import { reportError, withSentry } from "./sentry";
 
 /**
  * Where the daily list is kept for /admin. No client access (rules deny by default): the
@@ -51,14 +52,12 @@ const tiesOf = async (db: Firestore, uid: string): Promise<Ties> => {
   ).size;
 
   const ledgers = await db.collection("ledgers").where("memberUids", "array-contains", uid).get();
-  let sharedLogs = ledgers.docs.filter(
-    (d) => ((d.get("memberUids") ?? []) as unknown[]).length > 1,
-  ).length;
+  let sharedLogs = ledgers.docs.filter((d) => asList(d.get("memberUids")).length > 1).length;
 
   const userDocs = (await db.collection("users").where("userId", "==", uid).get()).docs;
   const groupIds = new Set<string>();
   for (const doc of userDocs) {
-    for (const id of (doc.get("groups") ?? []) as unknown[]) {
+    for (const id of asList(doc.get("groups"))) {
       if (typeof id === "string" && ID_RE.test(id)) groupIds.add(id);
     }
     const memberOf = await db
@@ -71,9 +70,7 @@ const tiesOf = async (db: Firestore, uid: string): Promise<Ties> => {
     const groups = await db.getAll(
       ...[...groupIds].map((id) => db.collection("log_groups").doc(id)),
     );
-    sharedLogs += groups.filter(
-      (g) => g.exists && ((g.get("members") ?? []) as unknown[]).length > 1,
-    ).length;
+    sharedLogs += groups.filter((g) => g.exists && asList(g.get("members")).length > 1).length;
   }
   return { friendships, sharedLogs };
 };
@@ -110,8 +107,13 @@ export const findCleanupCandidates = async (
   do {
     const page = await getAuth().listUsers(1000, pageToken);
     for (const user of page.users) {
-      const candidate = await candidateFor(db, user, nowMs);
-      if (candidate) found.push(candidate);
+      try {
+        const candidate = await candidateFor(db, user, nowMs);
+        if (candidate) found.push(candidate);
+      } catch (error) {
+        // One account that can't be checked is left off the list, not the whole scan.
+        reportError(error, { action: "cleanup_scan_account", level: "warning" });
+      }
     }
     pageToken = page.pageToken;
   } while (pageToken);

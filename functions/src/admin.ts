@@ -349,6 +349,10 @@ export const adminCleanupList = onCall(
  * Delete one listed account, by hand. It's checked again first against a fresh auth
  * record and its ties: someone who came back or made a friend since the list was built
  * is kept (and taken off the list) instead.
+ *
+ * Then the account is locked (disabled, sessions revoked) and checked once more, so a
+ * sign-in that raced the first check is seen, and none can start while its data is
+ * deleted. If they did come back, the lock is lifted again.
  */
 export const adminCleanupDelete = onCall(
   { timeoutSeconds: 540, memory: "512MiB" },
@@ -368,12 +372,23 @@ export const adminCleanupDelete = onCall(
       await unlist(db, uid);
       return { deleted: false, reason: "gone" as const };
     }
-    const candidate = await candidateFor(db, authUser, Date.now());
-    if (!candidate) {
+    if (!(await candidateFor(db, authUser, Date.now()))) {
       await unlist(db, uid);
       return { deleted: false, reason: "kept" as const };
     }
 
+    const auth = getAuth();
+    await auth.updateUser(uid, { disabled: true });
+    await auth.revokeRefreshTokens(uid);
+    const candidate = await candidateFor(db, await auth.getUser(uid), Date.now());
+    if (!candidate) {
+      // Back since the first check: unlock, unless an admin had disabled them already.
+      if (!authUser.disabled) await auth.updateUser(uid, { disabled: false });
+      await unlist(db, uid);
+      return { deleted: false, reason: "kept" as const };
+    }
+
+    // A failure from here leaves the account locked and still listed: delete it again.
     const result = await deleteUserData(db, uid);
     await audit(
       db,

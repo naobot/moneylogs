@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vite-plus/test";
-import { cleanupReason, hasTies, lastActiveMs, type CleanupAccount } from "./accountCleanupPlan";
+import {
+  asList,
+  cleanupReason,
+  hasTies,
+  lastActiveMs,
+  type CleanupAccount,
+} from "./accountCleanupPlan";
 
 const NOW = Date.parse("2026-12-31T00:00:00Z");
 const DAYS_AGO = (n: number) => new Date(NOW - n * 24 * 60 * 60 * 1000).toUTCString();
@@ -73,5 +79,12 @@ describe("hasTies", () => {
     expect(hasTies({ friendships: 1, sharedLogs: 0 })).toBe(true);
     expect(hasTies({ friendships: 0, sharedLogs: 1 })).toBe(true);
     expect(hasTies({ friendships: 0, sharedLogs: 0 })).toBe(false);
+  });
+});
+
+describe("asList", () => {
+  it("reads a malformed list field as empty instead of throwing", () => {
+    expect(asList(["a", "b"])).toEqual(["a", "b"]);
+    for (const bad of [undefined, null, "group-1", 3, { 0: "a" }]) expect(asList(bad)).toEqual([]);
   });
 });

@@ -58,3 +58,9 @@ export type Ties = { friendships: number; sharedLogs: number };
 
 /** Anyone connected to this account: then it's kept, confirmed or not. */
 export const hasTies = (t: Ties): boolean => t.friendships > 0 || t.sharedLogs > 0;
+
+/**
+ * A list field read from a doc, or [] when it isn't one. Users write their own profile
+ * (`groups`), so a malformed field must not stop the scan.
+ */
+export const asList = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
