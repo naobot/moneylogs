@@ -19,6 +19,7 @@ import { commentNotificationId, notificationRecipients } from "./notifications";
 import { friendAcceptedNotificationId, friendRequestNotificationId } from "./friendsPlan";
 import { purgeLog } from "./purgeLog";
 import { reportError, withSentryCall } from "./sentry";
+import { deleteTreeRootLast } from "./deleteTree";
 
 type Failures = { count: number; record: (what: string) => (err: unknown) => void };
 
@@ -270,8 +271,10 @@ export const deleteUserData = async (db: Firestore, uid: string): Promise<Delete
     throw new HttpsError("internal", "Some of your data couldn't be removed. Please try again.");
   }
 
-  // The user docs with their achievements and notifications, then the Auth account.
-  for (const ref of userRefs) await db.recursiveDelete(ref);
+  // The user docs with their achievements and notifications, then the Auth account. Each
+  // user doc goes only once everything under it has (deleteTree.ts): it's how a retry
+  // finds what's left, and the Auth account stays until then.
+  for (const ref of userRefs) await deleteTreeRootLast(db, ref);
   // Their public knick-knack shelves and friends lists (the mirrors also clear these if
   // they fire late).
   for (const ref of userRefs) {

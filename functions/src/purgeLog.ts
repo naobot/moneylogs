@@ -4,6 +4,7 @@ import { getStorage } from "firebase-admin/storage";
 import { LogKind, storagePrefixes, uniqueDocIds, userFieldsToDelete } from "./deleteLogPlan";
 import { reportError } from "./sentry";
 import { endSublogLinks } from "./sublogs";
+import { deleteTreeRootLast } from "./deleteTree";
 
 export type PurgeResult = { posts: number; participants: number };
 
@@ -52,7 +53,7 @@ export const purgeLog = async (
     participantIds = uniqueDocIds(memberRefs, subscribers, authors);
 
     // Posts and their comment subcollections.
-    for (const post of posts.docs) await db.recursiveDelete(post.ref, bulk);
+    for (const post of posts.docs) await deleteTreeRootLast(db, post.ref, bulk);
     bulk.delete(db.collection("processing").doc(id)).catch(recordFailure("delete processing doc"));
   }
 
@@ -100,8 +101,9 @@ export const purgeLog = async (
     }
   }
 
-  // Last: the log itself (for ledgers, also entries and months).
-  await db.recursiveDelete(logRef, bulk);
+  // Last: the log itself (for ledgers, also entries and months), the log document only
+  // once everything under it is gone, so a failure here can still be finished by retrying.
+  await deleteTreeRootLast(db, logRef, bulk);
   await bulk.close();
 
   return { posts: postIds.length, participants: participantIds.length };
