@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
 import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, NavigateFunction, useNavigate } from "react-router-dom";
 import { getDisplayPrefs, initDisplayPrefs } from "@/utils/displayPrefs";
 import { getTheme, initTheme } from "@/utils/theme";
 
@@ -64,6 +64,31 @@ describe("NavMenu", () => {
 
     toggle();
     expect(items()).toHaveLength(0);
+  });
+
+  it("closes on navigation and stays closed on returning to the page", () => {
+    let navigate: NavigateFunction = () => {};
+    const Nav = () => {
+      navigate = useNavigate();
+      return null;
+    };
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/a"]}>
+          <Nav />
+          <NavMenu isLoggedIn />
+        </MemoryRouter>,
+      ),
+    );
+    toggle();
+    expect(items().length).toBeGreaterThan(0);
+
+    // Away without a tap outside (e.g. Android's back button), then back again.
+    act(() => void navigate("/b"));
+    expect(items()).toHaveLength(0);
+    act(() => void navigate(-1));
+    expect(items()).toHaveLength(0);
+    expect(trigger().getAttribute("aria-expanded")).toBe("false");
   });
 
   it("closes on Escape", () => {

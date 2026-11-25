@@ -55,9 +55,15 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
   const { signOut, isPending: signOutPending } = useSignOut();
   const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  // The path it was opened on: navigating anywhere closes it, without an effect.
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === pathname;
+  const [open, setOpen] = useState(false);
+  // Any navigation closes it, back and forward included: reset during render when the
+  // path changes (no effect, so it never paints open on the new page). Remembering the
+  // path it was opened on instead would reopen it on returning there.
+  const [path, setPath] = useState(pathname);
+  if (path !== pathname) {
+    setPath(pathname);
+    setOpen(false);
+  }
   const [displayOpen, setDisplayOpen] = useState(false);
   const themeToggle = useThemeToggle(isLoggedIn);
 
@@ -67,7 +73,7 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
   }, [open]);
 
   const openDisplay = () => {
-    setOpenOn(null);
+    setOpen(false);
     setDisplayOpen(true);
     track("quick_display", { signed_in: isLoggedIn });
   };
@@ -84,13 +90,13 @@ export const NavMenu = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
           aria-expanded={open}
           aria-controls="nav-menu"
           icon="caret"
-          onClick={() => setOpenOn(open ? null : pathname)}
+          onClick={() => setOpen(!open)}
         />
       </span>
       <Popover
         anchor={anchor}
         open={open}
-        onClose={() => setOpenOn(null)}
+        onClose={() => setOpen(false)}
         placement="bottom"
         align="end"
         className="NavMenu__panel"
