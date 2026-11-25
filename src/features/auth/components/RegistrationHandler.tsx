@@ -30,10 +30,15 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
   const handleRegister = async () => {
     setRegistrationPending(true);
     setRegistrationError("");
+    // Which step failed, for Sentry: only a failure at "user_doc" leaves an Auth account
+    // without its user doc (made later by features/auth/ensureUserDoc.ts).
+    let step: "auth_account" | "user_doc" | "after_user_doc" = "auth_account";
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      trackStep("registration", "created auth account");
+      step = "user_doc";
 
       // A placeholder until the welcome wizard asks for a real display name.
       const displayName = placeholderDisplayName(email);
@@ -44,6 +49,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       });
 
       trackStep("registration", "created account");
+      step = "after_user_doc";
       track("sign_up", { method: "email" });
 
       await sendEmailVerification(auth.currentUser!);
@@ -65,7 +71,7 @@ const RegistrationHandler = ({ redirectTo }: { redirectTo?: string }) => {
       if (isExpectedRegistrationError(err.code)) {
         console.log(`${err.code}: ${err.message}`);
       } else {
-        reportError(error, { feature: "registration", action: "register" });
+        reportError(error, { feature: "registration", action: "register", tags: { step } });
       }
     }
   };
