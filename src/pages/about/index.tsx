@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { auth } from "@/config/firebase-config";
 import { EXTERNAL_LINKS } from "@/config/links";
 import Button from "@/components/Button";
+import { isNative } from "@/platform";
 
 export const About = () => {
   const [user] = useAuthState(auth);
@@ -34,13 +35,16 @@ export const About = () => {
       </div>
 
       <div>
-        <p>
-          moneylogs is free. If you'd like to support it, consider{" "}
-          <a href={EXTERNAL_LINKS.tipJar} target="_blank" rel="noopener noreferrer">
-            leaving a tip
-          </a>
-          .
-        </p>
+        {/* No tip link in the store apps (see Footer). */}
+        {!isNative() && (
+          <p>
+            moneylogs is free. If you'd like to support it, consider{" "}
+            <a href={EXTERNAL_LINKS.tipJar} target="_blank" rel="noopener noreferrer">
+              leaving a tip
+            </a>
+            .
+          </p>
+        )}
         <p>
           <Link to="/privacy">How moneylogs handles your data</Link>.
         </p>
