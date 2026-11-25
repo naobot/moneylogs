@@ -2,6 +2,7 @@ import {
   KNICK_KNACKS,
   KNICK_KNACK_IDS,
   KnickKnackId,
+  RARITY_LABELS,
   Rarity,
 } from "@/features/ledger/buddy/knickknacks/catalog";
 
@@ -12,13 +13,6 @@ export const GRANTABLE_RARITIES = [
   "common",
   "super_common",
 ] as const satisfies readonly Rarity[];
-
-const RARITY_LABELS: Record<(typeof GRANTABLE_RARITIES)[number], string> = {
-  special: "special",
-  rare: "rare",
-  common: "common",
-  super_common: "everyday",
-};
 
 export type ItemGroup = { rarity: string; label: string; items: KnickKnackId[] };
 

@@ -22,11 +22,12 @@ import {
 import GiftModal from "@/features/gifts/GiftModal";
 import { LUCK_WORDS, useLuck } from "@/features/ledger/buddy/knickknacks/luck";
 import KnickKnackReveal from "@/features/ledger/buddy/knickknacks/KnickKnackReveal";
+import KnickKnackDetails from "@/features/ledger/buddy/knickknacks/KnickKnackDetails";
 
 import "./Dashboard.scss";
 
 export const KNICK_KNACK_HELP =
-  "budget buddies in financial logs sometimes find random things throughout the day. rumour has it that better spending habits increase your luck. so does dropping by every day.";
+  "Budget buddies in financial logs sometimes find random things throughout the day. Rumour has it that better spending habits increase your luck. So does dropping by every day.";
 
 /** The bouncing "!" on the drawer's alerts. */
 const AlertMark = () => (
@@ -39,9 +40,10 @@ const AlertMark = () => (
  * Everything the budget buddies have found for you, on the dashboard. Always there,
  * even empty. Finds your buddy hasn't shown you yet, and gifts from friends, wait
  * behind centred alerts with a bouncing "!"; clicking one opens the reveal pop-up,
- * which is what completes the event. With a friend to give to, each opened knick-knack (except milestone ones) is
- * a button that gives one copy (after a confirmation). `?giftTo=<userDocId>` (from a
- * friend's profile) preselects who it goes to.
+ * which is what completes the event. Each kept knick-knack opens a closer look (its
+ * rarity and the buddy's line); with a friend to give to, that's also where gifting one
+ * copy starts (except milestone ones). `?giftTo=<userDocId>` (from a friend's profile)
+ * preselects who it goes to.
  */
 export const KnickKnackDrawer = () => {
   const { user, isLoading: userLoading } = useCurrentUser();
@@ -55,6 +57,7 @@ export const KnickKnackDrawer = () => {
   const luck = useLuck(user?.id);
   const { friends } = useFriendships();
   const { kept, waiting, gifts } = drawerContents(data);
+  const [viewing, setViewing] = useState<{ item: KnickKnackId; count: number } | null>(null);
   const [giving, setGiving] = useState<KnickKnackId | null>(null);
   // What the reveal pop-up is showing: a snapshot of the queue (finds leave `waiting` as
   // soon as they're marked seen) and where it's up to.
@@ -105,8 +108,9 @@ export const KnickKnackDrawer = () => {
       {givingTo && (
         <div className="KnickKnackDrawer__givingTo" role="status">
           <span className="keep-case">
-            pick something to give to {givingToName}
-            {giftable.size ? "" : ". you don't have anything to give yet"}
+            {giftable.size
+              ? `pick something to give to ${givingToName}`
+              : `you don't have anything to give ${givingToName} yet`}
           </span>
           <RowButton onClick={stopGivingTo}>cancel</RowButton>
         </div>
@@ -144,48 +148,54 @@ export const KnickKnackDrawer = () => {
         )}
         {kept.length > 0 ? (
           <ul className="KnickKnackDrawer__items">
-            {kept.map(({ item, count }) => {
-              const contents = (
-                <>
+            {kept.map(({ item, count }) => (
+              <li key={item}>
+                <button
+                  type="button"
+                  className="KnickKnackDrawer__item"
+                  aria-haspopup="dialog"
+                  onClick={() => setViewing({ item, count })}
+                >
                   <KnickKnack id={item} size={64} />
                   <span className="KnickKnackDrawer__name">
                     {KNICK_KNACKS[item].name}
                     {count > 1 && <span className="KnickKnackDrawer__count"> ×{count}</span>}
                   </span>
-                </>
-              );
-              return (
-                <li key={item}>
-                  {giftable.has(item) ? (
-                    <button
-                      type="button"
-                      className="KnickKnackDrawer__item KnickKnackDrawer__item--giftable"
-                      aria-label={`Give one ${KNICK_KNACKS[item].name.toLowerCase()} to a friend`}
-                      onClick={() => setGiving(item)}
-                    >
-                      {contents}
-                    </button>
-                  ) : (
-                    <div className="KnickKnackDrawer__item">{contents}</div>
-                  )}
-                </li>
-              );
-            })}
+                </button>
+              </li>
+            ))}
           </ul>
         ) : (
           !isLoading &&
           !gifts.length && (
             <p className="KnickKnackDrawer__empty">
-              nothing in here yet. the budget buddies are keeping an eye out~
+              Nothing in here yet. The budget buddies are keeping an eye out~
             </p>
           )
         )}
-        {giftable.size > 0 && !givingTo && (
+        {kept.length > 0 && !givingTo && (
           <p className="KnickKnackDrawer__hint">
-            tap a knick-knack you found to give one to a friend
+            {giftable.size > 0
+              ? "tap a knick-knack to look closer, or to give one to a friend"
+              : "tap a knick-knack to look closer"}
           </p>
         )}
       </div>
+      {viewing && (
+        <KnickKnackDetails
+          item={viewing.item}
+          count={viewing.count}
+          onGive={
+            giftable.has(viewing.item)
+              ? () => {
+                  setViewing(null);
+                  setGiving(viewing.item);
+                }
+              : undefined
+          }
+          onClose={() => setViewing(null)}
+        />
+      )}
       {giving && (
         <GiftModal
           item={giving}

@@ -19,12 +19,25 @@ export type KnickKnackId = keyof typeof ART;
  */
 export type Rarity = "super_common" | "common" | "rare" | "milestone" | "special";
 
+/**
+ * How each rarity reads in the UI. The ids stay as they are in data and in the
+ * functions' weights: super-common reads "everyday", common "uncommon", milestone
+ * "unique".
+ */
+export const RARITY_LABELS: Record<Rarity, string> = {
+  super_common: "everyday",
+  common: "uncommon",
+  rare: "rare",
+  milestone: "unique",
+  special: "special",
+};
+
 export type KnickKnackInfo = {
   name: string;
   rarity: Rarity;
   /** Seasons it can be found in, in the finder's hemisphere. */
   seasons: readonly Season[];
-  /** What the buddy says when it finds one. */
+  /** What the buddy says when it finds one. Sentence case (it's more than one sentence). */
   found: string;
   /**
    * Whether it comes from something done in a financial log (seasonal finds, coins). The
@@ -40,175 +53,175 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     name: "acorn",
     rarity: "common",
     seasons: ["autumn"],
-    found: "ooh, an acorn! i'll keep it safe for a squirrel who never comes~",
+    found: "Ooh, an acorn! I'll keep it safe for a squirrel who never comes~",
     fromLog: true,
   },
   pinecone: {
     name: "pinecone",
     rarity: "common",
     seasons: ["autumn", "winter"],
-    found: "found a pinecone! it smells like a forest. *sniff sniff*",
+    found: "Found a pinecone! It smells like a forest. *sniff sniff*",
     fromLog: true,
   },
   apple: {
     name: "apple",
     rarity: "rare",
     seasons: ["autumn"],
-    found: "an apple! there's a little worm living in it… hello, neighbour~",
+    found: "An apple! There's a little worm living in it… Hello, neighbour~",
     fromLog: true,
   },
   maple_leaf: {
     name: "maple leaf",
     rarity: "common",
     seasons: ["autumn"],
-    found: "a maple leaf drifted right onto the receipts. it's perfect!!",
+    found: "A maple leaf drifted right onto the receipts. It's perfect!!",
     fromLog: true,
   },
   persimmon: {
     name: "persimmon",
     rarity: "rare",
     seasons: ["autumn", "winter"],
-    found: "a persimmon! it's so ripe it's practically glowing ♡",
+    found: "A persimmon! It's so ripe it's practically glowing ♡",
     fromLog: true,
   },
   osmanthus: {
     name: "osmanthus",
     rarity: "common",
     seasons: ["autumn"],
-    found: "a sprig of osmanthus. the whole room smells like apricots now~",
+    found: "A sprig of osmanthus. The whole room smells like apricots now~",
     fromLog: true,
   },
   chestnut: {
     name: "chestnut",
     rarity: "common",
     seasons: ["autumn"],
-    found: "a chestnut came rolling past, so i pounced on it! all mine ♪",
+    found: "A chestnut came rolling past, so I pounced on it! All mine ♪",
     fromLog: true,
   },
   pine_branch: {
     name: "pine branch",
     rarity: "common",
     seasons: ["winter"],
-    found: "a little pine branch with snow still on it! it smells like the holidays~",
+    found: "A little pine branch with snow still on it! It smells like the holidays~",
     fromLog: true,
   },
   holly: {
     name: "holly",
     rarity: "common",
     seasons: ["winter"],
-    found: "holly! careful, it's pointy. one of the berries is trying to escape…",
+    found: "Holly! Careful, it's pointy. One of the berries is trying to escape…",
     fromLog: true,
   },
   snowdrop: {
     name: "snowdrop",
     rarity: "rare",
     seasons: ["winter"],
-    found: "a snowdrop poked up through the snow. so brave and so tiny ♡",
+    found: "A snowdrop poked up through the snow. So brave and so tiny ♡",
     fromLog: true,
   },
   cherry_blossom: {
     name: "cherry blossom",
     rarity: "rare",
     seasons: ["spring"],
-    found: "a cherry blossom! one petal already ran off on the breeze~",
+    found: "A cherry blossom! One petal already ran off on the breeze~",
     fromLog: true,
   },
   tulip: {
     name: "tulip",
     rarity: "common",
     seasons: ["spring"],
-    found: "a tulip, and it came with a ladybug! i promise not to pounce. probably.",
+    found: "A tulip, and it came with a ladybug! I promise not to pounce. Probably.",
     fromLog: true,
   },
   lilac: {
     name: "lilac",
     rarity: "common",
     seasons: ["spring"],
-    found: "a sprig of lilac. it smells so sweet i might sneeze *achoo* ♡",
+    found: "A sprig of lilac. It smells so sweet I might sneeze *achoo* ♡",
     fromLog: true,
   },
   daisy: {
     name: "daisy",
     rarity: "common",
     seasons: ["summer"],
-    found: "a daisy! loves me… loves me not… someone's been plucking it~",
+    found: "A daisy! Loves me… loves me not… Someone's been plucking it~",
     fromLog: true,
   },
   sunflower: {
     name: "sunflower",
     rarity: "common",
     seasons: ["summer"],
-    found: "a sunflower as big as my head! someone's been snacking on the seeds…",
+    found: "A sunflower as big as my head! Someone's been snacking on the seeds…",
     fromLog: true,
   },
   dragonfly: {
     name: "dragonfly",
     rarity: "rare",
     seasons: ["summer"],
-    found: "a dragonfly looped right past my nose and landed on the receipts ♪",
+    found: "A dragonfly looped right past my nose and landed on the receipts ♪",
     fromLog: true,
   },
   mushroom: {
     name: "mushroom",
     rarity: "super_common",
     seasons: ALL_SEASONS,
-    found: "a little mushroom popped up overnight! i'm not eating it. *sniffs it a lot*",
+    found: "A little mushroom popped up overnight! I'm not eating it. *sniffs it a lot*",
     fromLog: true,
   },
   pebble: {
     name: "pebble",
     rarity: "super_common",
     seasons: ALL_SEASONS,
-    found: "a perfectly smooth pebble! it fits right in my paw ♪ i'm keeping it forever~",
+    found: "A perfectly smooth pebble! It fits right in my paw ♪ I'm keeping it forever~",
     fromLog: true,
   },
   feather: {
     name: "feather",
     rarity: "super_common",
     seasons: ALL_SEASONS,
-    found: "a feather floated down from somewhere! i chased it for ages… worth it ♡",
+    found: "A feather floated down from somewhere! I chased it for ages… worth it ♡",
     fromLog: true,
   },
   copper_coin: {
     name: "copper coin",
     rarity: "milestone",
     seasons: [],
-    found: "a copper coin with a sprout growing out of it! our very first~ i'll water it every day",
+    found: "A copper coin with a sprout growing out of it! Our very first~ I'll water it every day",
     fromLog: true,
   },
   silver_coin: {
     name: "silver coin",
     rarity: "milestone",
     seasons: [],
-    found: "ten days in a row!! here, a silver coin. i polished it with my paw ♪",
+    found: "Ten days in a row!! Here, a silver coin. I polished it with my paw ♪",
     fromLog: true,
   },
   gold_coin: {
     name: "gold coin",
     rarity: "milestone",
     seasons: [],
-    found: "a whole month!! a real gold coin. i only bit it a little, to check~",
+    found: "A whole month!! A real gold coin. I only bit it a little, to check~",
     fromLog: true,
   },
   extra_shiny_gold_coin: {
     name: "extra shiny gold coin",
     rarity: "milestone",
     seasons: [],
-    found: "one hundred days!!! the shiniest coin i've ever seen. *squints* ✦",
+    found: "One hundred days!!! The shiniest coin I've ever seen. *squints* ✦",
     fromLog: true,
   },
   heart_leaf: {
     name: "heart-shaped leaf",
     rarity: "milestone",
     seasons: [],
-    found: "your first entry with friends! i found a heart-shaped leaf to celebrate ♡",
+    found: "Your first entry with friends! I found a heart-shaped leaf to celebrate ♡",
     fromLog: false,
   },
   paper_crane: {
     name: "paper crane",
     rarity: "milestone",
     seasons: [],
-    found: "a paper crane flew in with your first comment! i promise not to chase it… *wiggle*",
+    found: "A paper crane flew in with your first comment! I promise not to chase it… *wiggle*",
     fromLog: false,
   },
   friendship_bracelet: {
@@ -216,7 +229,7 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found:
-      "a friendship bracelet for your first friend! i made it myself. well, mostly i tangled it~",
+      "A friendship bracelet for your first friend! I made it myself. Well, mostly I tangled it~",
     fromLog: false,
   },
   little_envelope: {
@@ -224,7 +237,7 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found:
-      "a little envelope from your first invite! someone said yes~ i licked the seal myself *mlem*",
+      "A little envelope from your first invite! Someone said yes~ I licked the seal myself *mlem*",
     fromLog: false,
   },
   shiny_gear: {
@@ -232,7 +245,7 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found:
-      "found a shiny gear~ i think it's what keeps everything running. thank you for helping fix it ♪",
+      "Found a shiny gear~ I think it's what keeps everything running. Thank you for helping fix it ♪",
     fromLog: false,
   },
   extra_shiny_gear: {
@@ -240,21 +253,21 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "milestone",
     seasons: [],
     found:
-      "an extra shiny gear!! fourteen days in a row, you kept every wheel turning ♪ thank you~",
+      "An extra shiny gear!! Fourteen days in a row, you kept every wheel turning ♪ Thank you~",
     fromLog: false,
   },
   mini_robot_charm: {
     name: "mini robot charm",
     rarity: "special",
     seasons: [],
-    found: "a little robot charm! it winked at me. i think we're friends now ♪",
+    found: "A little robot charm! It winked at me. I think we're friends now ♪",
     fromLog: false,
   },
   enoki_bunch: {
     name: "enoki bunch",
     rarity: "special",
     seasons: [],
-    found: "a bunch of enoki, tied with a bow! one of them fell asleep on the others~ *tiptoe*",
+    found: "A bunch of enoki, tied with a bow! One of them fell asleep on the others~ *tiptoe*",
     fromLog: false,
   },
   olive_branch: {
@@ -262,7 +275,7 @@ export const KNICK_KNACKS: Record<KnickKnackId, KnickKnackInfo> = {
     rarity: "special",
     seasons: [],
     found:
-      "an olive branch! i think it means peace… or snacks? one olive already rolled away *pounce*",
+      "An olive branch! I think it means peace… or snacks? One olive already rolled away *pounce*",
     fromLog: false,
   },
 };

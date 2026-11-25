@@ -9,7 +9,7 @@ const PATHS = Object.fromEntries(
  * A knick-knack's pixel art in the current ink (night shift included). Sizes are whole
  * multiples of the 32-grid so the pixels stay crisp.
  */
-const KnickKnack = ({ id, size = 64 }: { id: KnickKnackId; size?: 32 | 64 }) => (
+const KnickKnack = ({ id, size = 64 }: { id: KnickKnackId; size?: 32 | 64 | 128 }) => (
   <svg
     className="KnickKnack"
     viewBox={`0 0 ${GRID_SIZE} ${GRID_SIZE}`}
