@@ -23,7 +23,16 @@ import { LogKind, resolveCreator } from "./deleteLogPlan";
 import { KNICK_KNACK_FINDS } from "./knickknacks";
 import { grantKept, sendSpiritGift } from "./knickknackGrants";
 import { purgeLog } from "./purgeLog";
-import { withSentryCall } from "./sentry";
+import { reportError, withSentryCall } from "./sentry";
+import {
+  candidateFor,
+  cleanupDeletionRef,
+  cleanupListRef,
+  refreshCleanupList,
+  withUnfinished,
+  type CleanupCandidate,
+} from "./accountCleanup";
+import { asList, INACTIVE_DAYS, planCleanupDelete } from "./accountCleanupPlan";
 
 /**
  * Admin-only callables behind the /admin page. Admins carry the `admin` custom claim
@@ -122,7 +131,7 @@ export const adminLookupUser = onCall(
     // Social logs, found the same way deleteAccount finds them.
     const groupIds = new Set<string>();
     for (const doc of userDocs) {
-      for (const id of (doc.data().groups ?? []) as unknown[]) {
+      for (const id of asList(doc.data().groups)) {
         if (typeof id === "string" && ID_RE.test(id)) groupIds.add(id);
       }
     }
@@ -297,5 +306,162 @@ export const adminDeleteAccount = onCall(
       `adminDeleteAccount: ${req.uid} by ${adminUid}; ${result.logsDeleted} logs deleted, ${result.logsLeft} left`,
     );
     return { deleted: true, ...result };
+  }),
+);
+
+/** Takes one account off the stored cleanup list (deleted, or no longer up for it). */
+const unlist = (db: Firestore, uid: string) =>
+  db.runTransaction(async (tx) => {
+    const snap = await tx.get(cleanupListRef(db));
+    if (!snap.exists) return;
+    const candidates = (snap.get("candidates") ?? []) as CleanupCandidate[];
+    const kept = candidates.filter((c) => c.uid !== uid);
+    if (kept.length === candidates.length) return;
+    tx.update(cleanupListRef(db), {
+      candidates: kept,
+      total: Math.max(0, ((snap.get("total") as number | undefined) ?? kept.length + 1) - 1),
+    });
+  });
+
+/**
+ * The account cleanup list (accountCleanup.ts): built every day, or now with
+ * `{ refresh: true }`. Listing never deletes; adminCleanupDelete does, one at a time.
+ */
+export const adminCleanupList = onCall(
+  { timeoutSeconds: 300, memory: "512MiB" },
+  withSentryCall("adminCleanupList", async (request) => {
+    requireAdmin(request);
+    const db = getFirestore();
+    const refresh = (request.data as { refresh?: unknown } | null)?.refresh === true;
+    if (refresh) return await withUnfinished(db, await refreshCleanupList(db));
+    const snap = await cleanupListRef(db).get();
+    if (!snap.exists) {
+      return withUnfinished(db, {
+        candidates: [] as CleanupCandidate[],
+        total: 0,
+        inactiveDays: INACTIVE_DAYS,
+        listedAt: null as string | null,
+      });
+    }
+    return withUnfinished(db, {
+      candidates: (snap.get("candidates") ?? []) as CleanupCandidate[],
+      total: (snap.get("total") as number | undefined) ?? 0,
+      inactiveDays: (snap.get("inactiveDays") as number | undefined) ?? INACTIVE_DAYS,
+      listedAt: (snap.get("listedAt") as string | null | undefined) ?? null,
+    });
+  }),
+);
+
+/**
+ * Delete one listed account, by hand, in two phases (planCleanupDelete):
+ *
+ * 1. Before anything is erased: check it again against a fresh auth record and its ties
+ *    (someone who came back or made a friend since the list was built is kept and taken
+ *    off the list), disable it, and check once more, so a sign-in or token refresh that
+ *    raced the first check is seen and none can happen from here on. Sessions aren't
+ *    revoked: a kept guest has no other way back in, and an idle account holds no live
+ *    ID token (they last an hour; minting one is activity). A failure in this phase
+ *    enables the account again.
+ * 2. Erasing: a marker (admin_cleanup_deletions/{uid}) is saved first. If deleteUserData
+ *    stops partway, logs may already be gone, so the account stays disabled and listed as
+ *    unfinished, and deleting again resumes the cascade (it's safe to retry) instead of
+ *    asking whether they're still eligible.
+ */
+export const adminCleanupDelete = onCall(
+  { timeoutSeconds: 540, memory: "512MiB" },
+  withSentryCall("adminCleanupDelete", async (request) => {
+    const adminUid = requireAdmin(request);
+    const uid = (request.data as { uid?: unknown } | null)?.uid;
+    if (typeof uid !== "string" || !ID_RE.test(uid)) {
+      throw new HttpsError("invalid-argument", "Expected { uid }.");
+    }
+    if (uid === adminUid) {
+      throw new HttpsError("failed-precondition", "Delete your own account from /me instead.");
+    }
+
+    const db = getFirestore();
+    const auth = getAuth();
+    const markerRef = cleanupDeletionRef(db, uid);
+    const [authUser, marker] = await Promise.all([authUserOrNull(uid), markerRef.get()]);
+
+    const step = await planCleanupDelete({
+      exists: !!authUser,
+      inProgress: marker.exists,
+      eligible: async () => !!authUser && !!(await candidateFor(db, authUser, Date.now())),
+    });
+    if (step === "gone" || step === "kept") {
+      // deleteUserData removes the Auth account last: gone means nothing's left to finish.
+      await markerRef.delete();
+      await unlist(db, uid);
+      return { deleted: false, reason: step };
+    }
+    if (!authUser) throw new HttpsError("internal", "Unreachable.");
+
+    let candidate: CleanupCandidate;
+    if (step === "resume") {
+      candidate = marker.get("candidate") as CleanupCandidate;
+      if (!authUser.disabled) await auth.updateUser(uid, { disabled: true });
+    } else {
+      // Phase 1: lock, check again, then mark the deletion as started.
+      const unlock = async () => {
+        // Unless an admin had disabled the account before this.
+        if (!authUser.disabled) await auth.updateUser(uid, { disabled: false });
+      };
+      let found: CleanupCandidate | null;
+      try {
+        await auth.updateUser(uid, { disabled: true });
+        found = await candidateFor(db, await auth.getUser(uid), Date.now());
+        if (found) {
+          await markerRef.set({
+            candidate: found,
+            adminUid,
+            startedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (error) {
+        await unlock().catch((unlockError) =>
+          reportError(unlockError, { action: "cleanup_unlock", level: "error" }),
+        );
+        throw error;
+      }
+      if (!found) {
+        // Back since the first check.
+        await unlock();
+        await unlist(db, uid);
+        return { deleted: false, reason: "kept" as const };
+      }
+      candidate = found;
+    }
+
+    // Phase 2: erase. From here a failure leaves the account disabled and marked.
+    let result: Awaited<ReturnType<typeof deleteUserData>>;
+    try {
+      result = await deleteUserData(db, uid);
+    } catch (error) {
+      reportError(error, { action: "cleanup_delete_partway", level: "error" });
+      throw new HttpsError(
+        "aborted",
+        "The deletion stopped partway. The account stays disabled; delete it again to finish.",
+      );
+    }
+    await audit(
+      db,
+      adminUid,
+      "cleanup_account",
+      { uid },
+      {
+        reason: candidate.reason,
+        email: candidate.email,
+        lastActiveAt: candidate.lastActiveAt,
+        resumed: step === "resume",
+        ...result,
+      },
+    );
+    await markerRef.delete();
+    await unlist(db, uid);
+    console.log(
+      `adminCleanupDelete: ${uid} (${candidate.reason}) by ${adminUid}${step === "resume" ? ", resumed" : ""}`,
+    );
+    return { deleted: true, reason: candidate.reason, ...result };
   }),
 );

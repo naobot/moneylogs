@@ -51,6 +51,11 @@ service cloud.firestore {
       return !g.get(['analytics', 'isCalculated'], false)
         && request.time <= g.end + duration.value(('endWallClock' in g) ? 93600 : 0, 's');
     }
+    // purgeLog flags a log `deleting` before it removes the posts: nothing new may land
+    // in it, or it would outlive the log.
+    function logNotDeleting(groupRef) {
+      return get(groupRef).data.get('deleting', false) == false;
+    }
 
     match /log_groups/{groupId} {
       allow read: if true;
@@ -110,7 +115,8 @@ service cloud.firestore {
         && isLogRef(request.resource.data.group)
         && request.resource.data.author in groupMembers(request.resource.data.group)
         && request.resource.data.commentSubscribers == [request.resource.data.author]
-        && logTakesEntries(request.resource.data.group);
+        && logTakesEntries(request.resource.data.group)
+        && logNotDeleting(request.resource.data.group);
 
       // The author edits their own entry (editLogPostFn). Once the log has closed, only
       // the words can change: amounts and dates are what the saved summary counted.
@@ -203,6 +209,7 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'content', 'createdAt'])
           && ownsUserRef(request.resource.data.authorId)
           && request.resource.data.authorId in groupMembers(get(/databases/$(database)/documents/log_posts/$(postId)).data.group)
+          && logNotDeleting(get(/databases/$(database)/documents/log_posts/$(postId)).data.group)
           && request.resource.data.content is string
           && request.resource.data.content.size() > 0
           && request.resource.data.content.size() <= 2000
@@ -614,6 +621,7 @@ service cloud.firestore {
       match /budgetSnapshots/{month} {
         allow read: if isLedgerMember(ledgerId);
         allow create: if isLedgerMember(ledgerId)
+          && ledgerData(ledgerId).get('deleting', false) == false
           && month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
           && request.resource.data.keys().hasOnly(['budgets', 'names', 'monthlyBudget', 'snapshotAt'])
           && request.resource.data.budgets is map

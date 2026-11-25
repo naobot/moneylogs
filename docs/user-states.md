@@ -91,6 +91,10 @@ As: a private window, signed out.
   (`ML__create_log_draft`, for an hour, dropped once read or once the log is created).
 - On an invite page signed out, the header's "Sign in" carries the invite along like the page's own buttons,
   so guest mode isn't offered there either.
+- A guest idle for 30+ days is listed by the daily cleanup (`functions/src/accountCleanup.ts`), as is an
+  account whose email was never confirmed, idle 30+ days, with no friendships, requests or shared logs.
+  Nothing is deleted automatically: an admin deletes each one from `/admin` → account cleanup, and the
+  server checks it again first (someone who came back or made ties since is kept).
 - Saving with an email that already has an account says so and keeps them a guest. Saving with a new one
   reloads as a normal, unconfirmed account (the banner's gone, same logs), and the confirmation email arrives.
 

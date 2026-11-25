@@ -59,6 +59,47 @@ export const adminDeleteAccount = httpsCallable<
   { deleted: boolean; logsDeleted: number; logsLeft: number }
 >(functions, "adminDeleteAccount");
 
+export type CleanupCandidate = {
+  uid: string;
+  reason: "idle_guest" | "idle_unconfirmed";
+  email: string | null;
+  createdAt: string | null;
+  lastActiveAt: string | null;
+  /** A deletion stopped partway (logs may be gone; the account is disabled): delete again. */
+  unfinished?: boolean;
+};
+
+export type CleanupList = {
+  candidates: CleanupCandidate[];
+  /** How many were found; more than `candidates` when the stored list was capped. */
+  total: number;
+  inactiveDays: number;
+  /** When the list was built (ISO), or null before the first daily run. */
+  listedAt: string | null;
+};
+
+/**
+ * The account cleanup list (functions/src/accountCleanup.ts), built daily. `refresh`
+ * builds it again now. Listing never deletes anything.
+ */
+export const adminCleanupList = httpsCallable<{ refresh?: boolean }, CleanupList>(
+  functions,
+  "adminCleanupList",
+  // A refresh scans every account: wait as long as the function may run (300 s), not the
+  // SDK's default 70 s.
+  { timeout: 300_000 },
+);
+
+/**
+ * Delete one listed account. The server checks it again first: `kept` means they came
+ * back or made ties since, `gone` that the account no longer exists. Either way it's
+ * taken off the list.
+ */
+export const adminCleanupDelete = httpsCallable<
+  { uid: string },
+  { deleted: boolean; reason: "idle_guest" | "idle_unconfirmed" | "kept" | "gone" }
+>(functions, "adminCleanupDelete", { timeout: 540_000 });
+
 /** The server's own message for an HttpsError, else a generic one. */
 export const adminErrorMessage = (err: unknown): string =>
   err instanceof FirebaseError && err.message && !err.code.endsWith("/internal")

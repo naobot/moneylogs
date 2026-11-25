@@ -4,6 +4,7 @@ import { getStorage } from "firebase-admin/storage";
 import { LogKind, storagePrefixes, uniqueDocIds, userFieldsToDelete } from "./deleteLogPlan";
 import { reportError } from "./sentry";
 import { endSublogLinks } from "./sublogs";
+import { deleteTreeRootLast } from "./deleteTree";
 
 export type PurgeResult = { posts: number; participants: number };
 
@@ -12,8 +13,9 @@ export type PurgeResult = { posts: number; participants: number };
  * posts and comments, participants' bookkeeping, achievements and notifications, images,
  * and finally the log document itself. Callers check who may do this.
  *
- * Safe to retry: the log document is removed last (ledgers stay flagged `deleting`), so a
- * partial failure can be finished by calling again.
+ * Safe to retry: the log document is removed last and stays flagged `deleting` (which the
+ * rules check, so nothing new is written under it meanwhile), so a partial failure can be
+ * finished by calling again.
  */
 export const purgeLog = async (
   db: Firestore,
@@ -43,6 +45,8 @@ export const purgeLog = async (
     await endSublogLinks(db, id);
     participantIds = uniqueDocIds(memberRefs);
   } else {
+    // Stop new posts and comments (via rules) before finding the posts to remove.
+    await logRef.update({ deleting: true });
     const posts = await db.collection("log_posts").where("group", "==", logRef).get();
     postIds = posts.docs.map((d) => d.id);
     const subscribers = posts.docs.flatMap(
@@ -52,7 +56,7 @@ export const purgeLog = async (
     participantIds = uniqueDocIds(memberRefs, subscribers, authors);
 
     // Posts and their comment subcollections.
-    for (const post of posts.docs) await db.recursiveDelete(post.ref, bulk);
+    for (const post of posts.docs) await deleteTreeRootLast(db, post.ref, bulk);
     bulk.delete(db.collection("processing").doc(id)).catch(recordFailure("delete processing doc"));
   }
 
@@ -100,8 +104,9 @@ export const purgeLog = async (
     }
   }
 
-  // Last: the log itself (for ledgers, also entries and months).
-  await db.recursiveDelete(logRef, bulk);
+  // Last: the log itself (for ledgers, also entries and months), the log document only
+  // once everything under it is gone, so a failure here can still be finished by retrying.
+  await deleteTreeRootLast(db, logRef, bulk);
   await bulk.close();
 
   return { posts: postIds.length, participants: participantIds.length };

@@ -9,7 +9,7 @@ import { withSentryCall } from "./sentry";
  * Only the log's creator may call this. Runs with the Admin SDK because security rules
  * can't express the cascade (and clients can't delete processed images).
  *
- * Safe to retry: the log document is removed last (ledgers stay flagged `deleting`), so a
+ * Safe to retry: the log document is removed last and stays flagged `deleting`, so a
  * partial failure can be finished by calling again.
  */
 export const deleteLog = onCall(
