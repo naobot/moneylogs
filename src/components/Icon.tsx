@@ -52,20 +52,18 @@ const Icon = ({ type, size = 24, fill, onClick }: IconProps) => {
         : moneylogsIcons.includes(type)
           ? "moneylogs"
           : "nakals";
-  const cssStyles = useMemo(
-    () => ({
-      height: size ?? undefined,
-      width: size ?? undefined,
-    }),
-    [size],
-  );
+  // Scaled by the UI size setting (--icon-scale is 1 at M, so M is `size` px exactly).
+  const cssStyles = useMemo(() => {
+    const px = `calc(${size}px * var(--icon-scale, 1))`;
+    return { height: px, width: px };
+  }, [size]);
 
   // fill="white" means "this icon sits on an inverted block". The colour flip itself
   // is a theme-aware CSS filter (see .Icon--inverse and --icon-filter-inverse).
   return (
     <div
       className={cx("Icon", { handler: onClick, "Icon--inverse": fill === "white" })}
-      style={size ? { height: size, width: size } : undefined}
+      style={size ? cssStyles : undefined}
       onClick={onClick}
     >
       <img src={`/icons/${iconSet}-${type}.svg`} style={cssStyles} />

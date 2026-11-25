@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 // Shared surface treatments. Inversion is the system's one emphasis "colour", so the
 // inverted block is defined once here and every strip, bar and header includes it.
 
@@ -26,7 +28,7 @@
 /// Layout (flex vs grid, gaps) stays with each component.
 @mixin strip($padding: 0.25em 0.5em) {
   @include inverted;
-  padding: $padding;
+  padding: ui($padding);
   border: none;
   border-radius: var(--radius-none);
 }

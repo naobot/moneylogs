@@ -1,4 +1,5 @@
 @use "/src/constants.scss";
+@use "@/ui-size" as *;
 
 // Section nav on the left, the chosen section on the right. Phones get one column: the
 // list at /me, or a single section (with a way back) at /me#section.
@@ -38,7 +39,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: 0.6em 0.5em;
+    padding: ui(0.6em) ui(0.5em);
     color: inherit;
     text-decoration: none;
 
@@ -97,8 +98,8 @@
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 1em;
-    padding: 1em 0 1.5em;
+    gap: ui(1em);
+    padding: ui(1em) 0 ui(1.5em);
 
     &[hidden] {
       display: none;

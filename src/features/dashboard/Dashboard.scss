@@ -1,12 +1,13 @@
 @use "/src/constants.scss";
+@use "@/ui-size" as *;
 
 // Home dashboard. Monochrome, square corners, no shadows — cards are ruled boxes, and
 // new activity is the inverted black block.
 .Dashboard {
   display: flex;
   flex-direction: column;
-  gap: 2em;
-  padding-bottom: 1em;
+  gap: ui(2em);
+  padding-bottom: ui(1em);
   // Fill the page's height, so the knick-knack drawer can run to the bottom.
   flex: 1 0 auto;
 
@@ -17,7 +18,7 @@
     @media (min-width: constants.$breakpoint-md) {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-      gap: 2em;
+      gap: ui(2em);
     }
   }
 
@@ -25,7 +26,7 @@
   &__side {
     display: flex;
     flex-direction: column;
-    gap: 2em;
+    gap: ui(2em);
     min-width: 0;
   }
 
@@ -36,7 +37,7 @@
   &__section {
     display: flex;
     flex-direction: column;
-    gap: 0.75em;
+    gap: ui(0.75em);
 
     h3 {
       margin: 0;
@@ -48,7 +49,7 @@
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.25em 1em;
+    gap: ui(0.25em) ui(1em);
   }
 
   // Section actions ("+ start a new log", "see all N in my logs"): lighter than the
@@ -64,7 +65,7 @@
 
   &__grid {
     display: grid;
-    gap: 0.75em;
+    gap: ui(0.75em);
 
     &--large {
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -94,9 +95,9 @@
       position: relative;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5em;
+      gap: ui(0.5em);
       margin: 0;
-      padding: 0.5em 0 0 1.2em;
+      padding: ui(0.5em) 0 0 ui(1.2em);
       list-style: none;
 
       // The trunk: from the parent's card down to the last row of sublogs.
@@ -136,9 +137,9 @@
 .LogCard {
   display: flex;
   flex-direction: column;
-  gap: 0.4em;
+  gap: ui(0.4em);
   min-width: 0;
-  padding: 0.8em;
+  padding: ui(0.8em);
   border: var(--border-rule) solid var(--ink);
   background-color: var(--paper);
   color: var(--ink);
@@ -162,12 +163,12 @@
 
   &--small {
     min-height: 5em;
-    padding: 0.6em;
+    padding: ui(0.6em);
   }
 
   &--compact {
-    gap: 0.2em;
-    padding: 0.4em 0.6em;
+    gap: ui(0.2em);
+    padding: ui(0.4em) ui(0.6em);
     border-width: var(--border-hairline);
     font-size: 0.9em;
     opacity: 0.75;
@@ -188,7 +189,7 @@
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.4em;
+    gap: ui(0.4em);
   }
 
   &__kind {
@@ -199,7 +200,7 @@
 
   &__badge {
     margin-left: auto;
-    padding: 0.1em 0.4em;
+    padding: ui(0.1em) ui(0.4em);
     font-size: 0.8em;
     font-weight: 700;
     background-color: var(--ink);
@@ -218,7 +219,7 @@
   &__details {
     display: flex;
     flex-direction: column;
-    gap: 0.15em;
+    gap: ui(0.15em);
     margin-top: auto;
     font-size: 0.85em;
     opacity: 0.8;
@@ -316,7 +317,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.3em;
+    gap: ui(0.3em);
   }
 
   // How lucky you are right now, in words; sits at the far end of the heading.
@@ -355,7 +356,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3em;
+    gap: ui(0.3em);
     box-sizing: border-box;
     width: 100%;
     padding: var(--space-2) 0;
@@ -389,8 +390,8 @@
   &__alert {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
-    padding: 0.3em 0.7em;
+    gap: ui(0.4em);
+    padding: ui(0.3em) ui(0.7em);
     border: var(--border-hairline) dashed var(--ink);
     background: none;
     color: var(--ink);
@@ -444,7 +445,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: 0.3em 0.6em;
+    padding: ui(0.3em) ui(0.6em);
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     font-size: 0.85em;

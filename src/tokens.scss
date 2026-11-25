@@ -49,16 +49,25 @@
   --entry-font-size: 1em;
   --entry-text-align: left;
 
-  // ---- spacing (em, so it follows the root's 0.8em on phones) ----
-  --space-1: 0.2em;
-  --space-2: 0.4em;
-  --space-3: 0.5em;
-  --space-4: 0.75em;
-  --space-5: 1em;
-  --space-6: 1.5em;
-  --space-7: 2em;
-  --window-pad: 30px;
-  --column-gap: 20px;
+  // ---- UI size: set per device in the /me Display drawer (src/utils/displayPrefs.ts) ----
+  // How much room the parts take, apart from the text: spacing scales by --ui-scale
+  // (here and through ui() in src/ui-size.scss), icons by --icon-scale, and L sets
+  // minimum heights so controls are comfortable to tap. M is today's layout exactly.
+  --ui-scale: 1;
+  --icon-scale: 1;
+  --tap-min: 0px;
+  --tap-min-row: 0px;
+
+  // ---- spacing (em, so it follows the root's 0.8em on phones; scaled by UI size) ----
+  --space-1: calc(0.2em * var(--ui-scale));
+  --space-2: calc(0.4em * var(--ui-scale));
+  --space-3: calc(0.5em * var(--ui-scale));
+  --space-4: calc(0.75em * var(--ui-scale));
+  --space-5: calc(1em * var(--ui-scale));
+  --space-6: calc(1.5em * var(--ui-scale));
+  --space-7: calc(2em * var(--ui-scale));
+  --window-pad: calc(30px * var(--ui-scale));
+  --column-gap: calc(20px * var(--ui-scale));
 
   // ---- corners: square by default; each rounded corner is a named exception ----
   --radius-none: 0;
@@ -87,7 +96,7 @@
   --main-width-wide: 1200px;
   --modal-width: 450px;
   // Inside a .Window frame.
-  --window-padding: 30px;
+  --window-padding: calc(30px * var(--ui-scale));
 
   // ---- layering ----
   --z-overlay: 50;
@@ -117,7 +126,7 @@
   color-scheme: light;
 }
 
-// Display prefs for entry text, written to <html> by src/utils/displayPrefs.ts.
+// Display prefs for entry text and UI size, written to <html> by src/utils/displayPrefs.ts.
 :root[data-entry-size="s"] {
   --entry-font-size: 0.85em;
 }
@@ -126,6 +135,16 @@
 }
 :root[data-entry-size="xl"] {
   --entry-font-size: 1.3em;
+}
+:root[data-ui-size="s"] {
+  --ui-scale: 0.65;
+  --icon-scale: 0.85;
+}
+:root[data-ui-size="l"] {
+  --ui-scale: 1.35;
+  --icon-scale: 1.15;
+  --tap-min: 44px;
+  --tap-min-row: 32px;
 }
 :root[data-entry-align="center"] {
   --entry-text-align: center;

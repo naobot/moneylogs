@@ -1,4 +1,5 @@
 @use "@/texture.scss" as tex;
+@use "@/ui-size" as *;
 
 // The budget helper's pie: groups told apart by the theme's chart colours (or, with
 // Display → Charts on mono, by 1-bit fills in two inks), paper gaps between slices, a
@@ -8,7 +9,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.75em 1.5em;
+  gap: ui(0.75em) ui(1.5em);
 
   &__chart {
     flex-shrink: 0;
@@ -74,11 +75,11 @@
     li {
       display: flex;
       align-items: center;
-      gap: 0.5em;
+      gap: ui(0.5em);
     }
 
     li + li {
-      margin-top: 0.3em;
+      margin-top: ui(0.3em);
     }
   }
 

@@ -4,6 +4,7 @@
 @use "./texture.scss";
 @use "./charts.scss";
 @use "./surfaces.scss";
+@use "@/ui-size" as *;
 
 :root {
   font-family: var(--font-mono);
@@ -125,7 +126,7 @@ html {
   textarea {
     flex: 1;
     resize: none;
-    padding: 0.5em;
+    padding: ui(0.5em);
     cursor: pointer;
     text-align: center;
     border: var(--border-rule) solid var(--ink);
@@ -133,7 +134,7 @@ html {
 
   &__block {
     font-size: 0.8em;
-    padding: 0.4em;
+    padding: ui(0.4em);
     transition: 0.3s ease-in-out;
     opacity: 1;
 
@@ -161,9 +162,9 @@ html {
 .MainNav {
   display: flex;
   align-items: center;
-  gap: 0.4em;
+  gap: ui(0.4em);
   width: 100%;
-  padding: 0.4em;
+  padding: ui(0.4em);
   flex-shrink: 0;
 
   &__nav,
@@ -171,12 +172,12 @@ html {
   &__brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
+    gap: ui(0.4em);
     font-size: 0.8em;
   }
 
   &__logs {
-    padding: 0.4em;
+    padding: ui(0.4em);
   }
 
   &__brand {
@@ -184,7 +185,7 @@ html {
   }
 
   &__item--icon {
-    padding: 0.4em 0 !important;
+    padding: ui(0.4em) 0 !important;
   }
 
   @media (max-width: constants.$breakpoint-sm) {
@@ -227,15 +228,15 @@ html {
     }
 
     .MainNav__signOut {
-      min-width: 40px;
-      min-height: 40px;
+      min-width: calc(40px * var(--icon-scale));
+      min-height: calc(40px * var(--icon-scale));
       justify-content: center;
     }
 
     // Comfortable tap targets for the nav icons (the bell included).
     &__item--icon {
-      min-width: 40px;
-      min-height: 40px;
+      min-width: calc(40px * var(--icon-scale));
+      min-height: calc(40px * var(--icon-scale));
       justify-content: center;
     }
 
@@ -266,14 +267,14 @@ html {
   align-items: center;
 
   > .Button {
-    padding-left: 0.1em;
-    padding-right: 0.1em;
+    padding-left: ui(0.1em);
+    padding-right: ui(0.1em);
   }
 }
 
 .Menu {
   display: inline-flex;
-  grid-gap: 0.4em;
+  grid-gap: ui(0.4em);
   font-size: 0.8em;
   align-items: center;
 
@@ -285,7 +286,7 @@ html {
 .Content {
   display: flex;
   justify-content: center;
-  padding: 1em 1em 0 1em;
+  padding: ui(1em) ui(1em) 0 ui(1em);
   width: 100%;
   flex: 1;
   overflow-y: hidden;
@@ -295,7 +296,7 @@ html {
   min-height: 0;
 
   @media (max-width: constants.$breakpoint-sm) {
-    padding: 0.5em 0.5em 0 0.5em;
+    padding: ui(0.5em) ui(0.5em) 0 ui(0.5em);
   }
 
   &__body {
@@ -311,9 +312,9 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-  grid-gap: 0.5em;
+  grid-gap: ui(0.5em);
   width: 100%;
-  padding: 0.6em 1em;
+  padding: ui(0.6em) ui(1em);
   font-size: 0.75em;
   border-top: var(--border-rule) solid var(--ink);
   box-sizing: border-box;
@@ -335,10 +336,10 @@ html {
   z-index: 1000;
   display: inline-flex;
   align-items: center;
-  grid-gap: 0.75em;
+  grid-gap: ui(0.75em);
   max-width: calc(100vw - 2em);
   box-sizing: border-box;
-  padding: 0.5em 0.5em 0.5em 1em;
+  padding: ui(0.5em) ui(0.5em) ui(0.5em) ui(1em);
   background-color: var(--paper);
   border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
@@ -354,14 +355,14 @@ html {
     cursor: pointer;
     font-size: 1.2em;
     line-height: 1;
-    padding: 0 0.25em;
+    padding: 0 ui(0.25em);
     color: var(--ink);
   }
 }
 
 .IconText {
   display: inline-flex;
-  grid-gap: 0.2em;
+  grid-gap: ui(0.2em);
   align-items: center;
   justify-content: center;
 }
@@ -369,16 +370,16 @@ html {
 .Icon {
   display: inline-flex;
   align-items: center;
-  width: 21px;
-  height: 21px;
+  width: calc(21px * var(--icon-scale));
+  height: calc(21px * var(--icon-scale));
   // Every SVG in public/icons has its art centred in a square viewBox, so the icon box's
   // centre is the art's centre. In running text, middle-align it to the text; inside flex
   // rows (buttons, IconText) vertical-align is ignored and align-items centres it.
   vertical-align: middle;
 
   &--sm {
-    width: 16px;
-    height: 16px;
+    width: calc(16px * var(--icon-scale));
+    height: calc(16px * var(--icon-scale));
   }
 
   img {
@@ -444,7 +445,7 @@ h6,
   // A sublog, right after its parent: smaller, no icon, tucked up close to it.
   &--sublog {
     font-size: 0.85em;
-    padding: 0.25em 0.4em;
+    padding: ui(0.25em) ui(0.4em);
     margin-left: calc(-1 * var(--space-1));
   }
 
@@ -463,11 +464,13 @@ h6,
 // emphasis (2px primary, 1px secondary/toggle); filled means "selected" and nothing else.
 .Button {
   display: inline-flex;
-  grid-gap: 0.2em;
+  grid-gap: ui(0.2em);
   align-items: center;
+  // UI size L: comfortable to tap (0 at S and M).
+  min-height: var(--tap-min);
   border-radius: var(--radius-none);
   border: none;
-  padding: 0.4em;
+  padding: ui(0.4em);
   background-color: var(--paper);
   color: var(--ink);
 
@@ -489,6 +492,8 @@ h6,
 
   &--icon {
     background-color: transparent;
+    min-width: var(--tap-min);
+    justify-content: center;
   }
 
   &--active {
@@ -516,11 +521,13 @@ h6,
 .RowButton {
   font-size: 0.75em;
   cursor: pointer;
+  // UI size L: comfortable to tap (0 at S and M).
+  min-height: var(--tap-min-row);
   background: var(--paper);
   color: var(--ink);
   border: var(--border-hairline) solid var(--ink);
   border-radius: var(--radius-none);
-  padding: 0.1em 0.5em;
+  padding: ui(0.1em) ui(0.5em);
 
   &:hover:not(:disabled),
   &:focus-visible {
@@ -533,19 +540,21 @@ h6,
     cursor: default;
   }
 
+  // A lone glyph (‹ ›) is square at L so it's as easy to hit as it is tall.
   &--glyph {
+    min-width: var(--tap-min-row);
     font-size: 0.9em;
     text-transform: none;
     letter-spacing: normal;
-    padding: 0 0.5em;
+    padding: 0 ui(0.5em);
   }
 
   // An icon before the label (e.g. the wallet on "budget").
   &--icon {
     display: inline-flex;
     align-items: center;
-    gap: 0.35em;
-    padding: 0 0.5em 0 0.25em; // the icon sets the height
+    gap: ui(0.35em);
+    padding: 0 ui(0.5em) 0 ui(0.25em); // the icon sets the height
   }
 
   // The icon flips with the button when it inverts.
@@ -553,6 +562,30 @@ h6,
   &:focus-visible .Icon img {
     filter: var(--icon-filter-inverse);
   }
+}
+
+// UI size L: the minimum heights above count the padding and frame, so a control is
+// 44px tall, not 44px plus its padding. Only at L, so S and M lay out exactly as before.
+:root[data-ui-size="l"] {
+  .Button,
+  .RowButton,
+  select,
+  input {
+    box-sizing: border-box;
+  }
+}
+
+// UI size L: form controls are comfortable to tap too (0 at S and M).
+select,
+input:not([type]),
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="email"],
+input[type="password"],
+input[type="search"] {
+  min-height: var(--tap-min);
 }
 
 // Inline, in-place text input: a dashed underline that turns solid on focus.
@@ -564,7 +597,7 @@ h6,
   border-bottom: var(--border-hairline) dashed var(--ink);
   border-radius: var(--radius-none);
   background: transparent;
-  padding: 0.2em 0;
+  padding: ui(0.2em) 0;
 
   &::placeholder {
     color: var(--ink);
@@ -602,9 +635,9 @@ h6,
 
 .ControlledInput {
   display: flex;
-  grid-gap: 0.4em;
+  grid-gap: ui(0.4em);
   align-items: center;
-  padding: 0.2em;
+  padding: ui(0.2em);
 
   @media (max-width: constants.$breakpoint-sm) {
     flex-direction: column;
@@ -620,7 +653,7 @@ h6,
   &__input {
     display: inline-flex;
     align-items: center;
-    grid-gap: 0.4em;
+    grid-gap: ui(0.4em);
   }
 
   label {
@@ -634,7 +667,7 @@ h6,
 }
 
 .Window {
-  margin-bottom: 1em;
+  margin-bottom: ui(1em);
   padding: var(--window-padding);
   border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
@@ -648,7 +681,7 @@ h6,
 .InfoBox {
   display: flex;
   flex-direction: column;
-  grid-gap: 1em;
+  grid-gap: ui(1em);
   align-items: center;
   align-content: center;
 }
@@ -668,7 +701,7 @@ h6,
 .LoginPage {
   display: flex;
   flex-direction: column;
-  grid-gap: 2em;
+  grid-gap: ui(2em);
   min-height: 0;
   overflow-y: auto;
 
@@ -703,7 +736,7 @@ h6,
 .AuthError {
   display: inline-flex;
   align-items: center;
-  grid-gap: 0.4em;
+  grid-gap: ui(0.4em);
   font-size: 0.9em;
   max-width: 300px;
   text-align: center;
@@ -732,7 +765,7 @@ h6,
   display: flex;
   flex-direction: column;
   align-items: center;
-  grid-gap: 0.75em;
+  grid-gap: ui(0.75em);
 }
 
 .AuthAction__title {
@@ -749,7 +782,7 @@ h6,
 .UserSettings {
   display: flex;
   flex-direction: column;
-  grid-gap: 1em;
+  grid-gap: ui(1em);
   // Direct children of .Content with no scroll pane of their own: stretch to the
   // bounded .Content height and scroll internally, so the Window border stays put.
   min-height: 0;
@@ -768,7 +801,7 @@ h6,
     grid-gap: 30px;
     align-items: center;
     width: 100%;
-    margin-bottom: 1em;
+    margin-bottom: ui(1em);
     @include surfaces.strip(0.5em);
     font-size: 0.8em;
     flex-shrink: 0;
@@ -780,7 +813,7 @@ h6,
     &__left,
     &__center,
     &__right {
-      grid-gap: 1em;
+      grid-gap: ui(1em);
     }
 
     &__left {
@@ -878,14 +911,14 @@ h6,
 .LogsMenu {
   display: flex;
   flex-direction: column;
-  grid-gap: 0.4em;
+  grid-gap: ui(0.4em);
   overflow-y: auto;
   max-height: 100%;
   // Fill the space left over next to the content column (widens/shrinks with the
   // window)...
   flex: 1;
   transition: 0.3s ease-in-out;
-  margin-bottom: 1em;
+  margin-bottom: ui(1em);
 
   // ...but when there is no content column beside it, fall back to the sidebar
   // width instead of stretching across the whole row.
@@ -926,8 +959,8 @@ h6,
     position: relative;
     display: flex;
     align-items: center;
-    gap: 0.4em;
-    padding: 0.8em 1em;
+    gap: ui(0.4em);
+    padding: ui(0.8em) ui(1em);
     border: var(--border-rule) solid var(--ink);
     text-align: right;
 
@@ -1015,7 +1048,7 @@ h6,
     }
 
     @media (max-width: constants.$breakpoint-sm) {
-      padding: 0.2em 0.8em;
+      padding: ui(0.2em) ui(0.8em);
     }
 
     @media (max-width: constants.$breakpoint-md) {
@@ -1129,7 +1162,7 @@ h6,
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.6em;
+  gap: ui(0.6em);
 
   &__arrow {
     background: none;
@@ -1137,7 +1170,7 @@ h6,
     color: var(--ink);
     font: inherit;
     cursor: pointer;
-    padding: 0 0.2em;
+    padding: 0 ui(0.2em);
     line-height: 1;
 
     &:disabled {
@@ -1190,19 +1223,19 @@ h6,
 
   &__menu {
     grid-column: 1 / -1;
-    margin-bottom: 1em;
+    margin-bottom: ui(1em);
   }
 
   &__error {
-    margin: 1em 0;
-    padding: 1em;
+    margin: ui(1em) 0;
+    padding: ui(1em);
   }
 
   &__loadMore {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1em 0;
+    padding: ui(1em) 0;
     flex-shrink: 0;
 
     &__status {
@@ -1214,8 +1247,8 @@ h6,
   &__posts {
     display: flex;
     flex-direction: column;
-    grid-gap: 1em;
-    padding-bottom: 1em;
+    grid-gap: ui(1em);
+    padding-bottom: ui(1em);
     overflow-y: auto;
     min-height: 0;
     max-height: 100%;
@@ -1238,7 +1271,7 @@ h6,
 
       &--week {
         font-weight: 700;
-        margin-bottom: -0.5em;
+        margin-bottom: ui(-0.5em);
       }
 
       &__left {
@@ -1255,8 +1288,8 @@ h6,
       position: relative;
       flex-direction: column;
       flex-shrink: 0;
-      gap: 0.5em;
-      padding: 1em;
+      gap: ui(0.5em);
+      padding: ui(1em);
       border: var(--border-hairline) solid var(--ink);
       background-color: var(--sheet);
       transition: 0.3s ease-in-out;
@@ -1329,7 +1362,7 @@ h6,
         &__left {
           text-align: left;
           display: inline-flex;
-          grid-gap: 0.2rem;
+          grid-gap: ui(0.2rem);
           font-weight: 700;
 
           // Daily digest author: a little more room between avatar and name, as in
@@ -1346,7 +1379,7 @@ h6,
           text-align: center;
           display: inline-flex;
           align-items: center;
-          grid-gap: 0.2rem;
+          grid-gap: ui(0.2rem);
           justify-content: center;
           font-weight: 700;
 
@@ -1368,9 +1401,9 @@ h6,
       &__footer {
         display: flex;
         align-items: center;
-        gap: 0.5em;
+        gap: ui(0.5em);
         justify-content: center;
-        margin-top: 0.5em;
+        margin-top: ui(0.5em);
       }
 
       &__date {
@@ -1382,7 +1415,7 @@ h6,
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 0.6em;
+        gap: ui(0.6em);
         // A grid item's default min-width is its content, which would let many reactions
         // widen this column and push the centred amount aside. Clip instead.
         min-width: 0;
@@ -1399,12 +1432,12 @@ h6,
       }
 
       &__content {
-        margin: 1em 0;
+        margin: ui(1em) 0;
 
         &__editor {
           display: flex;
           flex-direction: column;
-          grid-gap: 1em;
+          grid-gap: ui(1em);
         }
       }
     }
@@ -1421,8 +1454,8 @@ h6,
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5em;
-  margin: 0.5em 0;
+  gap: ui(0.5em);
+  margin: ui(0.5em) 0;
 
   &__img {
     max-width: 100%;
@@ -1432,7 +1465,7 @@ h6,
   }
 
   &--processing {
-    padding: 0.5em 0;
+    padding: ui(0.5em) 0;
   }
 
   &__skeleton {
@@ -1515,7 +1548,7 @@ h6,
       grid-template-areas:
         "left right"
         "center center";
-      row-gap: 0.4em;
+      row-gap: ui(0.4em);
     }
 
     .LogPosts__posts__item__header__left {
@@ -1544,7 +1577,7 @@ h6,
   background-color: var(--paper);
   color: var(--ink);
   border: var(--border-hairline) solid var(--ink);
-  padding: 0.5em 0.8em;
+  padding: ui(0.5em) ui(0.8em);
   border-radius: var(--radius-none);
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -1556,7 +1589,7 @@ h6,
   line-height: 1.4;
   display: flex;
   flex-direction: column;
-  gap: 0.2em;
+  gap: ui(0.2em);
 
   small {
     font-size: 0.78em;
@@ -1655,7 +1688,7 @@ h6,
   &__wrapper {
     display: flex;
     flex-direction: column;
-    grid-gap: 1em;
+    grid-gap: ui(1em);
     // Room left of each bubble's tail for the commenter's avatar (bigger on xl).
     margin: 0 0 0 40px;
 
@@ -1678,7 +1711,7 @@ h6,
   }
 
   &__notice {
-    padding: 1em;
+    padding: ui(1em);
     font-size: 0.9em;
     text-align: center;
   }
@@ -1691,7 +1724,7 @@ h6,
     position: relative;
     background: var(--paper);
     border-radius: var(--radius-bubble); // sanctioned: speech balloon
-    padding: 0.5em;
+    padding: ui(0.5em);
     border: var(--border-hairline) solid var(--ink);
     display: flex;
     flex-direction: column;
@@ -1855,7 +1888,7 @@ h6,
 
     &__body {
       background-color: transparent;
-      padding: 1em;
+      padding: ui(1em);
       font-size: 0.8em;
       text-align: left;
       min-width: 0;
@@ -1871,7 +1904,7 @@ h6,
           word-break: break-word;
 
           @media (max-width: constants.$breakpoint-md) {
-            margin-bottom: 0.2rem;
+            margin-bottom: ui(0.2rem);
           }
         }
       }
@@ -1923,7 +1956,7 @@ h6,
     cursor: default;
     border: var(--border-rule) solid var(--ink);
     border-radius: var(--radius-none);
-    margin: 1em;
+    margin: ui(1em);
     width: 100%;
     // Tall modals scroll inside the frame instead of running off a short screen.
     max-height: calc(100% - 2em);
@@ -1974,14 +2007,14 @@ h6,
   &__title {
     font-size: 1em;
     color: var(--paper);
-    margin: 0.2em 0;
+    margin: ui(0.2em) 0;
   }
 
   &__button {
     &--close {
       border-radius: var(--radius-none);
       border: none;
-      padding: 0.4em;
+      padding: ui(0.4em);
       background-color: transparent;
       color: var(--paper);
       font-weight: 700;
@@ -1989,14 +2022,14 @@ h6,
   }
 
   &__body {
-    padding: 1em;
+    padding: ui(1em);
     text-align: center;
   }
 
   &__footer {
     display: flex;
     justify-content: center;
-    grid-gap: 0.2em;
-    padding: 1em;
+    grid-gap: ui(0.2em);
+    padding: ui(1em);
   }
 }

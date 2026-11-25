@@ -41,7 +41,7 @@ type CategoryListProps = {
   onSelect: (id: string) => void;
   onMove: (id: string, toIndex: number) => void;
   onAdd: (name: string) => void;
-  /** Shows the "make it a sublog" line under the add form. */
+  /** Shows the "Make it a sublog" line under the add form. */
   onSublogHelp?: () => void;
 };
 
@@ -110,7 +110,11 @@ export const CategoryList = ({
   return (
     <div className="CategoryManager__listPane">
       <p className="CategoryManager__hint">
-        Tap a category to edit it. Drag <span aria-hidden="true">⋮⋮</span> to reorder.
+        Tap a category to edit it. Drag{" "}
+        <span className="GripDots" aria-hidden="true">
+          ⋮⋮
+        </span>{" "}
+        to reorder.
       </p>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={active.map((c) => c.id)} strategy={verticalListSortingStrategy}>
@@ -161,10 +165,10 @@ export const CategoryList = ({
         {addError && <small className="CategoryManager__error">{addError}</small>}
       </form>
       {onSublogHelp && (
-        <p className="CategoryManager__hint">
+        <p className="CategoryManager__hint CategoryManager__hint--sublog">
           Want one category to have its own log, with its own categories?{" "}
           <button type="button" className="SublogHelp" onClick={onSublogHelp}>
-            make it a sublog
+            Make it a sublog
           </button>
         </p>
       )}
@@ -264,7 +268,7 @@ const SortableRow = ({
         aria-label={`Reorder ${name}`}
         title="Drag to reorder"
       >
-        ⋮⋮
+        <span className="GripDots">⋮⋮</span>
       </span>
       {children}
     </li>

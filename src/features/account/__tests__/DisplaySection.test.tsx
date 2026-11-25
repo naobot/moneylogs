@@ -17,6 +17,7 @@ describe("DisplaySection", () => {
     delete document.documentElement.dataset.theme;
     delete document.documentElement.dataset.entrySize;
     delete document.documentElement.dataset.entryAlign;
+    delete document.documentElement.dataset.uiSize;
     initTheme();
     initDisplayPrefs();
     container = document.createElement("div");
@@ -102,12 +103,22 @@ describe("DisplaySection", () => {
   });
 
   it("sets entry size and alignment on the document", () => {
-    act(() => group("Entry size")[3].click());
+    act(() => group("Entry text")[3].click());
     act(() => group("Entry align")[2].click());
     expect(document.documentElement.dataset.entrySize).toBe("xl");
     expect(document.documentElement.dataset.entryAlign).toBe("justify");
-    expect(selected("Entry size")).toBe("XL");
+    expect(selected("Entry text")).toBe("XL");
     expect(selected("Entry align")).toBe("Justify");
+  });
+
+  it("sets the UI size on the document, M by default", () => {
+    expect(selected("UI size")).toBe("M");
+    act(() => group("UI size")[2].click());
+    expect(document.documentElement.dataset.uiSize).toBe("l");
+    expect(getDisplayPrefs().uiSize).toBe("l");
+    expect(selected("UI size")).toBe("L");
+    act(() => group("UI size")[0].click());
+    expect(document.documentElement.dataset.uiSize).toBe("s");
   });
 
   it("shows a sample entry", () => {

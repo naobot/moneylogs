@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+
 .LogActions {
   max-width: min(32em, 92vw);
 
@@ -5,7 +7,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5em;
+    gap: ui(0.5em);
     text-align: left;
 
     h4,
@@ -19,13 +21,13 @@
 
     ul {
       margin: 0;
-      padding-left: 1.2em;
+      padding-left: ui(1.2em);
       font-size: 0.9em;
     }
 
     & + & {
-      margin-top: 1.25em;
-      padding-top: 1em;
+      margin-top: ui(1.25em);
+      padding-top: ui(1em);
       border-top: var(--border-hairline) dashed var(--ink);
     }
   }
@@ -44,7 +46,7 @@
 }
 
 .ArchivedLogs {
-  margin-top: 1.5em;
+  margin-top: ui(1.5em);
 
   summary {
     cursor: pointer;
@@ -55,14 +57,14 @@
   &__list {
     list-style: none;
     padding: 0;
-    margin: 0.5em 0 0;
+    margin: ui(0.5em) 0 0;
 
     li {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      gap: 1em;
-      padding: 0.35em 0;
+      gap: ui(1em);
+      padding: ui(0.35em) 0;
       border-bottom: var(--border-hairline) dashed var(--ink);
     }
 
@@ -76,7 +78,7 @@
 .LogRowActions {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.6em;
+  gap: ui(0.6em);
   margin-left: auto;
 }
 
@@ -88,8 +90,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.25em 1em;
-    padding: 0.35em 0;
+    gap: ui(0.25em) ui(1em);
+    padding: ui(0.35em) 0;
     border-bottom: var(--border-hairline) dashed var(--ink);
 
     // Push to the right edge, like the other lists' row actions, even when the row
@@ -105,7 +107,7 @@
   border-top: var(--border-heavy) solid var(--ink) !important;
 
   h4 {
-    padding: 0.1em 0.4em;
+    padding: ui(0.1em) ui(0.4em);
     color: var(--paper);
     background: var(--ink);
   }
@@ -119,7 +121,7 @@
 .LogActions__confirm {
   display: flex;
   flex-direction: column;
-  gap: 0.3em;
+  gap: ui(0.3em);
   width: 100%;
   font-size: 0.9em;
 }

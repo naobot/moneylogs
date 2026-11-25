@@ -1,7 +1,9 @@
+@use "@/ui-size" as *;
+
 // The budget buddy: a kaomoji cat in the ledger's month row. Text glyphs and tokens only.
 
 .BudgetBuddy {
-  padding: 0.1em 0.5em;
+  padding: ui(0.1em) ui(0.5em);
   font-family: var(--font-mono);
   font-size: 1em;
   line-height: 1.4;
@@ -29,7 +31,7 @@
   // It found something: a "!" beside the face, which hops once as it appears.
   &__found {
     display: inline-block;
-    margin-left: 0.15em;
+    margin-left: ui(0.15em);
     vertical-align: middle;
     animation: buddy-bounce 0.45s ease-out 1;
   }
