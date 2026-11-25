@@ -35,8 +35,13 @@
       object-fit: contain;
     }
 
+    // Both shapes set a width and let the height follow. Safari (and so the iOS app)
+    // doesn't size the shrink-wrapped __card from a height + aspect-ratio box: it takes
+    // the full-size card image's width instead, and the preview ends up pushed to the
+    // right. 29.25vh × 16/9 = 52vh tall, 270px × 16/9 = 480px.
     &--story {
-      height: min(52vh, 480px);
+      width: min(29.25vh, 270px);
+      max-width: 100%;
       aspect-ratio: 9 / 16;
     }
 
