@@ -23,14 +23,14 @@ import { LogKind, resolveCreator } from "./deleteLogPlan";
 import { KNICK_KNACK_FINDS } from "./knickknacks";
 import { grantKept, sendSpiritGift } from "./knickknackGrants";
 import { purgeLog } from "./purgeLog";
-import { withSentryCall } from "./sentry";
+import { reportError, withSentryCall } from "./sentry";
 import {
   candidateFor,
   cleanupListRef,
   refreshCleanupList,
   type CleanupCandidate,
 } from "./accountCleanup";
-import { INACTIVE_DAYS } from "./accountCleanupPlan";
+import { asList, INACTIVE_DAYS } from "./accountCleanupPlan";
 
 /**
  * Admin-only callables behind the /admin page. Admins carry the `admin` custom claim
@@ -129,7 +129,7 @@ export const adminLookupUser = onCall(
     // Social logs, found the same way deleteAccount finds them.
     const groupIds = new Set<string>();
     for (const doc of userDocs) {
-      for (const id of (doc.data().groups ?? []) as unknown[]) {
+      for (const id of asList(doc.data().groups)) {
         if (typeof id === "string" && ID_RE.test(id)) groupIds.add(id);
       }
     }
@@ -350,9 +350,12 @@ export const adminCleanupList = onCall(
  * record and its ties: someone who came back or made a friend since the list was built
  * is kept (and taken off the list) instead.
  *
- * Then the account is locked (disabled, sessions revoked) and checked once more, so a
- * sign-in that raced the first check is seen, and none can start while its data is
- * deleted. If they did come back, the lock is lifted again.
+ * Then the account is disabled and checked once more, so a sign-in or token refresh that
+ * raced the first check is seen, and none can happen while its data is deleted. Its
+ * sessions aren't revoked: a kept guest has no other way back in, and an idle account
+ * holds no live ID token anyway (tokens last an hour, and minting one counts as activity).
+ * If they did come back, or anything fails before the Auth account is gone, it's enabled
+ * again, so a failure never leaves someone locked out; the row stays to try again.
  */
 export const adminCleanupDelete = onCall(
   { timeoutSeconds: 540, memory: "512MiB" },
@@ -378,18 +381,32 @@ export const adminCleanupDelete = onCall(
     }
 
     const auth = getAuth();
-    await auth.updateUser(uid, { disabled: true });
-    await auth.revokeRefreshTokens(uid);
-    const candidate = await candidateFor(db, await auth.getUser(uid), Date.now());
-    if (!candidate) {
-      // Back since the first check: unlock, unless an admin had disabled them already.
+    // Unlock, unless an admin had disabled the account before this.
+    const unlock = async () => {
       if (!authUser.disabled) await auth.updateUser(uid, { disabled: false });
+    };
+    await auth.updateUser(uid, { disabled: true });
+    let outcome: {
+      candidate: CleanupCandidate;
+      result: Awaited<ReturnType<typeof deleteUserData>>;
+    } | null;
+    try {
+      const candidate = await candidateFor(db, await auth.getUser(uid), Date.now());
+      outcome = candidate ? { candidate, result: await deleteUserData(db, uid) } : null;
+    } catch (error) {
+      // deleteUserData removes the Auth account last, so it still exists here.
+      await unlock().catch((unlockError) =>
+        reportError(unlockError, { action: "cleanup_unlock", level: "error" }),
+      );
+      throw error;
+    }
+    if (!outcome) {
+      // Back since the first check.
+      await unlock();
       await unlist(db, uid);
       return { deleted: false, reason: "kept" as const };
     }
-
-    // A failure from here leaves the account locked and still listed: delete it again.
-    const result = await deleteUserData(db, uid);
+    const { candidate, result } = outcome;
     await audit(
       db,
       adminUid,

@@ -130,7 +130,9 @@ export const deleteUserData = async (db: Firestore, uid: string): Promise<Delete
   // Social logs: from the user docs' `groups` lists and from membership.
   const groupIds = new Set<string>();
   for (const doc of userDocs) {
-    for (const id of (doc.data().groups ?? []) as unknown[]) {
+    // People write their own user doc: anything but a list counts as none.
+    const groups: unknown = doc.data().groups;
+    for (const id of Array.isArray(groups) ? groups : []) {
       if (typeof id === "string" && id) groupIds.add(id);
     }
   }
