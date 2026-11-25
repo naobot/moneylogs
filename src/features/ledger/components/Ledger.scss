@@ -5,33 +5,29 @@
 @use "@/ui-size" as *;
 
 .Ledger {
-  // Phones: one row like on wide screens (kind · title · actions), but the side columns
-  // can't be equal widths there without pushing the page sideways, so each side takes
-  // what it needs and the title is centred in the space between. The kind ellipsises
-  // first, and "(2 spots left)" shortens to "(2 left)".
+  // Phones: title · actions. The kind ("financial · 2 members") is left out, as the
+  // layout already says what kind of log this is, so the title gets the room: left-
+  // aligned, ellipsised when it's still too long. "(2 spots left)" is left out too.
   > .Group__header {
     @media (max-width: constants.$breakpoint-sm) {
-      grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       grid-gap: ui(0.75em);
 
-      .Group__header__left,
+      .Group__header__left {
+        display: none;
+      }
+
       .Group__header__center {
         min-width: 0;
+        justify-content: flex-start;
       }
 
       .Group__header__right {
         grid-gap: ui(0.75em);
       }
 
-      .Ledger__kind {
-        display: block;
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .Ledger__spots__long {
+      // Invite stays; how many spots are left is for wider screens.
+      .Ledger__spots {
         display: none;
       }
     }
