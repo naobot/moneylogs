@@ -1,0 +1,103 @@
+<!-- @dsCard group="Inputs" height=120 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Segmented</title>
+  </head>
+  <body>
+    <div
+      class="pv"
+      style="font-family: var(--font-mono, Hack, monospace); color: var(--ink); font-size: 14px"
+    >
+      <div
+        role="group"
+        style="
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          border: 2px solid var(--ink);
+          max-width: 380px;
+        "
+      >
+        <button
+          aria-pressed="true"
+          style="
+            height: 40px;
+            font: inherit;
+            font-size: 12px;
+            border: 0;
+            border-right: 2px solid var(--ink);
+            background: var(--inverse-surface);
+            color: var(--inverse-ink);
+            font-weight: 700;
+          "
+        >
+          entries</button
+        ><button
+          aria-pressed="false"
+          style="
+            height: 40px;
+            font: inherit;
+            font-size: 12px;
+            border: 0;
+            background: var(--paper);
+            color: var(--ink);
+          "
+        >
+          stats
+        </button>
+      </div>
+      <div style="height: 12px"></div>
+      <div
+        role="group"
+        style="
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          border: 1px solid var(--ink);
+          max-width: 380px;
+        "
+      >
+        <button
+          aria-pressed="false"
+          style="
+            height: 36px;
+            font: inherit;
+            font-size: 12px;
+            border: 0;
+            border-right: 1px solid var(--ink);
+            background: var(--paper);
+            color: var(--ink);
+          "
+        >
+          week</button
+        ><button
+          aria-pressed="true"
+          style="
+            height: 36px;
+            font: inherit;
+            font-size: 12px;
+            border: 0;
+            border-right: 1px solid var(--ink);
+            background: var(--inverse-surface);
+            color: var(--inverse-ink);
+            font-weight: 700;
+          "
+        >
+          month</button
+        ><button
+          aria-pressed="false"
+          style="
+            height: 36px;
+            font: inherit;
+            font-size: 12px;
+            border: 0;
+            background: var(--paper);
+            color: var(--ink);
+          "
+        >
+          year
+        </button>
+      </div>
+    </div>
+  </body>
+</html>

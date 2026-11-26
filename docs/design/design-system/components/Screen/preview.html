@@ -1,0 +1,273 @@
+<!-- @dsCard group="Foundations" height=760 width=960 subtitle="Reference screen: the whole system together" -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Screen</title>
+    <style>
+      .mock {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        width: 960px;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+      }
+      .nav__brand {
+        font-weight: 700;
+        font-size: 1.1em;
+      }
+      .nav__list {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        padding: 8px 16px 16px;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+      .mock h2,
+      .mock h3 {
+        margin: 0;
+      }
+      .mock h2 {
+        font-size: 1.5em;
+      }
+      .mock h3 {
+        font-size: 1.1em;
+      }
+      .head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .month {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 6px;
+        border-bottom: var(--border-rule) solid var(--ink);
+      }
+      .month__label {
+        min-width: 9ch;
+        text-align: center;
+      }
+      .month .Segmented {
+        margin-left: auto;
+      }
+      .entry {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: var(--border-rule) solid var(--ink);
+        background: var(--sheet);
+        font-size: 0.85em;
+      }
+      .entry .LineInput {
+        flex: 1;
+      }
+      .modal {
+        border: var(--border-rule) solid var(--ink);
+        background: var(--paper);
+        font-size: 0.85em;
+      }
+      .modal .Modal__body {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+      }
+      .btnrow {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .mock .Footer {
+        margin: 0 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mock">
+      <nav class="nav">
+        <span class="nav__brand">moneylogs</span>
+        <span class="nav__list">
+          <a class="Button Button--primary-border Button--size-sm Button--nav" href="#"
+            ><strong class="keep-case">Tokyo Trip '26</strong></a
+          >
+          <a class="Button Button--primary-border Button--size-sm Button--nav Button--past" href="#"
+            ><strong class="keep-case">Lisbon 2025</strong></a
+          >
+          <a class="Button Button--primary-border-lite Button--size-sm" href="#"
+            ><strong>New log</strong></a
+          >
+          <a class="Button Button--primary Button--size-sm" href="#" aria-label="Settings"
+            ><span class="Icon"><img src="/_blob/22edf25ce9bcd0a68a5f2a2fcdb1b8b2" alt="" /></span
+          ></a>
+        </span>
+      </nav>
+
+      <div class="main">
+        <div class="col">
+          <section class="col" style="gap: 10px">
+            <div class="head">
+              <h2>my logs</h2>
+              <a class="Button Button--primary Button--size-sm" href="#"
+                ><span class="Icon Icon--sm"
+                  ><img src="/_blob/37fcae281af8f22867d85966d5b03dfa" alt="" /></span
+                ><strong>Start a new log</strong></a
+              >
+            </div>
+            <div class="CardGrid">
+              <a class="LogCard LogCard--small LogCard--fresh" href="#"
+                ><span class="LogCard__top"
+                  ><span class="LogCard__kind">log group</span
+                  ><span class="LogCard__badge">3 new posts</span></span
+                ><strong class="LogCard__title keep-case">Tokyo Trip '26</strong
+                ><span class="LogCard__details"
+                  ><span>5 members</span><span>ends in 4 days</span></span
+                ></a
+              >
+              <a class="LogCard LogCard--small" href="#"
+                ><span class="LogCard__top"
+                  ><span class="LogCard__kind">financial · shared</span></span
+                ><strong class="LogCard__title keep-case">Household</strong
+                ><span class="LogCard__details"><span>¥ 182,400 this month</span></span></a
+              >
+              <a class="LogCard LogCard--small" href="#"
+                ><span class="LogCard__top"><span class="LogCard__kind">financial</span></span
+                ><strong class="LogCard__title keep-case">Side projects</strong
+                ><span class="LogCard__details"><span>¥ 12,900 this month</span></span></a
+              >
+            </div>
+          </section>
+
+          <section class="col" style="gap: 10px">
+            <div class="month">
+              <button class="RowButton RowButton--glyph" aria-label="Previous month">‹</button>
+              <span class="month__label"><strong>mar 2026</strong></span>
+              <button class="RowButton RowButton--glyph" aria-label="Next month">›</button>
+              <button class="RowButton">Today</button>
+              <div class="Segmented" role="group" aria-label="View">
+                <button class="Button Button--primary-border-lite Button--size-sm Button--active">
+                  <strong>Entries</strong>
+                </button>
+                <button class="Button Button--primary-border-lite Button--size-sm">
+                  <strong>Stats</strong>
+                </button>
+              </div>
+            </div>
+            <form class="entry">
+              <strong>food</strong><span class="num"><strong>¥ 680</strong></span>
+              <input class="LineInput" placeholder="Example: coffee, new shoes, etc." />
+              <button class="Button Button--primary-border Button--size-sm">
+                <strong>Add</strong>
+              </button>
+            </form>
+            <div class="EntryList" style="font-size: 0.9em">
+              <div class="EntryList__day__header">
+                <span>tue 10 mar</span><span class="num">¥ 4,380</span>
+              </div>
+              <ul>
+                <li class="EntryList__row">
+                  <span class="EntryList__category">food</span
+                  ><span class="EntryList__note">lunch <small>· konbini</small></span
+                  ><span class="EntryList__amount">¥ 680</span
+                  ><span class="EntryList__menu"><button class="RowButton">Edit</button></span>
+                </li>
+                <li class="EntryList__row">
+                  <span class="EntryList__category">transport</span
+                  ><span class="EntryList__note">suica top-up</span
+                  ><span class="EntryList__amount">¥ 3,000</span
+                  ><span class="EntryList__menu"><button class="RowButton">Edit</button></span>
+                </li>
+                <li class="EntryList__row">
+                  <span class="EntryList__category">coffee</span
+                  ><span class="EntryList__note">flat white</span
+                  ><span class="EntryList__amount">¥ 700</span
+                  ><span class="EntryList__menu"><button class="RowButton">Edit</button></span>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </div>
+
+        <div class="col">
+          <div class="modal" role="dialog" aria-labelledby="mt">
+            <div class="TitleBar TitleBar--striped">
+              <h3 id="mt" class="Modal__title">log actions</h3>
+              <span class="TitleBar__fill tex tex-stripe" aria-hidden="true"></span
+              ><button class="TitleBar__close" aria-label="Close">x</button>
+            </div>
+            <div class="Modal__body">
+              <section class="LogActions__section">
+                <h4>Archive this log group</h4>
+                <p>
+                  Hide it from your navigation and lists. Only you are affected, and you can still
+                  open it.
+                </p>
+                <button class="Button Button--primary-border-lite Button--size-sm">
+                  <strong>Archive</strong>
+                </button>
+              </section>
+              <section class="LogActions__section LogActions__danger">
+                <h4>Delete this log group</h4>
+                <p>Removes every post, comment and uploaded image for all members.</p>
+                <div class="btnrow">
+                  <button class="Button Button--primary-border-lite Button--size-sm">
+                    <strong>Nevermind</strong></button
+                  ><button class="Button Button--primary-border Button--size-sm">
+                    <strong>Delete log group</strong>
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <section
+            class="Window"
+            style="
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              font-size: 0.9em;
+            "
+          >
+            <h3>profile</h3>
+            <div class="ControlledInput" style="padding: 0">
+              <label for="dn">Display name</label
+              ><input id="dn" class="Input" value="Nao" style="flex: 1; min-width: 0" />
+            </div>
+            <div class="btnrow">
+              <button class="Button Button--primary-border Button--size-sm">
+                <strong>Save</strong></button
+              ><button class="Button Button--primary-border-lite Button--size-sm">
+                <strong>Change password</strong></button
+              ><button class="Button Button--primary-border Button--inverse Button--size-sm">
+                <strong>Sign out</strong>
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="Footer">
+        <span>moneylogs [beta]</span><span class="Footer__sep">·</span><a href="#">about</a
+        ><span class="Footer__sep">·</span><span>v5.1.0</span>
+      </footer>
+    </div>
+  </body>
+</html>

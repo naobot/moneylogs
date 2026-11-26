@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notifications, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.45;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications, 3 new"
+                aria-current="page"
+                style="
+                  position: relative;
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+                /><span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: 6px;
+                    right: 4px;
+                    min-width: 16px;
+                    padding: 0 3px;
+                    box-sizing: border-box;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 11px;
+                    font-weight: 700;
+                    line-height: 16px;
+                    text-align: center;
+                  "
+                  >3</span
+                ></a
+              >
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 22px;
+            min-height: 0;
+            flex-grow: 1;
+            overflow: hidden;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              align-items: center;
+              height: 44px;
+              box-sizing: border-box;
+              padding: 6px 4px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 10px;
+                padding: 0 10px;
+                background: #f5f3f0;
+                font-size: 16px;
+                line-height: 28px;
+                font-weight: 700;
+              "
+            >
+              notifications
+            </h1>
+          </header>
+          <section style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <h2 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">new</h2>
+              <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >3</span
+              >
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none">
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>ken</strong> commented on your post in
+                      <strong>trip to osaka</strong></span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >someone double dipped. it was ken.</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >12m<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d109b09ca7bdcd1bb504b6667c25654f"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      >80% of your groceries budget in <strong>household</strong></span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >¥ 20,000 of ¥ 25,000</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >1h<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>sora</strong> wants to be friends</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >3h<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+            </ul>
+          </section>
+          <section style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <h2 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                earlier
+              </h2>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none">
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid transparent;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d3e49191fc66a449cd4e602d6889a48c"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>trip to osaka</strong> ends in 3 days: last chance to post</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >yesterday</span
+                  ></a
+                >
+              </li>
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid transparent;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/c935eddd4c3935599a1e1ed79989485c"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      >logged <strong>rent</strong> in <strong>household</strong></span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >¥ 98,000: if it changed, edit the entry</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >mon</span
+                  ></a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 10px 8px 10px 8px;
+                    border-left: 4px solid transparent;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/489cc24ebb575bd5186530e0f74552e9"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>ken</strong> sent you a gift</span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >it's waiting, wrapped, in your knick-knack drawer</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >sun</span
+                  ></a
+                >
+              </li>
+            </ul>
+          </section>
+          <button
+            type="button"
+            style="
+              flex-shrink: 0;
+              height: 44px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #242424;
+              border: 1px solid #242424;
+              background: #f5f3f0;
+            "
+          >
+            load older
+          </button>
+        </main>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

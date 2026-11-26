@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Social log feed, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              aria-current="page"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 8px 4px 5px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 16px;
+            min-height: 0;
+            flex-grow: 1;
+            overflow: hidden;
+          "
+        >
+          <div style="display: flex; flex-direction: column; flex-shrink: 0">
+            <header
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 44px;
+                box-sizing: border-box;
+                padding: 6px 4px;
+                border: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+              "
+            >
+              <h1
+                style="
+                  margin: 0 0 0 10px;
+                  padding: 0 10px;
+                  background: #f5f3f0;
+                  font-size: 16px;
+                  line-height: 28px;
+                  font-weight: 700;
+                "
+              >
+                trip to osaka
+              </h1>
+              <div
+                style="display: flex; margin: -6px 6px -6px 0; padding: 0 2px; background: #f5f3f0"
+              >
+                <button
+                  type="button"
+                  aria-label="Invite"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    padding: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  <img
+                    src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                    alt=""
+                    width="20"
+                    height="20"
+                    style="display: block; flex-shrink: 0"
+                  />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Log actions"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    padding: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="#242424"
+                    stroke-width="2"
+                    stroke-linecap="square"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 10 H5 M10 10 H11 M15 10 H16"></path>
+                  </svg>
+                </button>
+              </div>
+            </header>
+            <div
+              role="tablist"
+              aria-label="View"
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                border: 2px solid #242424;
+                border-top: 0;
+              "
+            >
+              <a
+                href="#"
+                role="tab"
+                aria-selected="true"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  background: #242424;
+                  color: #f5f3f0;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >digest</a
+              >
+              <a
+                href="#"
+                role="tab"
+                aria-selected="false"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >summary</a
+              >
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                font-size: 12px;
+              "
+            >
+              <span style="color: rgba(36, 36, 36, 0.7)">day 3 of 7 · ends sun 29 nov</span
+              ><strong style="font-variant-numeric: tabular-nums">¥ 31,400 so far</strong>
+            </div>
+            <div
+              role="group"
+              aria-label="Show posts from"
+              style="display: flex; gap: 10px; overflow: hidden"
+            >
+              <button
+                type="button"
+                aria-pressed="true"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 11px;
+                  background: none;
+                  border: 0;
+                  color: #242424;
+                "
+              >
+                <span
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 13px;
+                    font-weight: 700;
+                  "
+                  >all</span
+                >everyone
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 11px;
+                  background: none;
+                  border: 0;
+                  color: #242424;
+                "
+              >
+                <span
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-weight: 700;
+                  "
+                  >M</span
+                >mika
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 11px;
+                  background: none;
+                  border: 0;
+                  color: #242424;
+                "
+              >
+                <span
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 4px solid #242424;
+                    background: #ffffff;
+                    font-weight: 700;
+                  "
+                  >K</span
+                ><strong style="display: inline-flex; align-items: center; gap: 2px"
+                  >ken
+                  <img
+                    src="/_blob/c202937d8b02eaf83dec4c44df7474f6"
+                    alt=""
+                    width="14"
+                    height="14"
+                    style="display: block; flex-shrink: 0"
+                  />2</strong
+                >
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 11px;
+                  background: none;
+                  border: 0;
+                  color: #242424;
+                "
+              >
+                <span
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-weight: 700;
+                  "
+                  >N</span
+                >nao
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 11px;
+                  background: none;
+                  border: 0;
+                  color: #242424;
+                "
+              >
+                <span
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-weight: 700;
+                  "
+                  >S</span
+                >sora
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 48px;
+              padding: 0 14px;
+              font: inherit;
+              border: 1px dashed #242424;
+              background: #ffffff;
+              flex-shrink: 0;
+            "
+          >
+            <strong>[+] new post</strong
+            ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">thu 26 nov · osaka</span>
+          </button>
+
+          <section
+            aria-label="Thursday 26 November"
+            style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0"
+          >
+            <h2
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+                height: 30px;
+                padding: 0 8px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 12px;
+                font-weight: 700;
+              "
+            >
+              <span>today · thu 26 nov</span
+              ><span style="font-variant-numeric: tabular-nums">¥ 8,200</span>
+            </h2>
+
+            <article
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                padding: 4px 4px 4px 12px;
+                border: 1px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div style="display: flex; align-items: center; gap: 8px; padding-top: 6px">
+                  <span
+                    aria-hidden="true"
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      box-sizing: border-box;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid #242424;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >M</span
+                  >
+                  <div style="display: flex; flex-direction: column; line-height: 1.3">
+                    <strong>mika</strong
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                      >19:40 · shinsekai</span
+                    >
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 2px">
+                  <span
+                    aria-label="pinned"
+                    title="pinned"
+                    style="display: inline-flex; padding: 2px; background: #242424"
+                    ><img
+                      src="/_blob/22eba59c5a378cd8b998dc5035f34fac"
+                      alt=""
+                      width="16"
+                      height="16"
+                      style="display: block; flex-shrink: 0; filter: invert(1)" /></span
+                  ><button
+                    type="button"
+                    aria-label="Post actions"
+                    style="
+                      width: 44px;
+                      height: 44px;
+                      padding: 0;
+                      font: inherit;
+                      background: none;
+                      border: 0;
+                    "
+                  >
+                    ⋯
+                  </button>
+                </div>
+              </div>
+              <p style="margin: 0; padding-right: 8px">
+                Kushikatsu, split four ways. No double dipping.
+              </p>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <strong style="font-size: 16px; font-variant-numeric: tabular-nums">¥ 4,800</strong>
+                <button
+                  type="button"
+                  onClick="{{openComments}}"
+                  style="
+                    height: 44px;
+                    padding: 0 8px;
+                    font: inherit;
+                    font-size: 13px;
+                    background: none;
+                    border: 0;
+                    color: #242424;
+                  "
+                >
+                  <span
+                    aria-label="add a reaction"
+                    style="display: inline-flex; align-items: center; margin-right: 14px"
+                    ><img
+                      src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                      alt=""
+                      width="20"
+                      height="20"
+                      style="display: block; flex-shrink: 0" /></span
+                  ><span
+                    aria-label="2 comments"
+                    style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px"
+                    ><img
+                      src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                      alt=""
+                      width="20"
+                      height="20"
+                      style="display: block; flex-shrink: 0"
+                    />2</span
+                  >
+                </button>
+              </div>
+            </article>
+
+            <article
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                padding: 4px 4px 4px 12px;
+                border: 1px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div style="display: flex; align-items: center; gap: 8px; padding-top: 6px">
+                  <span
+                    aria-hidden="true"
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      box-sizing: border-box;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid #242424;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >K</span
+                  >
+                  <div style="display: flex; flex-direction: column; line-height: 1.3">
+                    <strong>ken</strong
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                      >15:12 · dotonbori</span
+                    >
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Post actions"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ⋯
+                </button>
+              </div>
+              <div
+                role="img"
+                aria-label="Photo placeholder"
+                style="
+                  height: 130px;
+                  margin-right: 8px;
+                  border: 1px solid #242424;
+                  background: radial-gradient(#242424 0.6px, transparent 0.7px) 0 0 / 4px 4px;
+                "
+              ></div>
+              <p style="margin: 0; padding-right: 8px">
+                Takoyaki stand with the giant octopus sign.
+              </p>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <strong style="font-size: 16px; font-variant-numeric: tabular-nums">¥ 1,200</strong>
+                <button
+                  type="button"
+                  onClick="{{openComments}}"
+                  style="
+                    height: 44px;
+                    padding: 0 8px;
+                    font: inherit;
+                    font-size: 13px;
+                    background: none;
+                    border: 0;
+                    color: #242424;
+                  "
+                >
+                  <span
+                    aria-label="add a reaction"
+                    style="display: inline-flex; align-items: center; margin-right: 14px"
+                    ><img
+                      src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                      alt=""
+                      width="20"
+                      height="20"
+                      style="display: block; flex-shrink: 0" /></span
+                  ><span style="display: inline-flex; align-items: center; gap: 4px"
+                    ><span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                      >comment</span
+                    ><img
+                      src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                      alt=""
+                      width="20"
+                      height="20"
+                      style="display: block; flex-shrink: 0"
+                    /><span aria-hidden="true" style="font-size: 13px">+</span></span
+                  >
+                </button>
+              </div>
+            </article>
+          </section>
+        </main>
+
+        <sc-if value="{{commentsOpen}}" hint-placeholder-val="{{ false }}">
+          <div
+            style="
+              position: absolute;
+              inset: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              background: rgba(0, 0, 0, 0.2);
+            "
+          >
+            <button
+              type="button"
+              aria-label="Close comments"
+              onClick="{{closeComments}}"
+              style="flex-grow: 1; background: none; border: 0; padding: 0"
+            ></button>
+            <section
+              aria-label="Comments"
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                padding: 0 12px 16px;
+                background: #f5f3f0;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin: 0 -12px;
+                  padding-left: 12px;
+                  background: #242424;
+                  color: #f5f3f0;
+                "
+              >
+                <strong>comments · 2</strong
+                ><button
+                  type="button"
+                  aria-label="Close comments"
+                  onClick="{{closeComments}}"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    color: #f5f3f0;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  [-]
+                </button>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 16px;
+                  align-items: start;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >N</span
+                >
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    padding: 8px 10px;
+                    position: relative;
+                    border: 1px solid #242424;
+                    border-radius: 10px;
+                    background: #ffffff;
+                  "
+                >
+                  <span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -13px;
+                      top: 12px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 13px 13px 0;
+                      border-color: transparent #242424 transparent transparent;
+                    "
+                  ></span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -11px;
+                      top: 13px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 12px 12px 0;
+                      border-color: transparent #ffffff transparent transparent;
+                    "
+                  ></span
+                  ><span style="font-size: 12px"
+                    ><strong>nao</strong>
+                    <span style="color: rgba(36, 36, 36, 0.7)">· 19:52</span></span
+                  ><span>the beef one was the best one</span>
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 16px;
+                  align-items: start;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >S</span
+                >
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    padding: 8px 10px;
+                    position: relative;
+                    border: 1px solid #242424;
+                    border-radius: 10px;
+                    background: #ffffff;
+                  "
+                >
+                  <span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -13px;
+                      top: 12px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 13px 13px 0;
+                      border-color: transparent #242424 transparent transparent;
+                    "
+                  ></span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -11px;
+                      top: 13px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 12px 12px 0;
+                      border-color: transparent #ffffff transparent transparent;
+                    "
+                  ></span
+                  ><span style="font-size: 12px"
+                    ><strong>sora</strong>
+                    <span style="color: rgba(36, 36, 36, 0.7)">· 20:05</span></span
+                  ><span>someone double dipped. it was ken.</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: stretch">
+                <label
+                  style="
+                    flex-grow: 1;
+                    display: flex;
+                    border: 1px dashed #242424;
+                    background: #ffffff;
+                  "
+                  ><span
+                    style="
+                      position: absolute;
+                      width: 1px;
+                      height: 1px;
+                      overflow: hidden;
+                      clip: rect(0, 0, 0, 0);
+                    "
+                    >Add a comment</span
+                  ><textarea
+                    rows="1"
+                    placeholder="add a comment"
+                    style="
+                      flex-grow: 1;
+                      min-height: 44px;
+                      box-sizing: border-box;
+                      padding: 11px 12px;
+                      font: inherit;
+                      color: #242424;
+                      border: 0;
+                      resize: none;
+                      background: transparent;
+                    "
+                  ></textarea>
+                </label>
+                <button
+                  type="button"
+                  style="
+                    padding: 0 14px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    border: 2px solid #242424;
+                    background: #ffffff;
+                    color: #242424;
+                  "
+                >
+                  send
+                </button>
+              </div>
+            </section>
+          </div>
+        </sc-if>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { commentsOpen: false };
+        }
+        renderVals() {
+          const s = this.state || {};
+          return {
+            commentsOpen: !!s.commentsOpen,
+            openComments: () => this.setState({ commentsOpen: true }),
+            closeComments: () => this.setState({ commentsOpen: false })
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

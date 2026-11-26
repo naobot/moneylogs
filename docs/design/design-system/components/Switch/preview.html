@@ -1,0 +1,70 @@
+<!-- @dsCard group="Inputs" height=110 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Switch</title>
+  </head>
+  <body>
+    <div
+      class="pv"
+      style="font-family: var(--font-mono, Hack, monospace); color: var(--ink); font-size: 14px"
+    >
+      <label
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          min-height: 44px;
+          max-width: 360px;
+          border-bottom: 1px dashed var(--ink-faint);
+        "
+        ><span>colour charts</span
+        ><button
+          role="switch"
+          aria-checked="true"
+          style="
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 52px;
+            height: 26px;
+            padding: 2px;
+            box-sizing: border-box;
+            border: 2px solid var(--ink);
+            background: var(--inverse-surface);
+          "
+        >
+          <span style="width: 18px; height: 18px; background: var(--inverse-ink)"></span></button
+      ></label>
+      <label
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          min-height: 44px;
+          max-width: 360px;
+        "
+        ><span>daily digest</span
+        ><button
+          role="switch"
+          aria-checked="false"
+          style="
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 52px;
+            height: 26px;
+            padding: 2px;
+            box-sizing: border-box;
+            border: 2px solid var(--ink);
+            background: var(--paper);
+          "
+        >
+          <span style="width: 18px; height: 18px; background: var(--ink)"></span></button
+      ></label>
+    </div>
+  </body>
+</html>

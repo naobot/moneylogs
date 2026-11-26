@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Display settings, proposed desktop layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 1440px;
+          height: 900px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 15px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 52px;
+            padding: 0 16px;
+            border-bottom: 1px solid #242424;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex">
+            <a
+              href="#"
+              aria-label="Home"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="My preferences"
+              aria-current="page"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+                background: #242424;
+              "
+              ><img
+                src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+            /></a>
+            <a
+              href="#"
+              aria-label="Notifications"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 6px;
+              align-items: center;
+              padding-left: 16px;
+              border-left: 1px solid #242424;
+              font-size: 14px;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-left: auto">
+            <strong style="font-size: 16px">moneylogs</strong>
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-haspopup="menu"
+              style="
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />
+            </button>
+          </div>
+        </nav>
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 16px 24px 0;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 48px;
+              box-sizing: border-box;
+              padding: 7px 5px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 12px;
+                padding: 0 12px;
+                background: #f5f3f0;
+                font-size: 18px;
+                line-height: 30px;
+                font-weight: 700;
+              "
+            >
+              hi <span style="text-transform: none">Nao</span>
+            </h1>
+          </header>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 260px minmax(0, 1fr) 300px;
+              gap: 36px;
+              min-height: 0;
+            "
+          >
+            <nav aria-label="Settings sections">
+              <ul style="margin: 0; padding: 0; list-style: none; border: 2px solid #242424">
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>profile</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >Asia/Tokyo · avatar set</span
+                    ></a
+                  >
+                </li>
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>friends</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >4 friends · 1 request</span
+                    ></a
+                  >
+                </li>
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    aria-current="page"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                      background: #242424;
+                      color: #f5f3f0;
+                    "
+                    ><strong>display</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: #f5f3f0;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >Riso · text M · UI M</span
+                    ></a
+                  >
+                </li>
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>notifications</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >digest on · 9 types</span
+                    ></a
+                  >
+                </li>
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>account</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >email and password</span
+                    ></a
+                  >
+                </li>
+                <li style="border-bottom: 1px solid #242424">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>achievements</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >6 of 20</span
+                    ></a
+                  >
+                </li>
+                <li style="">
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      min-height: 54px;
+                      padding: 0 12px;
+                      text-decoration: none;
+                    "
+                    ><strong>my logs</strong
+                    ><span
+                      style="
+                        font-size: 12px;
+                        font-weight: 400;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >4 ongoing · 9 ended</span
+                    ></a
+                  >
+                </li>
+              </ul>
+              <a
+                href="#"
+                style="
+                  display: flex;
+                  align-items: center;
+                  height: 44px;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >sign out</a
+              >
+            </nav>
+            <main style="display: flex; flex-direction: column; gap: 26px; min-width: 0">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 700">display</h2>
+              <section style="display: flex; flex-direction: column; gap: 12px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h3 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    theme
+                  </h3>
+                </div>
+                <div
+                  role="group"
+                  aria-label="Theme"
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    width: 516px;
+                    border: 2px solid #242424;
+                  "
+                >
+                  <button
+                    type="button"
+                    aria-pressed="false"
+                    style="
+                      height: 40px;
+                      font: inherit;
+                      font-size: 13px;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                      background: #f5f3f0;
+                      color: #242424;
+                    "
+                  >
+                    paper</button
+                  ><button
+                    type="button"
+                    aria-pressed="true"
+                    style="
+                      height: 40px;
+                      font: inherit;
+                      font-size: 13px;
+                      font-weight: 700;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                      background: #242424;
+                      color: #f5f3f0;
+                    "
+                  >
+                    colour</button
+                  ><button
+                    type="button"
+                    aria-pressed="false"
+                    style="
+                      height: 40px;
+                      font: inherit;
+                      font-size: 13px;
+                      border: 0;
+                      background: #f5f3f0;
+                      color: #242424;
+                    "
+                  >
+                    night shift
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 100px minmax(0, 1fr);
+                    gap: 12px;
+                    align-items: start;
+                  "
+                >
+                  <span style="padding-top: 6px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >retro</span
+                  >
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #1c1408;
+                          color: #e8b060;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Amber CRT</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #1d3a66;
+                          color: #eaf1fb;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Blueprint</button
+                    ><button
+                      type="button"
+                      aria-pressed="true"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 2px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #fbe3ea;
+                          color: #3d1450;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      ><strong>Riso</strong></button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #232427;
+                          color: #e9c98c;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Gilt
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 100px minmax(0, 1fr);
+                    gap: 12px;
+                    align-items: start;
+                  "
+                >
+                  <span style="padding-top: 6px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >pastel</span
+                  >
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #e2f5ea;
+                          color: #0c2e20;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Mint</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #e9e2f7;
+                          color: #261a4a;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Lavender</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #fde6d6;
+                          color: #3e1c0b;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Peach</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #fbf3d0;
+                          color: #302707;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Butter
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 100px minmax(0, 1fr);
+                    gap: 12px;
+                    align-items: start;
+                  "
+                >
+                  <span style="padding-top: 6px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >aero</span
+                  >
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #d9f2fb;
+                          color: #002b47;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Aqua</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #e5f6d4;
+                          color: #0f340a;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Meadow</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #052a43;
+                          color: #b0dcec;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Aurora
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 100px minmax(0, 1fr);
+                    gap: 12px;
+                    align-items: start;
+                  "
+                >
+                  <span style="padding-top: 6px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >after dark</span
+                  >
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #0b170d;
+                          color: #86d99a;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Phosphor</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #13142a;
+                          color: #c8ccf6;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Midnight</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #2a0e12;
+                          color: #f4c7b9;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Oxblood</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        width: 96px;
+                        padding: 4px;
+                        box-sizing: border-box;
+                        font: inherit;
+                        font-size: 12px;
+                        color: #242424;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        text-align: left;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 26px;
+                          padding: 0 6px;
+                          border: 1px solid #242424;
+                          background: #18221a;
+                          color: #d3e4c0;
+                          font-size: 12px;
+                          font-weight: 700;
+                        "
+                        >Aa ¥</span
+                      >Forest
+                    </button>
+                  </div>
+                </div>
+              </section>
+              <div
+                style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px"
+              >
+                <section style="display: flex; flex-direction: column; gap: 12px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: flex-end;
+                      border-bottom: 1px solid #242424;
+                    "
+                  >
+                    <h3 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                      sizes
+                    </h3>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">text</span>
+                    <div
+                      role="group"
+                      aria-label="text"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        S</button
+                      ><button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        M</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        L
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">UI</span>
+                    <div
+                      role="group"
+                      aria-label="UI"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        S</button
+                      ><button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        M</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        L
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">entries</span>
+                    <div
+                      role="group"
+                      aria-label="entries"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        S</button
+                      ><button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        M</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        L</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        XL
+                      </button>
+                    </div>
+                  </div>
+                </section>
+                <section style="display: flex; flex-direction: column; gap: 12px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: flex-end;
+                      border-bottom: 1px solid #242424;
+                    "
+                  >
+                    <h3 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                      format
+                    </h3>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">clock</span>
+                    <div
+                      role="group"
+                      aria-label="clock"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        19:40</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        7:40pm
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">dates</span>
+                    <div
+                      role="group"
+                      aria-label="dates"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        26/11</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        11/26
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 140px 200px;
+                      gap: 16px;
+                      align-items: center;
+                    "
+                  >
+                    <span style="font-size: 14px">entry align</span>
+                    <div
+                      role="group"
+                      aria-label="entry align"
+                      style="
+                        display: grid;
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                        border: 1px solid #242424;
+                      "
+                    >
+                      <button
+                        type="button"
+                        aria-pressed="true"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #242424;
+                          color: #f5f3f0;
+                          font-weight: 700;
+                        "
+                      >
+                        left</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          border-right: 1px solid #242424;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        center</button
+                      ><button
+                        type="button"
+                        aria-pressed="false"
+                        style="
+                          height: 36px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          border: 0;
+                          background: #f5f3f0;
+                          color: #242424;
+                          font-weight: 400;
+                        "
+                      >
+                        justify
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <section style="display: flex; flex-direction: column; gap: 12px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h3 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    charts
+                  </h3>
+                </div>
+                <label
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 380px;
+                    min-height: 44px;
+                  "
+                  ><span style="font-size: 14px">colour charts</span
+                  ><button
+                    type="button"
+                    role="switch"
+                    aria-checked="true"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: flex-end;
+                      width: 52px;
+                      height: 26px;
+                      padding: 2px;
+                      box-sizing: border-box;
+                      border: 2px solid #242424;
+                      background: #242424;
+                    "
+                  >
+                    <span style="width: 18px; height: 18px; background: #f5f3f0"></span></button
+                ></label>
+              </section>
+            </main>
+            <aside style="display: flex; flex-direction: column; gap: 10px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  border-bottom: 1px solid #242424;
+                "
+              >
+                <h3 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                  preview
+                </h3>
+                <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >Riso</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                  padding: 14px;
+                  border: 1px solid #3d1450;
+                  background: #fbe3ea;
+                  color: #3d1450;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    height: 26px;
+                    padding: 0 8px;
+                    background: #3d1450;
+                    color: #fbe3ea;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                >
+                  <span>today · thu 26 nov</span><span>¥ 3,140</span>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    gap: 2px 10px;
+                    font-size: 14px;
+                  "
+                >
+                  <strong>groceries</strong><strong>¥ 2,180</strong
+                  ><span style="font-size: 13px; color: rgba(61, 20, 80, 0.7)"
+                    >tofu, rice, eggs</span
+                  >
+                </div>
+                <div
+                  aria-hidden="true"
+                  style="display: flex; height: 12px; border: 1px dashed #3d1450"
+                >
+                  <div style="width: 23%; background: #d28da7"></div>
+                  <div
+                    style="width: 14%; background: #268d92; border-left: 1px solid #3d1450"
+                  ></div>
+                  <div style="width: 9%; background: #cfb070; border-left: 1px solid #3d1450"></div>
+                  <div
+                    style="width: 16%; background: #7a94cd; border-left: 1px solid #3d1450"
+                  ></div>
+                </div>
+                <span style="font-size: 12px; color: rgba(61, 20, 80, 0.7)"
+                  >19:40 · 26/11 · entries left-aligned</span
+                >
+              </div>
+              <p style="margin: 0; font-size: 12px; color: rgba(36, 36, 36, 0.7)">
+                Updates as you change anything on the left.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

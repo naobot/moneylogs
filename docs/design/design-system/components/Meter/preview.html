@@ -1,0 +1,79 @@
+<!-- @dsCard group="Data" height=300 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meter</title>
+  </head>
+  <body>
+    <div class="pv">
+      <div class="LedgerStats">
+        <div class="LedgerStats__strip">
+          <span class="LedgerStats__strip__totals">¥ 182,400</span>
+          <span class="LedgerStats__bar" aria-hidden="true"
+            ><span class="LedgerStats__bar__seg LedgerStats__bar__seg--0" style="width: 38%"></span
+            ><span
+              class="LedgerStats__bar__seg LedgerStats__bar__seg--1 tex tex-dots"
+              style="width: 24%"
+            ></span
+            ><span
+              class="LedgerStats__bar__seg LedgerStats__bar__seg--2 tex tex-hatch"
+              style="width: 18%"
+            ></span
+            ><span
+              class="LedgerStats__bar__seg LedgerStats__bar__seg--3 tex tex-dither"
+              style="width: 12%"
+            ></span
+            ><span
+              class="LedgerStats__bar__seg LedgerStats__bar__seg--rest"
+              style="width: 8%"
+            ></span
+          ></span>
+          <span class="LedgerStats__strip__budget LedgerStats__strip__budget--over"
+            >over budget</span
+          ><span class="LedgerStats__strip__toggle">[+]</span>
+        </div>
+        <div class="LedgerStats__panel">
+          <div class="Meter">
+            <span>budget</span
+            ><span class="Meter__track Meter__track--budget"
+              ><span class="Meter__fill" style="width: 72%"></span></span
+            ><span class="Meter__pct num">72%</span>
+          </div>
+          <div class="Meter Meter--over">
+            <span>food</span
+            ><span class="Meter__track"><span class="Meter__fill" style="width: 100%"></span></span
+            ><span class="Meter__pct num">118%</span>
+          </div>
+          <ul class="Shares">
+            <li>
+              <span class="Shares__name"
+                ><span class="Swatch" style="background: var(--paper)"></span>food</span
+              ><span class="Shares__track"
+                ><span class="Shares__fill tex-solid" style="width: 38%"></span></span
+              ><span class="Shares__amount">¥ 69,300</span><span class="Shares__pct">38%</span>
+            </li>
+            <li>
+              <span class="Shares__name"><span class="Swatch tex tex-dots"></span>rent</span
+              ><span class="Shares__track"
+                ><span class="Shares__fill tex-solid" style="width: 24%"></span></span
+              ><span class="Shares__amount">¥ 43,800</span><span class="Shares__pct">24%</span>
+            </li>
+            <li>
+              <span class="Shares__name"><span class="Swatch tex tex-hatch"></span>transport</span
+              ><span class="Shares__track"
+                ><span class="Shares__fill tex-solid" style="width: 18%"></span></span
+              ><span class="Shares__amount">¥ 32,800</span><span class="Shares__pct">18%</span>
+            </li>
+            <li>
+              <span class="Shares__name"><span class="Swatch tex tex-dither"></span>other</span
+              ><span class="Shares__track"
+                ><span class="Shares__fill tex-solid" style="width: 20%"></span></span
+              ><span class="Shares__amount">¥ 36,500</span><span class="Shares__pct">20%</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

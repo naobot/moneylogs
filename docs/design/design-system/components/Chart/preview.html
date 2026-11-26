@@ -1,0 +1,58 @@
+<!-- @dsCard group="Data" height=230 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Chart</title>
+  </head>
+  <body>
+    <div class="pv">
+      <div style="position: relative" class="tex tex-grid">
+        <svg viewBox="0 0 320 150" width="100%" role="img" aria-label="Daily spending, 7 days">
+          <line class="SpendingChart__grid" x1="30" x2="310" y1="40" y2="40" />
+          <line class="SpendingChart__grid" x1="30" x2="310" y1="80" y2="80" />
+          <rect class="SpendingChart__bar" x="44" y="70" width="24" height="60" />
+          <rect class="SpendingChart__bar" x="84" y="40" width="24" height="90" />
+          <rect
+            class="SpendingChart__bar SpendingChart__bar--dim"
+            x="124"
+            y="95"
+            width="24"
+            height="35"
+          />
+          <rect class="SpendingChart__bar" x="164" y="20" width="24" height="110" />
+          <rect
+            class="SpendingChart__bar SpendingChart__bar--dim"
+            x="204"
+            y="85"
+            width="24"
+            height="45"
+          />
+          <rect
+            class="SpendingChart__bar SpendingChart__bar--dim"
+            x="244"
+            y="105"
+            width="24"
+            height="25"
+          />
+          <rect
+            class="SpendingChart__bar SpendingChart__bar--dim"
+            x="284"
+            y="75"
+            width="20"
+            height="55"
+          />
+          <line class="SpendingChart__axis" x1="30" x2="310" y1="130" y2="130" />
+          <text class="SpendingChart__tick" x="44" y="145">mon</text>
+          <text class="SpendingChart__tick" x="164" y="145">thu</text>
+          <text class="SpendingChart__tick" x="284" y="145">sun</text>
+          <text class="SpendingChart__tick" x="0" y="44">8k</text>
+          <text class="SpendingChart__tick" x="0" y="84">4k</text>
+        </svg>
+        <div class="SpendingChart__tooltip" style="left: 150px; top: -6px">
+          <strong>¥ 9,640</strong><span>thu · 4 posts</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

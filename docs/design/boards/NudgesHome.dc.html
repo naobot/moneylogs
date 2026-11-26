@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nudges on the home page, phone</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <svg
+          aria-hidden="true"
+          width="0"
+          height="0"
+          style="position: absolute; width: 0; height: 0; overflow: hidden"
+        >
+          <defs>
+            <symbol id="av-smile" viewBox="0 0 30 30">
+              <path
+                d="M10 4h8v1h-8zM8 5h3v1h-3zM17 5h3v1h-3zM7 6h2v1h-2zM20 6h2v1h-2zM6 7h2v1h-2zM21 7h2v1h-2zM5 8h2v1h-2zM22 8h2v1h-2zM5 9h1v1h-1zM23 9h2v1h-2zM4 10h2v1h-2zM24 10h1v1h-1zM4 11h1v1h-1zM25 11h1v1h-1zM4 12h1v1h-1zM11 12h1v1h-1zM19 12h1v1h-1zM25 12h1v1h-1zM4 13h1v1h-1zM25 13h2v1h-2zM4 14h1v1h-1zM26 14h1v1h-1zM4 15h1v1h-1zM26 15h1v1h-1zM4 16h1v1h-1zM26 16h1v1h-1zM4 17h2v1h-2zM26 17h1v1h-1zM5 18h1v1h-1zM26 18h1v1h-1zM5 19h1v1h-1zM13 19h6v1h-6zM26 19h1v1h-1zM6 20h1v1h-1zM25 20h2v1h-2zM6 21h2v1h-2zM25 21h1v1h-1zM7 22h2v1h-2zM24 22h2v1h-2zM8 23h2v1h-2zM23 23h2v1h-2zM9 24h2v1h-2zM22 24h2v1h-2zM11 25h3v1h-3zM20 25h3v1h-3zM13 26h8v1h-8z"
+                fill="#242424"
+              />
+            </symbol>
+            <symbol id="av-dog" viewBox="0 0 30 30">
+              <path
+                d="M8 2h14v1h-14zM6 3h2v1h-2zM22 3h2v1h-2zM3 4h4v1h-4zM23 4h4v1h-4zM2 5h1v1h-1zM6 5h1v1h-1zM23 5h1v1h-1zM27 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM23 6h1v1h-1zM28 6h1v1h-1zM1 7h1v1h-1zM6 7h1v1h-1zM23 7h1v1h-1zM28 7h1v1h-1zM0 8h1v1h-1zM6 8h1v1h-1zM10 8h2v1h-2zM18 8h2v1h-2zM23 8h1v1h-1zM29 8h1v1h-1zM0 9h1v1h-1zM6 9h1v1h-1zM10 9h2v1h-2zM18 9h2v1h-2zM23 9h1v1h-1zM29 9h1v1h-1zM0 10h1v1h-1zM5 10h1v1h-1zM24 10h1v1h-1zM29 10h1v1h-1zM0 11h1v1h-1zM5 11h1v1h-1zM24 11h1v1h-1zM29 11h1v1h-1zM1 12h1v1h-1zM5 12h1v1h-1zM13 12h4v1h-4zM24 12h1v1h-1zM28 12h1v1h-1zM1 13h1v1h-1zM4 13h2v1h-2zM12 13h6v1h-6zM24 13h2v1h-2zM28 13h1v1h-1zM2 14h2v1h-2zM5 14h1v1h-1zM13 14h4v1h-4zM24 14h1v1h-1zM26 14h2v1h-2zM5 15h1v1h-1zM11 15h1v1h-1zM14 15h2v1h-2zM18 15h1v1h-1zM24 15h1v1h-1zM5 16h1v1h-1zM12 16h2v1h-2zM16 16h2v1h-2zM24 16h1v1h-1zM6 17h1v1h-1zM23 17h1v1h-1zM7 18h1v1h-1zM22 18h1v1h-1zM8 19h2v1h-2zM20 19h2v1h-2zM10 20h10v1h-10zM10 21h10v1h-10zM9 22h1v1h-1zM14 22h2v1h-2zM20 22h1v1h-1zM8 23h1v1h-1zM14 23h2v1h-2zM21 23h1v1h-1zM7 24h1v1h-1zM22 24h1v1h-1zM6 25h1v1h-1zM23 25h1v1h-1zM5 26h1v1h-1zM24 26h1v1h-1zM4 27h1v1h-1zM25 27h1v1h-1zM3 28h1v1h-1zM26 28h1v1h-1zM2 29h1v1h-1zM27 29h1v1h-1z"
+                fill="#242424"
+              />
+            </symbol>
+            <symbol id="av-smile_left" viewBox="0 0 30 30">
+              <path
+                d="M13 4h8v1h-8zM11 5h3v1h-3zM20 5h3v1h-3zM9 6h2v1h-2zM22 6h2v1h-2zM8 7h2v1h-2zM23 7h2v1h-2zM7 8h2v1h-2zM24 8h2v1h-2zM6 9h2v1h-2zM25 9h1v1h-1zM6 10h1v1h-1zM25 10h2v1h-2zM5 11h1v1h-1zM26 11h1v1h-1zM5 12h1v1h-1zM11 12h1v1h-1zM19 12h1v1h-1zM26 12h1v1h-1zM4 13h2v1h-2zM26 13h1v1h-1zM4 14h1v1h-1zM26 14h1v1h-1zM4 15h1v1h-1zM26 15h1v1h-1zM4 16h1v1h-1zM26 16h1v1h-1zM4 17h1v1h-1zM25 17h2v1h-2zM4 18h1v1h-1zM25 18h1v1h-1zM4 19h1v1h-1zM12 19h6v1h-6zM25 19h1v1h-1zM4 20h2v1h-2zM24 20h1v1h-1zM5 21h1v1h-1zM23 21h2v1h-2zM5 22h2v1h-2zM22 22h2v1h-2zM6 23h2v1h-2zM21 23h2v1h-2zM7 24h2v1h-2zM20 24h2v1h-2zM8 25h3v1h-3zM17 25h3v1h-3zM10 26h8v1h-8z"
+                fill="#242424"
+              />
+            </symbol>
+          </defs>
+        </svg>
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 22px;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 44px;
+              box-sizing: border-box;
+              padding: 6px 4px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 10px;
+                padding: 0 10px;
+                background: #f5f3f0;
+                font-size: 16px;
+                line-height: 28px;
+                font-weight: 700;
+              "
+            >
+              home
+            </h1>
+          </header>
+          <div
+            aria-hidden="true"
+            style="display: flex; flex-direction: column; gap: 10px; opacity: 0.35"
+          >
+            <div style="height: 26px; border-bottom: 1px solid #242424"></div>
+            <div style="height: 56px; border: 1px solid #242424"></div>
+            <div style="height: 56px; border: 1px solid #242424"></div>
+          </div>
+          <section
+            aria-labelledby="h-fr"
+            style="position: relative; display: flex; flex-direction: column; gap: 12px"
+          >
+            <div style="border-bottom: 1px solid #242424">
+              <h2
+                id="h-fr"
+                style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700"
+              >
+                friends
+              </h2>
+            </div>
+            <div style="display: flex; gap: 16px">
+              <div
+                style="
+                  position: relative;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                "
+              >
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  onClick="{{openNudge}}"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 11px;
+                    color: #242424;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 30 30"
+                    aria-hidden="true"
+                    shape-rendering="crispEdges"
+                    style="
+                      display: block;
+                      flex-shrink: 0;
+                      background: #ffffff;
+                      border: 1px solid #242424;
+                    "
+                  >
+                    <use href="#av-smile" /></svg
+                  >mika</button
+                ><button
+                  type="button"
+                  aria-label="mika sent you something"
+                  onClick="{{openNudge}}"
+                  style="
+                    position: absolute;
+                    top: -6px;
+                    right: -8px;
+                    width: 22px;
+                    height: 22px;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font: inherit;
+                    font-size: 13px;
+                    font-weight: 700;
+                    line-height: 1;
+                    color: #f5f3f0;
+                    background: #242424;
+                    border: 1px solid #242424;
+                    border-radius: 0;
+                  "
+                >
+                  <span
+                    class="bounce"
+                    style="display: inline-block; animation: bounce 0.9s ease-out infinite"
+                    >!</span
+                  >
+                </button>
+              </div>
+              <div
+                style="
+                  position: relative;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                "
+              >
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  onClick="{{toggleMenu}}"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 11px;
+                    color: #242424;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 30 30"
+                    aria-hidden="true"
+                    shape-rendering="crispEdges"
+                    style="
+                      display: block;
+                      flex-shrink: 0;
+                      background: #ffffff;
+                      border: 1px solid #242424;
+                    "
+                  >
+                    <use href="#av-dog" /></svg
+                  >ken
+                </button>
+              </div>
+              <div
+                style="
+                  position: relative;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                "
+              >
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  onClick="{{toggleMenu}}"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 11px;
+                    color: #242424;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 30 30"
+                    aria-hidden="true"
+                    shape-rendering="crispEdges"
+                    style="
+                      display: block;
+                      flex-shrink: 0;
+                      background: #ffffff;
+                      border: 1px solid #242424;
+                    "
+                  >
+                    <use href="#av-smile_left" /></svg
+                  >sora
+                </button>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 2px;
+                  font-size: 11px;
+                "
+              >
+                <span
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 16px;
+                  "
+                  >+</span
+                >add
+              </div>
+            </div>
+            <sc-if value="{{nudgeOpen}}" hint-placeholder-val="{{ true }}"
+              ><div
+                role="dialog"
+                aria-label="From mika"
+                style="
+                  position: absolute;
+                  top: 74px;
+                  left: 0;
+                  z-index: 3;
+                  width: 260px;
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 6px;
+                  padding: 10px 4px 10px 14px;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                  border-radius: 10px;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -13px;
+                    left: 16px;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-bottom: 13px solid #242424;
+                  "
+                ></span
+                ><span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -11px;
+                    left: 17px;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-bottom: 12px solid #ffffff;
+                  "
+                ></span>
+                <p style="margin: 0; padding-top: 2px; font-size: 13px; flex-grow: 1">
+                  <strong>mika</strong> poked you ×3 · proud of you
+                </p>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick="{{closeAll}}"
+                  style="
+                    width: 32px;
+                    height: 32px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 16px;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ×
+                </button>
+              </div></sc-if
+            ><sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}"
+              ><div
+                role="menu"
+                aria-label="ken"
+                style="
+                  position: absolute;
+                  top: 74px;
+                  left: 40px;
+                  z-index: 3;
+                  width: 240px;
+                  display: flex;
+                  flex-direction: column;
+                  background: #f5f3f0;
+                  border: 2px solid #242424;
+                  box-shadow: 4px 4px 0 rgba(36, 36, 36, 0.25);
+                "
+              >
+                <div
+                  role="group"
+                  aria-label="Nudge ken"
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <button
+                    type="button"
+                    aria-label="Poke ken"
+                    onClick="{{poke}}"
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      justify-content: center;
+                      height: 44px;
+                      padding: 0;
+                      font: inherit;
+                      font-size: 13px;
+                      color: #242424;
+                      border: 0;
+                      background: #f5f3f0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    {{pokeLabel}}</button
+                  ><button
+                    type="button"
+                    aria-expanded="{{cheerAria}}"
+                    onClick="{{toggleCheer}}"
+                    style="display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0; font: inherit; font-size: 13px; color: #242424; border: 0; background: #f5f3f0; background: {{cheerBg}}; color: {{cheerFg}}"
+                  >
+                    cheer&nbsp;{{cheerArrow}}
+                  </button>
+                </div>
+                <sc-if value="{{cheerOpen}}" hint-placeholder-val="{{ false }}"
+                  ><div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      max-height: 200px;
+                      overflow-y: auto;
+                    "
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      you've got this</button
+                    ><button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      proud of you</button
+                    ><button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      keep going, you're doing great</button
+                    ><button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      one day at a time</button
+                    ><button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      small wins count too</button
+                    ><button
+                      type="button"
+                      role="menuitem"
+                      onClick="{{sent}}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        min-height: 40px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        text-align: left;
+                        background: none;
+                        border: 0;
+                        border-top: 1px dotted #242424;
+                      "
+                    >
+                      go easy on yourself today
+                    </button>
+                  </div></sc-if
+                >
+                <a
+                  href="#"
+                  role="menuitem"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 44px;
+                    padding: 0 12px;
+                    font-size: 13px;
+                    font-weight: 400;
+                    text-decoration: none;
+                    border-top: 1px solid #242424;
+                  "
+                  >profile<span aria-hidden="true">›</span></a
+                >
+              </div></sc-if
+            >
+            <sc-if value="{{cheered}}" hint-placeholder-val="{{ false }}"
+              ><p role="status" style="margin: 0; font-size: 12px; color: rgba(36, 36, 36, 0.7)">
+                sent to ken: “proud of you”
+              </p></sc-if
+            >
+          </section>
+          <div
+            aria-hidden="true"
+            style="display: flex; flex-direction: column; gap: 10px; opacity: 0.35"
+          >
+            <div style="height: 26px; border-bottom: 1px solid #242424"></div>
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px">
+              <div style="aspect-ratio: 1; border: 1px solid #242424"></div>
+              <div style="aspect-ratio: 1; border: 1px solid #242424"></div>
+              <div style="aspect-ratio: 1; border: 1px solid #242424"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"start": {"editor": "enum", "options": ["none", "nudge", "menu"], "default": "nudge"}, "$preview": {"width": 390, "height": 844}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) { super(props); this.state = { open: '', pokes: 0, cheered: false }; }
+        renderVals() {
+          const st = this.state || {};
+          const o = st.open === '' || st.open === undefined ? (this.props.start || 'nudge') : st.open;
+          const pokes = st.pokes || 0;
+          const cOn = o === 'cheer';
+          return {
+            nudgeOpen: o === 'nudge', menuOpen: o === 'menu' || cOn, cheerOpen: cOn,
+            cheerAria: cOn ? 'true' : 'false', cheerBg: cOn ? '#242424' : '#f5f3f0', cheerFg: cOn ? '#f5f3f0' : '#242424', cheerArrow: cOn ? '▴' : '▾',
+            openNudge: () => this.setState({ open: o === 'nudge' ? 'none' : 'nudge' }),
+            toggleMenu: () => this.setState({ open: o === 'menu' || cOn ? 'none' : 'menu' }),
+            toggleCheer: () => this.setState({ open: cOn ? 'menu' : 'cheer' }),
+            pokeLabel: pokes > 0 ? 'poked ×' + pokes : 'poke',
+            poke: () => this.setState({ pokes: pokes + 1 }),
+            sent: () => this.setState({ open: 'none', cheered: true }), cheered: !!st.cheered,
+            closeAll: () => this.setState({ open: 'none' })
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

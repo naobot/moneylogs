@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Audit map</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 1220px;
+          box-sizing: border-box;
+          padding: 48px 56px;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <header
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+            border-bottom: 2px solid #242424;
+            padding-bottom: 16px;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >audit · small screens (≤ 600px) · started 26 nov</span
+            >
+            <h1 style="margin: 0; font-size: 32px; line-height: 1.1; font-weight: 700">
+              quieter, clearer, still two inks
+            </h1>
+          </div>
+          <p style="margin: 0; max-width: 460px; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Keep the terminal look. Restore meaning to the levers it already has: frame weight, line
+            style, inversion, texture, case. Fix the system first, then pass over each screen with
+            one checklist.
+          </p>
+        </header>
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+            gap: 40px;
+            flex-grow: 1;
+            min-height: 0;
+          "
+        >
+          <section style="display: flex; flex-direction: column; gap: 16px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">diagnosis</h2>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                border: 2px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 32px minmax(0, 1fr);
+                  gap: 12px;
+                  padding: 14px 16px;
+                  border-bottom: 1px dashed #242424;
+                "
+              >
+                <span style="font-weight: 700">01</span>
+                <div>
+                  <strong>One voice for everything.</strong><br /><span
+                    style="color: rgba(36, 36, 36, 0.7)"
+                    >Inversion, 2px frames and caps are used for structure and for state, so nothing
+                    stands out.</span
+                  >
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 32px minmax(0, 1fr);
+                  gap: 12px;
+                  padding: 14px 16px;
+                  border-bottom: 1px dashed #242424;
+                "
+              >
+                <span style="font-weight: 700">02</span>
+                <div>
+                  <strong>Em compounding.</strong><br /><span style="color: rgba(36, 36, 36, 0.7)"
+                    >Phone root 0.8 × component 0.7 × nested 0.85 pushes text under the micro floor
+                    (≈ 9px and below).</span
+                  >
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 32px minmax(0, 1fr);
+                  gap: 12px;
+                  padding: 14px 16px;
+                  border-bottom: 1px dashed #242424;
+                "
+              >
+                <span style="font-weight: 700">03</span>
+                <div>
+                  <strong>Density without tiers.</strong><br /><span
+                    style="color: rgba(36, 36, 36, 0.7)"
+                    >ui() scales every gap the same, so items within a group sit as close as groups
+                    to each other.</span
+                  >
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 32px minmax(0, 1fr);
+                  gap: 12px;
+                  padding: 14px 16px;
+                "
+              >
+                <span style="font-weight: 700">04</span>
+                <div>
+                  <strong>Always-on chrome.</strong><br /><span style="color: rgba(36, 36, 36, 0.7)"
+                    >Forms, strips and menus all stay expanded on a 390px screen. Nothing waits
+                    behind a toggle.</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <h2 style="margin: 8px 0 0; font-size: 18px; font-weight: 700">per-screen checklist</h2>
+            <ul
+              style="
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                font-size: 13px;
+              "
+            >
+              <li>[ ] inverted blocks: active states only, 0 structural</li>
+              <li>[ ] frame weights in view: 2 at most</li>
+              <li>[ ] smallest text ≥ 11px rendered</li>
+              <li>[ ] every tap target ≥ 44px at UI size M</li>
+              <li>[ ] what is collapsed by default, and why</li>
+              <li>[ ] one display numeral at most</li>
+              <li>[ ] spacing: inside &lt; between &lt; group &lt; section</li>
+            </ul>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">the audit, in pieces</h2>
+
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                border: 2px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 8px 16px;
+                  border-bottom: 2px solid #242424;
+                "
+              >
+                <strong>layer 1 · foundations</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >system-wide · do first</span
+                >
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0">
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>F1</strong> surface tiers &amp; frame weights
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>F2</strong> inversion budget
+                </div>
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>F3</strong> phone type ladder &amp; 11px floor
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>F4</strong> spacing rhythm, four steps
+                </div>
+                <div style="padding: 10px 16px; border-right: 1px dashed #242424">
+                  <strong>F5</strong> 44px tap targets at every UI size
+                </div>
+                <div style="padding: 10px 16px; color: rgba(36, 36, 36, 0.7)">
+                  see: separation toolkit ↓
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                border: 2px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 8px 16px;
+                  border-bottom: 2px solid #242424;
+                "
+              >
+                <strong>layer 2 · controls</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >new or unified components</span
+                >
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0">
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>C1</strong> switch (one toggle, not checkbox + Button--toggle)
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>C2</strong> segmented control (views, periods)
+                </div>
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>C3</strong> disclosure [+] / [-] for secondary blocks
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>C4</strong> section label (replaces inverted strips)
+                </div>
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>C5</strong> list row anatomy at 44px
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>C6</strong> collapsed entry bar · <strong>C11</strong> [x] / (•)
+                </div>
+                <div
+                  style="
+                    padding: 10px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <strong>C7</strong> text field (boxed + line)
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px dashed #242424">
+                  <strong>C8</strong> text area + post toolbar
+                </div>
+                <div style="padding: 10px 16px; border-right: 1px dashed #242424">
+                  <strong>C9</strong> select (styled native)
+                </div>
+                <div style="padding: 10px 16px"><strong>C10</strong> listbox, amount, date</div>
+              </div>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                border: 2px solid #242424;
+                background: #ffffff;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 8px 16px;
+                  border-bottom: 2px solid #242424;
+                "
+              >
+                <strong>layer 3 · screen passes</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >each against the checklist</span
+                >
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(2, minmax(0, 1fr));
+                  gap: 0;
+                  font-size: 13px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S1</strong> nav + log strip</span><span>in pilot</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S2</strong> financial log · entries</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S3</strong> financial log · stats</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S4</strong> social log feed + comment sheet</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S5</strong> home dashboard</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S6</strong> /me + display settings</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S7</strong> notifications</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S8</strong> modals: actions, categories, budget, import</span
+                  ><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S9</strong> create wizard + invites</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S10</strong> login + welcome</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S11</strong> landing page</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span>desktop: social, stats, home</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S12</strong> knick-knacks + gifting</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-bottom: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S13</strong> menu, profiles, share card</span><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-right: 1px dashed #242424;
+                  "
+                >
+                  <span><strong>S14</strong> buddy moments, nudges, toasts, slides</span
+                  ><span>done</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    color: rgba(36, 36, 36, 0.7);
+                  "
+                >
+                  <span>design system: final pass</span><span>done</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1220}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Landing page, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 3560px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+            padding: 0 12px;
+            border-bottom: 1px solid #242424;
+            flex-shrink: 0;
+          "
+        >
+          <strong style="font-size: 15px">moneylogs</strong>
+          <a
+            href="#"
+            style="
+              display: flex;
+              align-items: center;
+              height: 44px;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+            "
+            >sign in</a
+          >
+        </div>
+        <main style="display: flex; flex-direction: column; gap: 36px; padding: 24px 16px 32px">
+          <header style="display: flex; flex-direction: column; gap: 14px; flex-shrink: 0">
+            <h1 style="margin: 0; font-size: 40px; line-height: 1.1; font-weight: 700">
+              moneylogs
+            </h1>
+            <p style="margin: 0">
+              A calm way to keep track of your spending. Log what you spent and why, in any
+              currency, and see where the month went.
+            </p>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Keep it to yourself, or let a few friends follow along — and when you travel together,
+              start a group log for the trip.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 4px">
+              <a
+                href="#"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 48px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                  text-decoration: none;
+                "
+                >create an account</a
+              >
+              <div
+                style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"
+              >
+                <a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 44px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    border: 1px solid #242424;
+                    text-decoration: none;
+                  "
+                  >sign in</a
+                >
+                <button
+                  type="button"
+                  style="
+                    height: 44px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    border: 1px dashed #242424;
+                    background: none;
+                  "
+                >
+                  try without an account
+                </button>
+              </div>
+            </div>
+          </header>
+          <section
+            aria-label="Example: Home"
+            style="display: flex; flex-direction: column; border: 2px solid #242424; flex-shrink: 0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 40px;
+                box-sizing: border-box;
+                padding: 5px 4px;
+                border-bottom: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+              "
+            >
+              <strong
+                style="
+                  margin-left: 8px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 14px;
+                "
+                >Home</strong
+              ><span
+                style="
+                  margin-right: 6px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >example</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; padding: 14px 12px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  border-bottom: 1px solid #242424;
+                "
+              >
+                <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                  now
+                </h3>
+              </div>
+              <a
+                href="#"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  padding: 8px 10px 10px;
+                  border: 4px solid #242424;
+                  background: #ffffff;
+                  font-weight: 400;
+                  text-decoration: none;
+                "
+                ><span style="display: flex; justify-content: space-between; align-items: center"
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >financial · shared</span
+                  ><span
+                    aria-label="2 new entries"
+                    title="2 new entries"
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      padding: 1px 6px 1px 3px;
+                      background: #242424;
+                      color: #f5f3f0;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    ><img
+                      src="/_blob/c935eddd4c3935599a1e1ed79989485c"
+                      alt=""
+                      width="16"
+                      height="16"
+                      style="display: block; flex-shrink: 0; filter: invert(1)"
+                    />2</span
+                  ></span
+                ><strong>Flat 2B</strong
+                ><span style="display: flex; justify-content: space-between; align-items: baseline"
+                  ><strong style="font-size: 18px">1,284.50 CAD</strong
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >3 members</span
+                  ></span
+                ></a
+              ><a
+                href="#"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  padding: 11px 13px 13px;
+                  border: 1px solid #242424;
+                  background: #ffffff;
+                  font-weight: 400;
+                  text-decoration: none;
+                "
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">log group</span
+                ><strong>Lisbon long weekend</strong
+                ><span style="display: flex; justify-content: space-between; align-items: baseline"
+                  ><span>ends in 2 days</span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >4 members</span
+                  ></span
+                ></a
+              >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  border-bottom: 1px solid #242424;
+                "
+              >
+                <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                  coming up
+                </h3>
+              </div>
+              <div style="margin-top: -10px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    min-height: 40px;
+                  "
+                >
+                  <strong>Ski cabin</strong
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >starts in 12 days</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+          <section style="display: flex; flex-direction: column; gap: 4px; flex-shrink: 0">
+            <h2 style="margin: 0 0 6px; font-size: 18px; font-weight: 700">
+              your spending, day to day
+            </h2>
+            <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid #242424">
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>An ongoing tracker</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Log each purchase as it happens, in any currency. Your log has no end date.</span
+                >
+              </li>
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>Categories and budgets</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Sort entries into your own categories and set monthly budgets to keep an eye
+                  on.</span
+                >
+              </li>
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>Stats that are always on</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >See where this month's money went, category by category, whenever you like.</span
+                >
+              </li>
+              <li style="display: flex; flex-direction: column; gap: 2px; padding: 10px 0">
+                <strong>Private until you share it</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >It's yours alone unless you invite someone in.</span
+                >
+              </li>
+            </ul>
+            <p style="margin: 8px 0 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Already tracking somewhere else? Import a CSV from <a href="#">Money Forward ME</a> or
+              <a href="#">YNAB</a> and pick up where you left off.
+            </p>
+          </section>
+          <section
+            aria-label="Example: My spending"
+            style="display: flex; flex-direction: column; border: 2px solid #242424; flex-shrink: 0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 40px;
+                box-sizing: border-box;
+                padding: 5px 4px;
+                border-bottom: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+              "
+            >
+              <strong
+                style="
+                  margin-left: 8px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 14px;
+                "
+                >My spending</strong
+              ><span
+                style="
+                  margin-right: 6px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >example</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; padding: 14px 12px">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div style="display: flex; flex-direction: column; line-height: 1.2">
+                  <strong style="font-size: 24px">642.18 CAD</strong
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >november · 57% of budget</span
+                  >
+                </div>
+                <span aria-hidden="true" style="font-size: 14px">ฅ^•ω•^ฅ</span>
+              </div>
+              <div
+                aria-hidden="true"
+                style="display: flex; height: 12px; border: 1px dashed #242424"
+              >
+                <div style="width: 18%; background: #89afd6"></div>
+                <div style="width: 14%; background: #b27e6c; border-left: 1px solid #242424"></div>
+                <div style="width: 13%; background: #a3c69c; border-left: 1px solid #242424"></div>
+                <div style="width: 12%; background: #a99b69; border-left: 1px solid #242424"></div>
+              </div>
+              <div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    height: 28px;
+                    padding: 0 8px;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                >
+                  <span>today · tue 18 nov</span><span>96.15 CAD</span>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    gap: 0 10px;
+                    padding: 8px 2px;
+                    border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                  "
+                >
+                  <strong>food</strong><strong>9.75</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >Oat latte and a croissant</span
+                  >
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    gap: 0 10px;
+                    padding: 8px 2px;
+                  "
+                >
+                  <strong>groceries</strong><strong>86.40</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)">Weekly shop</span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section style="display: flex; flex-direction: column; gap: 4px; flex-shrink: 0">
+            <h2 style="margin: 0 0 6px; font-size: 18px; font-weight: 700">with friends, gently</h2>
+            <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid #242424">
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>Friends, not followers</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Add people you actually know with a personal invite link. There's no public
+                  feed.</span
+                >
+              </li>
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>Share a log</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Invite a partner or flatmates into a financial log and track the household
+                  together.</span
+                >
+              </li>
+              <li
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  padding: 10px 0;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <strong>Every entry is a post</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Each purchase is a little microblog post. Write a line or a paragraph about why
+                  you bought it, and add a photo if you like. Friends can react or leave a
+                  comment.</span
+                >
+              </li>
+              <li style="display: flex; flex-direction: column; gap: 2px; padding: 10px 0">
+                <strong>Group logs</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                  >Start one for a trip. Particularly open friend groups can keep one going for a
+                  fond, slightly voyeuristic look at each other's lives. Extra fun if you live in
+                  different cities.</span
+                >
+              </li>
+            </ul>
+          </section>
+          <section
+            aria-label="Example: Lisbon long weekend"
+            style="display: flex; flex-direction: column; border: 2px solid #242424; flex-shrink: 0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 40px;
+                box-sizing: border-box;
+                padding: 5px 4px;
+                border-bottom: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+              "
+            >
+              <strong
+                style="
+                  margin-left: 8px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 14px;
+                "
+                >Lisbon long weekend</strong
+              ><span
+                style="
+                  margin-right: 6px;
+                  padding: 0 8px;
+                  background: #f5f3f0;
+                  line-height: 26px;
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >example</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; padding: 14px 12px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  border-bottom: 1px solid #242424;
+                "
+              >
+                <h3 style="margin: 0; padding-bottom: 4px; font-size: 12px; font-weight: 700">
+                  sat 8 nov
+                </h3>
+                <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >86.40 EUR</span
+                >
+              </div>
+              <article
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                  padding: 10px 12px;
+                  border: 1px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                <div style="display: flex; justify-content: space-between">
+                  <strong>Maya</strong
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">9:12</span>
+                </div>
+                <p style="margin: 0; font-size: 13px">
+                  Two pastéis de nata and a bica. Breakfast of champions.
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <strong>6.40 EUR</strong
+                  ><span style="font-size: 13px"
+                    ><span
+                      aria-label="add a reaction"
+                      style="display: inline-flex; align-items: center; margin-right: 14px"
+                      ><img
+                        src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                        alt=""
+                        width="20"
+                        height="20"
+                        style="display: block; flex-shrink: 0" /></span
+                    ><span
+                      aria-label="2 comments"
+                      style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px"
+                      ><img
+                        src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                        alt=""
+                        width="20"
+                        height="20"
+                        style="display: block; flex-shrink: 0"
+                      />2</span
+                    ></span
+                  >
+                </div>
+              </article>
+              <article
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                  padding: 10px 12px;
+                  border: 1px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                <div style="display: flex; justify-content: space-between">
+                  <strong>Theo</strong
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">13:47</span>
+                </div>
+                <p style="margin: 0; font-size: 13px">
+                  Tram 28 was packed so we split a tuk-tuk up to the castle. Worth it for the view.
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <strong>80 EUR</strong
+                  ><span style="font-size: 13px"
+                    ><span
+                      aria-label="add a reaction"
+                      style="display: inline-flex; align-items: center; margin-right: 14px"
+                      ><img
+                        src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                        alt=""
+                        width="20"
+                        height="20"
+                        style="display: block; flex-shrink: 0" /></span
+                    ><span
+                      aria-label="4 comments"
+                      style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px"
+                      ><img
+                        src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                        alt=""
+                        width="20"
+                        height="20"
+                        style="display: block; flex-shrink: 0"
+                      />4</span
+                    ></span
+                  >
+                </div>
+              </article>
+            </div>
+          </section>
+          <section style="display: flex; flex-direction: column; gap: 14px; flex-shrink: 0">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">how it works</h2>
+            <ol
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                margin: 0;
+                padding: 0;
+                list-style: none;
+              "
+            >
+              <li
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 12px;
+                  align-items: start;
+                "
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >1</span
+                ><span style="display: flex; flex-direction: column; gap: 2px"
+                  ><strong>Start your log</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >An ongoing financial log, just for you. Bring your history from another app if
+                    you have one.</span
+                  ></span
+                >
+              </li>
+              <li
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 12px;
+                  align-items: start;
+                "
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >2</span
+                ><span style="display: flex; flex-direction: column; gap: 2px"
+                  ><strong>Post as you go</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >What you spent, in any currency, and why.</span
+                  ></span
+                >
+              </li>
+              <li
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 12px;
+                  align-items: start;
+                "
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >3</span
+                ><span style="display: flex; flex-direction: column; gap: 2px"
+                  ><strong>Bring people in, if you like</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >Share a log with your household, or start a group log for a trip or a no-spend
+                    month.</span
+                  ></span
+                >
+              </li>
+              <li
+                style="
+                  display: grid;
+                  grid-template-columns: 28px minmax(0, 1fr);
+                  gap: 12px;
+                  align-items: start;
+                "
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >4</span
+                ><span style="display: flex; flex-direction: column; gap: 2px"
+                  ><strong>See how it adds up</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >Monthly stats and budgets for your own spending, and totals and hot posts when
+                    a group log ends.</span
+                  ></span
+                >
+              </li>
+            </ol>
+          </section>
+          <footer
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              padding-top: 16px;
+              border-top: 1px dotted #242424;
+              flex-shrink: 0;
+            "
+          >
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Got an invite link? Open it, sign up, and you'll go straight to it.
+            </p>
+            <div style="display: flex; gap: 8px">
+              <a
+                href="#"
+                style="
+                  flex-grow: 1;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 48px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                  text-decoration: none;
+                "
+                >create an account</a
+              ><a
+                href="#"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 48px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 1px solid #242424;
+                  text-decoration: none;
+                "
+                >about</a
+              >
+            </div>
+          </footer>
+        </main>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":3560}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

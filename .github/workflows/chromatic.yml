@@ -6,6 +6,7 @@ on:
     branches:
       - develop
       - main
+      - epic/ui-overhaul
 permissions:
   contents: read
 jobs:

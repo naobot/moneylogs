@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>No-spend days in the entry list, phone</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 16px;
+            min-height: 0;
+            flex-grow: 1;
+            overflow: hidden;
+          "
+        >
+          <div style="display: flex; flex-direction: column">
+            <header
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 44px;
+                box-sizing: border-box;
+                padding: 6px 4px;
+                border: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+                flex-shrink: 0;
+              "
+            >
+              <h1
+                style="
+                  margin: 0 0 0 10px;
+                  padding: 0 10px;
+                  background: #f5f3f0;
+                  font-size: 16px;
+                  line-height: 28px;
+                  font-weight: 700;
+                "
+              >
+                household
+              </h1>
+            </header>
+            <div
+              role="tablist"
+              aria-label="View"
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                border: 2px solid #242424;
+                border-top: 0;
+              "
+            >
+              <a
+                href="#"
+                role="tab"
+                aria-selected="true"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  background: #242424;
+                  color: #f5f3f0;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >entries</a
+              ><a
+                href="#"
+                role="tab"
+                aria-selected="false"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >stats</a
+              >
+            </div>
+          </div>
+          <section style="position: relative; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <button
+                type="button"
+                aria-label="Previous month"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 16px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ‹</button
+              ><span style="font-weight: 700">november 2026</span
+              ><button
+                type="button"
+                aria-label="Next month"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 16px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ›
+              </button>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; gap: 12px"
+            >
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <strong
+                  style="font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums"
+                  >¥ 48,210</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >62% of ¥ 78,000 · 4 days left</span
+                >
+              </div>
+              <button
+                type="button"
+                onClick="{{poke}}"
+                aria-label="Budget buddy"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-width: 96px;
+                  height: 56px;
+                  padding: 0 6px;
+                  font: inherit;
+                  font-size: 16px;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                  white-space: nowrap;
+                "
+              >
+                {{face}}
+              </button>
+            </div>
+            <sc-if value="{{cheer}}" hint-placeholder-val="{{ false }}"
+              ><div
+                role="dialog"
+                aria-label="Budget buddy says"
+                style="
+                  position: absolute;
+                  right: 0;
+                  top: 118px;
+                  z-index: 2;
+                  width: 230px;
+                  box-sizing: border-box;
+                  padding: 10px 14px 12px;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                  border-radius: 10px;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -13px;
+                    right: 40px;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-bottom: 13px solid #242424;
+                  "
+                ></span>
+                <span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -11px;
+                    right: 41px;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-bottom: 12px solid #ffffff;
+                  "
+                ></span>
+                <p style="margin: 0; font-size: 13px">
+                  a whole no-spend day! the wallet gets a day off ♡
+                </p>
+              </div></sc-if
+            >
+            <div aria-hidden="true" style="display: flex; height: 10px; border: 1px dashed #242424">
+              <div style="width: 38%; background: #89afd6"></div>
+              <div style="width: 24%; background: #b27e6c; border-left: 1px solid #242424"></div>
+            </div>
+          </section>
+          <section
+            aria-label="Friday 27 November"
+            style="display: flex; flex-direction: column; gap: 6px"
+          >
+            <h2
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                height: 30px;
+                padding: 0 8px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+            >
+              <span>today · fri 27 nov</span><span>¥ 0</span>
+            </h2>
+            <sc-if value="{{tAsk}}" hint-placeholder-val="{{ true }}"
+              ><button
+                type="button"
+                onClick="{{tConfirm}}"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  width: 100%;
+                  height: 44px;
+                  padding: 0 10px;
+                  font: inherit;
+                  font-size: 13px;
+                  color: #242424;
+                  text-align: left;
+                  background: #f5f3f0;
+                  border: 1px solid #242424;
+                "
+              >
+                <span aria-hidden="true" style="font-weight: 700">[ ]</span>nothing spent today
+              </button></sc-if
+            >
+            <sc-if value="{{tDone}}" hint-placeholder-val="{{ false }}"
+              ><p
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  height: 44px;
+                  margin: 0;
+                  padding: 0 10px;
+                  box-sizing: border-box;
+                  font-size: 13px;
+                  border: 1px dotted #242424;
+                "
+              >
+                <strong aria-hidden="true">✓</strong>no-spend day
+              </p></sc-if
+            >
+          </section>
+          <section
+            aria-label="Thursday 26 November"
+            style="display: flex; flex-direction: column; gap: 6px"
+          >
+            <h2
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                padding-bottom: 4px;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <span>thu 26 nov</span><span>¥ 0</span>
+            </h2>
+            <sc-if value="{{yAsk}}" hint-placeholder-val="{{ true }}"
+              ><button
+                type="button"
+                onClick="{{yConfirm}}"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  width: 100%;
+                  height: 44px;
+                  padding: 0 10px;
+                  font: inherit;
+                  font-size: 13px;
+                  color: #242424;
+                  text-align: left;
+                  background: #f5f3f0;
+                  border: 1px solid #242424;
+                "
+              >
+                <span aria-hidden="true" style="font-weight: 700">[ ]</span>nothing spent on thu 26
+              </button></sc-if
+            >
+            <sc-if value="{{yDone}}" hint-placeholder-val="{{ false }}"
+              ><p
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  height: 44px;
+                  margin: 0;
+                  padding: 0 10px;
+                  box-sizing: border-box;
+                  font-size: 13px;
+                  border: 1px dotted #242424;
+                "
+              >
+                <strong aria-hidden="true">✓</strong>no-spend day
+              </p></sc-if
+            >
+          </section>
+          <section aria-label="Wednesday 25 November" style="display: flex; flex-direction: column">
+            <h2
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                padding-bottom: 4px;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <span>wed 25 nov</span><span>¥ 7,760</span>
+            </h2>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 44px;
+                column-gap: 8px;
+                align-items: center;
+                padding: 6px 0 6px 2px;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <div style="display: flex; flex-direction: column">
+                <strong>groceries</strong
+                ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)">weekly shop</span>
+              </div>
+              <strong style="font-variant-numeric: tabular-nums">¥ 6,240</strong
+              ><button
+                type="button"
+                aria-label="Actions for groceries"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ⋯
+              </button>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 44px;
+                column-gap: 8px;
+                align-items: center;
+                padding: 6px 0 6px 2px;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <div style="display: flex; flex-direction: column"><strong>coffee</strong></div>
+              <strong style="font-variant-numeric: tabular-nums">¥ 520</strong
+              ><button
+                type="button"
+                aria-label="Actions for coffee"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ⋯
+              </button>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 44px;
+                column-gap: 8px;
+                align-items: center;
+                padding: 6px 0 6px 2px;
+              "
+            >
+              <div style="display: flex; flex-direction: column"><strong>transit</strong></div>
+              <strong style="font-variant-numeric: tabular-nums">¥ 1,000</strong
+              ><button
+                type="button"
+                aria-label="Actions for transit"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ⋯
+              </button>
+            </div>
+          </section>
+          <section
+            aria-label="Tuesday 24 November"
+            style="display: flex; flex-direction: column; gap: 6px"
+          >
+            <h2
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                padding-bottom: 4px;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <span>tue 24 nov</span><span>¥ 0</span>
+            </h2>
+            <p
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                height: 44px;
+                margin: 0;
+                padding: 0 10px;
+                box-sizing: border-box;
+                font-size: 13px;
+                border: 1px dotted #242424;
+              "
+            >
+              <strong aria-hidden="true">✓</strong>no-spend day
+            </p>
+          </section>
+        </main>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"start": {"editor": "enum", "options": ["evening", "confirmed"], "default": "evening"}, "$preview": {"width": 390, "height": 844}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) { super(props); this.state = { t: false, y: false }; }
+        renderVals() {
+          const st = this.state || {};
+          const t = !!st.t || this.props.start === 'confirmed';
+          const y = !!st.y;
+          return {
+            tAsk: !t, tDone: t, yAsk: !y, yDone: y, cheer: t && !st.quiet,
+            face: t ? 'ฅ^>ω<^ฅ' : 'ฅ^•ω•^ฅ',
+            tConfirm: () => this.setState({ t: true, quiet: false }), 
+            yConfirm: () => this.setState({ y: true, quiet: true }), 
+            poke: () => this.setState({ quiet: !st.quiet })
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

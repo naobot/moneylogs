@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Social log, proposed desktop layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1440px;
+          height: 900px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 15px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 52px;
+            padding: 0 16px;
+            border-bottom: 1px solid #242424;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex">
+            <a
+              href="#"
+              aria-label="Home"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="My preferences"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="Notifications"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 6px;
+              align-items: center;
+              padding-left: 16px;
+              border-left: 1px solid #242424;
+              font-size: 14px;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              aria-current="page"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px 4px 7px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-left: auto">
+            <strong style="font-size: 16px">moneylogs</strong>
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-haspopup="menu"
+              style="
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />
+            </button>
+          </div>
+        </nav>
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 16px 24px 0;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 48px;
+              box-sizing: border-box;
+              padding: 7px 5px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                gap: 14px;
+                margin-left: 12px;
+                padding: 0 12px;
+                background: #f5f3f0;
+                line-height: 30px;
+              "
+            >
+              <h1 style="margin: 0; font-size: 18px; font-weight: 700">trip to osaka</h1>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >log group · 4 members</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin: -7px 8px -7px 0;
+                padding: 0 6px;
+                height: 44px;
+                background: #f5f3f0;
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 36px;
+                  padding: 0 10px;
+                  font: inherit;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/216a6954baa8ee2b003ccf5c632b9e52"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />manage</button
+              ><button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 32px;
+                  padding: 0 12px 0 8px;
+                  font: inherit;
+                  color: #242424;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                "
+              >
+                <img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />invite
+              </button>
+            </div>
+          </header>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 260px minmax(0, 1fr) 340px;
+              gap: 32px;
+              min-height: 0;
+            "
+          >
+            <aside style="display: flex; flex-direction: column; gap: 18px">
+              <div style="display: flex; flex-direction: column; border: 2px solid #242424">
+                <a
+                  href="#"
+                  aria-current="page"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 44px;
+                    padding: 0 14px;
+                    background: #242424;
+                    color: #f5f3f0;
+                  "
+                  >digest</a
+                ><a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 44px;
+                    padding: 0 14px;
+                    border-top: 2px solid #242424;
+                  "
+                  >summary</a
+                >
+              </div>
+              <section style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h2 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    members
+                  </h2>
+                  <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >4 of 6</span
+                  >
+                </div>
+                <div>
+                  <a
+                    href="#"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 48px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                      font-weight: 400;
+                    "
+                    ><span
+                      aria-hidden="true"
+                      style="
+                        flex-shrink: 0;
+                        width: 32px;
+                        height: 32px;
+                        box-sizing: border-box;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #242424;
+                        background: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                      >M</span
+                    ><strong style="flex-grow: 1">mika</strong></a
+                  ><a
+                    href="#"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 48px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                      font-weight: 400;
+                    "
+                    ><span
+                      aria-hidden="true"
+                      style="
+                        flex-shrink: 0;
+                        width: 32px;
+                        height: 32px;
+                        box-sizing: border-box;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 4px solid #242424;
+                        background: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                      >K</span
+                    ><strong style="flex-grow: 1">ken</strong
+                    ><span
+                      aria-label="2 new posts"
+                      title="2 new posts"
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        padding: 1px 6px 1px 3px;
+                        background: #242424;
+                        color: #f5f3f0;
+                        font-size: 12px;
+                        font-weight: 700;
+                      "
+                      ><img
+                        src="/_blob/c202937d8b02eaf83dec4c44df7474f6"
+                        alt=""
+                        width="16"
+                        height="16"
+                        style="display: block; flex-shrink: 0; filter: invert(1)"
+                      />2</span
+                    ></a
+                  ><a
+                    href="#"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 48px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                      font-weight: 400;
+                    "
+                    ><span
+                      aria-hidden="true"
+                      style="
+                        flex-shrink: 0;
+                        width: 32px;
+                        height: 32px;
+                        box-sizing: border-box;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #242424;
+                        background: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                      >N</span
+                    ><strong style="flex-grow: 1">nao</strong
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">you</span></a
+                  ><a
+                    href="#"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 48px;
+                      font-weight: 400;
+                    "
+                    ><span
+                      aria-hidden="true"
+                      style="
+                        flex-shrink: 0;
+                        width: 32px;
+                        height: 32px;
+                        box-sizing: border-box;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #242424;
+                        background: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                      >S</span
+                    ><strong style="flex-grow: 1">sora</strong></a
+                  >
+                </div>
+              </section>
+            </aside>
+            <main
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                min-width: 0;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: baseline;
+                  font-size: 13px;
+                "
+              >
+                <span style="color: rgba(36, 36, 36, 0.7)">day 3 of 7 · ends sun 29 nov</span
+                ><strong>¥ 31,400 so far</strong>
+              </div>
+              <button
+                type="button"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  height: 48px;
+                  padding: 0 16px;
+                  font: inherit;
+                  border: 1px dashed #242424;
+                  background: #ffffff;
+                  flex-shrink: 0;
+                "
+              >
+                <strong>[+] new post</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >thu 26 nov · osaka</span
+                >
+              </button>
+              <section style="display: flex; flex-direction: column; gap: 12px">
+                <h2
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin: 0;
+                    height: 32px;
+                    padding: 0 12px;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 13px;
+                    font-weight: 700;
+                  "
+                >
+                  <span>today · thu 26 nov</span><span>¥ 8,200</span>
+                </h2>
+                <article
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding: 11px 13px;
+                    border: 2px solid #242424;
+                    background: #ffffff;
+                  "
+                >
+                  <div style="display: flex; justify-content: space-between; align-items: center">
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span
+                        aria-hidden="true"
+                        style="
+                          flex-shrink: 0;
+                          width: 30px;
+                          height: 30px;
+                          box-sizing: border-box;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          border: 1px solid #242424;
+                          background: #ffffff;
+                          font-size: 13px;
+                          font-weight: 700;
+                        "
+                        >M</span
+                      >
+                      <div style="display: flex; flex-direction: column; line-height: 1.3">
+                        <strong>mika</strong
+                        ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                          >19:40 · shinsekai</span
+                        >
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <button
+                        type="button"
+                        aria-label="Pinned"
+                        aria-pressed="true"
+                        title="pinned · unpin"
+                        style="
+                          width: 36px;
+                          height: 36px;
+                          padding: 0;
+                          display: inline-flex;
+                          align-items: center;
+                          justify-content: center;
+                          background: #242424;
+                          border: 0;
+                        "
+                      >
+                        <img
+                          src="/_blob/22eba59c5a378cd8b998dc5035f34fac"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0; filter: invert(1)"
+                        /></button
+                      ><button
+                        type="button"
+                        aria-label="Edit"
+                        style="
+                          width: 36px;
+                          height: 36px;
+                          padding: 0;
+                          display: inline-flex;
+                          align-items: center;
+                          justify-content: center;
+                          background: none;
+                          border: 0;
+                        "
+                      >
+                        <img
+                          src="/_blob/d3d427c7c4ee913265e8bd3e79b9e908"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  <p style="margin: 0">Kushikatsu, split four ways. No double dipping.</p>
+                  <div style="display: flex; justify-content: space-between; align-items: center">
+                    <strong style="font-size: 17px">¥ 4,800</strong
+                    ><span style="font-size: 13px; font-weight: 700"
+                      ><span
+                        aria-label="add a reaction"
+                        style="display: inline-flex; align-items: center; margin-right: 14px"
+                        ><img
+                          src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0" /></span
+                      ><span
+                        aria-label="2 comments"
+                        style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px"
+                        ><img
+                          src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0"
+                        />2</span
+                      ></span
+                    >
+                  </div>
+                </article>
+                <article
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding: 12px 14px;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                  "
+                >
+                  <div style="display: flex; justify-content: space-between; align-items: center">
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span
+                        aria-hidden="true"
+                        style="
+                          flex-shrink: 0;
+                          width: 30px;
+                          height: 30px;
+                          box-sizing: border-box;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          border: 1px solid #242424;
+                          background: #ffffff;
+                          font-size: 13px;
+                          font-weight: 700;
+                        "
+                        >K</span
+                      >
+                      <div style="display: flex; flex-direction: column; line-height: 1.3">
+                        <strong>ken</strong
+                        ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                          >15:12 · dotonbori</span
+                        >
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <button
+                        type="button"
+                        aria-label="Pin"
+                        style="
+                          width: 36px;
+                          height: 36px;
+                          padding: 0;
+                          display: inline-flex;
+                          align-items: center;
+                          justify-content: center;
+                          background: none;
+                          border: 0;
+                        "
+                      >
+                        <img
+                          src="/_blob/22eba59c5a378cd8b998dc5035f34fac"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0"
+                        /></button
+                      ><button
+                        type="button"
+                        aria-label="Edit"
+                        style="
+                          width: 36px;
+                          height: 36px;
+                          padding: 0;
+                          display: inline-flex;
+                          align-items: center;
+                          justify-content: center;
+                          background: none;
+                          border: 0;
+                        "
+                      >
+                        <img
+                          src="/_blob/d3d427c7c4ee913265e8bd3e79b9e908"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    role="img"
+                    aria-label="Photo placeholder"
+                    style="
+                      height: 150px;
+                      border: 1px solid #242424;
+                      background: radial-gradient(#242424 0.6px, transparent 0.7px) 0 0 / 4px 4px;
+                    "
+                  ></div>
+                  <p style="margin: 0">Takoyaki stand with the giant octopus sign.</p>
+                  <div style="display: flex; justify-content: space-between; align-items: center">
+                    <strong style="font-size: 17px">¥ 1,200</strong
+                    ><span style="font-size: 13px"
+                      ><span
+                        aria-label="add a reaction"
+                        style="display: inline-flex; align-items: center; margin-right: 14px"
+                        ><img
+                          src="/_blob/98f8b61ff41971a1edae38053b269e34"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0" /></span
+                      ><span style="display: inline-flex; align-items: center; gap: 4px"
+                        ><span
+                          style="
+                            position: absolute;
+                            width: 1px;
+                            height: 1px;
+                            overflow: hidden;
+                            clip: rect(0, 0, 0, 0);
+                          "
+                          >comment</span
+                        ><img
+                          src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                          alt=""
+                          width="20"
+                          height="20"
+                          style="display: block; flex-shrink: 0"
+                        /><span aria-hidden="true" style="font-size: 13px">+</span></span
+                      ></span
+                    >
+                  </div>
+                </article>
+              </section>
+            </main>
+            <aside
+              aria-label="Comments on mika's post"
+              style="display: flex; flex-direction: column; gap: 14px; padding-top: 144px"
+            >
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 30px minmax(0, 1fr);
+                  gap: 16px;
+                  align-items: start;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    flex-shrink: 0;
+                    width: 30px;
+                    height: 30px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-size: 13px;
+                    font-weight: 700;
+                  "
+                  >N</span
+                >
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    padding: 8px 10px;
+                    position: relative;
+                    border: 1px solid #242424;
+                    border-radius: 10px;
+                    background: #ffffff;
+                    font-size: 14px;
+                  "
+                >
+                  <span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -13px;
+                      top: 12px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 13px 13px 0;
+                      border-color: transparent #242424 transparent transparent;
+                    "
+                  ></span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -11px;
+                      top: 13px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 12px 12px 0;
+                      border-color: transparent #ffffff transparent transparent;
+                    "
+                  ></span
+                  ><span style="font-size: 12px"
+                    ><strong>nao</strong>
+                    <span style="color: rgba(36, 36, 36, 0.7)">· 19:52</span></span
+                  ><span>the beef one was the best one</span>
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 30px minmax(0, 1fr);
+                  gap: 16px;
+                  align-items: start;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    flex-shrink: 0;
+                    width: 30px;
+                    height: 30px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-size: 13px;
+                    font-weight: 700;
+                  "
+                  >S</span
+                >
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    padding: 8px 10px;
+                    position: relative;
+                    border: 1px solid #242424;
+                    border-radius: 10px;
+                    background: #ffffff;
+                    font-size: 14px;
+                  "
+                >
+                  <span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -13px;
+                      top: 12px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 13px 13px 0;
+                      border-color: transparent #242424 transparent transparent;
+                    "
+                  ></span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      position: absolute;
+                      left: -11px;
+                      top: 13px;
+                      width: 0;
+                      height: 0;
+                      border-style: solid;
+                      border-width: 0 12px 12px 0;
+                      border-color: transparent #ffffff transparent transparent;
+                    "
+                  ></span
+                  ><span style="font-size: 12px"
+                    ><strong>sora</strong>
+                    <span style="color: rgba(36, 36, 36, 0.7)">· 20:05</span></span
+                  ><span>someone double dipped. it was ken.</span>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  border: 1px dashed #242424;
+                  background: #ffffff;
+                "
+              >
+                <textarea
+                  rows="3"
+                  placeholder="add a comment"
+                  aria-label="Add a comment"
+                  style="
+                    padding: 10px 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 0;
+                    resize: none;
+                    background: transparent;
+                  "
+                ></textarea>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 4px 4px 4px 12px;
+                    border-top: 1px dashed rgba(36, 36, 36, 0.3);
+                    font-size: 12px;
+                    color: rgba(36, 36, 36, 0.7);
+                  "
+                >
+                  <span>markdown ok</span
+                  ><button
+                    type="button"
+                    style="
+                      height: 32px;
+                      padding: 0 12px;
+                      font: inherit;
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                      color: #242424;
+                      border: 2px solid #242424;
+                      background: #ffffff;
+                    "
+                  >
+                    send
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>
