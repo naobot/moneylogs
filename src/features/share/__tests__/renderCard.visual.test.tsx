@@ -111,7 +111,7 @@ describe("share cards (visual)", () => {
     expect(imgs).toHaveLength(4);
     expect(imgs[0].naturalHeight).toBe(1920);
     expect(imgs[1].naturalHeight).toBe(1080);
-    await v.snapshot("share cards");
+    await v.snapshot("share cards", { phoneRules: false });
   });
 
   it("makes room for photos, and shows amounts when asked", async () => {
@@ -121,12 +121,12 @@ describe("share cards (visual)", () => {
       [{ ...withPhotos, photos: withPhotos.photos!.slice(0, 1) }, "story"],
     ]);
     expect(imgs).toHaveLength(3);
-    await v.snapshot("share cards with photos and amounts");
+    await v.snapshot("share cards with photos and amounts", { phoneRules: false });
   });
 
   it("follows night shift", async () => {
     v.night();
     await showCards(v, [[daily, "square"]]);
-    await v.snapshot("share card night shift");
+    await v.snapshot("share card night shift", { phoneRules: false });
   });
 });

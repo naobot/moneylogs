@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 .NotificationsSection__digest {
   display: flex;
   align-items: center;
@@ -8,7 +9,7 @@
 
 .NotificationsSection__hint {
   margin: var(--space-2) 0 var(--space-4);
-  font-size: 0.85em;
+  font-size: type-floor(0.85em);
   color: var(--ink-muted);
 }
 

@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 // Friend picker for log invites (FriendPicker.tsx). Name left, checkbox right, like the
 // /me friends list.
 .FriendPicker {
@@ -31,7 +32,7 @@
   }
 
   &__status {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 

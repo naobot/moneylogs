@@ -49,12 +49,12 @@
     background-color: var(--paper);
 
     .Modal__header {
-      font-size: 0.8em;
+      font-size: type-floor(0.8em);
     }
 
     &__tag {
       padding: 0 6px;
-      font-size: 0.85em;
+      font-size: type-floor(0.85em);
       text-transform: lowercase;
     }
 
@@ -143,7 +143,7 @@
 
       p {
         margin: 0;
-        font-size: 0.9em;
+        font-size: type-floor(0.9em);
         color: var(--ink-muted);
       }
     }

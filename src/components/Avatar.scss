@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 // A user's 30×30 pixel avatar, or their initial in a hairline square when none is drawn.
 .Avatar {
   display: inline-block;
@@ -35,7 +36,7 @@
   }
 
   &--empty#{&}--15 {
-    font-size: 9px;
+    font-size: type-floor(9px);
   }
 
   &--empty#{&}--30 {
