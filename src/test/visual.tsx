@@ -92,6 +92,11 @@ export const useVisualHarness = () => {
     await archiveFonts();
     window.localStorage.clear();
     container = document.createElement("div");
+    // The app mounts in #root, which sets the phone root size (14px under 600px), so
+    // scenes render at the sizes the app does.
+    container.id = "root";
+    // #root is a flex row; stack the scene so it takes the full width, as before.
+    container.style.flexDirection = "column";
     // <body> is a flex row; without this the container grows to its content and runs
     // past a phone's width instead of wrapping like the app does.
     container.style.width = "100%";
