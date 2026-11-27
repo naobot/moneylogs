@@ -1,0 +1,91 @@
+@use "@/states" as *;
+
+// Section label (design-system SectionLabel, 2026-11 audit): a bold 13px lowercase name
+// on a 1px solid ink rule; a muted count after it; a total or a 44px caps text action at
+// the right. Spacing between sections is the page's (--gap-section); this is the label.
+.SectionLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--gap-between);
+  min-width: 0;
+  border-bottom: var(--border-hairline) solid var(--ink);
+  color: var(--ink);
+
+  &__name {
+    min-width: 0;
+    margin: 0;
+    padding-bottom: var(--gap-inside);
+    font-size: var(--phone-small);
+    font-weight: 700;
+    line-height: 1.4;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__count {
+    font-weight: 400;
+    color: var(--ink-muted);
+  }
+
+  // A total (a day header's ¥ 6,900): bold, tabular, on the label's baseline.
+  &__aside {
+    flex-shrink: 0;
+    padding-bottom: var(--gap-inside);
+    font-size: var(--phone-caption);
+    font-weight: 700;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+
+    // An action fills the aside to the rule, so it's 44px tall from the rule up.
+    &:has(.SectionLabel__action) {
+      padding-bottom: 0;
+    }
+  }
+
+  // 44px tall to tap, with its word on the name's baseline above the rule.
+  &__action {
+    display: inline-flex;
+    align-items: flex-end;
+    min-height: var(--tap-target);
+    padding: 0 var(--gap-between) var(--gap-inside);
+    margin-right: calc(-1 * var(--gap-between));
+    font: inherit;
+    font-size: var(--phone-caption);
+    line-height: 1.4;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    @include hover('&:focus-visible, &:active, &[aria-expanded="true"]') {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
+    }
+  }
+
+  // Today's day header: the one black bar per list.
+  &--today {
+    align-items: center;
+    min-height: 30px;
+    padding: 0 8px;
+    border-bottom: 0;
+    background: var(--inverse-surface);
+    color: var(--inverse-ink);
+
+    .SectionLabel__name,
+    .SectionLabel__aside {
+      padding-bottom: 0;
+      font-size: var(--phone-caption);
+    }
+
+    .SectionLabel__count {
+      color: inherit;
+    }
+  }
+}
