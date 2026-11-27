@@ -37,9 +37,6 @@
     border: 0;
     border-right: var(--segmented-line) solid var(--ink);
     text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     cursor: pointer;
 
     &:last-child {
@@ -75,6 +72,14 @@
         outline-color: var(--inverse-ink);
       }
     }
+  }
+
+  // Long labels are cut short here, not on the option, whose ::after must overflow it.
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   &--primary &__option {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { act, ReactNode } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { getByRole, queryByText } from "@testing-library/dom";
+import { getByRole, queryByRole, queryByText } from "@testing-library/dom";
 import { MemoryRouter } from "react-router-dom";
 import Segmented from "@/components/Segmented";
 import Disclosure from "@/components/Disclosure";
@@ -69,8 +69,12 @@ describe("Segmented", () => {
         ]}
       />,
     );
-    expect(getByRole(container, "link", { name: "stats" })).toHaveAttribute("aria-current", "page");
-    expect(getByRole(container, "link", { name: "entries" })).not.toHaveAttribute("aria-current");
+    // The page you're on is marked, and isn't a link back to itself.
+    const current = container.querySelector("[aria-current='page']");
+    expect(current).toHaveTextContent("stats");
+    expect(current?.tagName).toBe("SPAN");
+    expect(queryByRole(container, "link", { name: "stats" })).toBeNull();
+    expect(getByRole(container, "link", { name: "entries" })).toHaveAttribute("href", "/l/abc");
   });
 
   it("names glyph-like options by their aria label", () => {

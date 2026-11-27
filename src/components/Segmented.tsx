@@ -54,17 +54,22 @@ const Segmented = <Id extends string>({
         className: cx("Segmented__option", { "Segmented__option--selected": selected }),
         "aria-label": option.ariaLabel,
       };
-      return option.to ? (
-        <Link
-          key={option.id}
-          to={option.to}
-          aria-current={selected ? "page" : undefined}
-          onClick={() => onChange?.(option.id)}
-          {...shared}
-        >
-          {option.label}
-        </Link>
-      ) : (
+      // The label in its own box, so cutting a long one short doesn't clip the option's
+      // grown hit area.
+      const label = <span className="Segmented__label">{option.label}</span>;
+      if (option.to) {
+        // The page you're on isn't a link to itself: chosen means no longer pressable.
+        return selected ? (
+          <span key={option.id} aria-current="page" {...shared}>
+            {label}
+          </span>
+        ) : (
+          <Link key={option.id} to={option.to} onClick={() => onChange?.(option.id)} {...shared}>
+            {label}
+          </Link>
+        );
+      }
+      return (
         <button
           key={option.id}
           type="button"
@@ -74,7 +79,7 @@ const Segmented = <Id extends string>({
           }}
           {...shared}
         >
-          {option.label}
+          {label}
         </button>
       );
     })}

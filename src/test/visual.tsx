@@ -157,9 +157,53 @@ export const stolenTaps = (root: Element): string[] => {
 let currentContainer: HTMLDivElement | undefined;
 
 /**
+ * Controls whose grown hit area doesn't reach past their own box: something clips it
+ * (an `overflow: hidden` on the control or a scrolling row around it). Samples just
+ * outside each edge the area should cover; a tap there that lands on another control is
+ * stolenTaps' business, not this.
+ */
+export const clippedTapAreas = (root: Element): string[] => {
+  const found = new Set<string>();
+  const controls = Array.from(root.querySelectorAll(INTERACTIVE));
+  for (const control of controls) {
+    const after = getComputedStyle(control, "::after");
+    if (after.content === "none" || after.position !== "absolute") continue;
+    const box = control.getBoundingClientRect();
+    if (box.width === 0 || box.height === 0) continue;
+    const w = parseFloat(after.width) || 0;
+    const h = parseFloat(after.height) || 0;
+    const cx = box.left + box.width / 2;
+    const cy = box.top + box.height / 2;
+    // Under an open modal or sheet: not reachable at all, so nothing to clip.
+    const atCentre = document.elementFromPoint(cx, cy);
+    if (atCentre && !control.contains(atCentre)) continue;
+    const points: [number, number][] = [];
+    if (h > box.height + 1) points.push([cx, box.top - 1], [cx, box.bottom + 1]);
+    if (w > box.width + 1) points.push([box.left - 1, cy], [box.right + 1, cy]);
+    for (const [x, y] of points) {
+      if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) continue;
+      const hit = document.elementFromPoint(x, y);
+      if (!hit || control.contains(hit)) continue;
+      if (controls.some((other) => other !== control && other.contains(hit))) continue;
+      // Known: a modal's content box scrolls (overflow-y: auto), so it clips the buttons
+      // at its edges. The Modal rework (docs/design PLAN item 8: bottom sheet, pinned
+      // footer) gives them room; until then this one clip isn't reported.
+      const modal = control.closest(".Modal__content");
+      if (modal && !modal.contains(hit)) continue;
+      if (hit.closest(".Modal__footer, .Modal__header") && modal?.contains(hit)) continue;
+      found.add(
+        `${describeElement(control)} "${control.textContent?.trim().slice(0, 12)}" (${x < box.left ? "left" : x > box.right ? "right" : y < box.top ? "top" : "bottom"} edge lands on ${describeElement(hit)})`,
+      );
+      break;
+    }
+  }
+  return [...found];
+};
+
+/**
  * The 2026-11 phone rules, checked at Text size M · UI size M on a phone: no text under
- * the type floor (Text size S is the reader's own choice to go smaller), and no control's
- * grown hit area taking taps from another control.
+ * the type floor (Text size S is the reader's own choice to go smaller), no control's
+ * grown hit area taking taps from another control, and none clipped short.
  */
 const assertPhoneRules = (scene: string) => {
   const textSize = document.documentElement.dataset.textSize ?? "m";
@@ -170,6 +214,7 @@ const assertPhoneRules = (scene: string) => {
   const problems = [
     ...roots.flatMap(textBelowFloor).map((p) => `text under ${TYPE_FLOOR_PX}px: ${p}`),
     ...roots.flatMap(stolenTaps).map((p) => `tap area overlaps a control: ${p}`),
+    ...roots.flatMap(clippedTapAreas).map((p) => `tap area is clipped: ${p}`),
   ];
   if (problems.length) {
     throw new Error(`"${scene}" breaks the phone rules:\n  ${problems.join("\n  ")}`);

@@ -100,6 +100,20 @@ describe("Segmented + Disclosure (visual)", () => {
     await v.sizes("disclosures");
   });
 
+  it("lets a tap just outside a segment still reach it (a 44px target)", async () => {
+    v.render(<Controls />);
+    await v.viewport({ width: 390, height: 844 });
+    for (const option of v.container.querySelectorAll<HTMLElement>(".Segmented__option")) {
+      const box = option.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      // A segment is 36 or 40px; its hit area reaches 44px, 2-4px past each edge.
+      for (const y of [box.top - 1, box.bottom + 1]) {
+        const hit = document.elementFromPoint(x, y);
+        expect(option.contains(hit), `${option.textContent} at y=${y}`).toBe(true);
+      }
+    }
+  });
+
   it("themes both in night shift", async () => {
     v.night();
     v.render(
