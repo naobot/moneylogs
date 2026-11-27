@@ -48,8 +48,36 @@
     border: var(--border-rule) solid var(--ink);
     background-color: var(--paper);
 
-    .Modal__header {
+    // The striped window chrome the tool modals used to have: the title on a paper
+    // label over 1-bit stripes. Modals have a black bar now; S11 redraws these windows.
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: ui(2px 8px);
       font-size: type-floor(0.8em);
+      background-color: var(--paper);
+      color: var(--ink);
+      border-bottom: var(--border-rule) solid var(--ink);
+    }
+
+    &__title {
+      min-width: 0;
+      margin: ui-soft(0.2em) 0;
+      padding: 0 6px;
+      font-size: 1em;
+      color: var(--ink);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    &__fill {
+      flex: 1;
+      align-self: stretch;
+      margin: 5px 0;
     }
 
     &__tag {

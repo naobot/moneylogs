@@ -92,9 +92,7 @@ const BudgetManagerDialog = ({
   if (mode === "wizard") {
     return (
       <Modal isOpen onClose={close} className="BudgetManager BudgetManager--wizard">
-        <Modal.Header striped title="Budget helper">
-          Budget helper
-        </Modal.Header>
+        <Modal.Header title="Budget helper">Budget helper</Modal.Header>
         <Modal.Body>
           <BudgetWizard
             categories={draft}
@@ -175,9 +173,7 @@ const BudgetManagerDialog = ({
       onClose={close}
       className={cx("CategoryManager BudgetManager", { "CategoryManager--wide": wide })}
     >
-      <Modal.Header striped title="Budgets">
-        Budgets
-      </Modal.Header>
+      <Modal.Header title="Budgets">Budgets</Modal.Header>
       <Modal.Body>
         <ListDetail
           wide={wide}

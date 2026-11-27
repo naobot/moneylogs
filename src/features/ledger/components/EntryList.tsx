@@ -226,13 +226,13 @@ export const EntryList = ({
           )}
         </Modal.Body>
         <Modal.Actions>
+          <Modal.CancelButton text="Nevermind" />
           <Button
             onClick={() => void confirmDelete()}
             text="Delete"
             variant="primary"
             loading={isDeleting}
           />
-          <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
     </>

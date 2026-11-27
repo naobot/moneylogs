@@ -30,7 +30,9 @@ export default defineConfig({
         extends: true,
         // Snapshots are explicit (takeSnapshot): the automatic one fires after
         // afterEach cleanup, when the component is already unmounted.
-        plugins: [chromaticPlugin({ disableAutoSnapshot: true })],
+        // Entrances (a sheet rising, a toast dropping in) are captured where they end, not
+        // at their first, invisible frame.
+        plugins: [chromaticPlugin({ disableAutoSnapshot: true, pauseAnimationAtEnd: true })],
         test: {
           name: "visual",
           include: ["src/**/*.visual.test.tsx"],

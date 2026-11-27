@@ -282,9 +282,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
 
   return (
     <Modal isOpen onClose={isImporting ? undefined : onClose} className="ImportModal">
-      <Modal.Header striped title="Import">
-        Import
-      </Modal.Header>
+      <Modal.Header title="Import">Import</Modal.Header>
       <Modal.Body>
         <p className="ImportModal__hint">
           Bring in spending from a MoneyForward ME or YNAB CSV export. Entries are added as yours;
@@ -468,6 +466,7 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
         )}
       </Modal.Body>
       <Modal.Actions>
+        <Button text="Cancel" variant="secondary" disabled={isImporting} onClick={onClose} />
         <Button
           text={rows.length > 0 ? `Import ${rows.length}` : "Import"}
           variant="primary"
@@ -475,7 +474,6 @@ const ImportDialog = ({ ledger, onClose }: ImportModalProps) => {
           loading={isImporting}
           onClick={() => void handleImport()}
         />
-        <Button text="Cancel" variant="secondary" disabled={isImporting} onClick={onClose} />
       </Modal.Actions>
     </Modal>
   );

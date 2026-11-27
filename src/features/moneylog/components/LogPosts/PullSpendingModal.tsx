@@ -100,9 +100,7 @@ const PullSpendingModal = ({
 
   return (
     <Modal isOpen onClose={onClose} className="PullSpendingModal">
-      <Modal.Header striped title="pull spending">
-        pull spending
-      </Modal.Header>
+      <Modal.Header title="pull spending">pull spending</Modal.Header>
       <Modal.Body>
         <div className="PullSpendingModal__day">
           <RowButton
@@ -189,13 +187,13 @@ const PullSpendingModal = ({
         )}
       </Modal.Body>
       <Modal.Actions>
+        <Button text="Cancel" variant="secondary" onClick={onClose} />
         <Button
           text="Add to post"
           variant="primary"
           disabled={ids.length === 0}
           onClick={handleAdd}
         />
-        <Button text="Cancel" variant="secondary" onClick={onClose} />
       </Modal.Actions>
     </Modal>
   );
