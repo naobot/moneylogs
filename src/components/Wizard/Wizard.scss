@@ -34,15 +34,16 @@
     border-bottom: var(--border-hairline) dashed var(--ink);
     font-size: type-floor(0.85em);
 
+    // Steps still to come are secondary text; done and current ones are ink.
     &__step {
-      opacity: 0.45;
+      color: var(--ink-muted);
 
       &--done {
-        opacity: 0.8;
+        color: var(--ink);
       }
 
       &--current {
-        opacity: 1;
+        color: var(--ink);
         font-weight: 700;
         text-decoration: underline;
         text-underline-offset: 0.25em;

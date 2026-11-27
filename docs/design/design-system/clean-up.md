@@ -2,6 +2,8 @@
 
 Values found in the codebase that this system retires, and what replaces each. When touching a file that holds one, swap it.
 
+**Status (27 Nov 2026, PLAN item 2):** everything in the Colours, Corners and shadows, and Type tables is done. Most of it was already fixed in `src/` before this export; item 2 did the rest. That was text faded below 0.7 (footer separators, upcoming wizard steps), the one-off sizes, an inline `#666`, and literal disabled/dragging opacities moved onto their tokens. The **Duplicated components** table is left to the component PRs (items 4–13). The breakpoints stay as Sass constants (`src/constants.scss`), because media queries can't read custom properties.
+
 ## Colours
 
 | Found                             | Where                                                                                                                                    | Replace with                                                    |
