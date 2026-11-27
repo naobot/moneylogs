@@ -383,7 +383,7 @@ html {
   }
 
   &__sep {
-    opacity: 0.4;
+    color: var(--ink-muted);
   }
 }
 
@@ -579,7 +579,7 @@ h6 {
 
   &--disabled {
     cursor: default;
-    opacity: 0.3;
+    opacity: var(--opacity-disabled);
   }
 
   &--size-sm {
@@ -1052,7 +1052,7 @@ input[type="search"] {
     width: 100%;
     overflow-y: hidden;
     overflow-x: auto;
-    font-size: type-floor(0.6em);
+    font-size: type-floor(0.7em);
     margin-bottom: 0;
     // Room between items for the activity chip that overhangs each member's right
     // edge, and at the end so the last one isn't clipped by the scroll area.
@@ -1255,7 +1255,7 @@ input[type="search"] {
   }
 
   &--dragging {
-    opacity: 0.5;
+    opacity: var(--opacity-dragging);
     z-index: 10;
 
     // Override the item's pointer cursor while a drag is in progress
@@ -1283,7 +1283,7 @@ input[type="search"] {
     line-height: 1;
 
     &:disabled {
-      opacity: 0.2;
+      opacity: var(--opacity-disabled);
       cursor: default;
     }
   }
@@ -1590,7 +1590,7 @@ input[type="search"] {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: type-floor(0.72em);
+      font-size: type-floor(0.7em);
       color: var(--ink-muted);
       letter-spacing: 0.08em;
     }
@@ -1674,7 +1674,7 @@ input[type="search"] {
 
 .LogPostEditor--uploading {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: var(--opacity-dragging);
 }
 
 // Positioned (fixed, in a portal) by TutorialTooltip.tsx, so no container can bury or
@@ -1689,7 +1689,7 @@ input[type="search"] {
   padding: ui-soft(0.9em) ui-soft(1.2em);
   border-radius: var(--radius-none);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 400;
   width: max-content;
   max-width: min(240px, calc(100vw - 16px));
@@ -1701,7 +1701,7 @@ input[type="search"] {
   gap: ui-soft(0.4em);
 
   small {
-    font-size: type-floor(0.78em);
+    font-size: type-floor(0.8em);
     opacity: 0.7; // muted text floor (5.5:1)
     font-weight: 400;
   }
@@ -1756,7 +1756,7 @@ input[type="search"] {
 }
 
 .TimezoneSetter {
-  font-size: type-floor(0.6rem);
+  font-size: type-floor(0.7rem);
   font-weight: 400;
 }
 
