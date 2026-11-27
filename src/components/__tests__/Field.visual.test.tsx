@@ -129,6 +129,61 @@ describe("Field, TextArea, Select, Amount (visual)", () => {
     expect(getComputedStyle(area).overflowY).toBe("auto");
   });
 
+  it("keeps the text still between rest, focus and error", async () => {
+    /**
+     * Where the text sits inside a control: its left edge, and vertically its first line
+     * (a text area) or its centre line (one-line controls centre their text).
+     */
+    const textStart = (el: HTMLElement) => {
+      const style = getComputedStyle(el);
+      const box = el.getBoundingClientRect();
+      return {
+        x: box.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft),
+        y:
+          el.tagName === "TEXTAREA"
+            ? box.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop)
+            : box.top + box.height / 2,
+      };
+    };
+    const controls = (root: Element) =>
+      Array.from(root.querySelectorAll<HTMLElement>(".Field__input"));
+
+    const kinds = (error?: string) => (
+      <>
+        <Field label="a" value="x" onChange={noop} error={error} />
+        <TextArea label="b" value="x" onChange={noop} markdown maxLength={10} error={error} />
+        <Select
+          label="c"
+          value="g"
+          onChange={noop}
+          options={CATEGORIES.slice(0, 1)}
+          error={error}
+        />
+        <Amount label="d" value="1" onChange={noop} currency="JPY" error={error} />
+      </>
+    );
+
+    v.render(<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{kinds()}</div>);
+    const rest = controls(v.container).map(textStart);
+    const focused = controls(v.container).map((el) => {
+      act(() => el.focus());
+      return textStart(el);
+    });
+    v.render(
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{kinds("fix this")}</div>,
+    );
+    const invalid = controls(v.container).map(textStart);
+
+    const names = ["field", "text area", "select", "amount"];
+    rest.forEach((at, i) => {
+      // Rows below can shift down by a frame's width; within its own box the text can't.
+      expect(focused[i].x, `${names[i]} x on focus`).toBeCloseTo(at.x, 0);
+      // Only the focused control changes, so nothing above it moves either.
+      expect(focused[i].y, `${names[i]} y on focus`).toBeCloseTo(at.y, 0);
+      expect(invalid[i].x, `${names[i]} x in error`).toBeCloseTo(at.x, 0);
+    });
+  });
+
   it("themes them in night shift", async () => {
     v.night();
     v.render(<Inputs />);

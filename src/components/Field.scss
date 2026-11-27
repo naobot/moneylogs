@@ -33,13 +33,16 @@
   // The box: 44px on sheet in a dashed hairline. Padding gives back what a heavier frame
   // takes, so the text doesn't move between rest, focus and error.
   &__box {
+    // The frame's width now; children give it back in their padding (--field-give), so
+    // a heavier frame never moves the text.
     --field-line: var(--border-hairline);
+    --field-give: calc(var(--border-hairline) - var(--field-line));
 
     display: flex;
     align-items: stretch;
     min-height: var(--tap-target);
     box-sizing: border-box;
-    padding: 0 calc(12px + var(--border-hairline) - var(--field-line));
+    padding: 0 calc(12px + var(--field-give));
     border: var(--field-line) dashed var(--ink);
     border-radius: var(--radius-none);
     background: var(--sheet);
@@ -51,6 +54,7 @@
 
     &:focus-within {
       --field-line: var(--border-rule);
+      --field-give: calc(var(--border-hairline) - var(--border-rule));
 
       border-style: solid;
       outline: var(--border-rule) solid var(--focus-ring);
@@ -60,6 +64,7 @@
 
   &--invalid &__box {
     --field-line: var(--border-heavy);
+    --field-give: calc(var(--border-hairline) - var(--border-heavy));
 
     border-style: solid;
   }
@@ -105,7 +110,7 @@
   &__textarea {
     flex: none;
     box-sizing: border-box; // the height it's given counts its padding
-    padding: 10px 12px;
+    padding: calc(10px + var(--field-give)) calc(12px + var(--field-give)) 10px;
     line-height: 1.5;
     resize: none;
   }
@@ -114,7 +119,8 @@
     display: flex;
     justify-content: space-between;
     gap: var(--gap-between);
-    padding: var(--gap-inside) 12px;
+    padding: var(--gap-inside) calc(12px + var(--field-give))
+      calc(var(--gap-inside) + var(--field-give));
     border-top: var(--border-hairline) dashed var(--ink-faint);
     font-size: var(--phone-caption);
     color: var(--ink-muted);
@@ -215,7 +221,7 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 10px 0 calc(10px + var(--field-give));
     border-right: var(--border-hairline) solid var(--ink);
     font-size: var(--phone-small);
     font-weight: 700;
@@ -236,7 +242,7 @@
   &__currencySelect {
     appearance: none;
     align-self: stretch;
-    padding: 0 calc(10px + 1.2em) 0 10px;
+    padding: 0 calc(10px + 1.2em) 0 calc(10px + var(--field-give));
     font: inherit;
     color: inherit;
     background: transparent;
