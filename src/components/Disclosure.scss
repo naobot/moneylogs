@@ -1,0 +1,60 @@
+@use "@/states" as *;
+
+// Disclosure (design-system Disclosure, 2026-11 audit): a 44px unframed text button,
+// `[+] title` at the left and a muted note at the right. Opened, its content hangs off
+// a 1px dotted rule on the left.
+.Disclosure {
+  min-width: 0;
+
+  &__toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--gap-between);
+    width: 100%;
+    min-height: var(--tap-target);
+    padding: 0;
+    font: inherit;
+    color: var(--ink);
+    text-align: left;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    @include hover("&:focus-visible") {
+      .Disclosure__title {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+      }
+    }
+
+    &:focus-visible {
+      outline: var(--border-rule) solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  &__title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // The text-mode mark keeps its width as it flips, so the title doesn't shift.
+  &__mark {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__note {
+    flex-shrink: 0;
+    font-size: var(--phone-caption);
+    color: var(--ink-muted);
+  }
+
+  &__content {
+    padding: var(--gap-inside) 0 var(--gap-inside) 14px;
+    border-left: var(--border-hairline) dotted var(--ink);
+  }
+}

@@ -1,0 +1,84 @@
+@use "@/states" as *;
+
+// Segmented control (design-system Segmented, 2026-11 audit): segments share one frame,
+// split by its line; the chosen one is inverted. Primary: 2px, 40px, caps. Sub: 1px,
+// 36px, lowercase. Both are drawn under the 44px tap target, so each segment's hit area
+// grows to 44px vertically (never sideways, where its neighbours are).
+.Segmented {
+  --segmented-line: var(--border-rule);
+  --segmented-height: 40px;
+
+  display: grid;
+  border: var(--segmented-line) solid var(--ink);
+  background: var(--paper);
+
+  &--sub {
+    --segmented-line: var(--border-hairline);
+    --segmented-height: 36px;
+  }
+
+  // Under a TitleBar: the bar's bottom line is this control's top.
+  &--flush {
+    border-top: 0;
+  }
+
+  &__option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: var(--segmented-height);
+    padding: 0 var(--gap-between);
+    font: inherit;
+    font-size: var(--phone-caption);
+    color: var(--ink);
+    background: var(--paper);
+    border: 0;
+    border-right: var(--segmented-line) solid var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 50% 0 auto;
+      height: max(100%, var(--tap-target));
+      transform: translateY(-50%);
+    }
+
+    @include hover("&:active") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+    }
+
+    &:focus-visible {
+      outline: var(--border-rule) solid var(--focus-ring);
+      outline-offset: -4px;
+    }
+
+    // Chosen: inverted, and no longer something to press.
+    &--selected {
+      font-weight: 700;
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      cursor: default;
+
+      &:focus-visible {
+        outline-color: var(--inverse-ink);
+      }
+    }
+  }
+
+  &--primary &__option {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
