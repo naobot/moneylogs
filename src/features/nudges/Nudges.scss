@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Pokes and cheers between friends. Tokens only; emphasis is inversion.
 
@@ -37,8 +38,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -141,8 +141,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }

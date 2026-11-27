@@ -1,5 +1,6 @@
 @use "@/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Shared chrome for step-by-step flows (/create, /welcome): progress list, question,
 // hint, review list and Back/Next actions. Flow-specific bits live with each flow.
@@ -132,9 +133,7 @@
       font-size: type-floor(0.85em);
     }
 
-    &:hover,
-    &:focus-visible,
-    &--selected {
+    @include hover("&:focus-visible, &--selected, &:active") {
       background: var(--ink);
       color: var(--paper);
     }

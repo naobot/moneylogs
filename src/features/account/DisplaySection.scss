@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 .DisplaySection__row {
   display: flex;
   flex-wrap: wrap;
@@ -124,7 +125,7 @@
   border: var(--border-hairline) dashed transparent;
   cursor: pointer;
 
-  &:hover {
+  @include hover {
     border-color: var(--ink);
   }
 
@@ -170,8 +171,7 @@
   }
 
   // The current theme: a committed (solid) frame and an inverted label.
-  &--active,
-  &--active:hover {
+  @include hover("&--active", "&--active:hover") {
     border: var(--border-hairline) solid var(--ink);
   }
 

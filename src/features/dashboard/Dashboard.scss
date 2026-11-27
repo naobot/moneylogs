@@ -1,5 +1,6 @@
 @use "/src/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Home dashboard. Monochrome, square corners, no shadows — cards are ruled boxes, and
 // new activity is the inverted black block.
@@ -145,8 +146,7 @@
   color: var(--ink);
   text-decoration: none;
 
-  &:hover,
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active") {
     background-color: var(--ink);
     color: var(--paper);
     outline: none;
@@ -173,8 +173,7 @@
     font-size: type-floor(0.9em);
     opacity: 0.75;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       opacity: 1;
     }
   }
@@ -265,9 +264,10 @@
     border: none;
     cursor: pointer;
 
-    &:hover .DashboardFriends__name,
-    &:focus-visible .DashboardFriends__name,
-    &[aria-expanded="true"] .DashboardFriends__name {
+    @include hover(
+      '&:focus-visible .DashboardFriends__name, &[aria-expanded="true"] .DashboardFriends__name',
+      "&:hover .DashboardFriends__name"
+    ) {
       text-decoration: underline;
     }
 
@@ -368,8 +368,7 @@
     // The slot itself is the button that opens a closer look.
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-color: var(--ink);
       outline: none;
     }
@@ -411,8 +410,7 @@
     text-align: center;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-style: solid;
       outline: none;
     }

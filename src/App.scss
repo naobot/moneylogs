@@ -5,6 +5,7 @@
 @use "./charts.scss";
 @use "./surfaces.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 :root {
   font-family: var(--font-mono);
@@ -301,8 +302,7 @@ html {
   border: 0;
   cursor: pointer;
 
-  &:hover:not(:disabled),
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     outline: none;
@@ -451,11 +451,14 @@ html {
   }
 }
 
-// Buttons invert when active or hovered; their icons flip with them.
-.Button--active .Icon img,
-.Button--primary:hover:not(.Button--disabled) .Icon img,
-.Button--secondary:hover:not(.Button--disabled) .Icon img,
-.Button--toggle:hover:not(.Button--disabled) .Icon img {
+// Buttons invert when selected, hovered or pressed; their icons flip with them.
+:is(.Button--primary, .Button--secondary, .Button--toggle):not(.Button--disabled) {
+  @include hover("&:active .Icon img", "&:hover .Icon img") {
+    filter: var(--icon-filter-inverse);
+  }
+}
+
+.Button--active .Icon img {
   filter: var(--icon-filter-inverse);
 }
 
@@ -554,7 +557,7 @@ h6 {
   &--toggle {
     border: var(--border-hairline) solid var(--ink);
 
-    &:hover:not(.Button--disabled) {
+    @include hover("&:active:not(.Button--disabled)", "&:hover:not(.Button--disabled)") {
       background-color: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -604,8 +607,7 @@ h6 {
   border-radius: var(--radius-none);
   padding: ui(0.1em) ui(0.5em);
 
-  &:hover:not(:disabled),
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
   }
@@ -633,8 +635,10 @@ h6 {
   }
 
   // The icon flips with the button when it inverts.
-  &:hover:not(:disabled) .Icon img,
-  &:focus-visible .Icon img {
+  @include hover(
+    "&:focus-visible .Icon img, &:active:not(:disabled) .Icon img",
+    "&:hover:not(:disabled) .Icon img"
+  ) {
     filter: var(--icon-filter-inverse);
   }
 }
@@ -1065,6 +1069,7 @@ input[type="search"] {
   }
 
   &__item {
+    cursor: pointer;
     position: relative;
     display: flex;
     align-items: center;
@@ -1094,7 +1099,7 @@ input[type="search"] {
       }
     }
 
-    &:hover &__dragHandle {
+    @include hover(null, "&:hover &__dragHandle") {
       opacity: 0.7; // muted text floor
     }
 
@@ -1128,8 +1133,8 @@ input[type="search"] {
       }
     }
 
-    // The row inverts on hover, so the chip flips back to stay visible.
-    &:hover &__badge {
+    // The row inverts on hover or a press, so the chip flips back to stay visible.
+    @include hover("&:active &__badge", "&:hover &__badge") {
       background-color: var(--paper);
       border-color: var(--ink);
 
@@ -1174,8 +1179,7 @@ input[type="search"] {
       order: -1;
     }
 
-    &--active,
-    &:hover {
+    @include hover("&--active, &:active") {
       background-color: var(--ink);
       color: var(--paper);
     }
@@ -1187,10 +1191,6 @@ input[type="search"] {
     // so no hover/pointer treatment.
     &--skeleton {
       pointer-events: none;
-    }
-
-    &:hover {
-      cursor: pointer;
     }
   }
 
@@ -1259,8 +1259,7 @@ input[type="search"] {
     z-index: 10;
 
     // Override the item's pointer cursor while a drag is in progress
-    .LogsMenu__item,
-    .LogsMenu__item:hover {
+    .LogsMenu__item {
       cursor: grabbing;
     }
   }
@@ -1298,7 +1297,7 @@ input[type="search"] {
     opacity: 0.3;
     transition: 0.3s ease-in-out;
 
-    &:hover {
+    @include hover {
       opacity: 1;
     }
 

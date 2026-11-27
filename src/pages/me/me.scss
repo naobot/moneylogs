@@ -1,5 +1,6 @@
 @use "/src/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Section nav on the left, the chosen section on the right. Phones get one column: the
 // list at /me, or a single section (with a way back) at /me#section.
@@ -43,19 +44,24 @@
     color: inherit;
     text-decoration: none;
 
-    &:hover,
-    &:focus-visible,
-    &--active {
+    @include hover("&:focus-visible, &--active, &:active") {
       background-color: var(--inverse-surface);
       color: var(--inverse-ink);
       outline: none;
     }
 
-    // On phones the list is the page, so nothing reads as already chosen.
+    // On phones the list is the page, so nothing reads as already chosen, unless it's
+    // focused, pressed or (with a pointer) hovered. Not `:not(:hover)`: on touch, :hover
+    // sticks to the last item tapped.
     @media (max-width: calc(constants.$breakpoint-md - 1px)) {
-      &--active:not(:hover, :focus-visible) {
+      &--active:not(:focus-visible, :active) {
         background-color: transparent;
         color: inherit;
+      }
+
+      @include hover(null, "&--active:hover") {
+        background-color: var(--inverse-surface);
+        color: var(--inverse-ink);
       }
     }
   }

@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .ProfilePage {
   display: flex;
@@ -83,8 +84,7 @@
     text-align: center;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-color: var(--ink);
       outline: none;
     }
@@ -110,8 +110,7 @@
     border: none;
   }
 
-  &__item--transit:hover,
-  &__item--transit:focus-within {
+  @include hover("&__item--transit:focus-within", "&__item--transit:hover") {
     border-style: solid;
   }
 
@@ -131,8 +130,7 @@
   &--link {
     text-decoration: none;
 
-    &:hover .ProfileLink__name,
-    &:focus-visible .ProfileLink__name {
+    @include hover("&:focus-visible .ProfileLink__name", "&:hover .ProfileLink__name") {
       text-decoration: underline;
     }
   }
@@ -162,9 +160,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible,
-    &[aria-expanded="true"] {
+    @include hover("&:focus-visible, &[aria-expanded=" true "]") {
       text-decoration: underline;
     }
   }
@@ -185,8 +181,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover:not(:disabled),
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
