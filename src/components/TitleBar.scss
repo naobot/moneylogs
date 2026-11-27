@@ -1,0 +1,163 @@
+@use "/src/constants.scss";
+@use "@/states" as *;
+
+// The page title bar (design-system TitleBar, 2026-11 audit). Window chrome: a 2px
+// frame, 1px ink stripes with 3px gaps inset 6px top and bottom and 4px at the sides,
+// the title and the actions on paper labels. 44px on phones, 48px from medium up. The
+// chrome is fixed px (it's a frame, like the 44px tap target); the title is in rem so
+// Text size scales it.
+.TitleBar {
+  --title-bar-inset-y: 6px;
+  --title-bar-inset-x: 4px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: var(--title-bar-inset-y) var(--title-bar-inset-x);
+  border: var(--border-rule) solid var(--ink);
+  background: repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 4px);
+  background-clip: content-box;
+  color: var(--ink);
+
+  @media (min-width: constants.$breakpoint-md) {
+    --title-bar-inset-y: 7px;
+    --title-bar-inset-x: 5px;
+
+    min-height: 48px;
+  }
+
+  &__label {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    min-width: 0;
+    margin-left: 10px;
+    padding: 0 10px;
+    background: var(--paper);
+    line-height: 28px;
+
+    @media (min-width: constants.$breakpoint-md) {
+      margin-left: 12px;
+      padding: 0 12px;
+      line-height: 30px;
+    }
+  }
+
+  // A long title (a log's name) is cut short; the full one is in the tooltip.
+  &__title {
+    margin: 0;
+    min-width: 0;
+    font-size: 1rem; // 16px
+    font-weight: 700;
+    line-height: inherit;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    @media (min-width: constants.$breakpoint-md) {
+      font-size: 1.125rem;
+    }
+  }
+
+  // The log's kind and size; there's no room for it on phones.
+  &__meta {
+    flex-shrink: 0;
+    font-size: var(--phone-caption);
+    color: var(--ink-muted);
+    white-space: nowrap;
+
+    @media (max-width: calc(constants.$breakpoint-md - 1px)) {
+      display: none;
+    }
+  }
+
+  // The actions' paper label runs the full height inside the frame (over the stripes'
+  // inset), so its buttons get as much of the bar as they can.
+  &__actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: stretch;
+    align-self: stretch;
+    margin: calc(-1 * var(--title-bar-inset-y)) 6px calc(-1 * var(--title-bar-inset-y)) 0;
+    padding: 0 2px;
+    background: var(--paper);
+
+    @media (min-width: constants.$breakpoint-xl) {
+      gap: 4px;
+      margin-right: 8px;
+      padding: 0 6px;
+      align-items: center;
+    }
+  }
+
+  // Phones and medium screens: a 44px-wide icon button the height of the bar, with its
+  // hit area grown to 44px tall over the frame. Wide: icon + word, caps.
+  &__action {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 44px;
+    padding: 0;
+    font: inherit;
+    font-size: var(--phone-caption);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    background: none;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 50% 0 auto;
+      height: max(100%, var(--tap-target));
+      transform: translateY(-50%);
+    }
+
+    @include hover('&:focus-visible, &:active, &[aria-expanded="true"]') {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
+
+      .Icon img {
+        filter: var(--icon-filter-inverse);
+      }
+    }
+
+    @media (min-width: constants.$breakpoint-xl) {
+      width: auto;
+      height: 36px;
+      padding: 0 10px;
+
+      &::after {
+        content: none;
+      }
+    }
+  }
+
+  // The word is the button's name everywhere; it shows only on wide screens.
+  &__word {
+    @media (max-width: calc(constants.$breakpoint-xl - 1px)) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+
+  &__glyph {
+    font-size: var(--phone-heading);
+    font-weight: 700;
+    line-height: 1;
+  }
+}
