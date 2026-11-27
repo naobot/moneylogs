@@ -128,6 +128,7 @@ export const GiftModal = ({ item, onClose, onGiven, toUserDocId }: GiftModalProp
         {canGive && (
           <Button
             text={`Give 1 ${itemName}`}
+            icon="gift"
             variant="primary"
             disabled={!chosenFriend}
             loading={pending}
