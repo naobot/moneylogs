@@ -1,0 +1,1 @@
+The favicon is the brand's only mark: a 16×16 pixel drawing in `ink` (`#242424`) on a `paper` (`#f5f3f0`) square, `shape-rendering="crispEdges"`. Scale it only by whole multiples (16, 32, 48 …). There is no wordmark file — set "moneylogs" in the mono face, bold, lowercase.

@@ -1,5 +1,6 @@
 @use "@/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .LogsSummary {
   display: flex;
@@ -34,7 +35,7 @@
     border-radius: var(--radius-none);
     color: var(--inverse-ink);
     background-color: var(--ink);
-    font-size: 0.7em;
+    font-size: type-floor(0.7em);
     margin: ui(1em) 0;
     padding: ui(1em);
   }
@@ -76,7 +77,7 @@
 
   &__tab {
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     cursor: pointer;
     padding: ui(0.35em) ui(1.1em);
     border: var(--border-rule) solid var(--ink);
@@ -142,7 +143,7 @@
 
   &__daydetail {
     text-align: left;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
   }
 }
 
@@ -210,7 +211,7 @@
 
   // One letter per day, centred under its bar; the weekend in bold.
   &__weekday {
-    font-size: 10px;
+    font-size: type-floor(10px);
 
     &--weekend {
       font-weight: 700;
@@ -236,7 +237,7 @@
     color: var(--paper);
     border-radius: var(--radius-none);
     padding: ui(0.35em) ui(0.55em);
-    font-size: 0.72em;
+    font-size: type-floor(0.7em);
     white-space: nowrap;
     display: flex;
     flex-direction: column;
@@ -257,7 +258,7 @@
   background-color: var(--sheet);
   border: var(--border-hairline) solid var(--ink);
   border-radius: var(--radius-none);
-  font-size: 0.7em;
+  font-size: type-floor(0.7em);
   padding: ui(0.8em);
   min-width: fit-content;
   max-width: 180px;
@@ -309,7 +310,7 @@
       display: flex;
       flex-direction: column;
       gap: ui(0.15em);
-      font-size: 0.85em;
+      font-size: type-floor(0.85em);
 
       strong {
         font-size: 1em;
@@ -344,8 +345,7 @@
     text-decoration: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background-color: var(--ink);
       color: var(--paper);
 
@@ -356,13 +356,17 @@
       }
     }
 
-    // Milestone achievements aren't links: no pointer, no hover inversion.
+    // Milestone achievements aren't links: no pointer, no hover or press inversion.
     &--milestone {
       cursor: default;
 
-      &:hover {
+      @include hover("&:active") {
         background-color: transparent;
         color: var(--ink);
+
+        .Icon img {
+          filter: var(--icon-filter);
+        }
       }
     }
 
@@ -376,7 +380,7 @@
       display: flex;
       flex-direction: column;
       gap: ui(0.1em);
-      font-size: 0.82em;
+      font-size: type-floor(0.8em);
       min-width: 0;
       max-width: 100%;
       // Group titles are user-supplied and can be a single long token
@@ -394,7 +398,7 @@
 
   &__empty {
     grid-column: 1 / -1;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     opacity: 0.7; // muted text floor (5.5:1)
     text-align: center;
     padding: ui(1em) 0;

@@ -23,30 +23,32 @@ describe("Modal.Header", () => {
 
   const header = () => document.querySelector(".Modal__header")!;
 
-  it("renders the solid title bar by default", () => {
+  it("is always the black bar, with no striped chrome", () => {
     act(() =>
       root.render(
         <Modal isOpen onClose={() => {}}>
-          <Modal.Header title="Warning" />
+          <Modal.Header title="Categories" />
         </Modal>,
       ),
     );
-    expect(header().classList.contains("Modal__header--striped")).toBe(false);
-    expect(header().querySelector(".Modal__header__fill")).toBeNull();
+    expect(header().className.trim()).toBe("Modal__header");
+    expect(header().querySelector(".tex-stripe")).toBeNull();
+    expect(header().querySelector(".Modal__title")!.textContent).toBe("Categories");
   });
 
-  it("renders striped chrome with a decorative fill when asked", () => {
+  it("closes from its × button, which never submits a form", () => {
+    let closed = 0;
     act(() =>
       root.render(
-        <Modal isOpen onClose={() => {}}>
-          <Modal.Header striped title="Categories" />
+        <Modal isOpen onClose={() => (closed += 1)}>
+          <Modal.Header title="Categories" showCloseButton />
         </Modal>,
       ),
     );
-    expect(header().classList.contains("Modal__header--striped")).toBe(true);
-    const fill = header().querySelector(".Modal__header__fill")!;
-    expect(fill.classList.contains("tex-stripe")).toBe(true);
-    expect(fill.getAttribute("aria-hidden")).toBe("true");
-    expect(header().querySelector(".Modal__title")!.textContent).toBe("Categories");
+    const close = header().querySelector<HTMLButtonElement>(".Modal__button--close")!;
+    expect(close.type).toBe("button");
+    expect(close.getAttribute("aria-label")).toBe("Close modal");
+    act(() => close.click());
+    expect(closed).toBe(1);
   });
 });

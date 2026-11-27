@@ -1,0 +1,81 @@
+<!-- @dsCard group="Navigation" height=120 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TitleBar</title>
+  </head>
+  <body>
+    <div
+      class="pv"
+      style="font-family: var(--font-mono, Hack, monospace); color: var(--ink); font-size: 14px"
+    >
+      <div style="max-width: 380px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+            box-sizing: border-box;
+            padding: 6px 4px;
+            border: 2px solid var(--ink);
+            background: repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 4px);
+            background-clip: content-box;
+          "
+        >
+          <strong
+            style="margin-left: 10px; padding: 0 10px; background: var(--paper); line-height: 28px"
+            >household</strong
+          ><span
+            style="
+              margin: -6px 6px -6px 0;
+              padding: 0 10px;
+              background: var(--paper);
+              line-height: 40px;
+            "
+            >⋯</span
+          >
+        </div>
+        <div
+          role="group"
+          style="
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border: 2px solid var(--ink);
+            border-top: 0;
+            max-width: 380px;
+          "
+        >
+          <button
+            aria-pressed="true"
+            style="
+              height: 40px;
+              font: inherit;
+              font-size: 12px;
+              border: 0;
+              border-right: 2px solid var(--ink);
+              background: var(--inverse-surface);
+              color: var(--inverse-ink);
+              font-weight: 700;
+            "
+          >
+            entries</button
+          ><button
+            aria-pressed="false"
+            style="
+              height: 40px;
+              font: inherit;
+              font-size: 12px;
+              border: 0;
+              background: var(--paper);
+              color: var(--ink);
+            "
+          >
+            stats
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

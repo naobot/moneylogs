@@ -26,7 +26,7 @@ export const QuickDisplay = ({
   isLoggedIn: boolean;
 }) => (
   <Modal isOpen={isOpen} onClose={onClose} className="QuickDisplay">
-    <Modal.Header striped title="display" showCloseButton />
+    <Modal.Header title="display" showCloseButton />
     <Modal.Body>
       <ThemeRow />
       <SizeRows from="nav" />

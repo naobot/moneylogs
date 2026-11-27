@@ -52,7 +52,7 @@ const DeleteLogModal = ({
       disabled={deletion.isLoading}
       className="Admin__modal"
     >
-      <Modal.Header striped title={`Delete ${kindLabel(log)}`} />
+      <Modal.Header title={`Delete ${kindLabel(log)}`} />
       <Modal.Body>
         <p>
           Delete <strong className="keep-case">{log.title}</strong> with all its entries, comments,

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Update banner and toasts, phone</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <div
+          role="status"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 12px;
+            padding: 6px 6px 6px 12px;
+            font-size: 13px;
+            border: 1px solid #242424;
+            border-left: 4px solid #242424;
+            background: #f5f3f0;
+          "
+        >
+          <span style="flex-grow: 1">A new version is available.</span
+          ><button
+            type="button"
+            style="
+              height: 44px;
+              padding: 0 16px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #242424;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+              height: 36px;
+              padding: 0 12px;
+              border: 2px solid #242424;
+              background: #ffffff;
+            "
+          >
+            refresh
+          </button>
+        </div>
+        <main
+          aria-hidden="true"
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 14px 12px 0;
+            gap: 16px;
+            opacity: 0.35;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 44px;
+              box-sizing: border-box;
+              padding: 6px 4px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 10px;
+                padding: 0 10px;
+                background: #f5f3f0;
+                font-size: 16px;
+                line-height: 28px;
+                font-weight: 700;
+              "
+            >
+              household
+            </h1>
+          </header>
+          <div
+            style="height: 40px; border: 2px solid #242424; border-top: 0; margin-top: -16px"
+          ></div>
+          <div style="height: 56px"></div>
+          <div style="height: 10px; border: 1px dashed #242424"></div>
+          <div style="height: 30px; background: #242424"></div>
+          <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+          <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+        </main>
+        <div
+          style="
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          "
+        >
+          <div
+            role="status"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              min-height: 48px;
+              padding: 4px 4px 4px 12px;
+              font-size: 13px;
+              background: #f5f3f0;
+              border: 2px solid #242424;
+              box-shadow: 4px 4px 0 rgba(36, 36, 36, 0.25);
+            "
+          >
+            <strong aria-hidden="true" style="width: 18px; text-align: center">✓</strong
+            ><span style="flex-grow: 1">Sent to mika: “proud of you”</span
+            ><button
+              type="button"
+              aria-label="Close"
+              style="
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                font: inherit;
+                font-size: 16px;
+                background: none;
+                border: 0;
+              "
+            >
+              ×
+            </button>
+          </div>
+          <div
+            role="status"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              min-height: 48px;
+              padding: 4px 4px 4px 12px;
+              font-size: 13px;
+              background: #f5f3f0;
+              border: 2px solid #242424;
+              box-shadow: 4px 4px 0 rgba(36, 36, 36, 0.25);
+            "
+          >
+            <strong aria-hidden="true" style="width: 18px; text-align: center">✓</strong
+            ><span style="flex-grow: 1">You're friends now</span
+            ><button
+              type="button"
+              aria-label="Close"
+              style="
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                font: inherit;
+                font-size: 16px;
+                background: none;
+                border: 0;
+              "
+            >
+              ×
+            </button>
+          </div>
+          <div
+            role="alert"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              min-height: 48px;
+              padding: 4px 4px 4px 12px;
+              font-size: 13px;
+              background: #f5f3f0;
+              border: 3px solid #242424;
+              box-shadow: 4px 4px 0 rgba(36, 36, 36, 0.25);
+            "
+          >
+            <img
+              src="/_blob/e14eacb0e3fbd33ce3520c21de615283"
+              alt=""
+              width="18"
+              height="18"
+              style="display: block; flex-shrink: 0"
+            /><span style="flex-grow: 1">Couldn't save that. Please try again.</span
+            ><button
+              type="button"
+              aria-label="Close"
+              style="
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                font: inherit;
+                font-size: 16px;
+                background: none;
+                border: 0;
+              "
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview": {"width": 390, "height": 844}}'
+    >
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

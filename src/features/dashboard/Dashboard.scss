@@ -1,5 +1,6 @@
 @use "/src/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Home dashboard. Monochrome, square corners, no shadows — cards are ruled boxes, and
 // new activity is the inverted black block.
@@ -55,7 +56,7 @@
   // Section actions ("+ start a new log", "see all N in my logs"): lighter than the
   // headings they sit beside, with the destination in bold.
   &__action {
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
     font-weight: 400;
 
     strong {
@@ -145,8 +146,7 @@
   color: var(--ink);
   text-decoration: none;
 
-  &:hover,
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active") {
     background-color: var(--ink);
     color: var(--paper);
     outline: none;
@@ -170,11 +170,10 @@
     gap: ui(0.2em);
     padding: ui(0.4em) ui(0.6em);
     border-width: var(--border-hairline);
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
     opacity: 0.75;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       opacity: 1;
     }
   }
@@ -193,7 +192,7 @@
   }
 
   &__kind {
-    font-size: 0.75em;
+    font-size: type-floor(0.75em);
     text-transform: lowercase;
     opacity: 0.7;
   }
@@ -201,7 +200,7 @@
   &__badge {
     margin-left: auto;
     padding: ui(0.1em) ui(0.4em);
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     font-weight: 700;
     background-color: var(--ink);
     color: var(--paper);
@@ -221,7 +220,7 @@
     flex-direction: column;
     gap: ui(0.15em);
     margin-top: auto;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     opacity: 0.8;
     font-variant-numeric: tabular-nums;
   }
@@ -265,9 +264,10 @@
     border: none;
     cursor: pointer;
 
-    &:hover .DashboardFriends__name,
-    &:focus-visible .DashboardFriends__name,
-    &[aria-expanded="true"] .DashboardFriends__name {
+    @include hover(
+      '&:focus-visible .DashboardFriends__name, &[aria-expanded="true"] .DashboardFriends__name',
+      "&:hover .DashboardFriends__name"
+    ) {
       text-decoration: underline;
     }
 
@@ -299,7 +299,7 @@
   }
 
   &__profile {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink);
   }
 
@@ -323,7 +323,7 @@
   // How lucky you are right now, in words; sits at the far end of the heading.
   &__luck {
     margin-left: auto;
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     color: var(--ink-muted);
 
     strong {
@@ -368,8 +368,7 @@
     // The slot itself is the button that opens a closer look.
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-color: var(--ink);
       outline: none;
     }
@@ -380,7 +379,7 @@
   }
 
   &__name {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     text-transform: lowercase;
   }
 
@@ -407,12 +406,11 @@
     background: none;
     color: var(--ink);
     font-family: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     text-align: center;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-style: solid;
       outline: none;
     }
@@ -445,20 +443,20 @@
     padding: ui(0.3em) ui(0.6em);
     background: var(--inverse-surface);
     color: var(--inverse-ink);
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     // Its RowButton keeps its own paper fill and ink, like those on the ledger stats
     // strip: inheriting the banner's inverse ink painted paper text on paper (blank).
   }
 
   &__hint {
     margin: 0;
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     color: var(--ink-muted);
   }
 
   &__empty {
     margin: 0;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 }

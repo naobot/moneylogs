@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .ProfilePage {
   display: flex;
@@ -28,7 +29,7 @@
   }
 
   &__edit {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
   }
 
   &__section {
@@ -83,21 +84,20 @@
     text-align: center;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       border-color: var(--ink);
       outline: none;
     }
   }
 
   &__name {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     font-weight: 700;
     text-transform: lowercase;
   }
 
   &__provenance {
-    font-size: 0.75em;
+    font-size: type-floor(0.75em);
     color: var(--ink-muted);
   }
 
@@ -110,8 +110,7 @@
     border: none;
   }
 
-  &__item--transit:hover,
-  &__item--transit:focus-within {
+  @include hover("&__item--transit:focus-within", "&__item--transit:hover") {
     border-style: solid;
   }
 
@@ -131,8 +130,7 @@
   &--link {
     text-decoration: none;
 
-    &:hover .ProfileLink__name,
-    &:focus-visible .ProfileLink__name {
+    @include hover("&:focus-visible .ProfileLink__name", "&:hover .ProfileLink__name") {
       text-decoration: underline;
     }
   }
@@ -145,7 +143,7 @@
   gap: var(--space-2);
 
   &__status {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 
@@ -154,7 +152,7 @@
   &__friends {
     padding: ui(0.1em) 0;
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     font-weight: 700;
     text-transform: lowercase;
     color: var(--ink);
@@ -162,9 +160,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible,
-    &[aria-expanded="true"] {
+    @include hover("&:focus-visible, &[aria-expanded=" true "]") {
       text-decoration: underline;
     }
   }
@@ -178,15 +174,14 @@
     width: 100%;
     padding: ui(0.2em) ui(0.6em);
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     text-align: left;
     color: var(--ink-muted);
     background: none;
     border: none;
     cursor: pointer;
 
-    &:hover:not(:disabled),
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -239,7 +234,7 @@
 
   &__more {
     margin-left: auto;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
   }
 
   &__friends {

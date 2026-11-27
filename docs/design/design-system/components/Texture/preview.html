@@ -1,0 +1,44 @@
+<!-- @dsCard group="Foundations" height=230 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Texture</title>
+  </head>
+  <body>
+    <div class="pv">
+      <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px">
+        <div>
+          <div class="tex-solid" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">solid</div>
+        </div>
+        <div>
+          <div class="tex tex-dither" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">.tex-dither</div>
+        </div>
+        <div>
+          <div class="tex tex-hatch" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">.tex-hatch</div>
+        </div>
+        <div>
+          <div class="tex tex-dots" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">.tex-dots</div>
+        </div>
+        <div>
+          <div class="tex tex-stripe" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">.tex-stripe</div>
+        </div>
+        <div>
+          <div class="tex tex-grid" style="height: 64px; border: 1px solid var(--ink)"></div>
+          <div class="pv-label">.tex-grid</div>
+        </div>
+      </div>
+      <div class="pv-row" style="gap: 16px">
+        <span style="border: 1px solid var(--ink); padding: 2px 8px">solid = committed</span>
+        <span style="border: 1px dashed var(--ink); padding: 2px 8px">dashed = editable</span>
+        <span style="border: 1px dotted var(--ink); padding: 2px 8px">dotted = past</span>
+        <span style="border: 4px solid var(--ink); padding: 0 8px">4px = new</span>
+      </div>
+    </div>
+  </body>
+</html>

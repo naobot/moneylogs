@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>New log wizard, type step, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 18px;
+            min-height: 0;
+            flex-grow: 1;
+            overflow: hidden;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              align-items: center;
+              height: 44px;
+              box-sizing: border-box;
+              padding: 6px 4px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 10px;
+                padding: 0 10px;
+                background: #f5f3f0;
+                font-size: 16px;
+                line-height: 28px;
+                font-weight: 700;
+              "
+            >
+              new log
+            </h1>
+          </header>
+          <sc-if value="{{isSocial}}" hint-placeholder-val="{{ true }}">
+            <ol
+              aria-label="Steps"
+              style="
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                margin: 0;
+                padding: 0 0 12px;
+                list-style: none;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                flex-shrink: 0;
+              "
+            >
+              <li
+                aria-current="step"
+                style="display: flex; flex-direction: column; align-items: center; gap: 2px"
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >1</span
+                ><strong style="font-size: 11px">type</strong>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >2</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">basics</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >3</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">dates</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >4</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">friends</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >5</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">review</span>
+              </li>
+            </ol>
+          </sc-if>
+          <sc-if value="{{isFinancial}}" hint-placeholder-val="{{ false }}">
+            <ol
+              aria-label="Steps"
+              style="
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                margin: 0;
+                padding: 0 0 12px;
+                list-style: none;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                flex-shrink: 0;
+              "
+            >
+              <li
+                aria-current="step"
+                style="display: flex; flex-direction: column; align-items: center; gap: 2px"
+              >
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                  >1</span
+                ><strong style="font-size: 11px">type</strong>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >2</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">basics</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >3</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">part of</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >4</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">currency</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >5</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">friends</span>
+              </li>
+              <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                <span
+                  style="
+                    width: 28px;
+                    height: 28px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px dashed #242424;
+                    font-size: 12px;
+                  "
+                  >6</span
+                ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">review</span>
+              </li>
+            </ol>
+          </sc-if>
+          <h2
+            style="margin: 0; font-size: 18px; line-height: 1.3; font-weight: 700; flex-shrink: 0"
+          >
+            what kind of log are you starting?
+          </h2>
+          <div
+            role="radiogroup"
+            aria-label="Log type"
+            style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked="{{socialChecked}}"
+              onClick="{{pickSocial}}"
+              style="display: flex; flex-direction: column; gap: 4px; padding: 14px; font: inherit; text-align: left; border: 1px solid #242424; background: {{socialBg}}; color: {{socialFg}}"
+            >
+              <strong style="font-size: 16px">{{socialMark}} social</strong
+              ><span style="font-size: 13px">A time-boxed log group, up to a month long.</span
+              ><span style="font-size: 13px"
+                >Everyone posts about their day's spending; insights unlock when it ends.</span
+              >
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked="{{financialChecked}}"
+              onClick="{{pickFinancial}}"
+              style="display: flex; flex-direction: column; gap: 4px; padding: 14px; font: inherit; text-align: left; border: 1px solid #242424; background: {{financialBg}}; color: {{financialFg}}"
+            >
+              <strong style="font-size: 16px">{{financialMark}} financial</strong
+              ><span style="font-size: 13px">An ongoing spending tracker with no end date.</span
+              ><span style="font-size: 13px"
+                >One entry per purchase, by category, with stats that are always on.</span
+              >
+            </button>
+          </div>
+          <p
+            style="
+              margin: 0;
+              padding: 10px 12px;
+              border: 1px solid #242424;
+              font-size: 13px;
+              flex-shrink: 0;
+            "
+          >
+            You already have a financial log just for you: <a href="#">household</a>. Another can
+            keep something separate, like a trip or a side project.
+          </p>
+        </main>
+        <div
+          style="
+            display: flex;
+            gap: 10px;
+            padding: 12px 12px 16px;
+            border-top: 1px solid #242424;
+            background: #f5f3f0;
+            flex-shrink: 0;
+          "
+        >
+          <button
+            type="button"
+            disabled
+            style="
+              height: 44px;
+              padding: 0 16px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #242424;
+              border: 1px solid #242424;
+              background: #f5f3f0;
+              opacity: 0.3;
+            "
+          >
+            back</button
+          ><button
+            type="button"
+            style="
+              flex-grow: 1;
+              height: 44px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #242424;
+              border: 2px solid #242424;
+              background: #ffffff;
+            "
+          >
+            next
+          </button>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { mode: 'social' };
+        }
+        renderVals() {
+          const m = (this.state || {}).mode;
+          const v = { isSocial: m === 'social', isFinancial: m === 'financial' };
+          ['social', 'financial'].forEach((k) => {
+            const on = m === k;
+            v[k + 'Checked'] = on ? 'true' : 'false';
+            v[k + 'Bg'] = on ? '#242424' : '#ffffff';
+            v[k + 'Fg'] = on ? '#f5f3f0' : '#242424';
+            v[k + 'Mark'] = on ? '(•)' : '( )';
+          });
+          v.pickSocial = () => this.setState({ mode: 'social' });
+          v.pickFinancial = () => this.setState({ mode: 'financial' });
+          return v;
+        }
+      }
+    </script>
+  </body>
+</html>

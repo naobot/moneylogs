@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Share card on wide screens</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 1440px;
+          height: 900px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 15px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 52px;
+            padding: 0 16px;
+            border-bottom: 1px solid #242424;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex">
+            <a
+              href="#"
+              aria-label="Home"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="My preferences"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="Notifications"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 6px;
+              align-items: center;
+              padding-left: 16px;
+              border-left: 1px solid #242424;
+              font-size: 14px;
+            "
+          >
+            <a
+              href="#"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px 4px 7px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-left: auto">
+            <button
+              type="button"
+              aria-label="Theme: paper. Switch to mint"
+              title="theme · paper"
+              style="
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/a24e291db61a86d30c0e0ada6135bca8"
+                alt=""
+                width="20"
+                height="20"
+                style="display: block; flex-shrink: 0"
+              /></button
+            ><strong style="font-size: 16px; padding-left: 8px; border-left: 1px solid #242424"
+              >moneylogs</strong
+            >
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-haspopup="menu"
+              style="
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />
+            </button>
+          </div>
+        </nav>
+        <div
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; gap: 20px; padding: 16px 24px 0"
+        >
+          <div
+            style="
+              height: 48px;
+              box-sizing: border-box;
+              padding: 7px 5px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+            "
+          ></div>
+          <div style="display: grid; grid-template-columns: 260px minmax(0, 1fr) 260px; gap: 32px">
+            <div style="height: 92px; border: 2px solid #242424"></div>
+            <div style="display: flex; flex-direction: column; gap: 22px">
+              <div style="height: 44px; border-bottom: 1px solid #242424"></div>
+              <div style="height: 70px; border: 2px solid #242424"></div>
+              <div style="height: 32px; background: #242424"></div>
+              <div style="height: 42px; border-bottom: 1px dashed rgba(36, 36, 36, 0.3)"></div>
+              <div style="height: 42px; border-bottom: 1px dashed rgba(36, 36, 36, 0.3)"></div>
+            </div>
+            <div style="height: 200px"></div>
+          </div>
+        </div>
+
+        <div
+          style="
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+          "
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dsh"
+            style="
+              width: 640px;
+              display: flex;
+              flex-direction: column;
+              background: #f5f3f0;
+              border: 2px solid #242424;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 14px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+            >
+              <h2 id="dsh" style="margin: 0; font-size: 14px; font-weight: 700">share today</h2>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick="{{close}}"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 18px;
+                  color: #f5f3f0;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ×
+              </button>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 230px minmax(0, 1fr);
+                gap: 22px;
+                padding: 20px;
+              "
+            >
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div
+                  role="group"
+                  aria-label="Image shape"
+                  style="display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #242424"
+                >
+                  <button
+                    type="button"
+                    aria-pressed="{{storyOn}}"
+                    onClick="{{pickStory}}"
+                    style="height: 36px; padding: 0; font: inherit; font-size: 13px; border: 0; border-right: 1px solid #242424; background: {{storyBg}}; color: {{storyFg}}"
+                  >
+                    story</button
+                  ><button
+                    type="button"
+                    aria-pressed="{{squareOn}}"
+                    onClick="{{pickSquare}}"
+                    style="height: 36px; padding: 0; font: inherit; font-size: 13px; border: 0; background: {{squareBg}}; color: {{squareFg}}"
+                  >
+                    square
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 14px 0 6px;
+                    background: repeating-linear-gradient(
+                      45deg,
+                      rgba(36, 36, 36, 0.06) 0 1px,
+                      transparent 1px 6px
+                    );
+                    border: 1px solid #242424;
+                  "
+                >
+                  <sc-if value="{{storyOn}}" hint-placeholder-val="{{ true }}"
+                    ><div
+                      role="img"
+                      aria-label="Share card preview"
+                      style="
+                        width: 190px;
+                        height: 338px;
+                        box-sizing: border-box;
+                        padding: 6px;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        box-shadow: 3px 3px 0 rgba(36, 36, 36, 0.25);
+                      "
+                    >
+                      <div
+                        style="
+                          height: 100%;
+                          box-sizing: border-box;
+                          display: flex;
+                          flex-direction: column;
+                          gap: 8px;
+                          padding: 6px;
+                          border: 1.5px solid #242424;
+                          font-family: Hack, monospace;
+                        "
+                      >
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            height: 22px;
+                            box-sizing: border-box;
+                            padding: 3px 2px;
+                            border: 1.5px solid #242424;
+                            background: repeating-linear-gradient(
+                              180deg,
+                              #242424 0 1px,
+                              transparent 1px 3px
+                            );
+                            background-clip: content-box;
+                          "
+                        >
+                          <span
+                            style="
+                              margin-left: 8px;
+                              padding: 0 6px;
+                              background: #ffffff;
+                              font-size: 11px;
+                              font-weight: 700;
+                              line-height: 14px;
+                            "
+                            >today</span
+                          >
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px">
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 30 30"
+                            aria-hidden="true"
+                            shape-rendering="crispEdges"
+                            style="display: block; flex-shrink: 0; background: #ffffff"
+                          >
+                            <path
+                              d="M4 2h1v1h-1zM23 2h1v1h-1zM4 3h2v1h-2zM22 3h2v1h-2zM4 4h1v1h-1zM6 4h1v1h-1zM21 4h1v1h-1zM23 4h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM20 5h1v1h-1zM23 5h1v1h-1zM4 6h1v1h-1zM8 6h12v1h-12zM23 6h1v1h-1zM4 7h1v1h-1zM23 7h1v1h-1zM3 8h1v1h-1zM24 8h1v1h-1zM3 9h1v1h-1zM24 9h1v1h-1zM3 10h1v1h-1zM7 10h2v1h-2zM19 10h2v1h-2zM24 10h1v1h-1zM3 11h1v1h-1zM7 11h2v1h-2zM19 11h2v1h-2zM24 11h1v1h-1zM3 12h1v1h-1zM24 12h1v1h-1zM2 13h2v1h-2zM13 13h2v1h-2zM24 13h2v1h-2zM3 14h1v1h-1zM12 14h1v1h-1zM15 14h1v1h-1zM24 14h1v1h-1zM2 15h2v1h-2zM14 15h1v1h-1zM24 15h2v1h-2zM3 16h1v1h-1zM11 16h1v1h-1zM17 16h1v1h-1zM24 16h1v1h-1zM3 17h1v1h-1zM12 17h5v1h-5zM24 17h1v1h-1zM4 18h1v1h-1zM23 18h1v1h-1zM5 19h1v1h-1zM22 19h1v1h-1zM6 20h2v1h-2zM20 20h2v1h-2zM8 21h12v1h-12zM10 22h1v1h-1zM17 22h1v1h-1zM9 23h1v1h-1zM18 23h1v1h-1zM8 24h1v1h-1zM19 24h1v1h-1zM7 25h1v1h-1zM20 25h1v1h-1zM6 26h1v1h-1zM21 26h1v1h-1zM5 27h1v1h-1zM22 27h1v1h-1zM4 28h1v1h-1zM23 28h1v1h-1zM3 29h1v1h-1zM24 29h1v1h-1z"
+                              fill="#242424"
+                            /></svg
+                          ><span
+                            style="
+                              display: flex;
+                              flex-direction: column;
+                              line-height: 1.2;
+                              min-width: 0;
+                            "
+                            ><strong style="font-size: 9px">Nao</strong
+                            ><span style="font-size: 7px">Tokyo · fri 27 nov</span></span
+                          ><span style="margin-left: auto; font-size: 9px; white-space: nowrap"
+                            >ฅ(=✧ω✧=)ฅ</span
+                          >
+                        </div>
+                        <div style="border-top: 1px dashed #242424"></div>
+                        <div
+                          style="
+                            display: flex;
+                            flex-direction: column;
+                            gap: 3px;
+                            font-size: 8px;
+                            font-weight: 700;
+                            line-height: 1.3;
+                          "
+                        >
+                          <span>I spent 42% less than on a usual Friday!</span
+                          ><span>18% less than this point last month</span>
+                        </div>
+                        <sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ false }}"
+                          ><div
+                            style="
+                              height: 56px;
+                              border: 1px solid #242424;
+                              background: repeating-linear-gradient(
+                                135deg,
+                                #d9d4cc 0 6px,
+                                #cfc9bf 6px 12px
+                              );
+                            "
+                          ></div></sc-if
+                        ><sc-if value="{{pie}}" hint-placeholder-val="{{ true }}"
+                          ><div
+                            style="
+                              display: flex;
+                              flex-direction: column;
+                              align-items: center;
+                              gap: 6px;
+                              padding: 6px;
+                              border: 1px solid #242424;
+                            "
+                          >
+                            <span style="font-size: 7px; align-self: flex-start"
+                              >where my money went</span
+                            >
+                            <div style="display: flex; align-items: center; gap: 8px">
+                              <span
+                                aria-hidden="true"
+                                style="
+                                  flex-shrink: 0;
+                                  width: 64px;
+                                  height: 64px;
+                                  border-radius: 50%;
+                                  border: 1px solid #242424;
+                                  background: conic-gradient(
+                                    #89afd6 0 45%,
+                                    #b27e6c 0 80%,
+                                    #a3c69c 0
+                                  );
+                                "
+                              ></span
+                              ><sc-if value="{{names}}" hint-placeholder-val="{{ true }}"
+                                ><ul
+                                  style="
+                                    margin: 0;
+                                    padding: 0;
+                                    list-style: none;
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 2px;
+                                    font-size: 7px;
+                                  "
+                                >
+                                  <li style="display: flex; align-items: center; gap: 3px">
+                                    <span
+                                      style="
+                                        width: 6px;
+                                        height: 6px;
+                                        border: 0.5px solid #242424;
+                                        background: #89afd6;
+                                      "
+                                    ></span
+                                    >Groceries<sc-if
+                                      value="{{amounts}}"
+                                      hint-placeholder-val="{{ false }}"
+                                      ><span style="margin-left: auto; padding-left: 4px"
+                                        >¥1,240</span
+                                      ></sc-if
+                                    >
+                                  </li>
+                                  <li style="display: flex; align-items: center; gap: 3px">
+                                    <span
+                                      style="
+                                        width: 6px;
+                                        height: 6px;
+                                        border: 0.5px solid #242424;
+                                        background: #b27e6c;
+                                      "
+                                    ></span
+                                    >Eating out<sc-if
+                                      value="{{amounts}}"
+                                      hint-placeholder-val="{{ false }}"
+                                      ><span style="margin-left: auto; padding-left: 4px"
+                                        >¥960</span
+                                      ></sc-if
+                                    >
+                                  </li>
+                                  <li style="display: flex; align-items: center; gap: 3px">
+                                    <span
+                                      style="
+                                        width: 6px;
+                                        height: 6px;
+                                        border: 0.5px solid #242424;
+                                        background: #a3c69c;
+                                      "
+                                    ></span
+                                    >Transit<sc-if
+                                      value="{{amounts}}"
+                                      hint-placeholder-val="{{ false }}"
+                                      ><span style="margin-left: auto; padding-left: 4px"
+                                        >¥550</span
+                                      ></sc-if
+                                    >
+                                  </li>
+                                </ul></sc-if
+                              >
+                            </div>
+                          </div></sc-if
+                        >
+                        <div style="border-top: 1px dashed #242424"></div>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            margin-top: auto;
+                          "
+                        >
+                          <span style="display: flex; flex-direction: column; line-height: 1.15"
+                            ><strong style="font-size: 11px">moneylogs</strong
+                            ><span style="font-size: 7px">moneylogs.app</span></span
+                          ><svg
+                            width="30"
+                            height="30"
+                            viewBox="0 0 32 32"
+                            aria-hidden="true"
+                            shape-rendering="crispEdges"
+                            style="display: block; flex-shrink: 0"
+                          >
+                            <path
+                              d="M11 11h12v1h-12zM8 12h3v1h-3zM23 12h2v1h-2zM7 13h1v1h-1zM25 13h1v1h-1zM5 14h2v1h-2zM9 14h2v1h-2zM24 14h1v1h-1zM26 14h1v1h-1zM4 15h1v1h-1zM8 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM4 16h1v1h-1zM22 16h1v1h-1zM24 16h1v1h-1zM26 16h2v1h-2zM3 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM27 17h1v1h-1zM3 18h1v1h-1zM22 18h1v1h-1zM24 18h1v1h-1zM26 18h2v1h-2zM3 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM25 19h2v1h-2zM3 20h1v1h-1zM18 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM26 20h1v1h-1zM4 21h1v1h-1zM13 21h1v1h-1zM15 21h1v1h-1zM17 21h1v1h-1zM19 21h1v1h-1zM21 21h1v1h-1zM23 21h3v1h-3zM5 22h2v1h-2zM8 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM20 22h1v1h-1zM22 22h2v1h-2zM6 23h2v1h-2zM9 23h1v1h-1zM11 23h1v1h-1zM13 23h1v1h-1zM15 23h1v1h-1zM17 23h1v1h-1zM19 23h4v1h-4zM8 24h12v1h-12zM26 25h3v1h-3zM25 26h1v1h-1zM29 26h1v1h-1zM26 27h3v1h-3z"
+                              fill="#242424"
+                            />
+                          </svg>
+                        </div>
+                      </div></div
+                  ></sc-if>
+                  <sc-if value="{{squareOnB}}" hint-placeholder-val="{{ false }}"
+                    ><div
+                      role="img"
+                      aria-label="Share card preview"
+                      style="
+                        width: 250px;
+                        height: 250px;
+                        box-sizing: border-box;
+                        padding: 6px;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        box-shadow: 3px 3px 0 rgba(36, 36, 36, 0.25);
+                      "
+                    >
+                      <div
+                        style="
+                          height: 100%;
+                          box-sizing: border-box;
+                          display: flex;
+                          flex-direction: column;
+                          gap: 6px;
+                          padding: 6px;
+                          border: 1.5px solid #242424;
+                          font-family: Hack, monospace;
+                        "
+                      >
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            height: 18px;
+                            box-sizing: border-box;
+                            padding: 3px 2px;
+                            border: 1.5px solid #242424;
+                            background: repeating-linear-gradient(
+                              180deg,
+                              #242424 0 1px,
+                              transparent 1px 3px
+                            );
+                            background-clip: content-box;
+                          "
+                        >
+                          <span
+                            style="
+                              margin-left: 8px;
+                              padding: 0 6px;
+                              background: #ffffff;
+                              font-size: 9px;
+                              font-weight: 700;
+                              line-height: 14px;
+                            "
+                            >today</span
+                          >
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 30 30"
+                            aria-hidden="true"
+                            shape-rendering="crispEdges"
+                            style="display: block; flex-shrink: 0; background: #ffffff"
+                          >
+                            <path
+                              d="M4 2h1v1h-1zM23 2h1v1h-1zM4 3h2v1h-2zM22 3h2v1h-2zM4 4h1v1h-1zM6 4h1v1h-1zM21 4h1v1h-1zM23 4h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM20 5h1v1h-1zM23 5h1v1h-1zM4 6h1v1h-1zM8 6h12v1h-12zM23 6h1v1h-1zM4 7h1v1h-1zM23 7h1v1h-1zM3 8h1v1h-1zM24 8h1v1h-1zM3 9h1v1h-1zM24 9h1v1h-1zM3 10h1v1h-1zM7 10h2v1h-2zM19 10h2v1h-2zM24 10h1v1h-1zM3 11h1v1h-1zM7 11h2v1h-2zM19 11h2v1h-2zM24 11h1v1h-1zM3 12h1v1h-1zM24 12h1v1h-1zM2 13h2v1h-2zM13 13h2v1h-2zM24 13h2v1h-2zM3 14h1v1h-1zM12 14h1v1h-1zM15 14h1v1h-1zM24 14h1v1h-1zM2 15h2v1h-2zM14 15h1v1h-1zM24 15h2v1h-2zM3 16h1v1h-1zM11 16h1v1h-1zM17 16h1v1h-1zM24 16h1v1h-1zM3 17h1v1h-1zM12 17h5v1h-5zM24 17h1v1h-1zM4 18h1v1h-1zM23 18h1v1h-1zM5 19h1v1h-1zM22 19h1v1h-1zM6 20h2v1h-2zM20 20h2v1h-2zM8 21h12v1h-12zM10 22h1v1h-1zM17 22h1v1h-1zM9 23h1v1h-1zM18 23h1v1h-1zM8 24h1v1h-1zM19 24h1v1h-1zM7 25h1v1h-1zM20 25h1v1h-1zM6 26h1v1h-1zM21 26h1v1h-1zM5 27h1v1h-1zM22 27h1v1h-1zM4 28h1v1h-1zM23 28h1v1h-1zM3 29h1v1h-1zM24 29h1v1h-1z"
+                              fill="#242424"
+                            /></svg
+                          ><span
+                            style="
+                              display: flex;
+                              flex-direction: column;
+                              line-height: 1.2;
+                              min-width: 0;
+                            "
+                            ><strong style="font-size: 9px">Nao</strong
+                            ><span style="font-size: 7px">Tokyo · fri 27 nov</span></span
+                          ><span style="margin-left: auto; font-size: 9px; white-space: nowrap"
+                            >ฅ(=✧ω✧=)ฅ</span
+                          >
+                        </div>
+                        <div style="border-top: 1px dashed #242424"></div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start">
+                          <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+                            <div
+                              style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 3px;
+                                font-size: 7px;
+                                font-weight: 700;
+                                line-height: 1.3;
+                              "
+                            >
+                              <span>I spent 42% less than on a usual Friday!</span
+                              ><span>18% less than this point last month</span>
+                            </div>
+                          </div>
+                          <sc-if value="{{pie}}" hint-placeholder-val="{{ true }}"
+                            ><div
+                              style="
+                                display: flex;
+                                flex-direction: row;
+                                align-items: center;
+                                gap: 6px;
+                                padding: 6px;
+                                border: 1px solid #242424;
+                              "
+                            >
+                              <span style="font-size: 7px; display: none">where my money went</span>
+                              <div style="display: flex; align-items: center; gap: 8px">
+                                <span
+                                  aria-hidden="true"
+                                  style="
+                                    flex-shrink: 0;
+                                    width: 50px;
+                                    height: 50px;
+                                    border-radius: 50%;
+                                    border: 1px solid #242424;
+                                    background: conic-gradient(
+                                      #89afd6 0 45%,
+                                      #b27e6c 0 80%,
+                                      #a3c69c 0
+                                    );
+                                  "
+                                ></span
+                                ><sc-if value="{{names}}" hint-placeholder-val="{{ true }}"
+                                  ><ul
+                                    style="
+                                      margin: 0;
+                                      padding: 0;
+                                      list-style: none;
+                                      display: flex;
+                                      flex-direction: column;
+                                      gap: 2px;
+                                      font-size: 7px;
+                                    "
+                                  >
+                                    <li style="display: flex; align-items: center; gap: 3px">
+                                      <span
+                                        style="
+                                          width: 6px;
+                                          height: 6px;
+                                          border: 0.5px solid #242424;
+                                          background: #89afd6;
+                                        "
+                                      ></span
+                                      >Groceries<sc-if
+                                        value="{{amounts}}"
+                                        hint-placeholder-val="{{ false }}"
+                                        ><span style="margin-left: auto; padding-left: 4px"
+                                          >¥1,240</span
+                                        ></sc-if
+                                      >
+                                    </li>
+                                    <li style="display: flex; align-items: center; gap: 3px">
+                                      <span
+                                        style="
+                                          width: 6px;
+                                          height: 6px;
+                                          border: 0.5px solid #242424;
+                                          background: #b27e6c;
+                                        "
+                                      ></span
+                                      >Eating out<sc-if
+                                        value="{{amounts}}"
+                                        hint-placeholder-val="{{ false }}"
+                                        ><span style="margin-left: auto; padding-left: 4px"
+                                          >¥960</span
+                                        ></sc-if
+                                      >
+                                    </li>
+                                    <li style="display: flex; align-items: center; gap: 3px">
+                                      <span
+                                        style="
+                                          width: 6px;
+                                          height: 6px;
+                                          border: 0.5px solid #242424;
+                                          background: #a3c69c;
+                                        "
+                                      ></span
+                                      >Transit<sc-if
+                                        value="{{amounts}}"
+                                        hint-placeholder-val="{{ false }}"
+                                        ><span style="margin-left: auto; padding-left: 4px"
+                                          >¥550</span
+                                        ></sc-if
+                                      >
+                                    </li>
+                                  </ul></sc-if
+                                >
+                              </div>
+                            </div></sc-if
+                          >
+                        </div>
+                        <div style="border-top: 1px dashed #242424"></div>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            margin-top: auto;
+                          "
+                        >
+                          <span style="display: flex; flex-direction: column; line-height: 1.15"
+                            ><strong style="font-size: 9px">moneylogs</strong
+                            ><span style="font-size: 7px">moneylogs.app</span></span
+                          ><svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 32 32"
+                            aria-hidden="true"
+                            shape-rendering="crispEdges"
+                            style="display: block; flex-shrink: 0"
+                          >
+                            <path
+                              d="M11 11h12v1h-12zM8 12h3v1h-3zM23 12h2v1h-2zM7 13h1v1h-1zM25 13h1v1h-1zM5 14h2v1h-2zM9 14h2v1h-2zM24 14h1v1h-1zM26 14h1v1h-1zM4 15h1v1h-1zM8 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM4 16h1v1h-1zM22 16h1v1h-1zM24 16h1v1h-1zM26 16h2v1h-2zM3 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM27 17h1v1h-1zM3 18h1v1h-1zM22 18h1v1h-1zM24 18h1v1h-1zM26 18h2v1h-2zM3 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM25 19h2v1h-2zM3 20h1v1h-1zM18 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM26 20h1v1h-1zM4 21h1v1h-1zM13 21h1v1h-1zM15 21h1v1h-1zM17 21h1v1h-1zM19 21h1v1h-1zM21 21h1v1h-1zM23 21h3v1h-3zM5 22h2v1h-2zM8 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM20 22h1v1h-1zM22 22h2v1h-2zM6 23h2v1h-2zM9 23h1v1h-1zM11 23h1v1h-1zM13 23h1v1h-1zM15 23h1v1h-1zM17 23h1v1h-1zM19 23h4v1h-4zM8 24h12v1h-12zM26 25h3v1h-3zM25 26h1v1h-1zM29 26h1v1h-1zM26 27h3v1h-3z"
+                              fill="#242424"
+                            />
+                          </svg>
+                        </div>
+                      </div></div
+                  ></sc-if>
+                  <button
+                    type="button"
+                    style="
+                      height: 40px;
+                      padding: 0 10px;
+                      font: inherit;
+                      font-size: 12px;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      text-decoration: underline dotted;
+                    "
+                  >
+                    re-roll knick-knack
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 14px">
+                <div style="display: flex; flex-direction: column">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked="{{pieAria}}"
+                    onClick="{{togglePie}}"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      min-height: 40px;
+                      padding: 0;
+                      font: inherit;
+                      font-size: 13px;
+                      color: #242424;
+                      text-align: left;
+                      background: none;
+                      border: 0;
+                    "
+                  >
+                    <span aria-hidden="true" style="font-weight: 700; white-space: pre"
+                      >{{pieBox}}</span
+                    >Show today's spending pie (no fixed costs)
+                  </button>
+                  <sc-if value="{{pie}}" hint-placeholder-val="{{ true }}"
+                    ><div
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        margin-left: 1ch;
+                        padding-left: calc(2ch + 7px);
+                        border-left: 1px solid #242424;
+                        font-size: 13px;
+                      "
+                    >
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked="{{namesAria}}"
+                        onClick="{{toggleNames}}"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                          min-height: 40px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          color: #242424;
+                          text-align: left;
+                          background: none;
+                          border: 0;
+                        "
+                      >
+                        <span aria-hidden="true" style="font-weight: 700; white-space: pre"
+                          >{{namesBox}}</span
+                        >Show category names</button
+                      ><button
+                        type="button"
+                        role="checkbox"
+                        aria-checked="{{amountsAria}}"
+                        onClick="{{toggleAmounts}}"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                          min-height: 40px;
+                          padding: 0;
+                          font: inherit;
+                          font-size: 13px;
+                          color: #242424;
+                          text-align: left;
+                          background: none;
+                          border: 0;
+                        "
+                      >
+                        <span aria-hidden="true" style="font-weight: 700; white-space: pre"
+                          >{{amountsBox}}</span
+                        >Show amounts
+                      </button>
+                    </div></sc-if
+                  >
+                  <div style="display: flex; align-items: center; gap: 8px; padding-top: 6px">
+                    <sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ false }}"
+                      ><span
+                        style="
+                          position: relative;
+                          width: 44px;
+                          height: 44px;
+                          border: 1px solid #242424;
+                          background: repeating-linear-gradient(
+                            135deg,
+                            #d9d4cc 0 6px,
+                            #cfc9bf 6px 12px
+                          );
+                        "
+                        ><button
+                          type="button"
+                          aria-label="remove photo 1"
+                          onClick="{{togglePhoto}}"
+                          style="
+                            position: absolute;
+                            top: -8px;
+                            right: -8px;
+                            width: 20px;
+                            height: 20px;
+                            padding: 0;
+                            font: inherit;
+                            font-size: 12px;
+                            line-height: 1;
+                            color: #f5f3f0;
+                            background: #242424;
+                            border: 0;
+                          "
+                        >
+                          ×
+                        </button></span
+                      ></sc-if
+                    ><button
+                      type="button"
+                      onClick="{{addPhoto}}"
+                      aria-label="add a photo (up to 3)"
+                      style="
+                        height: 44px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 13px;
+                        color: #242424;
+                        background: #f5f3f0;
+                        border: 1px solid #242424;
+                      "
+                    >
+                      [+] photo
+                    </button>
+                  </div>
+                </div>
+                <p style="margin: 0; font-size: 12px; color: rgba(36, 36, 36, 0.7)">{{note}}</p>
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                padding: 12px 20px 16px;
+                border-top: 1px solid #242424;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  height: 44px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                cancel</button
+              ><button
+                type="button"
+                style="
+                  height: 44px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                save image
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"shape": {"editor": "enum", "options": ["story", "square"], "default": "story"}, "$preview": {"width": 1440, "height": 900}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) { super(props); this.state = {}; }
+        renderVals() {
+          const s = this.state || {};
+          const fmt = s.fmt ?? (this.props.shape ?? 'story');
+          const pie = s.pie ?? true, names = s.names ?? true, amounts = s.amounts ?? false, photo = s.photo ?? false;
+          const box = (b) => b ? '[x]' : '[ ]';
+          const t = (k, b) => () => this.setState({ [k]: !b });
+          return {
+            storyOn: fmt === 'story' ? 'true' : 'false', squareOn: fmt === 'square' ? 'true' : 'false', squareOnB: fmt === 'square',
+            storyBg: fmt === 'story' ? '#242424' : '#f5f3f0', storyFg: fmt === 'story' ? '#f5f3f0' : '#242424',
+            squareBg: fmt === 'square' ? '#242424' : '#f5f3f0', squareFg: fmt === 'square' ? '#f5f3f0' : '#242424',
+            pickStory: () => this.setState({ fmt: 'story' }), pickSquare: () => this.setState({ fmt: 'square' }),
+            pie, names: pie && names, amounts: pie && names && amounts, hasPhoto: photo,
+            pieBox: box(pie), namesBox: box(names), amountsBox: box(amounts),
+            pieAria: String(pie), namesAria: String(names), amountsAria: String(amounts),
+            togglePie: t('pie', pie), toggleNames: t('names', names), toggleAmounts: t('amounts', amounts),
+            togglePhoto: t('photo', photo), addPhoto: () => this.setState({ photo: true }),
+            note: (pie && names && amounts ? 'Only your own entries, with the amounts you chose to show.' : 'Only your own entries, and never an amount.') + (photo ? ' Photos are only drawn into the image, never uploaded to moneylogs.' : ''),
+            close: () => {}
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

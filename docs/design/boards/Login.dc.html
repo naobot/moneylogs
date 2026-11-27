@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Login and register, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            padding: 36px 20px 20px;
+            flex-grow: 1;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              flex-shrink: 0;
+            "
+          >
+            <h1 style="margin: 0; font-size: 40px; line-height: 1.1; font-weight: 700">
+              moneylogs
+            </h1>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7); text-align: center">
+              A calm way to keep track of your spending.
+            </p>
+            <a
+              href="#"
+              style="
+                display: flex;
+                align-items: center;
+                height: 36px;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+              >[?] what is this</a
+            >
+          </header>
+          <div
+            role="tablist"
+            aria-label="Account"
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              border: 2px solid #242424;
+              flex-shrink: 0;
+            "
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected="{{newOn}}"
+              onClick="{{pickNew}}"
+              style="height: 44px; font: inherit; font-size: 13px; border: 0; border-right: 2px solid #242424; background: {{newBg}}; color: {{newFg}}; font-weight: {{newW}}"
+            >
+              I'm a new user
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected="{{oldOn}}"
+              onClick="{{pickOld}}"
+              style="height: 44px; font: inherit; font-size: 13px; border: 0; background: {{oldBg}}; color: {{oldFg}}; font-weight: {{oldW}}"
+            >
+              I have an account
+            </button>
+          </div>
+          <form style="display: flex; flex-direction: column; gap: 14px; flex-shrink: 0">
+            <label
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                font-size: 12px;
+                color: rgba(36, 36, 36, 0.7);
+              "
+              >email<input
+                type="email"
+                value="nao@example.com"
+                style="
+                  height: 44px;
+                  box-sizing: border-box;
+                  padding: 0 12px;
+                  font: inherit;
+                  font-size: 14px;
+                  color: #242424;
+                  border: 1px dashed #242424;
+                  border-radius: 0;
+                  background: #ffffff;
+                "
+            /></label>
+            <sc-if value="{{isOld}}" hint-placeholder-val="{{ true }}">
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >password<input
+                  type="text"
+                  value="••••••••••"
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 1px dashed #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                  "
+              /></label>
+            </sc-if>
+            <sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}">
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >password<input
+                  type="text"
+                  value="moneylog"
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 1px dashed #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                  "
+                /><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >still needs: a number · an uppercase letter</span
+                ></label
+              >
+            </sc-if>
+            <button
+              type="button"
+              style="
+                height: 48px;
+                font: inherit;
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #242424;
+                border: 2px solid #242424;
+                background: #ffffff;
+              "
+            >
+              {{submitText}}
+            </button>
+            <sc-if value="{{isOld}}" hint-placeholder-val="{{ true }}">
+              <a
+                href="#"
+                style="
+                  align-self: center;
+                  display: flex;
+                  align-items: center;
+                  height: 40px;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >forgot password</a
+              >
+            </sc-if>
+          </form>
+          <section
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              margin-top: auto;
+              flex-shrink: 0;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <h2 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                just looking?
+              </h2>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Try it first, and save your account later if you like it.
+            </p>
+            <button
+              type="button"
+              style="
+                height: 44px;
+                font: inherit;
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #242424;
+                border: 1px solid #242424;
+                background: #f5f3f0;
+              "
+            >
+              try without an account
+            </button>
+          </section>
+        </main>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { view: 'login' };
+        }
+        renderVals() {
+          const isNew = (this.state || {}).view === 'register';
+          return {
+            isNew, isOld: !isNew,
+            newOn: isNew ? 'true' : 'false', oldOn: isNew ? 'false' : 'true',
+            newBg: isNew ? '#242424' : '#f5f3f0', newFg: isNew ? '#f5f3f0' : '#242424', newW: isNew ? 700 : 400,
+            oldBg: isNew ? '#f5f3f0' : '#242424', oldFg: isNew ? '#242424' : '#f5f3f0', oldW: isNew ? 400 : 700,
+            submitText: isNew ? 'register' : 'log in',
+            pickNew: () => this.setState({ view: 'register' }),
+            pickOld: () => this.setState({ view: 'login' })
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

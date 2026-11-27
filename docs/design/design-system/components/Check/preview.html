@@ -1,0 +1,67 @@
+<!-- @dsCard group="Inputs" height=260 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Check</title>
+  </head>
+  <body>
+    <div
+      class="pv"
+      style="font-family: var(--font-mono, Hack, monospace); color: var(--ink); font-size: 14px"
+    >
+      <div style="max-width: 360px">
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            border-bottom: 1px dashed var(--ink-faint);
+          "
+          ><input
+            type="checkbox"
+            style="position: absolute; opacity: 0; width: 1px; height: 1px"
+          /><strong aria-hidden="true">[ ]</strong><span>12 nov · coffee</span></label
+        >
+        <label style="display: flex; align-items: center; gap: 10px; min-height: 44px"
+          ><input
+            type="checkbox"
+            checked
+            style="position: absolute; opacity: 0; width: 1px; height: 1px"
+          /><strong aria-hidden="true">[x]</strong><span>15 nov · groceries</span></label
+        >
+        <div style="height: 10px"></div>
+        <div role="radiogroup" aria-label="Saving" style="padding-top: 1px">
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              min-height: 44px;
+              padding: 0 12px;
+              margin-top: -1px;
+              border: 1px solid var(--ink);
+              background: var(--sheet);
+            "
+            ><strong aria-hidden="true">( )</strong>save a lot</label
+          >
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              min-height: 44px;
+              padding: 0 12px;
+              margin-top: -1px;
+              border: 1px solid var(--ink);
+              background: var(--inverse-surface);
+              color: var(--inverse-ink);
+            "
+            ><strong aria-hidden="true">(•)</strong>save steadily</label
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

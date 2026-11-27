@@ -88,7 +88,7 @@ export const DeleteAccountModal = ({ isOpen, onClose }: DeleteAccountModalProps)
       disabled={pending}
       className="DeleteAccount"
     >
-      <Modal.Header striped title="Delete account" />
+      <Modal.Header title="Delete account" />
       <form onSubmit={handleSubmit}>
         <Modal.Body className="DeleteAccount__body">
           <p>

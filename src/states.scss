@@ -1,0 +1,27 @@
+// Interaction states (2026-11 audit, design-system README → States).
+//
+// Hover styles apply only where the pointer can hover. On a touch screen :hover sticks
+// to whatever was tapped last, so a tapped card or row stayed inverted when you came
+// back to it. Keyboard focus, selection and a press apply everywhere.
+//
+//   @include hover("&:focus-visible") { … }             hover, plus focus
+//   @include hover("&:focus-visible, &:active") { … }   a box that inverts: a press
+//                                                        inverts it on touch too
+//   @include hover(null, "&:hover &__badge") { … }      hover on the parent styles a child
+//
+// $with: the selectors that share the look on every device (focus, active, selected).
+// $hover: the hover selector, when it isn't plain `&:hover` (a :not() qualifier, a
+// descendant). Both are selector strings; `&` in them is the parent, as usual.
+@mixin hover($with: null, $hover: "&:hover") {
+  @if $with {
+    #{$with} {
+      @content;
+    }
+  }
+
+  @media (hover: hover) {
+    #{$hover} {
+      @content;
+    }
+  }
+}

@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Budget wizard sheet, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <div
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px"
+        >
+          <div style="height: 44px; border-bottom: 1px solid #242424"></div>
+          <div
+            style="
+              height: 44px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              padding: 6px 4px;
+              box-sizing: border-box;
+            "
+          ></div>
+          <div style="height: 40px; border: 2px solid #242424"></div>
+        </div>
+        <div
+          style="
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: rgba(0, 0, 0, 0.2);
+          "
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sheet-title"
+            style="display: flex; flex-direction: column; max-height: 720px; background: #f5f3f0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 14px;
+                background: #242424;
+                color: #f5f3f0;
+                flex-shrink: 0;
+              "
+            >
+              <h2
+                id="sheet-title"
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  font-weight: 700;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "
+              >
+                set a budget · step 4 of 5
+              </h2>
+              <button
+                type="button"
+                aria-label="Close"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 18px;
+                  color: #f5f3f0;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ×
+              </button>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                padding: 16px 14px 20px;
+                overflow: hidden;
+                flex-grow: 1;
+              "
+            >
+              <ol
+                aria-label="Steps"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(5, minmax(0, 1fr));
+                  margin: 0;
+                  padding: 0 0 12px;
+                  list-style: none;
+                  border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                "
+              >
+                <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                  <span
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid #242424;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >1</span
+                  ><span style="font-size: 11px">start</span>
+                </li>
+                <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                  <span
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid #242424;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >2</span
+                  ><span style="font-size: 11px">income</span>
+                </li>
+                <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                  <span
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px solid #242424;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >3</span
+                  ><span style="font-size: 11px">housing</span>
+                </li>
+                <li
+                  aria-current="step"
+                  style="display: flex; flex-direction: column; align-items: center; gap: 2px"
+                >
+                  <span
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      background: #242424;
+                      color: #f5f3f0;
+                      font-size: 12px;
+                      font-weight: 700;
+                    "
+                    >4</span
+                  ><strong style="font-size: 11px">saving</strong>
+                </li>
+                <li style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+                  <span
+                    style="
+                      width: 28px;
+                      height: 28px;
+                      box-sizing: border-box;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border: 1px dashed #242424;
+                      font-size: 12px;
+                    "
+                    >5</span
+                  ><span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">plan</span>
+                </li>
+              </ol>
+              <h3 style="margin: 0; font-size: 18px; line-height: 1.3; font-weight: 700">
+                how hard do you want to save?
+              </h3>
+              <div
+                role="radiogroup"
+                aria-label="Saving"
+                style="display: flex; flex-direction: column; padding-top: 1px"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked="{{c0checked}}"
+                  onClick="{{pick0}}"
+                  style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; font: inherit; font-size: 14px; text-align: left; border: 1px solid #242424; margin-top: -1px; background: {{c0bg}}; color: {{c0fg}}"
+                >
+                  <span aria-hidden="true" style="flex-shrink: 0; font-weight: 700">{{c0mark}}</span
+                  ><span>I want to live frugally and save a lot</span></button
+                ><button
+                  type="button"
+                  role="radio"
+                  aria-checked="{{c1checked}}"
+                  onClick="{{pick1}}"
+                  style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; font: inherit; font-size: 14px; text-align: left; border: 1px solid #242424; margin-top: -1px; background: {{c1bg}}; color: {{c1fg}}"
+                >
+                  <span aria-hidden="true" style="flex-shrink: 0; font-weight: 700">{{c1mark}}</span
+                  ><span>I want to save steadily and still enjoy myself</span></button
+                ><button
+                  type="button"
+                  role="radio"
+                  aria-checked="{{c2checked}}"
+                  onClick="{{pick2}}"
+                  style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; font: inherit; font-size: 14px; text-align: left; border: 1px solid #242424; margin-top: -1px; background: {{c2bg}}; color: {{c2fg}}"
+                >
+                  <span aria-hidden="true" style="flex-shrink: 0; font-weight: 700">{{c2mark}}</span
+                  ><span>I'd like to save a little, but comfort comes first</span></button
+                ><button
+                  type="button"
+                  role="radio"
+                  aria-checked="{{c3checked}}"
+                  onClick="{{pick3}}"
+                  style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; font: inherit; font-size: 14px; text-align: left; border: 1px solid #242424; margin-top: -1px; background: {{c3bg}}; color: {{c3fg}}"
+                >
+                  <span aria-hidden="true" style="flex-shrink: 0; font-weight: 700">{{c3mark}}</span
+                  ><span>I just want to keep my spending in check for now</span>
+                </button>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: rgba(36, 36, 36, 0.7)">
+                You can change every amount on the next step.
+              </p>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                padding: 12px 14px 16px;
+                border-top: 1px solid #242424;
+                flex-shrink: 0;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  height: 44px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                back
+              </button>
+              <button
+                type="button"
+                style="
+                  flex-grow: 1;
+                  height: 44px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                next
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { picked: 1 };
+        }
+        renderVals() {
+          const picked = (this.state || {}).picked;
+          const v = {};
+          for (let i = 0; i < 4; i++) {
+            const on = picked === i;
+            v['c' + i + 'checked'] = on ? 'true' : 'false';
+            v['c' + i + 'bg'] = on ? '#242424' : '#ffffff';
+            v['c' + i + 'fg'] = on ? '#f5f3f0' : '#242424';
+            v['c' + i + 'mark'] = on ? '(•)' : '( )';
+            v['pick' + i] = () => this.setState({ picked: i });
+          }
+          return v;
+        }
+      }
+    </script>
+  </body>
+</html>

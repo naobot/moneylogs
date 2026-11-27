@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Caret menu and quick display, phone</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                aria-expanded="{{menuOpen}}"
+                onClick="{{toggleMenu}}"
+                style="background: {{caretBg}} !important; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0"
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0; filter: {{caretFilter}}; transform: {{caretTurn}}"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; padding: 8px 12px 0; gap: 16px"
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 44px;
+              box-sizing: border-box;
+              padding: 6px 4px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <h1
+              style="
+                margin: 0 0 0 10px;
+                padding: 0 10px;
+                background: #f5f3f0;
+                font-size: 16px;
+                line-height: 28px;
+                font-weight: 700;
+              "
+            >
+              household
+            </h1>
+          </header>
+          <div
+            style="height: 40px; border: 2px solid #242424; border-top: 0; margin-top: -16px"
+          ></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <strong style="font-size: 28px">¥ 48,210</strong
+            ><span style="font-size: 16px">ฅ^•ω•^ฅ</span>
+          </div>
+          <div style="height: 10px; border: 1px dashed #242424"></div>
+          <div style="height: 30px; background: #242424"></div>
+          <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+          <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+        </main>
+        <sc-if value="{{isMenu}}" hint-placeholder-val="{{ true }}">
+          <div
+            role="menu"
+            aria-label="Menu"
+            style="
+              position: absolute;
+              top: 44px;
+              right: 8px;
+              z-index: 3;
+              width: 210px;
+              display: flex;
+              flex-direction: column;
+              background: #f5f3f0;
+              border: 2px solid #242424;
+              box-shadow: 4px 4px 0 rgba(36, 36, 36, 0.25);
+            "
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick="{{openDisplay}}"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                height: 44px;
+                padding: 0 12px;
+                font: inherit;
+                color: #242424;
+                text-align: left;
+                background: none;
+                border: 0;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <img
+                src="/_blob/9dfb76404e004c432e8ebd8317769859"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />display<span aria-hidden="true" style="margin-left: auto">›</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-label="{{themeLabel}}"
+              onClick="{{cycle}}"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                height: 44px;
+                padding: 0 12px;
+                font: inherit;
+                color: #242424;
+                text-align: left;
+                background: none;
+                border: 0;
+                border-bottom: 1px solid #242424;
+              "
+            >
+              <img
+                src="{{themeIcon}}"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />theme · {{themeName}}<span
+                aria-hidden="true"
+                style="margin-left: auto; font-size: 11px; color: rgba(36, 36, 36, 0.7)"
+                >{{themeStep}}</span
+              >
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                height: 44px;
+                padding: 0 12px;
+                font: inherit;
+                color: #242424;
+                text-align: left;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/527321a4883df8a51c70a1e90f5af443"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />sign out
+            </button>
+          </div>
+        </sc-if>
+        <sc-if value="{{isDisplay}}" hint-placeholder-val="{{ false }}"
+          ><div
+            style="
+              position: absolute;
+              inset: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              background: rgba(0, 0, 0, 0.2);
+            "
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="qd"
+              style="display: flex; flex-direction: column; background: #f5f3f0"
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding-left: 14px;
+                  background: #242424;
+                  color: #f5f3f0;
+                "
+              >
+                <h2 id="qd" style="margin: 0; font-size: 14px; font-weight: 700">display</h2>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick="{{closeAll}}"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 18px;
+                    color: #f5f3f0;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                style="display: flex; flex-direction: column; gap: 14px; padding: 18px 14px 14px"
+              >
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 64px minmax(0, 1fr);
+                    align-items: center;
+                    gap: 10px;
+                  "
+                >
+                  <span style="font-size: 12px; font-weight: 700">theme</span>
+                  <div
+                    role="group"
+                    aria-label="theme"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, minmax(0, 1fr));
+                      border: 2px solid #242424;
+                    "
+                  >
+                    <button
+                      type="button"
+                      aria-pressed="{{th_0_on}}"
+                      onClick="{{th_0_pick}}"
+                      style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0; font: inherit; font-size: 13px; border: 0; border-right: 1px solid #242424; background: {{th_0_bg}}; color: {{th_0_fg}}"
+                    >
+                      <img
+                        src="/_blob/a24e291db61a86d30c0e0ada6135bca8"
+                        alt=""
+                        width="14"
+                        height="14"
+                        style="flex-shrink: 0"
+                      />
+                      paper</button
+                    ><button
+                      type="button"
+                      aria-pressed="{{th_1_on}}"
+                      onClick="{{th_1_pick}}"
+                      style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0; font: inherit; font-size: 13px; border: 0; border-right: 1px solid #242424; background: {{th_1_bg}}; color: {{th_1_fg}}"
+                    >
+                      <img
+                        src="/_blob/9e610b9be66b0172ec9f2d47df379bbc"
+                        alt=""
+                        width="14"
+                        height="14"
+                        style="flex-shrink: 0"
+                      />
+                      mint</button
+                    ><button
+                      type="button"
+                      aria-pressed="{{th_2_on}}"
+                      onClick="{{th_2_pick}}"
+                      style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0; font: inherit; font-size: 13px; border: 0; background: {{th_2_bg}}; color: {{th_2_fg}}"
+                    >
+                      <img
+                        src="/_blob/8d329eb76c244b6472959fe7f71b2310"
+                        alt=""
+                        width="14"
+                        height="14"
+                        style="flex-shrink: 0"
+                      />
+                      night
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    border-top: 1px solid #242424;
+                    padding-top: 4px;
+                    font-size: 13px;
+                    font-weight: 700;
+                  "
+                >
+                  sizes
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 64px minmax(0, 1fr);
+                    align-items: center;
+                    gap: 10px;
+                  "
+                >
+                  <span style="font-size: 12px; font-weight: 700">text</span>
+                  <div
+                    role="group"
+                    aria-label="text"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, minmax(0, 1fr));
+                      border: 2px solid #242424;
+                    "
+                  >
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      S</button
+                    ><button
+                      type="button"
+                      aria-pressed="true"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #242424;
+                        color: #f5f3f0;
+                      "
+                    >
+                      M</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      L
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 64px minmax(0, 1fr);
+                    align-items: center;
+                    gap: 10px;
+                  "
+                >
+                  <span style="font-size: 12px; font-weight: 700">UI</span>
+                  <div
+                    role="group"
+                    aria-label="UI"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, minmax(0, 1fr));
+                      border: 2px solid #242424;
+                    "
+                  >
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      S</button
+                    ><button
+                      type="button"
+                      aria-pressed="true"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #242424;
+                        color: #f5f3f0;
+                      "
+                    >
+                      M</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      L
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 64px minmax(0, 1fr);
+                    align-items: center;
+                    gap: 10px;
+                  "
+                >
+                  <span style="font-size: 12px; font-weight: 700">entries</span>
+                  <div
+                    role="group"
+                    aria-label="entries"
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(4, minmax(0, 1fr));
+                      border: 2px solid #242424;
+                    "
+                  >
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      S</button
+                    ><button
+                      type="button"
+                      aria-pressed="true"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #242424;
+                        color: #f5f3f0;
+                      "
+                    >
+                      M</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        border-right: 1px solid #242424;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      L</button
+                    ><button
+                      type="button"
+                      aria-pressed="false"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        height: 40px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 13px;
+                        border: 0;
+                        background: #f5f3f0;
+                        color: #242424;
+                      "
+                    >
+                      XL
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p
+                style="
+                  margin: 0;
+                  padding: 12px 14px 18px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                  border-top: 1px dotted #242424;
+                "
+              >
+                Saved on this device only.
+                <a href="#" style="color: #242424">all display settings ›</a>
+              </p>
+            </section>
+          </div></sc-if
+        >
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"start": {"editor": "enum", "options": ["none", "menu", "display"], "default": "menu"}, "$preview": {"width": 390, "height": 844}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) { super(props); this.state = { open: null, theme: 0 }; }
+        renderVals() {
+          const s = this.state || {};
+          const open = s.open == null ? (this.props.start ?? 'menu') : s.open;
+          const t = s.theme || 0;
+          const icons = ['/_blob/a24e291db61a86d30c0e0ada6135bca8', '/_blob/9e610b9be66b0172ec9f2d47df379bbc', '/_blob/8d329eb76c244b6472959fe7f71b2310'];
+          const names = ['paper', 'mint', 'night shift'];
+          const v = {
+            isMenu: open === 'menu', isDisplay: open === 'display', menuOpen: open === 'menu' ? 'true' : 'false',
+            caretBg: open === 'menu' ? '#242424' : 'none', caretFilter: open === 'menu' ? 'invert(1)' : 'none', caretTurn: open === 'menu' ? 'rotate(180deg)' : 'none',
+            toggleMenu: () => this.setState({ open: open === 'menu' ? 'none' : 'menu' }),
+            openDisplay: () => this.setState({ open: 'display' }), closeAll: () => this.setState({ open: 'none' }),
+            themeIcon: icons[t], themeName: names[t], themeStep: (t + 1) + '/3',
+            themeLabel: 'Theme: ' + names[t] + '. Switch to ' + names[(t + 1) % 3],
+            cycle: () => this.setState({ theme: (t + 1) % 3 })
+          };
+          for (let j = 0; j < 3; j++) { const on = t === j; v['th_' + j + '_bg'] = on ? '#242424' : '#f5f3f0'; v['th_' + j + '_fg'] = on ? '#f5f3f0' : '#242424'; v['th_' + j + '_on'] = on ? 'true' : 'false'; v['th_' + j + '_pick'] = () => this.setState({ theme: j }); }
+          return v;
+        }
+      }
+    </script>
+  </body>
+</html>

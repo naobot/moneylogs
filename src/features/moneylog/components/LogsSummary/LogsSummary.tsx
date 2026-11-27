@@ -221,7 +221,7 @@ const LogsSummary = ({
           <div style={{ padding: "2rem", textAlign: "center" }}>
             <p style={{ marginBottom: "1rem", fontSize: "1.1em" }}>{processingState.step}</p>
             <Loader progress={processingState.percentage} />
-            <p style={{ marginTop: "1rem", color: "#666", fontSize: "0.9em" }}>
+            <p style={{ marginTop: "1rem", color: "var(--ink-muted)", fontSize: "0.9em" }}>
               This only happens once when the group is first archived
             </p>
           </div>

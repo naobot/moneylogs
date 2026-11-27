@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Buddy find and reveal, phone</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+          @keyframes bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-4px);
+            }
+            70% {
+              transform: translateY(1px);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bounce {
+              animation: none !important;
+            }
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 0 8px; flex-shrink: 0"
+        >
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; height: 44px"
+          >
+            <div style="display: flex">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center">
+              <strong style="font-size: 15px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              align-items: center;
+              height: 40px;
+              border-top: 1px solid #242424;
+              font-size: 13px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+        </nav>
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px 0;
+            gap: 18px;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <div style="display: flex; flex-direction: column; flex-shrink: 0">
+            <header
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 44px;
+                box-sizing: border-box;
+                padding: 6px 4px;
+                border: 2px solid #242424;
+                background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                background-clip: content-box;
+                flex-shrink: 0;
+              "
+            >
+              <h1
+                style="
+                  margin: 0 0 0 10px;
+                  padding: 0 10px;
+                  background: #f5f3f0;
+                  font-size: 16px;
+                  line-height: 28px;
+                  font-weight: 700;
+                "
+              >
+                household
+              </h1>
+            </header>
+            <div
+              role="tablist"
+              aria-label="View"
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                border: 2px solid #242424;
+                border-top: 0;
+              "
+            >
+              <a
+                href="#"
+                role="tab"
+                aria-selected="true"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  background: #242424;
+                  color: #f5f3f0;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >entries</a
+              ><a
+                href="#"
+                role="tab"
+                aria-selected="false"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 40px;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                "
+                >stats</a
+              >
+            </div>
+          </div>
+          <section
+            aria-label="November total"
+            style="
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              flex-shrink: 0;
+            "
+          >
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <button
+                type="button"
+                aria-label="Previous month"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 16px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ‹</button
+              ><span style="font-weight: 700">november 2026</span
+              ><button
+                type="button"
+                aria-label="Next month"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 16px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ›
+              </button>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; gap: 12px"
+            >
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <strong
+                  style="font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums"
+                  >¥ 48,210</strong
+                ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                  >62% of ¥ 78,000 · 4 days left</span
+                >
+              </div>
+              <button
+                type="button"
+                onClick="{{poke}}"
+                aria-label="{{buddyLabel}}"
+                aria-haspopup="dialog"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 4px;
+                  min-width: 96px;
+                  height: 56px;
+                  padding: 0 6px;
+                  font: inherit;
+                  font-size: 16px;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                  white-space: nowrap;
+                "
+              >
+                {{face}}<sc-if value="{{hasFind}}" hint-placeholder-val="{{ true }}"
+                  ><span
+                    class="bounce"
+                    style="display: inline-block; animation: bounce 0.9s ease-out infinite"
+                    ><img
+                      src="/_blob/e14eacb0e3fbd33ce3520c21de615283"
+                      alt=""
+                      width="14"
+                      height="14"
+                      style="display: block; flex-shrink: 0" /></span
+                ></sc-if>
+              </button>
+            </div>
+            <sc-if value="{{isBubble}}" hint-placeholder-val="{{ true }}">
+              <div
+                role="dialog"
+                aria-label="Budget buddy says"
+                style="
+                  position: absolute;
+                  right: 0;
+                  top: 118px;
+                  z-index: 2;
+                  width: 230px;
+                  box-sizing: border-box;
+                  padding: 10px 14px;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                  border-radius: 10px;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -13px;
+                    right: 40px;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-bottom: 13px solid #242424;
+                  "
+                ></span>
+                <span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: -11px;
+                    right: 41px;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-bottom: 12px solid #ffffff;
+                  "
+                ></span>
+                <button
+                  type="button"
+                  onClick="{{openReveal}}"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 8px;
+                    width: 100%;
+                    min-height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 13px;
+                    text-align: left;
+                    color: #242424;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  look look!! i found a thing~
+                  <span aria-hidden="true" style="font-weight: 700">›</span>
+                </button>
+              </div>
+            </sc-if>
+            <div aria-hidden="true" style="display: flex; height: 10px; border: 1px dashed #242424">
+              <div style="width: 23.5%; background: #89afd6"></div>
+              <div style="width: 13.6%; background: #b27e6c; border-left: 1px solid #242424"></div>
+              <div style="width: 9.3%; background: #a3c69c; border-left: 1px solid #242424"></div>
+              <div style="width: 2.4%; background: #ffffff; border-left: 1px solid #242424"></div>
+              <div
+                style="
+                  width: 13%;
+                  background: rgba(36, 36, 36, 0.3);
+                  border-left: 1px solid #242424;
+                "
+              ></div>
+            </div>
+          </section>
+          <div
+            aria-hidden="true"
+            style="display: flex; flex-direction: column; gap: 10px; opacity: 0.35"
+          >
+            <div style="height: 30px; background: #242424"></div>
+            <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+            <div style="height: 44px; border-bottom: 1px dotted #242424"></div>
+            <div style="height: 44px"></div>
+          </div>
+        </main>
+        <sc-if value="{{isReveal1}}" hint-placeholder-val="{{ false }}">
+          <div
+            style="
+              position: absolute;
+              inset: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              background: rgba(0, 0, 0, 0.2);
+            "
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rv-isReveal1"
+              style="display: flex; flex-direction: column; background: #f5f3f0"
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding-left: 14px;
+                  background: #242424;
+                  color: #f5f3f0;
+                "
+              >
+                <h2 id="rv-isReveal1" style="margin: 0; font-size: 14px; font-weight: 700">
+                  your budget buddy found something!
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick="{{close}}"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 18px;
+                    color: #f5f3f0;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 12px;
+                  padding: 22px 14px 20px;
+                "
+              >
+                <div style="padding: 14px; border: 1px solid #242424; background: #f5f3f0">
+                  <svg
+                    width="96"
+                    height="96"
+                    viewBox="0 0 32 32"
+                    aria-hidden="true"
+                    shape-rendering="crispEdges"
+                    style="display: block; flex-shrink: 0"
+                  >
+                    <path
+                      d="M17 6h2v1h-2zM16 7h1v1h-1zM18 7h1v1h-1zM13 8h3v1h-3zM18 8h1v1h-1zM15 9h1v1h-1zM18 9h1v1h-1zM10 10h4v1h-4zM15 10h7v1h-7zM8 11h2v1h-2zM14 11h3v1h-3zM22 11h1v1h-1zM7 12h1v1h-1zM12 12h8v1h-8zM23 12h2v1h-2zM6 13h3v1h-3zM12 13h1v1h-1zM15 13h2v1h-2zM19 13h5v1h-5zM6 14h1v1h-1zM9 14h3v1h-3zM15 14h2v1h-2zM20 14h1v1h-1zM22 14h1v1h-1zM24 14h1v1h-1zM5 15h1v1h-1zM11 15h1v1h-1zM14 15h1v1h-1zM17 15h2v1h-2zM20 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM5 16h1v1h-1zM11 16h3v1h-3zM19 16h2v1h-2zM22 16h1v1h-1zM24 16h2v1h-2zM4 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM4 18h1v1h-1zM22 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM4 19h1v1h-1zM23 19h1v1h-1zM25 19h2v1h-2zM4 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM26 20h1v1h-1zM5 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM25 21h2v1h-2zM5 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h2v1h-2zM5 23h1v1h-1zM21 23h1v1h-1zM23 23h1v1h-1zM25 23h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM18 24h1v1h-1zM20 24h1v1h-1zM22 24h1v1h-1zM24 24h1v1h-1zM7 25h3v1h-3zM11 25h1v1h-1zM13 25h1v1h-1zM15 25h1v1h-1zM17 25h1v1h-1zM21 25h1v1h-1zM23 25h2v1h-2zM9 26h4v1h-4zM14 26h1v1h-1zM16 26h1v1h-1zM18 26h1v1h-1zM20 26h3v1h-3zM12 27h9v1h-9z"
+                      fill="#242424"
+                    />
+                  </svg>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <strong style="font-size: 18px">persimmon</strong
+                  ><span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      padding: 1px 7px;
+                      font-size: 11px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.06em;
+                      background: #f5f3f0;
+                      border: 2px solid #242424;
+                    "
+                    >rare</span
+                  >
+                </div>
+                <div style="align-self: stretch; padding-top: 6px">
+                  <div style="display: flex; align-items: flex-start; gap: 16px">
+                    <span
+                      aria-hidden="true"
+                      style="flex-shrink: 0; padding-top: 6px; font-size: 13px; white-space: nowrap"
+                      >ฅ^•ω•^ฅ</span
+                    >
+                    <div
+                      style="
+                        position: relative;
+                        flex-grow: 1;
+                        padding: 8px 12px;
+                        font-size: 13px;
+                        background: #ffffff;
+                        border: 1px solid #242424;
+                        border-radius: 10px;
+                      "
+                    >
+                      <span
+                        aria-hidden="true"
+                        style="
+                          position: absolute;
+                          left: -13px;
+                          top: 12px;
+                          width: 0;
+                          height: 0;
+                          border-top: 7px solid transparent;
+                          border-bottom: 7px solid transparent;
+                          border-right: 13px solid #242424;
+                        "
+                      ></span>
+                      <span
+                        aria-hidden="true"
+                        style="
+                          position: absolute;
+                          left: -11px;
+                          top: 13px;
+                          width: 0;
+                          height: 0;
+                          border-top: 6px solid transparent;
+                          border-bottom: 6px solid transparent;
+                          border-right: 12px solid #ffffff;
+                        "
+                      ></span>
+                      A persimmon! It's so ripe it's practically glowing ♡
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; padding: 12px 14px 16px; border-top: 1px solid #242424">
+                <button
+                  type="button"
+                  onClick="{{next}}"
+                  style="
+                    flex-grow: 1;
+                    height: 44px;
+                    padding: 0 16px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    border: 2px solid #242424;
+                    background: #ffffff;
+                  "
+                >
+                  next (1 more)
+                </button>
+              </div>
+            </section>
+          </div>
+        </sc-if>
+        <sc-if value="{{isReveal2}}" hint-placeholder-val="{{ false }}">
+          <div
+            style="
+              position: absolute;
+              inset: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              background: rgba(0, 0, 0, 0.2);
+            "
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rv-isReveal2"
+              style="display: flex; flex-direction: column; background: #f5f3f0"
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding-left: 14px;
+                  background: #242424;
+                  color: #f5f3f0;
+                "
+              >
+                <h2 id="rv-isReveal2" style="margin: 0; font-size: 14px; font-weight: 700">
+                  a gift from mika
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick="{{close}}"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 18px;
+                    color: #f5f3f0;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 12px;
+                  padding: 22px 14px 20px;
+                "
+              >
+                <div style="padding: 14px; border: 1px solid #242424; background: #f5f3f0">
+                  <svg
+                    width="96"
+                    height="96"
+                    viewBox="0 0 32 32"
+                    aria-hidden="true"
+                    shape-rendering="crispEdges"
+                    style="display: block; flex-shrink: 0"
+                  >
+                    <path
+                      d="M14 5h3v1h-3zM19 5h4v1h-4zM13 6h1v1h-1zM17 6h2v1h-2zM23 6h1v1h-1zM12 7h1v1h-1zM24 7h1v1h-1zM11 8h1v1h-1zM18 8h1v1h-1zM24 8h1v1h-1zM11 9h1v1h-1zM18 9h1v1h-1zM24 9h1v1h-1zM12 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM23 10h1v1h-1zM13 11h1v1h-1zM16 11h1v1h-1zM23 11h3v1h-3zM11 12h5v1h-5zM17 12h3v1h-3zM21 12h2v1h-2zM26 12h1v1h-1zM10 13h1v1h-1zM17 13h1v1h-1zM19 13h1v1h-1zM26 13h1v1h-1zM10 14h1v1h-1zM15 14h1v1h-1zM17 14h3v1h-3zM21 14h1v1h-1zM26 14h1v1h-1zM3 15h3v1h-3zM10 15h1v1h-1zM17 15h1v1h-1zM20 15h1v1h-1zM26 15h1v1h-1zM3 16h1v1h-1zM5 16h2v1h-2zM11 16h2v1h-2zM14 16h1v1h-1zM16 16h3v1h-3zM20 16h3v1h-3zM24 16h1v1h-1zM26 16h1v1h-1zM3 17h1v1h-1zM6 17h1v1h-1zM11 17h1v1h-1zM13 17h1v1h-1zM15 17h3v1h-3zM19 17h1v1h-1zM21 17h5v1h-5zM4 18h3v1h-3zM12 18h3v1h-3zM16 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM22 18h1v1h-1zM5 19h1v1h-1zM12 19h2v1h-2zM15 19h1v1h-1zM17 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM5 20h1v1h-1zM11 20h3v1h-3zM16 20h1v1h-1zM18 20h4v1h-4zM6 21h1v1h-1zM10 21h3v1h-3zM17 21h2v1h-2zM20 21h1v1h-1zM6 22h1v1h-1zM9 22h2v1h-2zM7 23h3v1h-3zM6 24h3v1h-3zM26 24h1v1h-1zM28 24h1v1h-1zM6 25h2v1h-2zM25 25h1v1h-1zM28 25h1v1h-1zM4 26h3v1h-3zM25 26h1v1h-1zM28 26h1v1h-1zM4 27h2v1h-2zM25 27h3v1h-3zM2 28h3v1h-3zM2 29h2v1h-2zM24 29h1v1h-1zM29 29h1v1h-1zM1 30h2v1h-2zM1 31h1v1h-1z"
+                      fill="#242424"
+                    />
+                  </svg>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <strong style="font-size: 18px">cherry blossom</strong
+                  ><span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      padding: 1px 7px;
+                      font-size: 11px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.06em;
+                      background: #f5f3f0;
+                      border: 2px solid #242424;
+                    "
+                    >rare</span
+                  >
+                </div>
+                <div style="align-self: stretch; padding-top: 6px">
+                  <p style="margin: 0; text-align: center; font-size: 13px">
+                    mika sent you a cherry blossom!
+                  </p>
+                </div>
+              </div>
+              <div style="display: flex; padding: 12px 14px 16px; border-top: 1px solid #242424">
+                <button
+                  type="button"
+                  onClick="{{keep}}"
+                  style="
+                    flex-grow: 1;
+                    height: 44px;
+                    padding: 0 16px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    border: 2px solid #242424;
+                    background: #ffffff;
+                  "
+                >
+                  keep it
+                </button>
+              </div>
+            </section>
+          </div>
+        </sc-if>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"start": {"editor": "enum", "options": ["resting", "bubble", "find", "gift", "done"], "default": "bubble"}, "$preview": {"width": 390, "height": 844}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) { super(props); this.state = { stage: null }; }
+        renderVals() {
+          const st = (this.state && this.state.stage) || this.props.start || 'bubble';
+          const go = (s) => () => this.setState({ stage: s });
+          return {
+            isBubble: st === 'bubble', isReveal1: st === 'find', isReveal2: st === 'gift',
+            hasFind: st !== 'done' && st !== 'resting',
+            face: st === 'bubble' ? 'ฅ^ơωơ^ฅ♡' : 'ฅ^•ω•^ฅ',
+            buddyLabel: st === 'done' ? 'Budget buddy: happy. Click to hear how the month is going.' : 'Budget buddy found something! Click to hear about it.',
+            poke: go(st === 'resting' ? 'bubble' : (st === 'bubble' ? 'resting' : (st === 'done' ? 'done' : 'bubble'))),
+            openReveal: go('find'), next: go('gift'), keep: go('done'), close: go('done')
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

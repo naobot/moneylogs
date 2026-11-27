@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // A feature introduction, one slide at a time (Slides.tsx). Two inks; the pictures
 // inside bring their own fills.
@@ -25,7 +26,7 @@
   &__text,
   &__example {
     margin: 0;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
   }
 
   &__example {
@@ -61,7 +62,7 @@
 
   &__skip {
     font: inherit;
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     color: var(--ink-muted);
     background: none;
     border: none;
@@ -70,8 +71,7 @@
     text-decoration: underline;
     text-underline-offset: 0.2em;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       color: var(--ink);
     }
   }

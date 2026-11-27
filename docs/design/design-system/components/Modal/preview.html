@@ -1,0 +1,77 @@
+<!-- @dsCard group="Containers" height=230 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Modal</title>
+  </head>
+  <body>
+    <div
+      class="pv"
+      style="font-family: var(--font-mono, Hack, monospace); color: var(--ink); font-size: 14px"
+    >
+      <div style="max-width: 380px; border: 2px solid var(--ink); background: var(--paper)">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 14px;
+            background: var(--inverse-surface);
+            color: var(--inverse-ink);
+          "
+        >
+          <strong>change password</strong
+          ><button
+            aria-label="Close"
+            style="
+              width: 44px;
+              height: 44px;
+              font: inherit;
+              font-size: 18px;
+              color: var(--inverse-ink);
+              background: none;
+              border: 0;
+            "
+          >
+            ×
+          </button>
+        </div>
+        <div style="padding: 16px 14px">Your new password needs at least 8 characters.</div>
+        <div style="display: flex; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--ink)">
+          <button
+            style="
+              height: 44px;
+              padding: 0 16px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: var(--ink);
+              border: 1px solid var(--ink);
+              background: var(--paper);
+            "
+          >
+            nevermind</button
+          ><button
+            style="
+              flex-grow: 1;
+              height: 44px;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: var(--ink);
+              border: 2px solid var(--ink);
+              background: var(--sheet);
+            "
+          >
+            save
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Log actions sheet, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <div
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px"
+        >
+          <div style="height: 44px; border-bottom: 1px solid #242424"></div>
+          <div
+            style="
+              height: 44px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              padding: 6px 4px;
+              box-sizing: border-box;
+            "
+          ></div>
+          <div style="height: 40px; border: 2px solid #242424"></div>
+        </div>
+        <div
+          style="
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: rgba(0, 0, 0, 0.2);
+          "
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sheet-title"
+            style="display: flex; flex-direction: column; max-height: 620px; background: #f5f3f0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 14px;
+                background: #242424;
+                color: #f5f3f0;
+                flex-shrink: 0;
+              "
+            >
+              <h2
+                id="sheet-title"
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  font-weight: 700;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "
+              >
+                manage <span style="text-transform: none">household</span>
+              </h2>
+              <button
+                type="button"
+                aria-label="Close"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 18px;
+                  color: #f5f3f0;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ×
+              </button>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                padding: 16px 14px 20px;
+                overflow: hidden;
+                flex-grow: 1;
+              "
+            >
+              <section style="display: flex; flex-direction: column; gap: 10px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                    name
+                  </h3>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: stretch">
+                  <input
+                    aria-label="Log name"
+                    value="household"
+                    style="
+                      flex-grow: 1;
+                      min-width: 0;
+                      height: 44px;
+                      box-sizing: border-box;
+                      padding: 0 12px;
+                      font: inherit;
+                      color: #242424;
+                      border: 1px dashed #242424;
+                      border-radius: 0;
+                      background: #ffffff;
+                    "
+                  /><button
+                    type="button"
+                    style="
+                      height: 44px;
+                      padding: 0 14px;
+                      font: inherit;
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                      color: #242424;
+                      border: 1px solid #242424;
+                      background: #f5f3f0;
+                    "
+                  >
+                    save
+                  </button>
+                </div>
+              </section>
+              <section style="display: flex; flex-direction: column; gap: 10px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                    archive
+                  </h3>
+                </div>
+                <p style="margin: 0; font-size: 13px">
+                  Hide this log from your navigation and lists. Only you are affected, and you can
+                  still open it.
+                </p>
+                <button
+                  type="button"
+                  style="
+                    align-self: flex-start;
+                    height: 40px;
+                    padding: 0 14px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    border: 1px solid #242424;
+                    background: #f5f3f0;
+                  "
+                >
+                  archive
+                </button>
+              </section>
+              <section
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                  padding-top: 12px;
+                  border-top: 3px solid #242424;
+                "
+              >
+                <h3 style="margin: 0; font-size: 13px; font-weight: 700">! delete this log</h3>
+                <p style="margin: 0; font-size: 13px">
+                  Removes every entry, category and budget, for every member. This can't be undone.
+                </p>
+                <button
+                  type="button"
+                  style="
+                    align-self: flex-start;
+                    height: 40px;
+                    padding: 0 14px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    border: 3px solid #242424;
+                    background: #ffffff;
+                  "
+                >
+                  delete…
+                </button>
+              </section>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                padding: 12px 14px 16px;
+                border-top: 1px solid #242424;
+                flex-shrink: 0;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  height: 44px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                close
+              </button>
+              <button
+                type="button"
+                style="
+                  flex-grow: 1;
+                  height: 44px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                done
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Category manager sheet, proposed phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <div
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px"
+        >
+          <div style="height: 44px; border-bottom: 1px solid #242424"></div>
+          <div
+            style="
+              height: 44px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              padding: 6px 4px;
+              box-sizing: border-box;
+            "
+          ></div>
+          <div style="height: 40px; border: 2px solid #242424"></div>
+        </div>
+        <div
+          style="
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: rgba(0, 0, 0, 0.2);
+          "
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sheet-title"
+            style="display: flex; flex-direction: column; max-height: 720px; background: #f5f3f0"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 14px;
+                background: #242424;
+                color: #f5f3f0;
+                flex-shrink: 0;
+              "
+            >
+              <h2
+                id="sheet-title"
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  font-weight: 700;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "
+              >
+                categories
+              </h2>
+              <button
+                type="button"
+                aria-label="Close"
+                style="
+                  width: 44px;
+                  height: 44px;
+                  padding: 0;
+                  font: inherit;
+                  font-size: 18px;
+                  color: #f5f3f0;
+                  background: none;
+                  border: 0;
+                "
+              >
+                ×
+              </button>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                padding: 16px 14px 20px;
+                overflow: hidden;
+                flex-grow: 1;
+              "
+            >
+              <sc-if value="{{listView}}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 22px">
+                  <section style="display: flex; flex-direction: column; gap: 4px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        border-bottom: 1px solid #242424;
+                      "
+                    >
+                      <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                        categories
+                      </h3>
+                      <span
+                        style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                        >drag to reorder</span
+                      >
+                    </div>
+                    <ul style="margin: 0; padding: 0; list-style: none">
+                      <li
+                        style="
+                          display: flex;
+                          align-items: center;
+                          border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                        "
+                      >
+                        <span
+                          aria-hidden="true"
+                          style="
+                            width: 32px;
+                            height: 44px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: rgba(36, 36, 36, 0.7);
+                          "
+                          >⠿</span
+                        ><button
+                          type="button"
+                          onClick="{{openDetail}}"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            height: 44px;
+                            padding: 0 4px;
+                            font: inherit;
+                            color: #242424;
+                            background: none;
+                            border: 0;
+                            text-align: left;
+                          "
+                        >
+                          <strong
+                            style="
+                              flex-grow: 1;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                            "
+                            >groceries</strong
+                          ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                            >¥ 25,000</span
+                          ><span aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                      <li
+                        style="
+                          display: flex;
+                          align-items: center;
+                          border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                        "
+                      >
+                        <span
+                          aria-hidden="true"
+                          style="
+                            width: 32px;
+                            height: 44px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: rgba(36, 36, 36, 0.7);
+                          "
+                          >⠿</span
+                        ><button
+                          type="button"
+                          onClick="{{openDetail}}"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            height: 44px;
+                            padding: 0 4px;
+                            font: inherit;
+                            color: #242424;
+                            background: none;
+                            border: 0;
+                            text-align: left;
+                          "
+                        >
+                          <strong
+                            style="
+                              flex-grow: 1;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                            "
+                            >dining out</strong
+                          ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                            >¥ 12,000</span
+                          ><span aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                      <li
+                        style="
+                          display: flex;
+                          align-items: center;
+                          border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                        "
+                      >
+                        <span
+                          aria-hidden="true"
+                          style="
+                            width: 32px;
+                            height: 44px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: rgba(36, 36, 36, 0.7);
+                          "
+                          >⠿</span
+                        ><button
+                          type="button"
+                          onClick="{{openDetail}}"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            height: 44px;
+                            padding: 0 4px;
+                            font: inherit;
+                            color: #242424;
+                            background: none;
+                            border: 0;
+                            text-align: left;
+                          "
+                        >
+                          <strong
+                            style="
+                              flex-grow: 1;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                            "
+                            >rent</strong
+                          ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">fixed</span
+                          ><span aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                      <li
+                        style="
+                          display: flex;
+                          align-items: center;
+                          border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                        "
+                      >
+                        <span
+                          aria-hidden="true"
+                          style="
+                            width: 32px;
+                            height: 44px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: rgba(36, 36, 36, 0.7);
+                          "
+                          >⠿</span
+                        ><button
+                          type="button"
+                          onClick="{{openDetail}}"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            height: 44px;
+                            padding: 0 4px;
+                            font: inherit;
+                            color: #242424;
+                            background: none;
+                            border: 0;
+                            text-align: left;
+                          "
+                        >
+                          <strong
+                            style="
+                              flex-grow: 1;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                            "
+                            >transit</strong
+                          ><span aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                      <li style="display: flex; align-items: center">
+                        <span
+                          aria-hidden="true"
+                          style="
+                            width: 32px;
+                            height: 44px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: rgba(36, 36, 36, 0.7);
+                          "
+                          >⠿</span
+                        ><button
+                          type="button"
+                          onClick="{{openDetail}}"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            height: 44px;
+                            padding: 0 4px;
+                            font: inherit;
+                            color: #242424;
+                            background: none;
+                            border: 0;
+                            text-align: left;
+                          "
+                        >
+                          <strong
+                            style="
+                              flex-grow: 1;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                            "
+                            >weekend trips with the whole family</strong
+                          ><span aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </section>
+                  <section style="display: flex; flex-direction: column; gap: 10px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        border-bottom: 1px solid #242424;
+                      "
+                    >
+                      <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                        add a category
+                      </h3>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: stretch">
+                      <input
+                        aria-label="New category name"
+                        placeholder="e.g. gifts"
+                        style="
+                          flex-grow: 1;
+                          min-width: 0;
+                          height: 44px;
+                          box-sizing: border-box;
+                          padding: 0 12px;
+                          font: inherit;
+                          color: #242424;
+                          border: 1px dashed #242424;
+                          border-radius: 0;
+                          background: #ffffff;
+                        "
+                      /><button
+                        type="button"
+                        style="
+                          height: 44px;
+                          padding: 0 14px;
+                          font: inherit;
+                          font-size: 12px;
+                          font-weight: 700;
+                          text-transform: uppercase;
+                          letter-spacing: 0.04em;
+                          color: #242424;
+                          border: 1px solid #242424;
+                          background: #f5f3f0;
+                        "
+                      >
+                        add
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              </sc-if>
+              <sc-if value="{{detailView}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 22px">
+                  <button
+                    type="button"
+                    onClick="{{closeDetail}}"
+                    style="
+                      align-self: flex-start;
+                      height: 36px;
+                      padding: 0;
+                      margin-bottom: -10px;
+                      font: inherit;
+                      font-size: 13px;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                    "
+                  >
+                    ‹ categories
+                  </button>
+                  <section style="display: flex; flex-direction: column; gap: 10px">
+                    <label
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        font-size: 12px;
+                        color: rgba(36, 36, 36, 0.7);
+                      "
+                      >name<input
+                        value="groceries"
+                        style="
+                          height: 44px;
+                          box-sizing: border-box;
+                          padding: 0 12px;
+                          font: inherit;
+                          font-size: 14px;
+                          color: #242424;
+                          border: 1px dashed #242424;
+                          border-radius: 0;
+                          background: #ffffff;
+                        "
+                    /></label>
+                  </section>
+                  <section style="display: flex; flex-direction: column; gap: 10px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        border-bottom: 1px solid #242424;
+                      "
+                    >
+                      <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                        spending
+                      </h3>
+                    </div>
+                    <label
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        min-height: 44px;
+                      "
+                      ><span>fixed cost</span
+                      ><button
+                        type="button"
+                        role="switch"
+                        aria-checked="{{fixed}}"
+                        aria-label="Fixed cost"
+                        onClick="{{toggleFixed}}"
+                        style="display: flex; align-items: center; justify-content: {{knobSide}}; width: 52px; height: 26px; padding: 2px; box-sizing: border-box; border: 2px solid #242424; background: {{trackBg}}"
+                      >
+                        <span
+                          style="width: 18px; height: 18px; background: {{knobBg}}"
+                        ></span></button
+                    ></label>
+                    <p style="margin: 0; font-size: 12px; color: rgba(36, 36, 36, 0.7)">
+                      Fixed costs come out the same every month, like rent. They're counted before
+                      everything else.
+                    </p>
+                  </section>
+                  <section style="display: flex; flex-direction: column; gap: 10px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        border-bottom: 1px solid #242424;
+                      "
+                    >
+                      <h3 style="margin: 0; padding-bottom: 4px; font-size: 13px; font-weight: 700">
+                        monthly budget
+                      </h3>
+                    </div>
+                    <label
+                      style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        font-size: 12px;
+                        color: rgba(36, 36, 36, 0.7);
+                      "
+                      >amount<span
+                        style="
+                          display: flex;
+                          align-items: center;
+                          height: 44px;
+                          box-sizing: border-box;
+                          border: 1px dashed #242424;
+                          background: #ffffff;
+                        "
+                        ><span
+                          style="
+                            padding: 0 10px;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            border-right: 1px solid #242424;
+                            color: #242424;
+                            font-size: 13px;
+                            font-weight: 700;
+                          "
+                          >JPY ▾</span
+                        ><input
+                          inputmode="numeric"
+                          value="25,000"
+                          style="
+                            flex-grow: 1;
+                            min-width: 0;
+                            padding: 0 12px;
+                            font: inherit;
+                            font-size: 16px;
+                            font-weight: 700;
+                            text-align: right;
+                            color: #242424;
+                            border: 0;
+                            background: transparent;
+                          " /></span
+                    ></label>
+                  </section>
+                  <div style="display: flex; gap: 8px">
+                    <button
+                      type="button"
+                      style="
+                        height: 40px;
+                        padding: 0 14px;
+                        font: inherit;
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #242424;
+                        border: 1px solid #242424;
+                        background: #f5f3f0;
+                      "
+                    >
+                      archive</button
+                    ><button
+                      type="button"
+                      style="
+                        height: 40px;
+                        padding: 0 14px;
+                        font: inherit;
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #242424;
+                        border: 3px solid #242424;
+                        background: #ffffff;
+                      "
+                    >
+                      delete…
+                    </button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                padding: 12px 14px 16px;
+                border-top: 1px solid #242424;
+                flex-shrink: 0;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  height: 44px;
+                  padding: 0 16px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                close
+              </button>
+              <button
+                type="button"
+                style="
+                  flex-grow: 1;
+                  height: 44px;
+                  font: inherit;
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.04em;
+                  color: #242424;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                done
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { detail: false, fixed: false };
+        }
+        renderVals() {
+          const s = this.state || {};
+          return {
+            listView: !s.detail,
+            detailView: !!s.detail,
+            openDetail: () => this.setState({ detail: true }),
+            closeDetail: () => this.setState({ detail: false }),
+            fixed: s.fixed ? 'true' : 'false',
+            toggleFixed: () => this.setState({ fixed: !s.fixed }),
+            knobSide: s.fixed ? 'flex-end' : 'flex-start',
+            trackBg: s.fixed ? '#242424' : '#f5f3f0',
+            knobBg: s.fixed ? '#f5f3f0' : '#242424'
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

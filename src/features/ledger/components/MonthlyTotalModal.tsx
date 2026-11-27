@@ -81,9 +81,7 @@ const MonthlyTotalDialog = ({
 
   return (
     <Modal isOpen onClose={onClose} className="MonthlyTotal" disabled={isSaving}>
-      <Modal.Header striped title="monthly total">
-        monthly total
-      </Modal.Header>
+      <Modal.Header title="monthly total">monthly total</Modal.Header>
       <Modal.Body>
         <form
           onSubmit={(e) => {

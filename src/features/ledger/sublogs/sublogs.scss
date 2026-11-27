@@ -5,6 +5,7 @@
 @use "@/constants.scss";
 @use "./mark";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .SublogMark {
   @include mark.nested-frame;
@@ -40,13 +41,16 @@
     text-overflow: ellipsis;
   }
 
-  @at-root a#{&}:hover, a#{&}:focus-visible {
-    background: var(--inverse-surface);
-    color: var(--inverse-ink);
-    outline: none;
+  // Only the linked form (an <a>) inverts.
+  @at-root {
+    @include hover("a#{&}:focus-visible, a#{&}:active", "a#{&}:hover") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
 
-    .SublogName__glyph {
-      color: inherit;
+      .SublogName__glyph {
+        color: inherit;
+      }
     }
   }
 }
@@ -83,7 +87,7 @@
   }
 
   &__count {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 
@@ -97,18 +101,20 @@
     text-align: right;
   }
 
-  @at-root a#{&}:hover, a#{&}:focus-visible {
-    background: var(--inverse-surface);
-    color: var(--inverse-ink);
-    outline: none;
+  @at-root {
+    @include hover("a#{&}:focus-visible, a#{&}:active", "a#{&}:hover") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
 
-    .SublogRow__count,
-    .SublogName__glyph {
-      color: inherit;
-    }
+      .SublogRow__count,
+      .SublogName__glyph {
+        color: inherit;
+      }
 
-    .SublogMark {
-      border-color: var(--inverse-ink);
+      .SublogMark {
+        border-color: var(--inverse-ink);
+      }
     }
   }
 }
@@ -116,7 +122,7 @@
 // Under the add form: where linked categories are logged instead.
 .SublogHint {
   margin: 0;
-  font-size: 0.8em;
+  font-size: type-floor(0.8em);
   color: var(--ink-muted);
 
   a {
@@ -124,8 +130,7 @@
     font-weight: 700;
     text-decoration: none;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -141,7 +146,7 @@
     align-items: baseline;
     gap: ui(0.75em);
     width: 100%;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
 
     label {
       flex: 0 0 6.5em;
@@ -171,7 +176,7 @@
     margin: 0;
     padding: 0;
     border: none;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
 
     legend {
       float: left;
@@ -232,7 +237,7 @@
   align-items: center;
   gap: 0 ui(0.3em);
   margin: 0;
-  font-size: 0.75em;
+  font-size: type-floor(0.75em);
   color: var(--ink-muted);
 
   a {
@@ -240,8 +245,7 @@
     font-weight: 700;
     text-decoration: none;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -257,7 +261,7 @@
   padding: ui(0.75em);
   border: var(--border-hairline) solid var(--ink);
   background: var(--paper);
-  font-size: 0.75em;
+  font-size: type-floor(0.75em);
   line-height: 1.35;
 
   &__row {
@@ -271,7 +275,7 @@
   }
 
   &__caption {
-    font-size: 0.92em;
+    font-size: type-floor(0.92em);
     color: var(--ink-muted);
   }
 
@@ -280,7 +284,7 @@
     align-items: center;
     justify-content: center;
     gap: ui(0.4em);
-    font-size: 0.92em;
+    font-size: type-floor(0.92em);
     color: var(--ink-muted);
     text-align: center;
 
@@ -422,7 +426,7 @@
     padding: 0 ui(0.4em);
     border: var(--border-hairline) solid var(--ink);
     font-weight: 700;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     text-transform: uppercase;
   }
 }
@@ -598,8 +602,7 @@
   text-decoration: underline dashed;
   text-underline-offset: 0.2em;
 
-  &:hover,
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
   }

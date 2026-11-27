@@ -5,6 +5,7 @@
 @use "./charts.scss";
 @use "./surfaces.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 :root {
   font-family: var(--font-mono);
@@ -18,7 +19,7 @@
 
   // Phones: 14px, a step down from desktop so dense pages (log posts, ledgers) still fit.
   @media (max-width: constants.$breakpoint-sm) {
-    font-size: 0.875em;
+    font-size: type-floor(0.875em);
   }
 }
 
@@ -135,7 +136,7 @@ html {
   }
 
   &__block {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     padding: ui(0.4em);
     transition: 0.3s ease-in-out;
     opacity: 1;
@@ -176,7 +177,7 @@ html {
     display: inline-flex;
     align-items: center;
     gap: ui(0.4em);
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
   }
 
   &__logs {
@@ -245,7 +246,7 @@ html {
 
     &__logs {
       grid-area: logs;
-      font-size: 0.9em;
+      font-size: type-floor(0.9em);
       padding: var(--space-2) 0;
       border-top: var(--border-hairline) solid var(--ink);
       overflow-x: auto;
@@ -294,15 +295,14 @@ html {
   gap: ui(0.6em);
   padding: ui(0.45em) ui(0.9em);
   font: inherit;
-  font-size: 0.9em;
+  font-size: type-floor(0.9em);
   text-align: left;
   color: var(--ink);
   background: none;
   border: 0;
   cursor: pointer;
 
-  &:hover:not(:disabled),
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
     outline: none;
@@ -334,11 +334,11 @@ html {
 .Menu {
   display: inline-flex;
   grid-gap: ui(0.4em);
-  font-size: 0.8em;
+  font-size: type-floor(0.8em);
   align-items: center;
 
   @media (max-width: constants.$breakpoint-sm) {
-    font-size: 0.7em;
+    font-size: type-floor(0.7em);
   }
 }
 
@@ -374,7 +374,7 @@ html {
   grid-gap: ui(0.5em);
   width: 100%;
   padding: ui(0.6em) ui(1em);
-  font-size: 0.75em;
+  font-size: type-floor(0.75em);
   border-top: var(--border-rule) solid var(--ink);
   box-sizing: border-box;
 
@@ -383,7 +383,7 @@ html {
   }
 
   &__sep {
-    opacity: 0.4;
+    color: var(--ink-muted);
   }
 }
 
@@ -402,7 +402,7 @@ html {
   background-color: var(--paper);
   border: var(--border-rule) solid var(--ink);
   border-radius: var(--radius-none);
-  font-size: 0.85em;
+  font-size: type-floor(0.85em);
 
   &__text {
     white-space: nowrap;
@@ -451,11 +451,14 @@ html {
   }
 }
 
-// Buttons invert when active or hovered; their icons flip with them.
-.Button--active .Icon img,
-.Button--primary:hover:not(.Button--disabled) .Icon img,
-.Button--secondary:hover:not(.Button--disabled) .Icon img,
-.Button--toggle:hover:not(.Button--disabled) .Icon img {
+// Buttons invert when selected, hovered or pressed; their icons flip with them.
+:is(.Button--primary, .Button--secondary, .Button--toggle):not(.Button--disabled) {
+  @include hover("&:active .Icon img", "&:hover .Icon img") {
+    filter: var(--icon-filter-inverse);
+  }
+}
+
+.Button--active .Icon img {
   filter: var(--icon-filter-inverse);
 }
 
@@ -474,6 +477,22 @@ h6,
   text-transform: lowercase;
 }
 
+// The browser's own smaller text, at its own ratios, floored like the rest: `smaller`
+// is 1/1.2 of the parent, and an 11px header's <small> otherwise came out at 9px.
+small,
+sub,
+sup {
+  font-size: type-floor(calc(1em / 1.2));
+}
+
+h5 {
+  font-size: type-floor(0.83em);
+}
+
+h6 {
+  font-size: type-floor(0.67em);
+}
+
 .keep-case {
   text-transform: none;
 }
@@ -486,7 +505,7 @@ h6,
 }
 
 .Button strong {
-  font-size: 0.85em;
+  font-size: type-floor(0.85em);
 }
 
 // The nav's log buttons show log titles (user content), so they keep their case.
@@ -503,7 +522,7 @@ h6,
 
   // A sublog, right after its parent: smaller, no icon, tucked up close to it.
   &--sublog {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     padding: ui(0.25em) ui(0.4em);
     margin-left: calc(-1 * var(--space-1));
   }
@@ -538,7 +557,7 @@ h6,
   &--toggle {
     border: var(--border-hairline) solid var(--ink);
 
-    &:hover:not(.Button--disabled) {
+    @include hover("&:active:not(.Button--disabled)", "&:hover:not(.Button--disabled)") {
       background-color: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -563,11 +582,11 @@ h6,
 
   &--disabled {
     cursor: default;
-    opacity: 0.3;
+    opacity: var(--opacity-disabled);
   }
 
   &--size-sm {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
   }
 
   &--size-md {
@@ -578,7 +597,7 @@ h6,
 // Small hairline-framed action at the end of a list row or beside a stepper.
 // Words are caps-lock (see the label rule above); glyphs (‹ › ↑ ↓ ×) keep their own form.
 .RowButton {
-  font-size: 0.75em;
+  font-size: type-floor(0.75em);
   cursor: pointer;
   // UI size L: comfortable to tap (0 at S and M).
   min-height: var(--tap-min-row);
@@ -588,8 +607,7 @@ h6,
   border-radius: var(--radius-none);
   padding: ui(0.1em) ui(0.5em);
 
-  &:hover:not(:disabled),
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active:not(:disabled)", "&:hover:not(:disabled)") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
   }
@@ -602,7 +620,7 @@ h6,
   // A lone glyph (‹ ›) is square at L so it's as easy to hit as it is tall.
   &--glyph {
     min-width: var(--tap-min-row);
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
     text-transform: none;
     letter-spacing: normal;
     padding: 0 ui(0.5em);
@@ -617,9 +635,45 @@ h6,
   }
 
   // The icon flips with the button when it inverts.
-  &:hover:not(:disabled) .Icon img,
-  &:focus-visible .Icon img {
+  @include hover(
+    "&:focus-visible .Icon img, &:active:not(:disabled) .Icon img",
+    "&:hover:not(:disabled) .Icon img"
+  ) {
     filter: var(--icon-filter-inverse);
+  }
+}
+
+// Tap targets (2026-11 audit): on phones every shared control is at least --tap-target
+// square to the finger at every UI size, while it's drawn at its own size: an invisible
+// ::after centred on it grows the hit area. :where() keeps this at zero specificity, so
+// any rule that positions one of these itself (a badge's anchor, a stacked layer) wins.
+// Neighbours closer than the grown area would fight over the space between them, so
+// controls that always sit in joined groups don't grow: segmented toggles (44px once they
+// become Segmented, PLAN item 5) and ‹ › steppers (their screens' PRs). The visual tests
+// fail on any other overlap (stolenTaps in src/test/visual.tsx).
+$-tap-grows: ".Button:not(.Button--toggle), .RowButton:not(.RowButton--glyph), .Tabs__tab";
+
+@media (max-width: constants.$breakpoint-sm) {
+  :where(#{$-tap-grows}) {
+    position: relative;
+  }
+
+  :where(#{$-tap-grows})::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--tap-target));
+    height: max(100%, var(--tap-target));
+    transform: translate(-50%, -50%);
+  }
+}
+
+// The nav's icon links sit 5px apart: they grow to 44px tall but keep their width
+// (the nav's own PR, S13, gives them room).
+@media (max-width: constants.$breakpoint-sm) {
+  .MainNav__item--icon::after {
+    width: 100%;
   }
 }
 
@@ -747,7 +801,7 @@ input[type="search"] {
 
 .GroupArchive__empty {
   opacity: 0.7; // muted text floor (5.5:1)
-  font-size: 0.9em;
+  font-size: type-floor(0.9em);
 }
 
 .AboutPage {
@@ -768,7 +822,7 @@ input[type="search"] {
     text-align: center;
 
     small {
-      font-size: 0.2em;
+      font-size: type-floor(0.2em);
     }
   }
 }
@@ -788,7 +842,7 @@ input[type="search"] {
   p {
     margin: 0;
     color: var(--ink-muted);
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
   }
 }
 
@@ -796,7 +850,7 @@ input[type="search"] {
   display: inline-flex;
   align-items: center;
   grid-gap: ui(0.4em);
-  font-size: 0.9em;
+  font-size: type-floor(0.9em);
   max-width: 300px;
   text-align: center;
 }
@@ -817,7 +871,7 @@ input[type="search"] {
 .ForgotPassword__hint,
 .AuthAction__hint {
   color: var(--ink-muted);
-  font-size: 0.9em;
+  font-size: type-floor(0.9em);
 }
 
 .ForgotPassword__actions {
@@ -862,11 +916,11 @@ input[type="search"] {
     width: 100%;
     margin-bottom: ui(1em);
     @include surfaces.strip(0.5em);
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     flex-shrink: 0;
 
     @media (max-width: constants.$breakpoint-sm) {
-      font-size: 0.7em;
+      font-size: type-floor(0.7em);
     }
 
     &__left,
@@ -1002,7 +1056,7 @@ input[type="search"] {
     width: 100%;
     overflow-y: hidden;
     overflow-x: auto;
-    font-size: 0.6em;
+    font-size: type-floor(0.7em);
     margin-bottom: 0;
     // Room between items for the activity chip that overhangs each member's right
     // edge, and at the end so the last one isn't clipped by the scroll area.
@@ -1011,10 +1065,11 @@ input[type="search"] {
   }
 
   @media (min-width: constants.$breakpoint-md) and (max-width: constants.$breakpoint-xl) {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
   }
 
   &__item {
+    cursor: pointer;
     position: relative;
     display: flex;
     align-items: center;
@@ -1036,7 +1091,7 @@ input[type="search"] {
       transform: translateY(-50%);
       cursor: grab;
       opacity: 0;
-      font-size: 0.9em;
+      font-size: type-floor(0.9em);
       user-select: none;
 
       &:active {
@@ -1044,7 +1099,7 @@ input[type="search"] {
       }
     }
 
-    &:hover &__dragHandle {
+    @include hover(null, "&:hover &__dragHandle") {
       opacity: 0.7; // muted text floor
     }
 
@@ -1078,8 +1133,8 @@ input[type="search"] {
       }
     }
 
-    // The row inverts on hover, so the chip flips back to stay visible.
-    &:hover &__badge {
+    // The row inverts on hover or a press, so the chip flips back to stay visible.
+    @include hover("&:active &__badge", "&:hover &__badge") {
       background-color: var(--paper);
       border-color: var(--ink);
 
@@ -1099,7 +1154,7 @@ input[type="search"] {
     }
 
     &__subtitle {
-      font-size: 0.7em;
+      font-size: type-floor(0.7em);
 
       @media (max-width: constants.$breakpoint-sm) {
         display: none;
@@ -1124,8 +1179,7 @@ input[type="search"] {
       order: -1;
     }
 
-    &--active,
-    &:hover {
+    @include hover("&--active, &:active") {
       background-color: var(--ink);
       color: var(--paper);
     }
@@ -1137,10 +1191,6 @@ input[type="search"] {
     // so no hover/pointer treatment.
     &--skeleton {
       pointer-events: none;
-    }
-
-    &:hover {
-      cursor: pointer;
     }
   }
 
@@ -1205,12 +1255,11 @@ input[type="search"] {
   }
 
   &--dragging {
-    opacity: 0.5;
+    opacity: var(--opacity-dragging);
     z-index: 10;
 
     // Override the item's pointer cursor while a drag is in progress
-    .LogsMenu__item,
-    .LogsMenu__item:hover {
+    .LogsMenu__item {
       cursor: grabbing;
     }
   }
@@ -1233,7 +1282,7 @@ input[type="search"] {
     line-height: 1;
 
     &:disabled {
-      opacity: 0.2;
+      opacity: var(--opacity-disabled);
       cursor: default;
     }
   }
@@ -1248,7 +1297,7 @@ input[type="search"] {
     opacity: 0.3;
     transition: 0.3s ease-in-out;
 
-    &:hover {
+    @include hover {
       opacity: 1;
     }
 
@@ -1298,7 +1347,7 @@ input[type="search"] {
     flex-shrink: 0;
 
     &__status {
-      font-size: 0.85em;
+      font-size: type-floor(0.85em);
       opacity: 0.7;
     }
   }
@@ -1377,7 +1426,7 @@ input[type="search"] {
         order: -1;
         color: var(--inverse-ink);
         background-color: var(--inverse-surface);
-        font-size: 0.8em;
+        font-size: type-floor(0.8em);
 
         .LogPostMenu__item .Icon img {
           filter: var(--icon-filter-inverse);
@@ -1416,7 +1465,7 @@ input[type="search"] {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         grid-gap: 2px;
-        font-size: 0.8em;
+        font-size: type-floor(0.8em);
 
         &__left {
           text-align: left;
@@ -1452,7 +1501,7 @@ input[type="search"] {
       }
 
       &__body {
-        font-size: 0.9em;
+        font-size: type-floor(0.9em);
         overflow-y: auto;
         flex: 1;
       }
@@ -1487,7 +1536,7 @@ input[type="search"] {
       &__reactions {
         display: flex;
         justify-content: flex-end;
-        font-size: 0.8em;
+        font-size: type-floor(0.8em);
       }
 
       &__content {
@@ -1540,7 +1589,7 @@ input[type="search"] {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 0.72em;
+      font-size: type-floor(0.7em);
       color: var(--ink-muted);
       letter-spacing: 0.08em;
     }
@@ -1624,7 +1673,7 @@ input[type="search"] {
 
 .LogPostEditor--uploading {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: var(--opacity-dragging);
 }
 
 // Positioned (fixed, in a portal) by TutorialTooltip.tsx, so no container can bury or
@@ -1639,7 +1688,7 @@ input[type="search"] {
   padding: ui-soft(0.9em) ui-soft(1.2em);
   border-radius: var(--radius-none);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 400;
   width: max-content;
   max-width: min(240px, calc(100vw - 16px));
@@ -1651,7 +1700,7 @@ input[type="search"] {
   gap: ui-soft(0.4em);
 
   small {
-    font-size: 0.78em;
+    font-size: type-floor(0.8em);
     opacity: 0.7; // muted text floor (5.5:1)
     font-weight: 400;
   }
@@ -1706,7 +1755,7 @@ input[type="search"] {
 }
 
 .TimezoneSetter {
-  font-size: 0.6rem;
+  font-size: type-floor(0.7rem);
   font-weight: 400;
 }
 
@@ -1741,7 +1790,7 @@ input[type="search"] {
   }
 
   @media (max-width: constants.$breakpoint-xl) {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
   }
 
   &__wrapper {
@@ -1771,7 +1820,7 @@ input[type="search"] {
 
   &__notice {
     padding: ui(1em);
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
     text-align: center;
   }
 
@@ -1948,7 +1997,7 @@ input[type="search"] {
     &__body {
       background-color: transparent;
       padding: ui(1em);
-      font-size: 0.8em;
+      font-size: type-floor(0.8em);
       text-align: left;
       min-width: 0;
       overflow-wrap: break-word;
@@ -1970,7 +2019,7 @@ input[type="search"] {
     }
 
     &__footer {
-      font-size: 0.7em;
+      font-size: type-floor(0.7em);
       text-align: right;
 
       // A little more air between the commenter's avatar and name than elsewhere:
@@ -1989,107 +2038,194 @@ input[type="search"] {
   }
 }
 
+// Modal (design-system Modal, 2026-11 audit). Phones: a bottom sheet, full width,
+// docked to the bottom over the scrim, at most 90% of the screen tall. From bp-md: a
+// centred box, 450px, in a 2px frame. Both: a black header bar (an overlay is what
+// you're working in now) with a 44px ×, a left-aligned 14px body, and a footer with a
+// 1px rule. The content box scrolls; the header and footer stay pinned to it.
 .Modal {
   &__backdrop {
     position: fixed;
     inset: 0;
-    // Centre within what's actually visible: clear of the notch, home indicator and
-    // on-screen keyboard, so a modal's fields and buttons stay reachable while typing.
-    padding: var(--safe-top) var(--safe-right) calc(var(--safe-bottom) + var(--keyboard-inset))
-      var(--safe-left);
     box-sizing: border-box;
     z-index: 50;
     display: flex;
-    cursor: pointer;
-    background-color: var(--scrim);
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    // The sheet runs under the home indicator (its footer pads past it) and rises with
+    // the on-screen keyboard.
+    padding: var(--safe-top) 0 var(--keyboard-inset);
+    background-color: var(--scrim);
+    cursor: pointer;
+
+    @media (min-width: constants.$breakpoint-md) {
+      align-items: center;
+      padding: var(--safe-top) var(--safe-right) calc(var(--safe-bottom) + var(--keyboard-inset))
+        var(--safe-left);
+    }
   }
 
   &__content {
-    font-size: 0.8em;
     display: flex;
     flex-direction: column;
-    background-color: var(--paper);
-    z-index: 55;
-    cursor: default;
-    border: var(--border-rule) solid var(--ink);
-    border-radius: var(--radius-none);
-    margin: ui-soft(1em);
+    box-sizing: border-box;
     width: 100%;
-    // Tall modals scroll inside the frame instead of running off a short screen.
-    max-height: calc(100% - 2em);
+    max-height: 90%;
     overflow-y: auto;
     overscroll-behavior: contain;
+    font-size: var(--phone-body);
+    text-align: left;
+    background-color: var(--paper);
+    color: var(--ink);
+    border: 0;
+    border-radius: var(--radius-none);
+    cursor: default;
+
+    // A sheet with no footer clears the home indicator itself (a footer pads past it).
+    &:not(:has(> .Modal__footer)) {
+      padding-bottom: var(--safe-bottom);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: Modal-rise 0.2s ease-out;
+    }
 
     @media (min-width: constants.$breakpoint-md) {
-      max-width: 450px;
+      max-width: var(--modal-width);
+      max-height: calc(100% - 2em);
+      margin: 1em;
+      border: var(--border-rule) solid var(--ink);
+      animation: none;
     }
   }
 
   &__header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
-    width: 100%;
-    @include surfaces.strip(2px 8px);
-  }
-
-  // Striped window chrome for tool modals: the title and close sit on paper labels
-  // over a field of horizontal 1-bit stripes.
-  &__header--striped {
     align-items: center;
-    gap: 8px;
-    background-color: var(--paper);
-    border-bottom: var(--border-rule) solid var(--ink);
+    min-height: var(--tap-target);
+    padding-left: 14px;
+    background-color: var(--inverse-surface);
+    color: var(--inverse-ink);
 
-    .Modal__title,
-    .Modal__button--close {
-      color: var(--ink);
-      padding: 0 6px;
+    @media (min-width: constants.$breakpoint-md) {
+      padding-left: 16px;
     }
 
-    // A long title (a log's name) is cut short rather than squeezing out the stripes.
-    .Modal__title {
-      min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
+    .Icon img {
+      filter: var(--icon-filter-inverse);
     }
-  }
-
-  &__header__fill {
-    flex: 1;
-    align-self: stretch;
-    margin: 5px 0;
   }
 
   &__title {
-    font-size: 1em;
-    color: var(--paper);
-    margin: ui-soft(0.2em) 0;
-  }
+    min-width: 0;
+    margin: 0;
+    padding: var(--gap-inside) 0;
+    font-size: var(--phone-body);
+    font-weight: 700;
+    color: inherit;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 
-  &__button {
-    &--close {
-      border-radius: var(--radius-none);
-      border: none;
-      padding: ui-soft(0.4em);
-      background-color: transparent;
-      color: var(--paper);
-      font-weight: 700;
+    @media (min-width: constants.$breakpoint-md) {
+      font-size: 0.9375rem; // 15px
     }
   }
 
-  // Modals vary less with UI size than the page (ui-soft), and keep a little more room.
-  &__body {
-    padding: ui-soft(1.25em);
-    text-align: center;
+  &__button--close {
+    flex-shrink: 0;
+    width: var(--tap-target);
+    height: var(--tap-target);
+    margin-left: auto;
+    padding: 0;
+    font: inherit;
+    font-size: var(--phone-heading);
+    font-weight: 700;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-none);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: var(--border-rule) solid var(--inverse-ink);
+      outline-offset: -4px;
+    }
+
+    &:disabled {
+      opacity: var(--opacity-disabled);
+      cursor: default;
+    }
   }
 
+  &__body {
+    flex-grow: 1;
+    padding: 16px 14px 20px;
+
+    @media (min-width: constants.$breakpoint-md) {
+      padding: 18px 16px 20px;
+    }
+  }
+
+  // Pinned to the bottom of the sheet. Phones: back / cancel at the left, the main
+  // action (the last) filling the rest, both 44px; one action fills the row. Wide:
+  // right-aligned, 40px.
   &__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    flex-shrink: 0;
     display: flex;
-    justify-content: center;
-    grid-gap: ui-soft(0.4em);
-    padding: ui-soft(1.25em);
+    gap: 10px;
+    margin-top: auto;
+    padding: 12px 14px calc(16px + var(--safe-bottom));
+    background-color: var(--paper);
+    border-top: var(--border-hairline) solid var(--ink);
+
+    > .Button {
+      justify-content: center;
+      min-height: var(--tap-target);
+      box-sizing: border-box;
+    }
+
+    > :last-child {
+      flex-grow: 1;
+    }
+
+    @media (min-width: constants.$breakpoint-md) {
+      justify-content: flex-end;
+      padding: 12px 16px 14px;
+
+      > .Button {
+        min-height: 40px;
+      }
+
+      > :last-child {
+        flex-grow: 0;
+      }
+    }
+  }
+}
+
+// Phones: every modal is a sheet, whatever width it asks for on wide screens (the id
+// outranks a modal's own class).
+@media (max-width: calc(constants.$breakpoint-md - 1px)) {
+  #modal-root .Modal__content {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@keyframes Modal-rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
   }
 }

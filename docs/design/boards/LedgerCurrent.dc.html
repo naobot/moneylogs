@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Financial log, current phone layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 12.8px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="display: flex; flex-direction: column; padding: 2px 6px 0; flex-shrink: 0"
+        >
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div style="display: flex; gap: 5px">
+              <a
+                href="#"
+                aria-label="Home"
+                style="
+                  display: inline-flex;
+                  width: 40px;
+                  height: 40px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                  alt=""
+                  width="20"
+                  height="20"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="My preferences"
+                style="
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+              <a
+                href="#"
+                aria-label="Notifications"
+                style="
+                  display: inline-flex;
+                  width: 40px;
+                  height: 40px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="20"
+                  height="20"
+                  style="display: block; flex-shrink: 0"
+              /></a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px">
+              <strong style="font-size: 14px">moneylogs</strong>
+              <button
+                type="button"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  padding: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="#242424"
+                  stroke-width="2"
+                  stroke-linecap="square"
+                  aria-hidden="true"
+                >
+                  <path d="M3 5 H17 M3 10 H17 M3 15 H17"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 5px;
+              padding: 5px 0;
+              border-top: 1px solid #242424;
+              font-size: 11.5px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <a
+              href="#"
+              style="
+                padding: 4px 6px;
+                background: #242424;
+                color: #f5f3f0;
+                border: 1px solid #242424;
+              "
+              >household</a
+            >
+            <a href="#" style="padding: 4px 6px; border: 1px solid #242424">trip to osaka</a>
+            <a href="#" style="padding: 4px 6px; border: 1px solid #242424">flat bills</a>
+            <a href="#" style="padding: 4px 6px; border: 1px solid #242424">book club</a>
+          </div>
+        </nav>
+
+        <main
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 6px 6px 0;
+            gap: 9px;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 4px 6px;
+              background: #242424;
+              color: #f5f3f0;
+              font-size: 9px;
+            "
+          >
+            <strong>household</strong>
+            <span style="display: flex; gap: 9px; align-items: center">
+              <span>INVITE</span>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="#f5f3f0"
+                stroke-width="2.4"
+                stroke-linecap="square"
+                aria-hidden="true"
+              >
+                <path d="M4 4 H16 V16 H4 Z M8 8 H12 V12 H8 Z"></path>
+              </svg>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="#f5f3f0"
+                stroke-width="2.4"
+                stroke-linecap="square"
+                aria-hidden="true"
+              >
+                <path d="M3 5 H17 M3 10 H17 M3 15 H17"></path>
+              </svg>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="#f5f3f0"
+                stroke-width="2.4"
+                stroke-linecap="square"
+                aria-hidden="true"
+              >
+                <path d="M10 3 V13 M6 9 L10 13 L14 9 M4 17 H16"></path>
+              </svg>
+            </span>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 13px;
+              font-size: 10.2px;
+              white-space: nowrap;
+              overflow: hidden;
+            "
+          >
+            <div style="display: flex; gap: 4px">
+              <a
+                href="#"
+                style="
+                  padding: 7px 10px;
+                  border: 2px solid #242424;
+                  background: #242424;
+                  color: #f5f3f0;
+                "
+                >entries</a
+              >
+              <a href="#" style="padding: 7px 10px; border: 2px solid #242424">stats</a>
+            </div>
+            <div
+              style="display: flex; gap: 4px; padding-left: 13px; border-left: 1px dotted #242424"
+            >
+              <a href="#" style="padding: 7px 10px; border: 1px solid #242424; font-weight: 400"
+                >week</a
+              >
+              <a href="#" style="padding: 7px 10px; border: 1px solid #242424; font-weight: 400"
+                >month</a
+              >
+              <a href="#" style="padding: 7px 10px; border: 1px solid #242424; font-weight: 400"
+                >year</a
+              >
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding-bottom: 6px;
+              border-bottom: 2px solid #242424;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 9px">
+              <button
+                type="button"
+                aria-label="Previous month"
+                style="
+                  padding: 0 6px;
+                  font-size: 11.5px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ‹
+              </button>
+              <span style="min-width: 8ch; text-align: center">nov 2026</span>
+              <button
+                type="button"
+                aria-label="Next month"
+                style="
+                  padding: 0 6px;
+                  font-size: 11.5px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                ›
+              </button>
+            </div>
+            <span style="font-size: 10px; color: rgba(36, 36, 36, 0.7)">ฅ^•ω•^ฅ</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; border: 2px solid #242424">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                padding: 6px 9px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+            >
+              <strong style="font-variant-numeric: tabular-nums">¥ 48,210</strong>
+              <div
+                aria-hidden="true"
+                style="display: flex; flex-grow: 1; height: 10px; border: 1px solid #f5f3f0"
+              >
+                <div style="width: 38%; background: #f5f3f0"></div>
+                <div
+                  style="
+                    width: 22%;
+                    background: repeating-linear-gradient(
+                      45deg,
+                      #f5f3f0 0 1px,
+                      transparent 1px 4px
+                    );
+                  "
+                ></div>
+                <div
+                  style="
+                    width: 15%;
+                    background: repeating-conic-gradient(#f5f3f0 0 25%, transparent 0 50%) 0 0 / 2px
+                      2px;
+                  "
+                ></div>
+              </div>
+              <span style="font-size: 10.2px">62% of ¥78k</span>
+            </div>
+          </div>
+
+          <form
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              padding: 9px 12px;
+              border: 2px solid #242424;
+              background: #ffffff;
+            "
+          >
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                row-gap: 5px;
+                font-size: 10.2px;
+                font-weight: 700;
+              "
+            >
+              <span>‹ 26 nov · thu ›</span>
+              <span>JPY ▾</span>
+              <span style="grid-column: 1 / -1; text-align: center">food ▾</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 6px">
+              <label for="cur-amount" style="font-size: 10.2px; font-weight: 700">¥</label>
+              <input
+                id="cur-amount"
+                placeholder="0"
+                style="
+                  width: 72px;
+                  font: inherit;
+                  text-align: right;
+                  border: 0;
+                  border-bottom: 1px dashed #242424;
+                  background: transparent;
+                  padding: 2px 0;
+                "
+              />
+              <label for="cur-note" style="font-size: 10.2px; font-weight: 700">note</label>
+              <input
+                id="cur-note"
+                style="
+                  flex-grow: 1;
+                  min-width: 0;
+                  font: inherit;
+                  font-size: 11.5px;
+                  border: 0;
+                  border-bottom: 1px dashed #242424;
+                  background: transparent;
+                  padding: 2px 0;
+                "
+              />
+            </div>
+          </form>
+
+          <div style="display: flex; justify-content: flex-end">
+            <button
+              type="button"
+              style="
+                font: inherit;
+                font-size: 9.6px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                padding: 1px 6px;
+                border: 1px solid #242424;
+                background: #f5f3f0;
+              "
+            >
+              no-spend day
+            </button>
+          </div>
+
+          <section style="display: flex; flex-direction: column; gap: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 3px 6px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 10.9px;
+              "
+            >
+              <span>thu 26 nov</span
+              ><strong style="font-variant-numeric: tabular-nums">¥ 3,140</strong>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 29px;
+                gap: 4px 10px;
+                align-items: center;
+                padding: 5px 6px;
+                border-bottom: 1px dashed #242424;
+              "
+            >
+              <strong>groceries</strong
+              ><span style="font-variant-numeric: tabular-nums">¥ 2,180</span
+              ><button
+                type="button"
+                aria-label="Entry actions"
+                style="
+                  font: inherit;
+                  font-size: 9.6px;
+                  padding: 0 4px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                …
+              </button>
+              <span style="grid-column: 1 / -1">tofu, rice, eggs</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 29px;
+                gap: 4px 10px;
+                align-items: center;
+                padding: 5px 6px;
+                border-bottom: 1px dashed #242424;
+              "
+            >
+              <strong>coffee</strong><span style="font-variant-numeric: tabular-nums">¥ 520</span
+              ><button
+                type="button"
+                aria-label="Entry actions"
+                style="
+                  font: inherit;
+                  font-size: 9.6px;
+                  padding: 0 4px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                …
+              </button>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 29px;
+                gap: 4px 10px;
+                align-items: center;
+                padding: 5px 6px;
+                border-bottom: 1px dashed #242424;
+              "
+            >
+              <strong>transit</strong><span style="font-variant-numeric: tabular-nums">¥ 440</span
+              ><button
+                type="button"
+                aria-label="Entry actions"
+                style="
+                  font: inherit;
+                  font-size: 9.6px;
+                  padding: 0 4px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                …
+              </button>
+            </div>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 3px 6px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 10.9px;
+              "
+            >
+              <span>wed 25 nov</span
+              ><strong style="font-variant-numeric: tabular-nums">¥ 6,900</strong>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 29px;
+                gap: 4px 10px;
+                align-items: center;
+                padding: 5px 6px;
+                border-bottom: 1px dashed #242424;
+              "
+            >
+              <strong>dining out</strong
+              ><span style="font-variant-numeric: tabular-nums">¥ 5,600</span
+              ><button
+                type="button"
+                aria-label="Entry actions"
+                style="
+                  font: inherit;
+                  font-size: 9.6px;
+                  padding: 0 4px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                …
+              </button>
+              <span style="grid-column: 1 / -1">izakaya with team</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto 29px;
+                gap: 4px 10px;
+                align-items: center;
+                padding: 5px 6px;
+                border-bottom: 1px dashed #242424;
+              "
+            >
+              <strong>household</strong
+              ><span style="font-variant-numeric: tabular-nums">¥ 1,300</span
+              ><button
+                type="button"
+                aria-label="Entry actions"
+                style="
+                  font: inherit;
+                  font-size: 9.6px;
+                  padding: 0 4px;
+                  border: 1px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                …
+              </button>
+              <span style="grid-column: 1 / -1">sponges, bin bags</span>
+            </div>
+          </section>
+        </main>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

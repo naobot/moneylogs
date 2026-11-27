@@ -122,11 +122,6 @@ interface ModalHeaderProps {
   title?: ReactNode;
   showCloseButton?: boolean;
   className?: string;
-  /**
-   * Striped window chrome (title on a paper label over 1-bit stripes) for tool-like
-   * modals — managing a log, editing categories. Confirmations keep the solid bar.
-   */
-  striped?: boolean;
 }
 
 const ModalHeader: React.FC<ModalHeaderProps> = ({
@@ -134,16 +129,17 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   title,
   showCloseButton = false,
   className = "",
-  striped = false,
 }) => {
   const { onClose, disabled } = useContext(ModalContext);
 
+  // The black bar (2026-11 audit): an overlay's header always says "you're working in
+  // this now". The striped bar is a page's own header (TitleBar), never a modal's.
   return (
-    <div className={`Modal__header ${striped ? "Modal__header--striped" : ""} ${className}`}>
+    <div className={`Modal__header ${className}`}>
       <h2 className="Modal__title">{title ?? children}</h2>
-      {striped && <span className="Modal__header__fill tex-stripe" aria-hidden="true" />}
       {showCloseButton && onClose && (
         <button
+          type="button"
           className="Modal__button--close"
           onClick={onClose}
           aria-label="Close modal"

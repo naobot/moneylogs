@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inputs: text fields, text areas, selects</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 1640px;
+          box-sizing: border-box;
+          padding: 48px 56px;
+          display: flex;
+          flex-direction: column;
+          gap: 36px;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            border: 2px solid #242424;
+            background: #ffffff;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              padding: 14px 18px;
+              border-right: 1px dashed #242424;
+            "
+          >
+            <div style="height: 30px; border-bottom: 1px dashed #242424"></div>
+            <strong>dashed · you type</strong>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >text fields, text areas, amounts. Solid while focused.</span
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              padding: 14px 18px;
+              border-right: 1px dashed #242424;
+            "
+          >
+            <div style="height: 30px; box-sizing: border-box; border: 1px solid #242424"></div>
+            <strong>solid · you choose</strong>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >selects, dates, currencies. A fixed set of answers.</span
+            >
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 18px">
+            <div style="height: 30px; box-sizing: border-box; border: 3px solid #242424"></div>
+            <strong>heavy · fix this</strong>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >error. border-heavy, the system's warning weight.</span
+            >
+          </div>
+        </div>
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 40px 48px;
+            align-content: start;
+          "
+        >
+          <section style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 2px solid #242424;
+                padding-bottom: 6px;
+              "
+            >
+              <h2 style="margin: 0; font-size: 18px">C7 · text field</h2>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">boxed, for forms</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px 20px;
+              "
+            >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >rest
+                <input
+                  placeholder="e.g. tokyo flat"
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 1px dashed #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                  "
+              /></label>
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >focus
+                <input
+                  value="household"
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 11px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 2px solid #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                    outline: 2px solid #242424;
+                    outline-offset: 2px;
+                  "
+              /></label>
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >error
+                <input
+                  value=""
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 10px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 3px solid #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                  "
+                  aria-invalid="true"
+                />
+                <span style="color: #242424"><strong>!</strong> give the log a name</span></label
+              >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                  opacity: 0.3;
+                "
+                >disabled
+                <input
+                  value="locked after archive"
+                  disabled
+                  style="
+                    height: 44px;
+                    box-sizing: border-box;
+                    padding: 0 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 1px dashed #242424;
+                    border-radius: 0;
+                    background: #ffffff;
+                  "
+              /></label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >line input · inline, in place (unchanged: titles, notes, quick edits)</span
+              >
+              <div style="display: flex; gap: 10px; align-items: baseline">
+                <strong style="font-size: 12px">note</strong
+                ><input
+                  value="izakaya with team"
+                  style="
+                    flex-grow: 1;
+                    height: 36px;
+                    box-sizing: border-box;
+                    font: inherit;
+                    color: #242424;
+                    border: 0;
+                    border-bottom: 1px dashed #242424;
+                    border-radius: 0;
+                    background: transparent;
+                  "
+                />
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Label always above, never placeholder-as-label. Helper and error text in caption,
+              under the box.
+            </p>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 2px solid #242424;
+                padding-bottom: 6px;
+              "
+            >
+              <h2 style="margin: 0; font-size: 18px">C8 · text area</h2>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >posts, comments, descriptions</span
+              >
+            </div>
+            <label
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                font-size: 12px;
+                color: rgba(36, 36, 36, 0.7);
+              "
+              >rest
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  border: 1px dashed #242424;
+                  background: #ffffff;
+                "
+              >
+                <textarea
+                  rows="3"
+                  placeholder="what happened today?"
+                  style="
+                    padding: 10px 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 0;
+                    resize: none;
+                    background: transparent;
+                  "
+                ></textarea>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 4px 12px;
+                    border-top: 1px dashed rgba(36, 36, 36, 0.3);
+                    font-size: 12px;
+                  "
+                >
+                  <span>markdown ok</span><span>0 / 2000</span>
+                </div>
+              </div></label
+            >
+            <label
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                font-size: 12px;
+                color: rgba(36, 36, 36, 0.7);
+              "
+              >focus · with the post toolbar
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                  outline: 2px solid #242424;
+                  outline-offset: 2px;
+                "
+              >
+                <div
+                  role="toolbar"
+                  aria-label="Formatting"
+                  style="display: flex; border-bottom: 1px solid #242424"
+                >
+                  <button
+                    type="button"
+                    aria-label="Bold"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      font-weight: 700;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Italic"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      font-style: italic;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="List"
+                    aria-pressed="true"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      color: #f5f3f0;
+                      background: #242424;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    •
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Link"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    [↗]
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Add image"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      border-right: 1px solid #242424;
+                    "
+                  >
+                    [▣]
+                  </button>
+                  <span style="flex-grow: 1"></span>
+                  <button
+                    type="button"
+                    style="
+                      padding: 0 12px;
+                      height: 36px;
+                      font: inherit;
+                      font-size: 12px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.04em;
+                      color: #242424;
+                      background: none;
+                      border: 0;
+                      border-left: 1px solid #242424;
+                    "
+                  >
+                    preview
+                  </button>
+                </div>
+                <textarea
+                  rows="4"
+                  style="
+                    padding: 10px 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: #242424;
+                    border: 0;
+                    resize: none;
+                    background: transparent;
+                  "
+                >
+- found the good bakery by the station
+- split the taxi home</textarea>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 4px 12px;
+                    border-top: 1px dashed rgba(36, 36, 36, 0.3);
+                    font-size: 12px;
+                  "
+                >
+                  <span>markdown ok</span><span>61 / 2000</span>
+                </div>
+              </div></label
+            >
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Grows from 3 to 8 rows, then scrolls; no resize handle. The counter appears past 80%
+              of the limit on comments.
+            </p>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 2px solid #242424;
+                padding-bottom: 6px;
+              "
+            >
+              <h2 style="margin: 0; font-size: 18px">C9 · select</h2>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >designed trigger, native list</span
+              >
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px 20px;
+              "
+            >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >rest
+                <span
+                  style="
+                    display: flex;
+                    align-items: stretch;
+                    height: 44px;
+                    box-sizing: border-box;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    color: #242424;
+                    font-size: 14px;
+                  "
+                  ><span style="flex-grow: 1; display: flex; align-items: center; padding: 0 12px"
+                    >groceries</span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      width: 40px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border-left: 1px solid #242424;
+                    "
+                    >▾</span
+                  ></span
+                ></label
+              >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >open / pressed
+                <span
+                  style="
+                    display: flex;
+                    align-items: stretch;
+                    height: 44px;
+                    box-sizing: border-box;
+                    border: 2px solid #242424;
+                    background: #ffffff;
+                    color: #242424;
+                    font-size: 14px;
+                  "
+                  ><span style="flex-grow: 1; display: flex; align-items: center; padding: 0 11px"
+                    >groceries</span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      width: 40px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      background: #242424;
+                      color: #f5f3f0;
+                    "
+                    >▴</span
+                  ></span
+                ></label
+              >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >empty
+                <span
+                  style="
+                    display: flex;
+                    align-items: stretch;
+                    height: 44px;
+                    box-sizing: border-box;
+                    border: 1px solid #242424;
+                    background: #ffffff;
+                    font-size: 14px;
+                  "
+                  ><span
+                    style="
+                      flex-grow: 1;
+                      display: flex;
+                      align-items: center;
+                      padding: 0 12px;
+                      color: rgba(36, 36, 36, 0.7);
+                    "
+                    >pick a category…</span
+                  ><span
+                    aria-hidden="true"
+                    style="
+                      width: 40px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border-left: 1px solid #242424;
+                    "
+                    >▾</span
+                  ></span
+                ></label
+              >
+              <label
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: rgba(36, 36, 36, 0.7);
+                "
+                >inline · in headers and rows
+                <span
+                  style="
+                    display: flex;
+                    gap: 14px;
+                    align-items: center;
+                    height: 44px;
+                    font-size: 14px;
+                    color: #242424;
+                  "
+                  ><span style="border-bottom: 1px solid #242424; font-weight: 700">JPY ▾</span
+                  ><span style="border-bottom: 1px solid #242424; font-weight: 700"
+                    >this month ▾</span
+                  ></span
+                ></label
+              >
+            </div>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              On phones the list stays the OS picker: the styled box is a real &lt;select&gt; with
+              appearance: none, so the wheel and keyboard still work. 14 files use &lt;select&gt;
+              today.
+            </p>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 2px solid #242424;
+                padding-bottom: 6px;
+              "
+            >
+              <h2 style="margin: 0; font-size: 18px">C10 · listbox · amount · date</h2>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >when native isn't enough</span
+              >
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 20px;
+                align-items: start;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    height: 44px;
+                    padding: 0 12px;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <span aria-hidden="true">&gt;</span
+                  ><input
+                    aria-label="Search currencies"
+                    value="ye"
+                    style="
+                      flex-grow: 1;
+                      min-width: 0;
+                      font: inherit;
+                      color: #242424;
+                      border: 0;
+                      background: transparent;
+                    "
+                  />
+                </div>
+                <ul
+                  role="listbox"
+                  aria-label="Currency"
+                  style="margin: 0; padding: 0; list-style: none; font-size: 14px"
+                >
+                  <li
+                    role="option"
+                    aria-selected="true"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      height: 44px;
+                      padding: 0 12px;
+                      background: #242424;
+                      color: #f5f3f0;
+                    "
+                  >
+                    <strong>JPY</strong><span style="font-size: 12px">japanese yen</span>
+                  </li>
+                  <li
+                    role="option"
+                    aria-selected="false"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      height: 44px;
+                      padding: 0 12px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <strong>CNY</strong
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">chinese yuan</span>
+                  </li>
+                  <li
+                    role="option"
+                    aria-selected="false"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      height: 44px;
+                      padding: 0 12px;
+                    "
+                  >
+                    <strong>YER</strong
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">yemeni rial</span>
+                  </li>
+                </ul>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 16px">
+                <label
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    font-size: 12px;
+                    color: rgba(36, 36, 36, 0.7);
+                  "
+                  >amount
+                  <span
+                    style="
+                      display: flex;
+                      align-items: center;
+                      height: 44px;
+                      box-sizing: border-box;
+                      border: 1px dashed #242424;
+                      background: #ffffff;
+                    "
+                    ><span
+                      style="
+                        padding: 0 10px;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        border-right: 1px solid #242424;
+                        color: #242424;
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                      >JPY ▾</span
+                    ><input
+                      inputmode="numeric"
+                      value="2,180"
+                      style="
+                        flex-grow: 1;
+                        min-width: 0;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 16px;
+                        font-weight: 700;
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        color: #242424;
+                        border: 0;
+                        background: transparent;
+                      " /></span
+                ></label>
+                <label
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    font-size: 12px;
+                    color: rgba(36, 36, 36, 0.7);
+                  "
+                  >date
+                  <span
+                    style="
+                      display: flex;
+                      align-items: stretch;
+                      height: 44px;
+                      box-sizing: border-box;
+                      border: 1px solid #242424;
+                      background: #ffffff;
+                      color: #242424;
+                      font-size: 14px;
+                    "
+                    ><span
+                      style="
+                        width: 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-right: 1px solid #242424;
+                      "
+                      >‹</span
+                    ><span
+                      style="
+                        flex-grow: 1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                      >thu 26 nov</span
+                    ><span
+                      style="
+                        width: 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-left: 1px solid #242424;
+                      "
+                      >›</span
+                    ></span
+                  >
+                  <span>tap the date for the OS calendar</span></label
+                >
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+              Custom listbox only for long or searchable lists (currency, place picker): a
+              container, search on top, 44px options, selected inverted. CustomDropdown becomes
+              this.
+            </p>
+          </section>
+        </div>
+        <section style="display: flex; flex-direction: column; gap: 16px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">C11 · checkbox and radio</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >text-mode marks, real inputs underneath</span
+            >
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+              gap: 40px;
+              align-items: start;
+            "
+          >
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >checkbox · pick items from a list</span
+              >
+              <div>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-height: 44px;
+                    border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                  "
+                  ><input
+                    type="checkbox"
+                    style="position: absolute; opacity: 0; width: 1px; height: 1px"
+                  /><span aria-hidden="true" style="font-weight: 700">[ ]</span
+                  ><span>12 nov · coffee</span></label
+                ><label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-height: 44px;
+                    border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                  "
+                  ><input
+                    type="checkbox"
+                    style="position: absolute; opacity: 0; width: 1px; height: 1px"
+                  /><span aria-hidden="true" style="font-weight: 700">[x]</span
+                  ><span>15 nov · groceries</span></label
+                >
+                <div style="outline: 2px solid #242424; outline-offset: 2px">
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                      border-bottom: 0;
+                    "
+                    ><input
+                      type="checkbox"
+                      style="position: absolute; opacity: 0; width: 1px; height: 1px"
+                    /><span aria-hidden="true" style="font-weight: 700">[ ]</span
+                    ><span>focus</span></label
+                  >
+                </div>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-height: 44px;
+                    border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    opacity: 0.3;
+                  "
+                  ><input
+                    type="checkbox"
+                    style="position: absolute; opacity: 0; width: 1px; height: 1px"
+                  /><span aria-hidden="true" style="font-weight: 700">[ ]</span
+                  ><span>disabled</span></label
+                >
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >radio · one answer, stacked rows</span
+              >
+              <div role="radiogroup" aria-label="Example" style="padding-top: 1px">
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 44px;
+                    padding: 0 12px;
+                    border: 1px solid #242424;
+                    margin-top: -1px;
+                    background: #ffffff;
+                  "
+                  ><span aria-hidden="true" style="font-weight: 700">( )</span
+                  ><span>save a lot</span></label
+                ><label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 44px;
+                    padding: 0 12px;
+                    border: 1px solid #242424;
+                    margin-top: -1px;
+                    background: #242424;
+                    color: #f5f3f0;
+                  "
+                  ><span aria-hidden="true" style="font-weight: 700">(•)</span
+                  ><span>save steadily</span></label
+                ><label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 44px;
+                    padding: 0 12px;
+                    border: 1px solid #242424;
+                    margin-top: -1px;
+                    background: #ffffff;
+                  "
+                  ><span aria-hidden="true" style="font-weight: 700">( )</span
+                  ><span>comfort first</span></label
+                >
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">which control?</span>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 90px minmax(0, 1fr);
+                  gap: 8px 12px;
+                  padding: 12px 14px;
+                  border: 1px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                <strong>switch</strong><span>a setting that is on or off, saved at once</span>
+                <strong>[x]</strong><span>choosing some items from a list</span> <strong>(•)</strong
+                ><span>one of a few answers, each needing a sentence</span>
+                <strong>segmented</strong
+                ><span>one of 2–4 short options (S M L, colour / mono)</span> <strong>select</strong
+                ><span>one of many, or options too long for a row</span>
+              </div>
+            </div>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            The mark is decoration; a visually hidden native input keeps keyboard, screen-reader and
+            form behaviour. Checked rows don't invert: only a chosen radio does.
+          </p>
+        </section>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1640}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

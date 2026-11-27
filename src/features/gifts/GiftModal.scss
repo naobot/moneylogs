@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 .GiftModal {
   &__body {
     display: flex;
@@ -23,7 +24,7 @@
 
   &__note {
     margin: 0;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 }

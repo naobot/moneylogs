@@ -16,13 +16,13 @@
     }
 
     p {
-      font-size: 0.9em;
+      font-size: type-floor(0.9em);
     }
 
     ul {
       margin: 0;
       padding-left: ui(1.2em);
-      font-size: 0.9em;
+      font-size: type-floor(0.9em);
     }
 
     & + & {
@@ -123,5 +123,5 @@
   flex-direction: column;
   gap: ui(0.3em);
   width: 100%;
-  font-size: 0.9em;
+  font-size: type-floor(0.9em);
 }

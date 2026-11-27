@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Financial log stats, proposed desktop layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1440px;
+          height: 900px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 15px;
+          line-height: 1.5;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 52px;
+            padding: 0 16px;
+            border-bottom: 1px solid #242424;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex">
+            <a
+              href="#"
+              aria-label="Home"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="My preferences"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="Notifications"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 6px;
+              align-items: center;
+              padding-left: 16px;
+              border-left: 1px solid #242424;
+              font-size: 14px;
+            "
+          >
+            <a
+              href="#"
+              aria-current="page"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px 4px 7px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+              />household</a
+            >
+            <a
+              href="#"
+              title="coffee fund (a sublog)"
+              style="
+                display: inline-flex;
+                align-items: center;
+                padding: 4px 6px;
+                margin-left: -4px;
+                font-size: 13px;
+                font-weight: 400;
+              "
+              ><span aria-hidden="true" style="color: rgba(36, 36, 36, 0.7)">↳</span>&nbsp;coffee
+              fund</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-left: auto">
+            <strong style="font-size: 16px">moneylogs</strong>
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-haspopup="menu"
+              style="
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 0;
+              "
+            >
+              <img
+                src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0"
+              />
+            </button>
+          </div>
+        </nav>
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 16px 24px 0;
+            min-height: 0;
+            flex-grow: 1;
+          "
+        >
+          <header
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 48px;
+              box-sizing: border-box;
+              padding: 7px 5px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+              flex-shrink: 0;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                gap: 14px;
+                margin-left: 12px;
+                padding: 0 12px;
+                background: #f5f3f0;
+                line-height: 30px;
+              "
+            >
+              <h1 style="margin: 0; font-size: 18px; font-weight: 700">household</h1>
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >financial · 2 members</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin: -7px 8px -7px 0;
+                padding: 0 6px;
+                height: 44px;
+                background: #f5f3f0;
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+            >
+              <button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 36px;
+                  padding: 0 10px;
+                  font: inherit;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/216a6954baa8ee2b003ccf5c632b9e52"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />manage</button
+              ><button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 36px;
+                  padding: 0 10px;
+                  font: inherit;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <img
+                  src="/_blob/bb27b82c9e2f9ff0ba799668fa06da09"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />categories</button
+              ><button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 36px;
+                  padding: 0 10px;
+                  font: inherit;
+                  color: #242424;
+                  background: none;
+                  border: 0;
+                "
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="#242424"
+                  stroke-width="2"
+                  stroke-linecap="square"
+                  aria-hidden="true"
+                >
+                  <path d="M10 3 V12 M6 8 L10 12 L14 8 M3 16 H17"></path></svg
+                >import</button
+              ><button
+                type="button"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  height: 32px;
+                  padding: 0 12px 0 8px;
+                  font: inherit;
+                  color: #242424;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                "
+              >
+                <img
+                  src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                  alt=""
+                  width="18"
+                  height="18"
+                  style="display: block; flex-shrink: 0"
+                />invite
+              </button>
+            </div>
+          </header>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 260px minmax(0, 1fr) 260px;
+              gap: 32px;
+              min-height: 0;
+            "
+          >
+            <aside style="display: flex; flex-direction: column; gap: 18px">
+              <div style="display: flex; flex-direction: column; border: 2px solid #242424">
+                <a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 44px;
+                    padding: 0 14px;
+                  "
+                  >entries</a
+                ><a
+                  href="#"
+                  aria-current="page"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 44px;
+                    padding: 0 14px;
+                    border-top: 2px solid #242424;
+                    background: #242424;
+                    color: #f5f3f0;
+                  "
+                  >stats</a
+                >
+              </div>
+              <div style="display: flex; flex-direction: column; border: 1px solid #242424">
+                <a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 38px;
+                    padding: 0 14px;
+                    font-weight: 400;
+                  "
+                  >week</a
+                ><a
+                  href="#"
+                  aria-current="page"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 38px;
+                    padding: 0 14px;
+                    border-top: 1px solid #242424;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-weight: 400;
+                  "
+                  >month</a
+                ><a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 38px;
+                    padding: 0 14px;
+                    border-top: 1px solid #242424;
+                    font-weight: 400;
+                  "
+                  >year</a
+                >
+              </div>
+              <div style="display: flex; flex-direction: column">
+                <a
+                  href="#"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    height: 38px;
+                    padding: 0 14px;
+                    border: 1px solid #242424;
+                    font-weight: 400;
+                  "
+                  >↳ coffee fund</a
+                ><button
+                  type="button"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    height: 38px;
+                    padding: 0 14px;
+                    font: inherit;
+                    color: rgba(36, 36, 36, 0.7);
+                    background: none;
+                    border: 1px dashed #242424;
+                    border-top: 0;
+                    text-align: left;
+                  "
+                >
+                  + sublog
+                </button>
+              </div>
+            </aside>
+            <main style="display: flex; flex-direction: column; gap: 24px; min-width: 0">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: auto auto minmax(0, 1fr);
+                  gap: 28px;
+                  align-items: center;
+                "
+              >
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <button
+                    type="button"
+                    aria-label="Previous month"
+                    style="
+                      width: 36px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      font-size: 16px;
+                      border: 1px solid #242424;
+                      background: #f5f3f0;
+                    "
+                  >
+                    ‹</button
+                  ><span style="min-width: 13ch; text-align: center; font-weight: 700"
+                    >november 2026</span
+                  ><button
+                    type="button"
+                    aria-label="Next month"
+                    style="
+                      width: 36px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      font-size: 16px;
+                      border: 1px solid #242424;
+                      background: #f5f3f0;
+                    "
+                  >
+                    ›
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    line-height: 1.2;
+                    padding-left: 28px;
+                    border-left: 1px solid #242424;
+                  "
+                >
+                  <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">spent</span
+                  ><strong style="font-size: 24px">¥ 48,210</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <div style="display: flex; justify-content: space-between; font-size: 13px">
+                    <span><strong>62%</strong> of ¥ 78,000 budget</span
+                    ><span style="color: rgba(36, 36, 36, 0.7)">4 days left</span>
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    style="display: flex; height: 14px; border: 1px dashed #242424"
+                  >
+                    <div style="width: 23.5%; background: #89afd6"></div>
+                    <div
+                      style="width: 13.6%; background: #b27e6c; border-left: 1px solid #242424"
+                    ></div>
+                    <div
+                      style="width: 9.3%; background: #a3c69c; border-left: 1px solid #242424"
+                    ></div>
+                    <div
+                      style="width: 8.2%; background: #a99b69; border-left: 1px solid #242424"
+                    ></div>
+                    <div
+                      style="
+                        width: 7.3%;
+                        background: rgba(36, 36, 36, 0.3);
+                        border-left: 1px solid #242424;
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <section style="display: flex; flex-direction: column; gap: 4px; flex-shrink: 0">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h2 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    categories
+                  </h2>
+                  <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    ><button
+                      type="button"
+                      style="
+                        height: 32px;
+                        padding: 0;
+                        font: inherit;
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #242424;
+                        background: none;
+                        border: 0;
+                      "
+                    >
+                      manage
+                    </button></span
+                  >
+                </div>
+                <div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid #242424;
+                        background: #89afd6;
+                      "
+                    ></span
+                    ><strong
+                      title="groceries"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      >groceries</strong
+                    ><strong style="text-align: right">¥ 18,320</strong
+                    ><span style="text-align: right; font-size: 13px">38%</span>
+                    <div aria-hidden="true" style="height: 8px; border: 1px dashed #242424">
+                      <div style="width: 73%; height: 100%; background: #242424"></div>
+                    </div>
+                    <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                      >of ¥ 25,000</span
+                    >
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid #242424;
+                        background: #b27e6c;
+                      "
+                    ></span
+                    ><strong
+                      title="dining out"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      >dining out</strong
+                    ><strong style="text-align: right">¥ 10,600</strong
+                    ><span style="text-align: right; font-size: 13px">22%</span>
+                    <div aria-hidden="true" style="height: 8px; border: 1px dashed #242424">
+                      <div style="width: 88%; height: 100%; background: #242424"></div>
+                    </div>
+                    <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                      >of ¥ 12,000</span
+                    >
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid #242424;
+                        background: #a3c69c;
+                      "
+                    ></span
+                    ><strong
+                      title="weekend trips with the whole family"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      >weekend trips with the whole family</strong
+                    ><strong style="text-align: right">¥ 7,230</strong
+                    ><span style="text-align: right; font-size: 13px">15%</span
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">no budget</span
+                    ><span></span>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid #242424;
+                        background: #a99b69;
+                      "
+                    ></span
+                    ><strong
+                      title="transit"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      >transit</strong
+                    ><strong style="text-align: right">¥ 6,400</strong
+                    ><span style="text-align: right; font-size: 13px">13%</span>
+                    <div aria-hidden="true" style="height: 8px; border: 1px dashed #242424">
+                      <div style="width: 80%; height: 100%; background: #242424"></div>
+                    </div>
+                    <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                      >of ¥ 8,000</span
+                    >
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                      border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        position: relative;
+                        flex-shrink: 0;
+                        width: 12px;
+                        height: 12px;
+                        box-sizing: border-box;
+                        border: 1px solid #242424;
+                        background: #f5f3f0;
+                      "
+                      ><span
+                        style="
+                          position: absolute;
+                          inset: 2px;
+                          border: 1px solid #242424;
+                          background: #ffffff;
+                        "
+                      ></span></span
+                    ><a
+                      href="#"
+                      title="coffee fund, a sublog: open it"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      ><span style="font-weight: 400; color: rgba(36, 36, 36, 0.7)">↳</span> coffee
+                      fund ›</a
+                    ><strong style="text-align: right">¥ 1,900</strong
+                    ><span style="text-align: right; font-size: 13px">4%</span
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                      >logged in its own log</span
+                    ><span></span>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 14px minmax(0, 1.2fr) 100px 50px minmax(0, 1fr) 90px;
+                      gap: 14px;
+                      align-items: center;
+                      min-height: 44px;
+                    "
+                  >
+                    <span
+                      aria-hidden="true"
+                      style="
+                        width: 12px;
+                        height: 12px;
+                        border: 1px solid #242424;
+                        background: rgba(36, 36, 36, 0.3);
+                      "
+                    ></span
+                    ><strong
+                      title="everything else"
+                      style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                      >everything else</strong
+                    ><strong style="text-align: right">¥ 3,760</strong
+                    ><span style="text-align: right; font-size: 13px">8%</span
+                    ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">no budget</span
+                    ><span></span>
+                  </div>
+                </div>
+              </section>
+              <section style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h2 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    month by month
+                  </h2>
+                  <span style="padding-bottom: 4px; font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                    >JPY</span
+                  >
+                </div>
+                <div
+                  role="img"
+                  aria-label="Monthly spending, June to November"
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
+                    gap: 24px;
+                    align-items: end;
+                    height: 150px;
+                    padding: 0 8px;
+                    background: repeating-linear-gradient(
+                      180deg,
+                      transparent 0 36px,
+                      rgba(36, 36, 36, 0.15) 36px 37px
+                    );
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 62%; background: rgba(36, 36, 36, 0.3)"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">jun</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 70%; background: rgba(36, 36, 36, 0.3)"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">jul</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 58%; background: rgba(36, 36, 36, 0.3)"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">aug</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 75%; background: rgba(36, 36, 36, 0.3)"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">sep</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 82%; background: rgba(36, 36, 36, 0.3)"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">oct</span>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: flex-end;
+                      gap: 4px;
+                      height: 100%;
+                    "
+                  >
+                    <div style="width: 100%; height: 74%; background: #242424"></div>
+                    <span style="font-size: 11px; color: rgba(36, 36, 36, 0.7)">nov</span>
+                  </div>
+                </div>
+              </section>
+            </main>
+            <aside style="display: flex; flex-direction: column; gap: 22px">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+                <div
+                  aria-hidden="true"
+                  style="
+                    width: 100px;
+                    height: 100px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                  "
+                >
+                  ฅ^•ω•^ฅ
+                </div>
+                <button
+                  type="button"
+                  style="
+                    height: 36px;
+                    padding: 0 12px;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #242424;
+                    border: 1px solid #242424;
+                    background: #f5f3f0;
+                  "
+                >
+                  share november
+                </button>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  border: 2px solid #242424;
+                  background: #ffffff;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-left: 12px;
+                    background: #242424;
+                    color: #f5f3f0;
+                    font-size: 13px;
+                  "
+                >
+                  <strong>october in review</strong
+                  ><button
+                    type="button"
+                    aria-label="Close october in review"
+                    style="
+                      width: 40px;
+                      height: 36px;
+                      padding: 0;
+                      font: inherit;
+                      color: #f5f3f0;
+                      background: none;
+                      border: 0;
+                    "
+                  >
+                    [-]
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding: 12px;
+                    font-size: 13px;
+                  "
+                >
+                  <p style="margin: 0">
+                    October came in ¥ 4,700 under budget. Keep ¥ 78,000 for november?
+                  </p>
+                  <div style="display: flex; gap: 8px">
+                    <button
+                      type="button"
+                      style="
+                        height: 36px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #242424;
+                        border: 2px solid #242424;
+                        background: #ffffff;
+                      "
+                    >
+                      keep</button
+                    ><button
+                      type="button"
+                      style="
+                        height: 36px;
+                        padding: 0 12px;
+                        font: inherit;
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #242424;
+                        border: 1px solid #242424;
+                        background: #ffffff;
+                      "
+                    >
+                      change
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <section style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1px solid #242424;
+                  "
+                >
+                  <h2 style="margin: 0; padding-bottom: 4px; font-size: 14px; font-weight: 700">
+                    insights
+                  </h2>
+                </div>
+                <ul
+                  style="
+                    margin: 0;
+                    padding: 0 0 0 16px;
+                    font-size: 13px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                  "
+                >
+                  <li>Dining out is ¥ 1,400 under its budget with 4 days left.</li>
+                  <li>Weekends took 41% of the month.</li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

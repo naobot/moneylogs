@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notification pop-up, proposed desktop layout</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          position: relative;
+          width: 1440px;
+          height: 900px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 15px;
+          line-height: 1.45;
+        "
+      >
+        <nav
+          aria-label="Main"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 52px;
+            padding: 0 16px;
+            border-bottom: 1px solid #242424;
+          "
+        >
+          <div style="display: flex">
+            <a
+              href="#"
+              aria-label="Home"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/f2fd515f0bede2b0ca5b192ed6b45158"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <a
+              href="#"
+              aria-label="My preferences"
+              style="
+                display: inline-flex;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+              "
+              ><img
+                src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                alt=""
+                width="22"
+                height="22"
+                style="display: block; flex-shrink: 0"
+            /></a>
+            <span style="display: inline-flex; background: #242424"
+              ><a
+                href="#"
+                aria-label="Notifications, 3 new"
+                aria-expanded="true"
+                style="
+                  position: relative;
+                  display: inline-flex;
+                  width: 44px;
+                  height: 44px;
+                  align-items: center;
+                  justify-content: center;
+                "
+                ><img
+                  src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                  alt=""
+                  width="22"
+                  height="22"
+                  style="display: block; flex-shrink: 0; filter: invert(1)"
+                /><span
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    top: 6px;
+                    right: 4px;
+                    min-width: 16px;
+                    padding: 0 3px;
+                    box-sizing: border-box;
+                    background: #f5f3f0;
+                    color: #242424;
+                    font-size: 11px;
+                    font-weight: 700;
+                    line-height: 16px;
+                    text-align: center;
+                  "
+                  >3</span
+                ></a
+              ></span
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 6px;
+              align-items: center;
+              padding-left: 16px;
+              border-left: 1px solid #242424;
+              font-size: 14px;
+            "
+          >
+            <a
+              href="#"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px 4px 7px;
+                background: #242424;
+                color: #f5f3f0;
+              "
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0; filter: invert(1)"
+              />household</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />trip to osaka</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/701047e3379826ebc9feda7157870afd"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />flat bills</a
+            >
+            <a
+              href="#"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px"
+              ><img
+                src="/_blob/61d45be9d1ac610cc020477a3e48ed70"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />book club</a
+            >
+          </div>
+          <strong style="margin-left: auto; font-size: 16px">moneylogs</strong>
+        </nav>
+        <div
+          aria-hidden="true"
+          style="display: flex; flex-direction: column; gap: 20px; padding: 16px 24px 0"
+        >
+          <div
+            style="
+              height: 48px;
+              box-sizing: border-box;
+              padding: 7px 5px;
+              border: 2px solid #242424;
+              background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+              background-clip: content-box;
+            "
+          ></div>
+          <div style="display: grid; grid-template-columns: 260px minmax(0, 1fr) 260px; gap: 32px">
+            <div style="height: 92px; border: 2px solid #242424"></div>
+            <div style="display: flex; flex-direction: column; gap: 22px">
+              <div style="height: 44px; border-bottom: 1px solid #242424"></div>
+              <div style="height: 70px; border: 2px solid #242424"></div>
+              <div style="height: 32px; background: #242424"></div>
+              <div style="height: 42px; border-bottom: 1px dashed rgba(36, 36, 36, 0.3)"></div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+        <section
+          role="dialog"
+          aria-label="Notifications"
+          style="
+            position: absolute;
+            top: 52px;
+            left: 60px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #242424;
+            background: #f5f3f0;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              height: 40px;
+              padding: 0 14px;
+              background: #242424;
+              color: #f5f3f0;
+              font-size: 14px;
+            "
+          >
+            <strong>notifications</strong
+            ><span
+              aria-label="3 new"
+              title="3 new"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 1px 6px 1px 3px;
+                background: #f5f3f0;
+                color: #242424;
+                font-size: 12px;
+                font-weight: 700;
+              "
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="16"
+                height="16"
+                style="display: block; flex-shrink: 0"
+              />3</span
+            >
+          </div>
+          <div style="padding: 4px 8px">
+            <ul style="margin: 0; padding: 0; list-style: none">
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 8px 8px 8px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d183196b0fbd049fb57e99812b591c8c"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>ken</strong> commented on your post in
+                      <strong>trip to osaka</strong></span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >someone double dipped. it was ken.</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >12m<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 8px 8px 8px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d109b09ca7bdcd1bb504b6667c25654f"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      >80% of your groceries budget in <strong>household</strong></span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        color: rgba(36, 36, 36, 0.7);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                      "
+                      >¥ 20,000 of ¥ 25,000</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >1h<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+              <li style="border-bottom: 1px dashed rgba(36, 36, 36, 0.3)">
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 8px 8px 8px 8px;
+                    border-left: 4px solid #242424;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/640a26c714e2a3c742076631aaf9bd19"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>sora</strong> wants to be friends</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >3h<span
+                      style="
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                      "
+                    >
+                      (new)</span
+                    ></span
+                  ></a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  style="
+                    display: grid;
+                    grid-template-columns: 20px minmax(0, 1fr) auto;
+                    gap: 10px;
+                    align-items: start;
+                    min-height: 44px;
+                    padding: 8px 8px 8px 8px;
+                    border-left: 4px solid transparent;
+                    font-weight: 400;
+                    text-decoration: none;
+                  "
+                  ><img
+                    src="/_blob/d3e49191fc66a449cd4e602d6889a48c"
+                    alt=""
+                    width="22"
+                    height="22"
+                    style="display: block; flex-shrink: 0; margin-top: 2px"
+                  /><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"
+                    ><span style="font-size: 14px; overflow-wrap: anywhere"
+                      ><strong>trip to osaka</strong> ends in 3 days: last chance to post</span
+                    ></span
+                  ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7); white-space: nowrap"
+                    >yesterday</span
+                  ></a
+                >
+              </li>
+            </ul>
+          </div>
+          <a
+            href="#"
+            style="
+              display: flex;
+              justify-content: flex-end;
+              align-items: center;
+              height: 40px;
+              padding: 0 14px;
+              border-top: 1px solid #242424;
+              font: inherit;
+              font-size: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #242424;
+              text-decoration: none;
+            "
+            ><span
+              aria-label="see all notifications"
+              title="see all notifications"
+              style="display: inline-flex; align-items: center; gap: 4px"
+              ><img
+                src="/_blob/64a2d48d8057f5b21a0e2df0e1a8dccb"
+                alt=""
+                width="18"
+                height="18"
+                style="display: block; flex-shrink: 0" />all<img
+                src="/_blob/55d0d9ee8ea194f06bc5846cf1f3be07"
+                alt=""
+                width="14"
+                height="14"
+                style="display: block; flex-shrink: 0; transform: rotate(-90deg)" /></span
+          ></a>
+        </section>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

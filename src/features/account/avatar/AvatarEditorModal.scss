@@ -1,3 +1,5 @@
+@use "@/ui-size" as *;
+@use "@/states" as *;
 .AvatarEditor {
   &__body {
     display: flex;
@@ -57,9 +59,7 @@
     color: var(--ink);
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible,
-    &--active {
+    @include hover("&:focus-visible, &--active, &:active") {
       background: var(--inverse-surface);
       outline: none;
 
@@ -77,6 +77,6 @@
 
   &__hint {
     color: var(--ink-muted);
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
   }
 }

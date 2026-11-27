@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 @keyframes knickknack-details-enter {
   from {
     transform: scale(0.9);
@@ -44,7 +45,7 @@
   &__rarity {
     padding: var(--space-1) var(--space-4);
     border: var(--border-hairline) solid var(--ink);
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     font-weight: 700;
 
     &--rare,

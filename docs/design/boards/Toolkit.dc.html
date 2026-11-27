@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Separation toolkit</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: Hack;
+            src: url("ds/moneylogs/fonts/Hack-bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+          }
+          body {
+            margin: 0;
+          }
+          a {
+            color: #242424;
+          }
+          a:hover {
+            color: #000;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 1520px;
+          box-sizing: border-box;
+          padding: 48px 56px;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 40px 48px;
+          align-content: start;
+          background: #f5f3f0;
+          color: #242424;
+          font-family: Hack, ui-monospace, Menlo, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">F1 · surface tiers</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">three, and only three</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  height: 92px;
+                  padding: 10px;
+                  box-sizing: border-box;
+                  background: #f5f3f0;
+                  outline: 1px dotted rgba(36, 36, 36, 0.3);
+                  font-size: 12px;
+                "
+              >
+                rows, totals, labels
+              </div>
+              <strong>ground</strong
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >paper, no frame. Content you read.</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  height: 92px;
+                  padding: 10px;
+                  box-sizing: border-box;
+                  background: #ffffff;
+                  border: 1px solid #242424;
+                  font-size: 12px;
+                "
+              >
+                a post, a card
+              </div>
+              <strong>card</strong
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >sheet + 1px. One item among many.</span
+              >
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                style="
+                  height: 92px;
+                  padding: 10px;
+                  box-sizing: border-box;
+                  background: #ffffff;
+                  border: 2px solid #242424;
+                  font-size: 12px;
+                "
+              >
+                the open form, a modal
+              </div>
+              <strong>container</strong
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+                >sheet + 2px. Where you act. One per view.</span
+              >
+            </div>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            3px and 4px stay as they are: warning and fresh. They read louder once 2px is rare.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">F2 · inversion budget</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >state, never structure</span
+            >
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 14px;
+              font-size: 13px;
+            "
+          >
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">today: a header</span>
+              <div style="padding: 6px 10px; background: #242424; color: #f5f3f0">
+                <strong>household</strong>
+              </div>
+              <div
+                style="
+                  padding: 4px 10px;
+                  background: #242424;
+                  color: #f5f3f0;
+                  display: flex;
+                  justify-content: space-between;
+                "
+              >
+                <span>thu 26 nov</span><span>¥ 3,140</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">proposed</span>
+              <div
+                style="
+                  height: 36px;
+                  box-sizing: border-box;
+                  display: flex;
+                  align-items: center;
+                  padding: 5px 4px;
+                  border: 2px solid #242424;
+                  background: repeating-linear-gradient(180deg, #242424 0 1px, transparent 1px 4px);
+                  background-clip: content-box;
+                "
+              >
+                <strong
+                  style="margin-left: 10px; padding: 0 10px; line-height: 22px; background: #f5f3f0"
+                  >household</strong
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  padding-bottom: 4px;
+                  border-bottom: 1px solid #242424;
+                  font-size: 12px;
+                  font-weight: 700;
+                "
+              >
+                <span>thu 26 nov</span><span>¥ 3,140</span>
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              padding: 12px 14px;
+              border: 1px solid #242424;
+              background: #ffffff;
+            "
+          >
+            <strong style="font-size: 13px">the black bar stays for two things</strong>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 28px;
+                padding: 0 8px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 12px;
+                font-weight: 700;
+              "
+            >
+              <span>today · thu 26 nov</span><span>¥ 3,140</span>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 28px;
+                padding: 0 0 0 8px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 12px;
+                font-weight: 700;
+              "
+            >
+              <span>comments · 2</span><span style="width: 36px; text-align: center">[-]</span>
+            </div>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >Today's day header (once per list: everything under it is the past), and the header
+              of anything on top of the page: modals, sheets, the review box.</span
+            >
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Otherwise, every inverted block should be something you could tap away from.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">F3 · phone type ladder</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">rendered px, floor 11</span>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">display</span
+              ><span style="font-size: 12px">36</span
+              ><strong style="font-size: 36px; line-height: 1.1">¥ 48,210</strong>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">heading</span
+              ><span style="font-size: 12px">18</span
+              ><strong style="font-size: 18px">spending patterns</strong>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">body</span
+              ><span style="font-size: 12px">14</span
+              ><span style="font-size: 14px">groceries · ¥ 2,180</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">small</span
+              ><span style="font-size: 12px">13</span
+              ><span style="font-size: 13px">tofu, rice, eggs</span>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">caption · caps</span
+              ><span style="font-size: 12px">12</span
+              ><span style="font-size: 12px"
+                >thu 26 nov ·
+                <strong style="text-transform: uppercase; letter-spacing: 0.04em"
+                  >save</strong
+                ></span
+              >
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 90px 48px minmax(0, 1fr);
+                align-items: baseline;
+                gap: 12px;
+                padding: 6px 0;
+              "
+            >
+              <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">micro</span
+              ><span style="font-size: 12px">11</span
+              ><span style="font-size: 11px">chart ticks, tooltips. Nothing smaller.</span>
+            </div>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Components pick a step in rem; no nested em shrinking. Today: page header ≈ 9px, member
+            strip ≈ 7.7px.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">F4 · spacing rhythm</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >each step clearly bigger</span
+            >
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: minmax(0, 1fr) 180px;
+              gap: 24px;
+              align-items: start;
+            "
+          >
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 110px 70px minmax(0, 1fr);
+                  gap: 10px;
+                  align-items: center;
+                "
+              >
+                <strong>inside</strong><span>4px</span>
+                <div style="width: 4px; height: 12px; background: #242424"></div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 110px 70px minmax(0, 1fr);
+                  gap: 10px;
+                  align-items: center;
+                "
+              >
+                <strong>between</strong><span>8px</span>
+                <div style="width: 8px; height: 12px; background: #242424"></div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 110px 70px minmax(0, 1fr);
+                  gap: 10px;
+                  align-items: center;
+                "
+              >
+                <strong>group</strong><span>18px</span>
+                <div style="width: 18px; height: 12px; background: #242424"></div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 110px 70px minmax(0, 1fr);
+                  gap: 10px;
+                  align-items: center;
+                "
+              >
+                <strong>section</strong><span>28px</span>
+                <div style="width: 28px; height: 12px; background: #242424"></div>
+              </div>
+              <p style="margin: 4px 0 0; color: rgba(36, 36, 36, 0.7)">
+                UI size scales the two inner steps; group and section keep their gap so S never runs
+                sections together.
+              </p>
+            </div>
+            <div aria-hidden="true" style="display: flex; flex-direction: column; gap: 28px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <div style="height: 8px; background: #242424"></div>
+                  <div style="height: 6px; width: 60%; background: rgba(36, 36, 36, 0.3)"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <div style="height: 8px; background: #242424"></div>
+                  <div style="height: 6px; width: 45%; background: rgba(36, 36, 36, 0.3)"></div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 18px">
+                <div style="height: 8px; background: #242424"></div>
+                <div style="height: 8px; background: #242424"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">C1 · switch</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >replaces checkbox + toggle button</span
+            >
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <label
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-height: 44px;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+              ><span>night shift</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked="true"
+                aria-label="Night shift"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-end;
+                  width: 52px;
+                  height: 26px;
+                  padding: 2px;
+                  box-sizing: border-box;
+                  border: 2px solid #242424;
+                  background: #242424;
+                "
+              >
+                <span style="width: 18px; height: 18px; background: #f5f3f0"></span>
+              </button>
+            </label>
+            <label
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-height: 44px;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+              "
+              ><span>push notifications</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked="false"
+                aria-label="Push notifications"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-start;
+                  width: 52px;
+                  height: 26px;
+                  padding: 2px;
+                  box-sizing: border-box;
+                  border: 2px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                <span style="width: 18px; height: 18px; background: #242424"></span>
+              </button>
+            </label>
+            <label
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-height: 44px;
+                opacity: 0.3;
+              "
+              ><span>count in budget</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked="false"
+                aria-label="Count in budget"
+                disabled
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-start;
+                  width: 52px;
+                  height: 26px;
+                  padding: 2px;
+                  box-sizing: border-box;
+                  border: 2px solid #242424;
+                  background: #f5f3f0;
+                "
+              >
+                <span style="width: 18px; height: 18px; background: #242424"></span>
+              </button>
+            </label>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            On = inverted track (the system's "this one"). The whole row is the hit area.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">C2 · segmented control</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >views, periods, filters</span
+            >
+          </div>
+          <div
+            role="tablist"
+            aria-label="View"
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              border: 2px solid #242424;
+            "
+          >
+            <a
+              href="#"
+              role="tab"
+              aria-selected="true"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+              >entries</a
+            >
+            <a
+              href="#"
+              role="tab"
+              aria-selected="false"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+              "
+              >stats</a
+            >
+          </div>
+          <div
+            role="tablist"
+            aria-label="Period"
+            style="
+              display: grid;
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+              border: 1px solid #242424;
+            "
+          >
+            <a
+              href="#"
+              role="tab"
+              aria-selected="false"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 36px;
+                border-right: 1px solid #242424;
+                font-size: 12px;
+                font-weight: 400;
+              "
+              >week</a
+            >
+            <a
+              href="#"
+              role="tab"
+              aria-selected="true"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 36px;
+                border-right: 1px solid #242424;
+                background: #242424;
+                color: #f5f3f0;
+                font-size: 12px;
+              "
+              >month</a
+            >
+            <a
+              href="#"
+              role="tab"
+              aria-selected="false"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 36px;
+                font-size: 12px;
+                font-weight: 400;
+              "
+              >year</a
+            >
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Primary choice: 2px frame. Sub-choice: 1px. Replaces the row of separately framed
+            sidebar items.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">C3 · disclosure</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)"
+              >secondary blocks start closed</span
+            >
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <button
+              type="button"
+              aria-expanded="false"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 44px;
+                padding: 0;
+                font: inherit;
+                background: none;
+                border: 0;
+                border-bottom: 1px dashed rgba(36, 36, 36, 0.3);
+                text-align: left;
+              "
+            >
+              <span>[+] scheduled payments</span
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">3</span>
+            </button>
+            <button
+              type="button"
+              aria-expanded="true"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 44px;
+                padding: 0;
+                font: inherit;
+                background: none;
+                border: 0;
+                text-align: left;
+              "
+            >
+              <span>[-] breakdown</span
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">4 categories</span>
+            </button>
+            <div
+              style="
+                padding: 4px 0 4px 14px;
+                border-left: 1px dotted #242424;
+                font-size: 13px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+              "
+            >
+              <span>groceries · 38%</span><span>dining out · 22%</span>
+            </div>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Remember each one's open state per user, like display prefs.
+          </p>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              border-bottom: 2px solid #242424;
+              padding-bottom: 6px;
+            "
+          >
+            <h2 style="margin: 0; font-size: 18px">C4–C6 · labels, rows, entry bar</h2>
+            <span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">the list, rebuilt</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <button
+              type="button"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 48px;
+                padding: 0 14px;
+                font: inherit;
+                border: 1px dashed #242424;
+                background: #ffffff;
+              "
+            >
+              <strong>[+] add entry</strong
+              ><span style="font-size: 12px; color: rgba(36, 36, 36, 0.7)">thu 26 nov · JPY</span>
+            </button>
+            <div style="display: flex; flex-direction: column">
+              <h3
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin: 0;
+                  padding-bottom: 4px;
+                  border-bottom: 1px solid #242424;
+                  font-size: 12px;
+                "
+              >
+                <span>thu 26 nov</span><span>¥ 3,140</span>
+              </h3>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: minmax(0, 1fr) auto 44px;
+                  column-gap: 8px;
+                  align-items: center;
+                  padding: 6px 0 6px 2px;
+                "
+              >
+                <div style="display: flex; flex-direction: column">
+                  <strong>groceries</strong
+                  ><span style="font-size: 13px; color: rgba(36, 36, 36, 0.7)"
+                    >tofu, rice, eggs</span
+                  >
+                </div>
+                <strong style="font-variant-numeric: tabular-nums">¥ 2,180</strong>
+                <button
+                  type="button"
+                  aria-label="Actions for groceries"
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    padding: 0;
+                    font: inherit;
+                    background: none;
+                    border: 0;
+                  "
+                >
+                  ⋯
+                </button>
+              </div>
+            </div>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: rgba(36, 36, 36, 0.7)">
+            Separators between rows drop to ink-faint; the label rule stays full ink, so days read
+            as groups.
+          </p>
+        </section>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1520}}'>
+      class Component extends DCLogic {
+      renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

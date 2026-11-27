@@ -164,21 +164,14 @@ Emulator data is wiped each session. Local `.env` values are not committed.
 
 Linting and formatting run automatically on staged files pre-commit.
 
-## Design Guidelines
+## UI work
 
-- Reuse existing styles as much as possible. If new designs are necessary, stick to the monochrome, retro Terminal-like aesthetic of the current app.
-- **Tokens are the single source.** Read colours, spacing, corners, frame weights and z-index from the CSS custom properties in `src/tokens.scss`; never hard-code a colour, radius or font.
-- **Two inks only:** `--ink` on `--paper` (`--sheet` for framed writing surfaces). Never introduce new colours. Emphasis is inversion (`--inverse-surface` / `--inverse-ink`). Secondary text is never fainter than 0.7 opacity / `--ink-muted`.
-- **Chart colours, the one exception:** categorical charts (series told apart by fill: category bars and swatches, the budget pie, share-card pies) use the theme's muted `--chart-1…6` (+ `--chart-rest` for "other"), via `src/charts.scss`. Never for text, frames or UI, and single-series charts stay ink. Each fill needs a mono fallback under `:root[data-charts="mono"]` (Display → Charts) using the 1-bit textures. A new theme needs a `chart-palette(...)` include; check it with `node scripts/chart-palette.mjs`.
-- **Link accent, the other exception:** links in posts (markdown entries, comments, previews) use the theme's `--accent` (or `--accent-inverse` on an inverted block, via `--link-ink`), underlined: the theme's own ink (or paper) pushed brighter and more saturated, never a contrasting hue. Grey-ink themes (Paper, Night shift) keep links ink. Never for frames, fills or other UI text. A new theme needs an `accent(...)` include; generate and check it with `node scripts/link-accent.mjs <paper> <sheet> <ink>`.
-- **Night shift** swaps the inks under `:root[data-theme="night"]`. Anything written against tokens works in both; icons flip via `--icon-filter` / `.Icon--inverse` (`fill="white"`), markdown via `markdownColorMode()`.
-- **Type:** one typeface, Hack (`--font-mono`), self-hosted, for everything. Hierarchy comes from size, weight (400/700) and case: headings lowercase, button labels caps-lock. User content keeps its own case (`.keep-case`).
-- **Case:** UI text is all lowercase by default. This covers headings, labels, tabs, options, chips, legends, placeholders, empty states and short hints. The only exception is descriptive copy written as full sentences within a paragraph (explanations, insights, notes), which uses normal sentence case. Write the lowercase into the copy itself rather than relying on `text-transform`, so it holds wherever the text is reused (toasts, share cards, aria labels). Button labels are the one styled exception: they render caps-lock through CSS.
-- **Corners are square by default.** Rounding is a deliberate exception tied to a physical object, with its own token: `--radius-tab` (folder tabs), `--radius-bubble` (speech bubbles). No drop shadows or gradients.
-- **Frames and lines carry meaning:** 1px secondary, 2px container, 3px warning, 4px new activity; solid = committed, dashed = editable, dotted = past.
-- **Variation** comes from 1-bit textures (`src/texture.scss`: `texture()` mixin, `.tex-*`), striped tool-modal headers (`Modal.Header striped`), and text-mode glyphs — not from new colours.
-- **Sublog mark:** a category that is another log rolled up (a sublog) is marked by a box inside a box: an inset 1px frame on its swatch or bar segment (`sublogs/_mark.scss` `nested-frame`, `.SublogMark`), plus `↳` before the name and `›` when the name opens the sublog (`SublogName`). It's drawn with a frame, not a colour, so it holds in mono charts and every theme. Use it only for linked categories.
-- Shared primitives: `Button`, `RowButton` (small row actions), `.LineInput` (dashed inline input), `Modal`, `Drawer`, `Tabs`.
+The November 2026 UI audit is being implemented from `docs/design/`.
+
+- Read `docs/design/PLAN.md` to see the order of work and pick the next PR.
+- Read `docs/design/design-system/README.md` before any UI change; use only its tokens.
+- Each screen's spec is in `docs/design/screens/`; its "Decisions made in review" win over everything else.
+- One PR per plan item. Add or refresh a visual test for anything you restyle.
 
 ## Coding and Agent Rules
 

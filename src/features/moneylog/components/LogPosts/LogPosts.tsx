@@ -353,13 +353,13 @@ const LogPostItemComponent = ({
           </p>
         </Modal.Body>
         <Modal.Actions>
+          <Modal.CancelButton text="Nevermind" />
           <Button
             onClick={() => void handleDeletePost(post.id)}
             text="Delete"
             variant="primary"
             loading={deleteLogPost.isLoading}
           />
-          <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
       <Modal
@@ -375,13 +375,13 @@ const LogPostItemComponent = ({
           <p>Your currently pinned post will return to being a regular post.</p>
         </Modal.Body>
         <Modal.Actions>
+          <Modal.CancelButton text="Nevermind" />
           <Button
             onClick={() => void handlePinPost(post.id)}
             text="Pin"
             variant="primary"
             loading={updatePinnedPost.isLoading}
           />
-          <Modal.CancelButton text="Nevermind" />
         </Modal.Actions>
       </Modal>
     </>

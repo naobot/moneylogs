@@ -145,7 +145,7 @@ export const AvatarEditorModal = ({ isOpen, onClose }: AvatarEditorModalProps) =
       disabled={pending}
       className="AvatarEditor"
     >
-      <Modal.Header title="Draw your avatar" striped />
+      <Modal.Header title="Draw your avatar" />
       <Modal.Body className="AvatarEditor__body">
         <div className="AvatarEditor__tools" role="group" aria-label="Drawing tool">
           {(["pen", "eraser"] as const).map((t) => (

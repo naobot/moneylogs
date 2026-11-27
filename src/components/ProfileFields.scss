@@ -1,4 +1,5 @@
 @use "/src/constants.scss";
+@use "@/ui-size" as *;
 
 // Profile-style forms (/me, /welcome): labelled inputs, selects and the place picker,
 // all of which still fit a phone.
@@ -45,7 +46,7 @@
 
   &__hint {
     margin: 0 0 var(--space-3);
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 }

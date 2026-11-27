@@ -5,7 +5,7 @@
   display: flex;
   justify-content: flex-end;
   margin: 0;
-  font-size: 0.85em;
+  font-size: type-floor(0.85em);
 
   &--confirmed {
     color: var(--ink-muted);
