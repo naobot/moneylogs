@@ -157,7 +157,7 @@ export const LogActionsModal = ({
         disabled={deletion.isLoading}
         className="LogActions"
       >
-        <Modal.Header striped title={`Delete ${noun}`} />
+        <Modal.Header title={`Delete ${noun}`} />
         <Modal.Body>
           <section className="LogActions__section">
             <p>
@@ -209,7 +209,6 @@ export const LogActionsModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} disabled={pending} className="LogActions">
       <Modal.Header
-        striped
         title={
           <>
             Manage <span className="keep-case">{logTitle}</span>

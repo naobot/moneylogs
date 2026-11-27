@@ -56,7 +56,7 @@ const InviteBar = ({
   </aside>
 );
 
-/** A striped window frame, like the tool modals, around one example screen. */
+/** A striped window frame around one example screen (S11 redraws these). */
 const PreviewWindow = ({
   title,
   label,
@@ -67,9 +67,9 @@ const PreviewWindow = ({
   children: React.ReactNode;
 }) => (
   <section className="Landing__window" aria-label={label}>
-    <div className="Modal__header Modal__header--striped">
-      <h2 className="Modal__title">{title}</h2>
-      <span className="Modal__header__fill tex-stripe" aria-hidden="true" />
+    <div className="Landing__window__header">
+      <h2 className="Landing__window__title">{title}</h2>
+      <span className="Landing__window__fill tex-stripe" aria-hidden="true" />
       <span className="Landing__window__tag">example</span>
     </div>
     <div className="Landing__window__body">{children}</div>

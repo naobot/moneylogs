@@ -75,7 +75,7 @@ export const DefaultCurrencyPrompt = () => {
 
   return (
     <Modal isOpen onClose={saving ? undefined : () => void save(guess)} disabled={saving}>
-      <Modal.Header title="your currency" striped />
+      <Modal.Header title="your currency" />
       <Modal.Body>
         <p>
           Which currency do you usually spend in? New logs start in it, and new posts use it when

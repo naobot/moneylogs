@@ -55,7 +55,7 @@ export const Slides = ({ isOpen, title, slides, onClose, action }: SlidesProps) 
 
   return (
     <Modal isOpen={isOpen} onClose={close} className="Slides">
-      <Modal.Header striped showCloseButton title={title} />
+      <Modal.Header showCloseButton title={title} />
       <Modal.Body className="Slides__body">
         <section className="Slides__slide" aria-roledescription="slide" aria-live="polite">
           <h3 className="Slides__heading">{slide.heading}</h3>

@@ -138,9 +138,7 @@ const CategoryManagerDialog = ({
       onClose={close}
       className={cx("CategoryManager", { "CategoryManager--wide": wide })}
     >
-      <Modal.Header striped title="Categories">
-        Categories
-      </Modal.Header>
+      <Modal.Header title="Categories">Categories</Modal.Header>
       <Modal.Body>
         <ListDetail
           wide={wide}
@@ -226,9 +224,7 @@ const ConfirmView = ({
 
   return (
     <Modal isOpen onClose={onBack} className="CategoryManager CategoryManager--confirm">
-      <Modal.Header striped title={`${confirming.kind} category`}>
-        {confirming.kind} category
-      </Modal.Header>
+      <Modal.Header title={`${confirming.kind} category`}>{confirming.kind} category</Modal.Header>
       <Modal.Body>
         {confirming.kind === "archive" && (
           <>

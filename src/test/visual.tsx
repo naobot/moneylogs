@@ -58,10 +58,18 @@ const setSize = (key: "textSize" | "uiSize", size: Size) =>
   act(() => setDisplayPrefs({ [key]: size }));
 
 /** Two frames: one for styles to apply, one for anything that measures layout. */
-// Two frames for layout, after every image has loaded: an icon fetched for the first
-// time otherwise shows as a broken image in the shot.
+// Two frames for layout, after every image has loaded (an icon fetched for the first
+// time otherwise shows as a broken image in the shot) and every entrance has finished.
 const settle = async () => {
   await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => undefined)));
+  // Entrances (a sheet rising, a toast dropping in) end where they'll stay: wait for
+  // them, but not for loops (a blink, a pulse), which never finish.
+  await Promise.all(
+    document
+      .getAnimations()
+      .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+      .map((a) => a.finished.catch(() => undefined)),
+  );
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
@@ -190,12 +198,6 @@ export const clippedTapAreas = (root: Element): string[] => {
       const hit = document.elementFromPoint(x, y);
       if (!hit || control.contains(hit)) continue;
       if (controls.some((other) => other !== control && other.contains(hit))) continue;
-      // Known: a modal's content box scrolls (overflow-y: auto), so it clips the buttons
-      // at its edges. The Modal rework (docs/design PLAN item 8: bottom sheet, pinned
-      // footer) gives them room; until then this one clip isn't reported.
-      const modal = control.closest(".Modal__content");
-      if (modal && !modal.contains(hit)) continue;
-      if (hit.closest(".Modal__footer, .Modal__header") && modal?.contains(hit)) continue;
       found.add(
         `${describeElement(control)} "${control.textContent?.trim().slice(0, 12)}" (${x < box.left ? "left" : x > box.right ? "right" : y < box.top ? "top" : "bottom"} edge lands on ${describeElement(hit)})`,
       );
@@ -294,9 +296,12 @@ export const useVisualHarness = () => {
     /** Snapshot for Chromatic. Checks the phone rules first unless `phoneRules` is
      *  false (share cards: fixed-size images, not phone UI). */
     snapshot: async (name: string, { phoneRules = true } = {}) => {
+      await settle();
       if (phoneRules) assertPhoneRules(name);
       await takeSnapshot(name);
     },
+    /** Wait until images have loaded, entrances have finished and layout has run. */
+    settled: () => settle(),
     /** Switch to night shift (reset after each test). */
     night: () => {
       document.documentElement.dataset.theme = "night";

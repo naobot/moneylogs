@@ -146,7 +146,7 @@ export const ConfirmEmailProvider = ({ children }: PropsWithChildren) => {
       {children}
       {open && isGuest(user) && (
         <Modal isOpen onClose={() => setOpen(false)} className="ConfirmEmail">
-          <Modal.Header striped title="save your account" />
+          <Modal.Header title="save your account" />
           <Modal.Body className="ConfirmEmail__body">
             <p>
               Adding friends, sending gifts and inviting people need an account. Save yours with an
@@ -161,7 +161,7 @@ export const ConfirmEmailProvider = ({ children }: PropsWithChildren) => {
       )}
       {open && !isGuest(user) && (
         <Modal isOpen onClose={() => setOpen(false)} className="ConfirmEmail">
-          <Modal.Header striped title="confirm your email" />
+          <Modal.Header title="confirm your email" />
           <Modal.Body className="ConfirmEmail__body">
             <p>
               Adding friends, sending gifts and inviting people need a confirmed email address. We

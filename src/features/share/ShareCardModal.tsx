@@ -481,7 +481,7 @@ const ShareCardFrame = ({
       disabled={pending}
       className="ShareCardModal"
     >
-      <Modal.Header title={title} striped />
+      <Modal.Header title={title} />
       <Modal.Body className="ShareCardModal__body">
         {picker}
         {isError ? (
