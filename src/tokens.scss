@@ -45,6 +45,16 @@
   // ---- type: one face, Hack, throughout ----
   --font-mono: Hack, monospace;
 
+  // Phone ladder (2026-11 audit), in rem so Text size scales it. Components pick a step
+  // rather than shrinking with nested em. --phone-micro is the floor: nothing renders
+  // smaller on any screen (type-floor() in src/ui-size.scss).
+  --phone-display: 2.25rem; // 36px: the one number per screen (28px when it shares a row)
+  --phone-heading: 1.125rem; // 18px
+  --phone-body: 0.875rem; // 14px
+  --phone-small: 0.8125rem; // 13px
+  --phone-caption: 0.75rem; // 12px
+  --phone-micro: 0.6875rem; // 11px
+
   // Entry text: set per device in the /me Display drawer (src/utils/displayPrefs.ts).
   --entry-font-size: 1em;
   --entry-text-align: left;
@@ -76,6 +86,12 @@
   --space-5: calc(1em * var(--ui-scale));
   --space-6: calc(1.5em * var(--ui-scale));
   --space-7: calc(2em * var(--ui-scale));
+  // Rhythm (2026-11 audit): inside < between < group < section. UI size scales only the
+  // two inner steps, so S never runs sections together.
+  --gap-inside: calc(4px * var(--ui-scale));
+  --gap-between: calc(8px * var(--ui-scale));
+  --gap-group: 18px;
+  --gap-section: 28px;
   --window-pad: calc(30px * var(--ui-scale));
   --column-gap: calc(20px * var(--ui-scale));
 
@@ -90,6 +106,10 @@
   --border-heavy: 3px;
   --border-fresh: 4px;
 
+  // ---- shadow: the one shadow, a hard offset for things floating above the page
+  // (menus, popovers, toasts). Never on cards, buttons, sheets or modals. ----
+  --shadow-float: 4px 4px 0 rgba(36, 36, 36, 0.25);
+
   // ---- opacity ----
   --opacity-disabled: 0.3;
   --opacity-dragging: 0.5;
@@ -99,6 +119,9 @@
   --icon-sm: 16px;
   --icon-md: 21px;
   --icon-lg: 24px;
+  // The smallest hit area for anything tappable on a phone, at every UI size. The drawn
+  // control can be smaller (tap-target() in src/ui-size.scss); its hit area can't.
+  --tap-target: 44px;
   --sidebar-width: 420px;
   --main-width: 800px;
   // How far the log's middle column may grow on very wide screens, once both side
@@ -183,6 +206,7 @@
   --ink-ghost: #{rgba($ink, 0.15)};
   --ink-wash: #{rgba($ink, 0.07)};
   --scrim: #{$scrim};
+  --shadow-float: 4px 4px 0 #{rgba($ink, 0.25)};
   --icon-filter: #{$icon-filter};
   --icon-filter-inverse: #{$icon-filter-inverse};
 

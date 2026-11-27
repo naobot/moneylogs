@@ -1,3 +1,4 @@
+@use "@/ui-size" as *;
 .DisplaySection__row {
   display: flex;
   flex-wrap: wrap;
@@ -20,7 +21,7 @@
   border: var(--border-hairline) dashed var(--ink);
 
   &__meta {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
     margin-bottom: var(--space-2);
   }
@@ -56,7 +57,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
 
     li {
       display: inline-flex;
@@ -76,7 +77,7 @@
 
 .DisplaySection__hint {
   margin: 0;
-  font-size: 0.85em;
+  font-size: type-floor(0.85em);
   opacity: 0.7;
 }
 
@@ -100,7 +101,7 @@
   }
 
   &__family-name {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 
@@ -163,7 +164,7 @@
 
   &__label {
     padding: 0 var(--space-1);
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     text-align: center;
     overflow-wrap: anywhere;
   }

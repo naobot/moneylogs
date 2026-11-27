@@ -28,7 +28,7 @@
   }
 
   &__edit {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
   }
 
   &__section {
@@ -91,13 +91,13 @@
   }
 
   &__name {
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     font-weight: 700;
     text-transform: lowercase;
   }
 
   &__provenance {
-    font-size: 0.75em;
+    font-size: type-floor(0.75em);
     color: var(--ink-muted);
   }
 
@@ -145,7 +145,7 @@
   gap: var(--space-2);
 
   &__status {
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     color: var(--ink-muted);
   }
 
@@ -154,7 +154,7 @@
   &__friends {
     padding: ui(0.1em) 0;
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     font-weight: 700;
     text-transform: lowercase;
     color: var(--ink);
@@ -178,7 +178,7 @@
     width: 100%;
     padding: ui(0.2em) ui(0.6em);
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     text-align: left;
     color: var(--ink-muted);
     background: none;
@@ -239,7 +239,7 @@
 
   &__more {
     margin-left: auto;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
   }
 
   &__friends {

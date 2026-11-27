@@ -74,7 +74,7 @@
 // Who reacted (hover)
 .ReactionTooltip {
   padding: var(--space-2) var(--space-3);
-  font-size: 0.72em;
+  font-size: type-floor(0.72em);
   max-width: min(260px, 80vw);
   line-height: 1.4;
 }
@@ -143,7 +143,7 @@
 .ReactionDetails {
   width: 280px;
   padding: var(--space-3) var(--space-4);
-  font-size: 0.8em;
+  font-size: type-floor(0.8em);
 
   &__title {
     font-weight: 700;
@@ -224,7 +224,7 @@
 
   &__category {
     padding: var(--space-2) var(--space-3);
-    font-size: 0.8em;
+    font-size: type-floor(0.8em);
     font-weight: 700;
     text-transform: lowercase;
     color: var(--ink);

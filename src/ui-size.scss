@@ -31,3 +31,11 @@
 @function ui-soft($value) {
   @return -scaled($value, --ui-scale-soft);
 }
+
+// The type floor (2026-11 audit): nothing renders under --phone-micro (11px at Text size
+// M) on any screen. Wrap every font size below 1em in it: em sizes compound when nested
+// (a 0.85em label in a 0.8em button in a 0.8em modal footer came out at 8px), and the
+// floor catches that wherever it lands. It changes nothing that was already 11px or more.
+@function type-floor($size) {
+  @return max(var(--phone-micro), #{$size});
+}

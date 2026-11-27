@@ -30,7 +30,7 @@
     width: 100%;
     padding: ui(0.2em) ui(0.6em);
     font: inherit;
-    font-size: 0.85em;
+    font-size: type-floor(0.85em);
     text-align: left;
     color: var(--ink);
     background: none;
@@ -55,7 +55,7 @@
   height: 1.3em;
   padding: 0;
   font: inherit;
-  font-size: 0.8em;
+  font-size: type-floor(0.8em);
   font-weight: 700;
   line-height: 1;
   color: var(--inverse-ink);
@@ -127,7 +127,7 @@
 
   &__text {
     margin: 0;
-    font-size: 0.9em;
+    font-size: type-floor(0.9em);
     line-height: 1.4;
   }
 
