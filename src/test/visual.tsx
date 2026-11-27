@@ -159,8 +159,8 @@ let currentContainer: HTMLDivElement | undefined;
 /**
  * Controls whose grown hit area doesn't reach past their own box: something clips it
  * (an `overflow: hidden` on the control or a scrolling row around it). Samples just
- * outside each edge the area should cover; a tap there that lands on another control is
- * stolenTaps' business, not this.
+ * outside each edge, inside the area it should cover; a tap there that lands on another
+ * control is stolenTaps' business, not this.
  */
 export const clippedTapAreas = (root: Element): string[] => {
   const found = new Set<string>();
@@ -177,9 +177,14 @@ export const clippedTapAreas = (root: Element): string[] => {
     // Under an open modal or sheet: not reachable at all, so nothing to clip.
     const atCentre = document.elementFromPoint(cx, cy);
     if (atCentre && !control.contains(atCentre)) continue;
+    // Sample halfway into the margin the area adds past each edge. A margin under a
+    // pixel (a 43.4px button grown to 44) is rounding, and font metrics differ between
+    // machines, so it isn't checked.
+    const marginY = (h - box.height) / 2;
+    const marginX = (w - box.width) / 2;
     const points: [number, number][] = [];
-    if (h > box.height + 1) points.push([cx, box.top - 1], [cx, box.bottom + 1]);
-    if (w > box.width + 1) points.push([box.left - 1, cy], [box.right + 1, cy]);
+    if (marginY >= 1) points.push([cx, box.top - marginY / 2], [cx, box.bottom + marginY / 2]);
+    if (marginX >= 1) points.push([box.left - marginX / 2, cy], [box.right + marginX / 2, cy]);
     for (const [x, y] of points) {
       if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) continue;
       const hit = document.elementFromPoint(x, y);
