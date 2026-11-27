@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // Reactions in the post header, left of the comment bubble. Applied emoji are bare
 // (no frames): an emoji and its count, in plain weight.
@@ -104,8 +105,7 @@
   border-radius: var(--radius-none);
   cursor: pointer;
 
-  &:hover,
-  &:focus-visible {
+  @include hover("&:focus-visible") {
     border-color: var(--ink);
     outline: none;
   }

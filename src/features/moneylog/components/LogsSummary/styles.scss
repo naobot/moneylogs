@@ -1,5 +1,6 @@
 @use "@/constants.scss";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .LogsSummary {
   display: flex;
@@ -344,8 +345,7 @@
     text-decoration: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background-color: var(--ink);
       color: var(--paper);
 
@@ -356,13 +356,17 @@
       }
     }
 
-    // Milestone achievements aren't links: no pointer, no hover inversion.
+    // Milestone achievements aren't links: no pointer, no hover or press inversion.
     &--milestone {
       cursor: default;
 
-      &:hover {
+      @include hover("&:active") {
         background-color: transparent;
         color: var(--ink);
+
+        .Icon img {
+          filter: var(--icon-filter);
+        }
       }
     }
 

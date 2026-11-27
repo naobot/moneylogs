@@ -1,4 +1,5 @@
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 // The budget buddy: a kaomoji cat in the ledger's month row. Text glyphs and tokens only.
 
@@ -120,8 +121,7 @@
     text-underline-offset: 0.2em;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       text-decoration-style: solid;
       outline: none;
     }

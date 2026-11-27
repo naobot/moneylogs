@@ -5,6 +5,7 @@
 @use "@/constants.scss";
 @use "./mark";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .SublogMark {
   @include mark.nested-frame;
@@ -40,13 +41,16 @@
     text-overflow: ellipsis;
   }
 
-  @at-root a#{&}:hover, a#{&}:focus-visible {
-    background: var(--inverse-surface);
-    color: var(--inverse-ink);
-    outline: none;
+  // Only the linked form (an <a>) inverts.
+  @at-root {
+    @include hover("a#{&}:focus-visible, a#{&}:active", "a#{&}:hover") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
 
-    .SublogName__glyph {
-      color: inherit;
+      .SublogName__glyph {
+        color: inherit;
+      }
     }
   }
 }
@@ -97,18 +101,20 @@
     text-align: right;
   }
 
-  @at-root a#{&}:hover, a#{&}:focus-visible {
-    background: var(--inverse-surface);
-    color: var(--inverse-ink);
-    outline: none;
+  @at-root {
+    @include hover("a#{&}:focus-visible, a#{&}:active", "a#{&}:hover") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+      outline: none;
 
-    .SublogRow__count,
-    .SublogName__glyph {
-      color: inherit;
-    }
+      .SublogRow__count,
+      .SublogName__glyph {
+        color: inherit;
+      }
 
-    .SublogMark {
-      border-color: var(--inverse-ink);
+      .SublogMark {
+        border-color: var(--inverse-ink);
+      }
     }
   }
 }
@@ -124,8 +130,7 @@
     font-weight: 700;
     text-decoration: none;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -240,8 +245,7 @@
     font-weight: 700;
     text-decoration: none;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible, &:active") {
       background: var(--inverse-surface);
       color: var(--inverse-ink);
     }
@@ -598,8 +602,7 @@
   text-decoration: underline dashed;
   text-underline-offset: 0.2em;
 
-  &:hover,
-  &:focus-visible {
+  @include hover("&:focus-visible, &:active") {
     background: var(--inverse-surface);
     color: var(--inverse-ink);
   }

@@ -3,6 +3,7 @@
 @use "@/charts.scss";
 @use "@/features/ledger/sublogs/mark";
 @use "@/ui-size" as *;
+@use "@/states" as *;
 
 .Ledger {
   // Phones: title · actions. The kind ("financial · 2 members") is left out, as the
@@ -232,8 +233,7 @@
       border-style: dashed;
       cursor: pointer;
 
-      &:hover,
-      &:focus-visible {
+      @include hover("&:focus-visible, &:active") {
         color: var(--inverse-ink);
         background: var(--inverse-surface);
       }
@@ -645,8 +645,10 @@
     border: none;
     cursor: pointer;
 
-    &:hover .CategoryManager__nameText,
-    &:focus-visible .CategoryManager__nameText {
+    @include hover(
+      "&:focus-visible .CategoryManager__nameText",
+      "&:hover .CategoryManager__nameText"
+    ) {
       text-decoration: underline;
       text-underline-offset: 0.25em;
     }
@@ -829,8 +831,7 @@
     border: none;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       text-decoration: underline;
       text-underline-offset: 0.2em;
     }
@@ -966,8 +967,7 @@
     text-underline-offset: 0.2em;
     cursor: pointer;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       text-decoration-style: solid;
     }
   }
@@ -1065,8 +1065,7 @@
       padding: 0;
       cursor: pointer;
 
-      &:hover,
-      &:focus-visible {
+      @include hover("&:focus-visible") {
         text-decoration: underline dashed;
         text-underline-offset: 0.2em;
       }
@@ -1096,8 +1095,7 @@
       padding: 0;
       cursor: pointer;
 
-      &:hover,
-      &:focus-visible {
+      @include hover("&:focus-visible") {
         text-decoration: underline dashed;
         text-underline-offset: 0.2em;
       }
@@ -1229,8 +1227,7 @@
       text-decoration-thickness: var(--border-hairline);
       text-underline-offset: 0.25em;
 
-      &:hover,
-      &:focus-visible {
+      @include hover("&:focus-visible") {
         text-decoration-style: solid;
       }
     }

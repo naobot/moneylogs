@@ -1,3 +1,4 @@
+@use "@/states" as *;
 // A toast is a small framed card that pops up in the middle of the screen, so it
 // lands where the eye already is. The page behind dims with the modal scrim; a click
 // on the dimmed layer dismisses the toast.
@@ -86,8 +87,7 @@
     padding: var(--space-1) var(--space-3);
     line-height: 1;
 
-    &:hover,
-    &:focus-visible {
+    @include hover("&:focus-visible") {
       opacity: 1;
       text-decoration: underline;
     }
