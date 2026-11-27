@@ -58,7 +58,9 @@ async function signUpFromInvite(w: Walkthrough, invitePath: string, tag: string)
 async function expectFriendsWithAlice(w: Walkthrough) {
   const { page } = w;
   await waitForPath(page, new RegExp(`^/u/${ids.aliceDocId}`));
-  await page.locator(".FriendControls__status--friends").waitFor();
+  // The words, not a class: the friends state has been a badge, a menu button and
+  // (docs/design PLAN item 30) plain status text.
+  await page.locator(".FriendControls").getByText("✓ friends").waitFor();
   expect(await page.locator("h2").first().innerText()).toBe("Alice Chen");
 }
 

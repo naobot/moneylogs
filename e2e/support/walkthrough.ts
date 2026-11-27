@@ -52,6 +52,9 @@ export async function openWalkthrough(
     hasTouch: true,
     timezoneId: BROWSER_TIMEZONE,
     locale: "en-CA",
+    // Looping animations (the invite page's floating sign-up bar) never hold still, so
+    // Playwright can't click them. The app stops them under reduced motion.
+    reducedMotion: "reduce",
   });
   // A new context is a first visit: nothing stored but the theme for this variant.
   await context.addInitScript((theme) => {

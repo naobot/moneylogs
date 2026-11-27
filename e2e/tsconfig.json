@@ -1,0 +1,12 @@
+{
+  // The walkthroughs run in Node (Playwright, the emulator helpers in scripts/), so they
+  // get Node's types, plus the DOM for code passed to page.evaluate. Nothing else
+  // includes e2e/.
+  "extends": "../tsconfig.node.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.e2e.tsbuildinfo"
+  },
+  "include": ["**/*.ts", "../scripts/**/*.ts"]
+}
