@@ -1,0 +1,104 @@
+@use "@/states" as *;
+
+// Check and RadioRows (design-system Check, 2026-11 audit): text-mode marks, `[ ]` `[x]`
+// and `( )` `(•)`, over visually hidden native inputs. The mark is decoration; the input
+// does the work, so keyboard focus shows on the row.
+
+// Hidden but still focusable and in the form (not display: none).
+.Check__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.Check__mark {
+  flex-shrink: 0;
+  font-weight: 700;
+  white-space: pre;
+}
+
+// A checkbox row: 44px, no frame (a list separates its rows with faint dashes).
+.Check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap-target);
+  color: var(--ink);
+  cursor: pointer;
+
+  &:has(.Check__input:focus-visible) {
+    outline: var(--border-rule) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &--disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  &__label {
+    min-width: 0;
+  }
+}
+
+// Radio rows: 1px frames that share their lines (each pulls up over the one above), on
+// the card tier's sheet; the chosen row inverts, and another inverts while hovered or
+// pressed, like any box you can tap.
+.RadioRows {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--border-hairline);
+
+  &__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--tap-target);
+    padding: var(--gap-between) 12px;
+    margin-top: calc(-1 * var(--border-hairline));
+    border: var(--border-hairline) solid var(--ink);
+    background: var(--sheet);
+    color: var(--ink);
+    cursor: pointer;
+
+    @include hover("&--chosen, &:active") {
+      background: var(--inverse-surface);
+      color: var(--inverse-ink);
+
+      .RadioRows__description {
+        color: inherit;
+      }
+    }
+
+    &--chosen {
+      cursor: default;
+    }
+
+    &:has(.Check__input:focus-visible) {
+      z-index: 1;
+      outline: var(--border-rule) solid var(--focus-ring);
+      outline-offset: -4px;
+    }
+
+    &--chosen:has(.Check__input:focus-visible) {
+      outline-color: var(--inverse-ink);
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-inside);
+    min-width: 0;
+  }
+
+  &__description {
+    font-size: var(--phone-small);
+    color: var(--ink-muted);
+  }
+}

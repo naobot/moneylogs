@@ -1,0 +1,65 @@
+// Switch (design-system Switch, 2026-11 audit): a square 52×26 track in a 2px frame
+// with an 18px square knob. On: the track inverted, the knob right. Off: paper, the
+// knob in ink at the left. The row (label + switch, at least 44px) is the hit area.
+.Switch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gap-between);
+  min-height: var(--tap-target);
+  color: var(--ink);
+  cursor: pointer;
+
+  &--disabled {
+    opacity: var(--opacity-disabled);
+    cursor: default;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-inside);
+    min-width: 0;
+    padding: var(--gap-inside) 0;
+  }
+
+  &__hint {
+    font-size: var(--phone-caption);
+    color: var(--ink-muted);
+  }
+
+  &__track {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 52px;
+    height: 26px;
+    padding: 2px;
+    box-sizing: border-box;
+    border: var(--border-rule) solid var(--ink);
+    border-radius: var(--radius-none);
+    background: var(--paper);
+    cursor: inherit;
+
+    &[aria-checked="true"] {
+      justify-content: flex-end;
+      background: var(--inverse-surface);
+
+      .Switch__knob {
+        background: var(--inverse-ink);
+      }
+    }
+
+    &:focus-visible {
+      outline: var(--border-rule) solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  &__knob {
+    width: 18px;
+    height: 18px;
+    background: var(--ink);
+  }
+}
